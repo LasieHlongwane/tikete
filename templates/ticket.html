@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,104 +11,882 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
     <title>
         Kalxa Ticket
     </title>
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
     >
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            font-size:
+                16px;
+
+            line-height:
+                1.6;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+
+        .muted {
+
+            color:
+                #64748b;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page-shell {
+
+            width:
+                100%;
+
+            max-width:
+                560px;
+
+            margin:
+                0 auto;
+
+            padding:
+                28px 18px 70px;
+        }
+
+
+        /* =====================================================
+           TICKET CARD
+        ===================================================== */
+
+        .ticket-card {
+
+            overflow:
+                hidden;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                24px;
+
+            box-shadow:
+                0 12px 40px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.07
+                );
+        }
+
+
+        /* =====================================================
+           TICKET HEADER
+        ===================================================== */
+
+        .ticket-header {
+
+            padding:
+                26px 24px 22px;
+
+            border-bottom:
+                1px solid #eef2f7;
+        }
+
+
+        .brand {
+
+            margin-bottom:
+                14px;
+
+            color:
+                #111111;
+
+            font-size:
+                12px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.14em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        h1 {
+
+            margin:
+                0;
+
+            color:
+                #111827;
+
+            font-size:
+                clamp(
+                    30px,
+                    7vw,
+                    42px
+                );
+
+            line-height:
+                1.05;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.045em;
+        }
+
+
+        /* =====================================================
+           EVENT INFO
+        ===================================================== */
+
+        .ticket-event-info {
+
+            display:
+                grid;
+
+            gap:
+                10px;
+
+            padding:
+                20px 24px;
+
+            border-bottom:
+                1px solid #eef2f7;
+        }
+
+
+        .ticket-meta {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                9px;
+
+            color:
+                #475569;
+
+            font-size:
+                13px;
+
+            font-weight:
+                650;
+        }
+
+
+        /* =====================================================
+           QR SECTION
+        ===================================================== */
+
+        .qr-section {
+
+            padding:
+                26px 24px;
+
+            text-align:
+                center;
+
+            border-bottom:
+                1px solid #eef2f7;
+        }
+
+
+        .qr-label {
+
+            margin-bottom:
+                6px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                0.12em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .qr-note {
+
+            margin:
+                0 auto 18px;
+
+            max-width:
+                380px;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+        }
+
+
+        .ticket-qr-wrap {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                14px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                18px;
+
+            box-shadow:
+                0 7px 22px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.05
+                );
+        }
+
+
+        .ticket-qr {
+
+            width:
+                230px;
+
+            max-width:
+                100%;
+
+            height:
+                auto;
+
+            display:
+                block;
+        }
+
+
+        /* =====================================================
+           ENTRY CODE
+        ===================================================== */
+
+        .entry-section {
+
+            padding:
+                22px 24px;
+
+            border-bottom:
+                1px solid #eef2f7;
+        }
+
+
+        .entry-label {
+
+            display:
+                block;
+
+            margin-bottom:
+                8px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.1em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .reference-box {
+
+            padding:
+                15px;
+
+            background:
+                #f8fafc;
+
+            color:
+                #111827;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                14px;
+
+            text-align:
+                center;
+
+            font-family:
+                ui-monospace,
+                SFMono-Regular,
+                Menlo,
+                Monaco,
+                Consolas,
+                monospace;
+
+            font-size:
+                18px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.08em;
+
+            word-break:
+                break-word;
+        }
+
+
+        /* =====================================================
+           HOLDER
+        ===================================================== */
+
+        .holder-section {
+
+            padding:
+                20px 24px;
+
+            border-bottom:
+                1px solid #eef2f7;
+        }
+
+
+        .holder-row {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                20px;
+        }
+
+
+        .holder-row span {
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+
+            font-weight:
+                650;
+        }
+
+
+        .holder-row strong {
+
+            color:
+                #111827;
+
+            font-size:
+                14px;
+
+            font-weight:
+                850;
+
+            text-align:
+                right;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status-section {
+
+            padding:
+                22px 24px 26px;
+        }
+
+
+        .success-box {
+
+            padding:
+                15px;
+
+            background:
+                #f0fdf4;
+
+            color:
+                #166534;
+
+            border:
+                1px solid #bbf7d0;
+
+            border-radius:
+                13px;
+
+            text-align:
+                center;
+
+            font-size:
+                13px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.03em;
+        }
+
+
+        .alert {
+
+            padding:
+                15px;
+
+            background:
+                #fef2f2;
+
+            color:
+                #b91c1c;
+
+            border:
+                1px solid #fecaca;
+
+            border-radius:
+                13px;
+
+            text-align:
+                center;
+
+            font-size:
+                13px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.03em;
+        }
+
+
+        /* =====================================================
+           FOOTER NOTE
+        ===================================================== */
+
+        .ticket-note {
+
+            margin-top:
+                18px;
+
+            padding:
+                0 10px;
+
+            color:
+                #94a3b8;
+
+            font-size:
+                11px;
+
+            line-height:
+                1.6;
+
+            text-align:
+                center;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 560px
+        ) {
+
+            .page-shell {
+
+                padding:
+                    20px 14px 50px;
+            }
+
+
+            .ticket-card {
+
+                border-radius:
+                    18px;
+            }
+
+
+            .ticket-header,
+            .ticket-event-info,
+            .qr-section,
+            .entry-section,
+            .holder-section,
+            .status-section {
+
+                padding-left:
+                    18px;
+
+                padding-right:
+                    18px;
+            }
+
+
+            .ticket-qr {
+
+                width:
+                    205px;
+            }
+
+
+            .holder-row {
+
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+
+                gap:
+                    4px;
+            }
+
+
+            .holder-row strong {
+
+                text-align:
+                    left;
+            }
+
+
+            .reference-box {
+
+                font-size:
+                    16px;
+            }
+
+        }
+
+    </style>
 
 </head>
 
+
 <body>
+
 
 <div class="page-shell">
 
+
     <div class="ticket-card">
 
-        <div class="brand">
-            KALXA TICKET
+
+        <!-- =====================================
+             HEADER
+        ====================================== -->
+
+        <div class="ticket-header">
+
+
+            <div class="brand">
+                KALXA TICKET
+            </div>
+
+
+            <h1>
+                {{ entry_pass.order.event.title }}
+            </h1>
+
+
         </div>
 
 
-        <h1>
-            {{ entry_pass.order.event.title }}
-        </h1>
+
+        <!-- =====================================
+             EVENT INFORMATION
+        ====================================== -->
+
+        <div class="ticket-event-info">
 
 
-        {% if entry_pass.order.event.event_date %}
+            {% if entry_pass.order.event.event_date %}
 
-            <p>
-                📅
-                {{ entry_pass.order.event.event_date.strftime('%d %B %Y') }}
-            </p>
+                <div class="ticket-meta">
 
-        {% endif %}
+                    <span>
+                        📅
+                    </span>
 
+                    <span>
+                        {{ entry_pass.order.event.event_date.strftime(
+                            '%d %B %Y'
+                        ) }}
+                    </span>
 
-        {% if entry_pass.order.event.venue %}
+                </div>
 
-            <p>
-                📍
-                {{ entry_pass.order.event.venue }}
-            </p>
-
-        {% endif %}
-
-
-        <img
-            src="{{ url_for(
-                'ticket_qr',
-                entry_code=entry_pass.entry_code
-            ) }}"
-            alt="Ticket QR Code"
-            class="ticket-qr"
-        >
+            {% endif %}
 
 
-        <p>
-            Entry Code
-        </p>
+
+            {% if entry_pass.order.event.event_time %}
+
+                <div class="ticket-meta">
+
+                    <span>
+                        🕒
+                    </span>
+
+                    <span>
+                        {{ entry_pass.order.event.event_time.strftime(
+                            '%H:%M'
+                        ) }}
+                    </span>
+
+                </div>
+
+            {% endif %}
 
 
-        <div class="reference-box">
-            {{ entry_pass.entry_code }}
+
+            {% if entry_pass.order.event.venue %}
+
+                <div class="ticket-meta">
+
+                    <span>
+                        📍
+                    </span>
+
+                    <span>
+                        {{ entry_pass.order.event.venue }}
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+
         </div>
 
 
-        <p>
-            Holder:
-            <strong>
-                {{ entry_pass.order.customer_name }}
-            </strong>
-        </p>
+
+        <!-- =====================================
+             QR CODE
+        ====================================== -->
+
+        <div class="qr-section">
 
 
-        {% if entry_pass.status == "valid" %}
-
-            <div class="success-box">
-                VALID TICKET
+            <div class="qr-label">
+                ENTRY QR
             </div>
 
-        {% elif entry_pass.status == "used" %}
 
-            <div class="alert">
-                ALREADY USED
+            <p class="qr-note">
+                Present this QR code at the event entrance.
+                It is linked to your unique Kalxa entry pass.
+            </p>
+
+
+            <div class="ticket-qr-wrap">
+
+                <img
+                    src="{{ url_for(
+                        'ticket_qr',
+                        entry_code=entry_pass.entry_code
+                    ) }}"
+                    alt="Kalxa Ticket QR Code"
+                    class="ticket-qr"
+                >
+
             </div>
 
-        {% else %}
 
-            <div class="alert">
-                INVALID TICKET
+        </div>
+
+
+
+        <!-- =====================================
+             ENTRY CODE
+        ====================================== -->
+
+        <div class="entry-section">
+
+
+            <span class="entry-label">
+                Entry Code
+            </span>
+
+
+            <div class="reference-box">
+                {{ entry_pass.entry_code }}
             </div>
 
-        {% endif %}
+
+        </div>
+
+
+
+        <!-- =====================================
+             HOLDER
+        ====================================== -->
+
+        <div class="holder-section">
+
+
+            <div class="holder-row">
+
+                <span>
+                    Ticket Holder
+                </span>
+
+                <strong>
+                    {{ entry_pass.order.customer_name }}
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =====================================
+             STATUS
+        ====================================== -->
+
+        <div class="status-section">
+
+
+            {% if entry_pass.status == "valid" %}
+
+                <div class="success-box">
+                    ✓ VALID TICKET
+                </div>
+
+
+            {% elif entry_pass.status == "used" %}
+
+                <div class="alert">
+                    ALREADY USED
+                </div>
+
+
+            {% else %}
+
+                <div class="alert">
+                    INVALID TICKET
+                </div>
+
+            {% endif %}
+
+
+        </div>
+
 
     </div>
 
+
+
+    <!-- =====================================
+         NOTE
+    ====================================== -->
+
+    <div class="ticket-note">
+
+        Keep this ticket private. Each entry code is unique
+        and can only be used according to the ticket status.
+
+    </div>
+
+
 </div>
+
 
 </body>
 
