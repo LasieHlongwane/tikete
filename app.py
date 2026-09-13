@@ -606,7 +606,6 @@ def get_kalxa_bridge_serializer():
 # ============================================================
 # KALXA ORGANIZER AUTH BRIDGE
 # ============================================================
-
 @app.route(
     "/auth/kalxa",
     methods=["POST"],
@@ -725,8 +724,8 @@ def kalxa_auth_bridge():
 
     if (
         not bridge_id
-        or not organizer_id
-        or not content_item_id
+        or organizer_id is None
+        or content_item_id is None
     ):
 
         abort(403)
@@ -745,6 +744,14 @@ def kalxa_auth_bridge():
     except (
         TypeError,
         ValueError,
+    ):
+
+        abort(403)
+
+
+    if (
+        organizer_id <= 0
+        or content_item_id <= 0
     ):
 
         abort(403)
@@ -848,15 +855,24 @@ def kalxa_auth_bridge():
 
 
     # =====================================================
-    # CONTINUE TO ORGANIZER DASHBOARD
+    # CONTINUE TO TICKETING ADMIN DASHBOARD
+    # =====================================================
+    #
+    # The admin dashboard reads:
+    #
+    # session["kalxa_organizer_id"]
+    # session["kalxa_content_item_id"]
+    #
+    # and uses that secure context to display/create the
+    # TicketEvent for the approved Kalxa Discovery event.
     # =====================================================
 
     return redirect(
         url_for(
-            "organizer_ticketing_dashboard"
+            "admin_dashboard"
         )
     )
-    
+
     
 # ============================================================
 # CURRENT TICKETING ORGANIZER
