@@ -982,11 +982,32 @@ def require_ticketing_organizer():
 # ============================================================
 # ORGANIZER TICKETING DASHBOARD
 # ============================================================
+# ============================================================
+# ORGANIZER TICKETING DASHBOARD
+# ============================================================
+#
+# Legacy / compatibility route.
+#
+# Ticketing now uses /admin as the single organizer-scoped
+# dashboard because /admin reads both:
+#
+# - kalxa_organizer_id
+# - kalxa_content_item_id
+#
+# from the secure bridge session.
+#
+# Keeping this route prevents old links from breaking while
+# ensuring every organizer reaches the correct dashboard.
+# ============================================================
 
 @app.route(
     "/organizer/dashboard"
 )
 def organizer_ticketing_dashboard():
+
+    # ========================================================
+    # REQUIRE ORGANIZER SESSION
+    # ========================================================
 
     auth = (
         require_ticketing_organizer()
@@ -997,99 +1018,15 @@ def organizer_ticketing_dashboard():
         return auth
 
 
-    organizer_id = (
-        get_ticketing_organizer_id()
-    )
+    # ========================================================
+    # REDIRECT TO MAIN TICKETING DASHBOARD
+    # ========================================================
 
-
-    # =====================================================
-    # ONLY THIS ORGANIZER'S EVENTS
-    # =====================================================
-
-    events = (
-        TicketEvent.query
-        .filter_by(
-            kalxa_organizer_id=(
-                organizer_id
-            )
-        )
-        .order_by(
-            TicketEvent
-            .created_at
-            .desc()
-        )
-        .all()
-    )
-
-
-    # =====================================================
-    # ORDERS BELONGING TO THEIR EVENTS
-    # =====================================================
-
-    orders = (
-        TicketOrder.query
-        .join(
-            TicketEvent
-        )
-        .filter(
-            TicketEvent.kalxa_organizer_id
-            == organizer_id
-        )
-        .all()
-    )
-
-
-    total_orders = len(
-        orders
-    )
-
-
-    paid_orders = sum(
-        1
-        for order
-        in orders
-        if (
-            order.payment_status
-            == "paid"
+    return redirect(
+        url_for(
+            "admin_dashboard"
         )
     )
-
-
-    checked_in = (
-        CheckIn.query
-        .join(
-            EntryPass
-        )
-        .join(
-            TicketOrder
-        )
-        .join(
-            TicketEvent
-        )
-        .filter(
-            TicketEvent.kalxa_organizer_id
-            == organizer_id
-        )
-        .count()
-    )
-
-
-    return render_template(
-        "admin/dashboard.html",
-
-        events=
-            events,
-
-        total_orders=
-            total_orders,
-
-        paid_orders=
-            paid_orders,
-
-        checked_in=
-            checked_in,
-    )
-    
     
 @app.route(
     "/ticketing/access"
