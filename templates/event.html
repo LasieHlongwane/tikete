@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,143 +11,1067 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
     <title>
         Kalxa Tickets
     </title>
 
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
     >
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            font-size:
+                16px;
+
+            line-height:
+                1.6;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+
+        a {
+            color: inherit;
+        }
+
+
+        .muted {
+            color:
+                #64748b;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page-shell {
+
+            width:
+                100%;
+
+            max-width:
+                1100px;
+
+            margin:
+                0 auto;
+
+            padding:
+                28px 18px 70px;
+        }
+
+
+        /* =====================================================
+           BRAND
+        ===================================================== */
+
+        .brand {
+
+            margin-bottom:
+                28px;
+
+            color:
+                #111111;
+
+            font-size:
+                15px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.02em;
+        }
+
+
+        /* =====================================================
+           TYPOGRAPHY
+        ===================================================== */
+
+        .eyebrow {
+
+            margin:
+                0 0 8px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                0.14em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        h1 {
+
+            margin:
+                0 0 14px;
+
+            color:
+                #111827;
+
+            font-size:
+                clamp(
+                    34px,
+                    7vw,
+                    54px
+                );
+
+            line-height:
+                1.02;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.05em;
+        }
+
+
+        h2 {
+
+            margin:
+                0;
+
+            color:
+                #111827;
+
+            font-size:
+                21px;
+
+            line-height:
+                1.2;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                -0.03em;
+        }
+
+
+        /* =====================================================
+           DETAIL CARD
+        ===================================================== */
+
+        .event-detail {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                minmax(0, 1.15fr)
+                minmax(320px, 0.85fr);
+
+            gap:
+                34px;
+
+            align-items:
+                start;
+
+            padding:
+                26px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                24px;
+
+            box-shadow:
+                0 12px 40px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.06
+                );
+        }
+
+
+        .event-detail-image-wrap {
+
+            overflow:
+                hidden;
+
+            background:
+                #f8fafc;
+
+            border-radius:
+                18px;
+        }
+
+
+        .event-detail-image {
+
+            width:
+                100%;
+
+            height:
+                auto;
+
+            min-height:
+                360px;
+
+            display:
+                block;
+
+            object-fit:
+                cover;
+        }
+
+
+        .event-detail-content {
+
+            min-width:
+                0;
+        }
+
+
+        .event-description {
+
+            margin:
+                0 0 22px;
+
+            color:
+                #475569;
+
+            font-size:
+                15px;
+
+            line-height:
+                1.75;
+        }
+
+
+        /* =====================================================
+           EVENT META
+        ===================================================== */
+
+        .event-meta-list {
+
+            display:
+                grid;
+
+            gap:
+                10px;
+
+            margin:
+                24px 0;
+        }
+
+
+        .event-meta {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                10px;
+
+            padding:
+                12px 14px;
+
+            background:
+                #f8fafc;
+
+            color:
+                #334155;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                12px;
+
+            font-size:
+                13px;
+
+            font-weight:
+                650;
+        }
+
+
+        /* =====================================================
+           TICKET BOX
+        ===================================================== */
+
+        .ticket-box {
+
+            margin-top:
+                24px;
+
+            padding:
+                22px;
+
+            background:
+                #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                18px;
+        }
+
+
+        .ticket-label {
+
+            display:
+                block;
+
+            margin-bottom:
+                5px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.08em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .ticket-price {
+
+            color:
+                #111827;
+
+            font-size:
+                clamp(
+                    32px,
+                    6vw,
+                    42px
+                );
+
+            line-height:
+                1;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.045em;
+        }
+
+
+        .ticket-availability {
+
+            margin:
+                10px 0 0;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+
+            font-weight:
+                650;
+        }
+
+
+        /* =====================================================
+           BUTTON
+        ===================================================== */
+
+        .button {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                100%;
+
+            min-height:
+                52px;
+
+            margin-top:
+                18px;
+
+            padding:
+                12px 18px;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border:
+                1px solid #111111;
+
+            border-radius:
+                12px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                15px;
+
+            font-weight:
+                850;
+
+            cursor:
+                pointer;
+
+            transition:
+                background 0.16s ease,
+                transform 0.16s ease,
+                box-shadow 0.16s ease;
+        }
+
+
+        .button:hover {
+
+            background:
+                #27272a;
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 8px 20px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.1
+                );
+        }
+
+
+        .button.disabled {
+
+            background:
+                #e5e7eb;
+
+            color:
+                #94a3b8;
+
+            border-color:
+                #e5e7eb;
+
+            cursor:
+                not-allowed;
+
+            box-shadow:
+                none;
+
+            transform:
+                none;
+        }
+
+
+        /* =====================================================
+           EVENT LIST
+        ===================================================== */
+
+        .event-list-header {
+
+            margin-bottom:
+                24px;
+        }
+
+
+        .event-list-header h1 {
+
+            margin-bottom:
+                8px;
+        }
+
+
+        .event-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                18px;
+        }
+
+
+        .event-card {
+
+            overflow:
+                hidden;
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                18px;
+
+            text-decoration:
+                none;
+
+            box-shadow:
+                0 8px 28px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.045
+                );
+
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                border-color 0.18s ease;
+        }
+
+
+        .event-card:hover {
+
+            transform:
+                translateY(-3px);
+
+            border-color:
+                #cbd5e1;
+
+            box-shadow:
+                0 14px 32px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.08
+                );
+        }
+
+
+        .event-image {
+
+            width:
+                100%;
+
+            height:
+                220px;
+
+            display:
+                block;
+
+            object-fit:
+                cover;
+
+            background:
+                #f1f5f9;
+        }
+
+
+        .event-card-content {
+
+            display:
+                flex;
+
+            flex:
+                1;
+
+            flex-direction:
+                column;
+
+            padding:
+                18px;
+        }
+
+
+        .event-card-date {
+
+            margin-top:
+                8px;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+        }
+
+
+        .event-card-price {
+
+            margin-top:
+                auto;
+
+            padding-top:
+                18px;
+
+            color:
+                #111827;
+
+            font-size:
+                18px;
+
+            font-weight:
+                900;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty-state {
+
+            padding:
+                34px 22px;
+
+            background:
+                #f8fafc;
+
+            color:
+                #64748b;
+
+            border:
+                1px dashed #cbd5e1;
+
+            border-radius:
+                16px;
+
+            text-align:
+                center;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 850px
+        ) {
+
+            .event-detail {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .event-detail-image {
+
+                min-height:
+                    280px;
+            }
+
+
+            .event-grid {
+
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
+
+        }
+
+
+        @media (
+            max-width: 560px
+        ) {
+
+            .page-shell {
+
+                padding:
+                    22px 14px 50px;
+            }
+
+
+            .event-detail {
+
+                gap:
+                    22px;
+
+                padding:
+                    16px;
+
+                border-radius:
+                    18px;
+            }
+
+
+            .event-detail-image {
+
+                min-height:
+                    220px;
+
+                border-radius:
+                    14px;
+            }
+
+
+            .ticket-box {
+
+                padding:
+                    18px;
+            }
+
+
+            .event-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .event-image {
+
+                height:
+                    210px;
+            }
+
+        }
+
+    </style>
 
 </head>
 
+
 <body>
+
 
 <div class="page-shell">
 
+
+    <!-- =========================================
+         BRAND
+    ========================================== -->
+
     <div class="brand">
-        KALXA TICKETS
+        KALXA TICKETING
     </div>
+
 
 
     {% if event %}
 
-        <div class="event-card event-detail">
+
+        <!-- =====================================
+             SINGLE EVENT
+        ====================================== -->
+
+        <div class="event-detail">
+
+
+            <!-- =================================
+                 EVENT IMAGE
+            ================================== -->
 
             {% if event.image_url %}
 
-                <img
-                    src="{{ event.image_url }}"
-                    alt="{{ event.title }}"
-                    class="event-image"
-                >
+                <div class="event-detail-image-wrap">
+
+                    <img
+                        src="{{ event.image_url }}"
+                        alt="{{ event.title }}"
+                        class="event-detail-image"
+                    >
+
+                </div>
 
             {% endif %}
 
 
-            <p class="eyebrow">
-                LOCAL EVENT
-            </p>
+
+            <!-- =================================
+                 EVENT CONTENT
+            ================================== -->
+
+            <div class="event-detail-content">
 
 
-            <h1>
-                {{ event.title }}
-            </h1>
-
-
-            {% if event.description %}
-
-                <p>
-                    {{ event.description }}
+                <p class="eyebrow">
+                    LOCAL EVENT
                 </p>
 
-            {% endif %}
+
+                <h1>
+                    {{ event.title }}
+                </h1>
 
 
-            {% if event.event_date %}
 
-                <div class="event-meta">
-                    📅
-                    {{ event.event_date.strftime('%d %B %Y') }}
+                {% if event.description %}
+
+                    <p class="event-description">
+                        {{ event.description }}
+                    </p>
+
+                {% endif %}
+
+
+
+                <!-- =============================
+                     EVENT INFORMATION
+                ============================== -->
+
+                <div class="event-meta-list">
+
+
+                    {% if event.event_date %}
+
+                        <div class="event-meta">
+
+                            <span>
+                                📅
+                            </span>
+
+                            <span>
+                                {{ event.event_date.strftime(
+                                    '%d %B %Y'
+                                ) }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+
+                    {% if event.event_time %}
+
+                        <div class="event-meta">
+
+                            <span>
+                                🕒
+                            </span>
+
+                            <span>
+                                {{ event.event_time.strftime(
+                                    '%H:%M'
+                                ) }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+
+                    {% if event.venue %}
+
+                        <div class="event-meta">
+
+                            <span>
+                                📍
+                            </span>
+
+                            <span>
+                                {{ event.venue }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
                 </div>
 
-            {% endif %}
 
 
-            {% if event.event_time %}
+                <!-- =============================
+                     TICKET INFORMATION
+                ============================== -->
 
-                <div class="event-meta">
-                    🕒
-                    {{ event.event_time.strftime('%H:%M') }}
+                <div class="ticket-box">
+
+
+                    <span class="ticket-label">
+                        Ticket Price
+                    </span>
+
+
+                    <div class="ticket-price">
+
+                        {% if event.ticket_price == 0 %}
+
+                            FREE
+
+                        {% else %}
+
+                            R{{ "%.2f"|format(
+                                event.ticket_price
+                            ) }}
+
+                        {% endif %}
+
+                    </div>
+
+
+
+                    {% if event.ticket_capacity is not none %}
+
+                        <p class="ticket-availability">
+
+                            {{ event.remaining_tickets }}
+                            ticket(s) remaining
+
+                        </p>
+
+                    {% endif %}
+
+
+
+                    {% if event.is_sold_out %}
+
+                        <button
+                            class="button disabled"
+                            disabled
+                        >
+                            SOLD OUT
+                        </button>
+
+
+                    {% else %}
+
+                        <a
+                            href="{{ url_for(
+                                'reserve_ticket',
+                                event_id=event.id
+                            ) }}"
+                            class="button"
+                        >
+                            Buy Ticket
+                        </a>
+
+                    {% endif %}
+
+
                 </div>
 
-            {% endif %}
 
-
-            {% if event.venue %}
-
-                <div class="event-meta">
-                    📍
-                    {{ event.venue }}
-                </div>
-
-            {% endif %}
-
-
-            <div class="ticket-price">
-                R{{ "%.2f"|format(event.ticket_price) }}
             </div>
 
-
-            {% if event.ticket_capacity is not none %}
-
-                <p class="muted">
-                    {{ event.remaining_tickets }}
-                    ticket(s) remaining
-                </p>
-
-            {% endif %}
-
-
-            {% if event.is_sold_out %}
-
-                <button
-                    class="button disabled"
-                    disabled
-                >
-                    SOLD OUT
-                </button>
-
-            {% else %}
-
-                <a
-                    href="{{ url_for(
-                        'reserve_ticket',
-                        event_id=event.id
-                    ) }}"
-                    class="button"
-                >
-                    Buy Ticket
-                </a>
-
-            {% endif %}
 
         </div>
 
 
+
     {% else %}
 
-        <h1>
-            Events
-        </h1>
+
+        <!-- =====================================
+             EVENT LIST
+        ====================================== -->
+
+        <div class="event-list-header">
+
+            <p class="eyebrow">
+                KALXA EVENTS
+            </p>
+
+            <h1>
+                Ticketed Events
+            </h1>
+
+            <p class="muted">
+                Discover events and secure your ticket
+                before capacity is reached.
+            </p>
+
+        </div>
+
 
 
         {% if events %}
 
+
             <div class="event-grid">
 
+
                 {% for item in events %}
+
 
                     <a
                         href="{{ url_for(
@@ -156,52 +1081,104 @@
                         class="event-card"
                     >
 
+
                         {% if item.image_url %}
 
                             <img
                                 src="{{ item.image_url }}"
                                 alt="{{ item.title }}"
                                 class="event-image"
+                                loading="lazy"
                             >
 
                         {% endif %}
 
 
-                        <h2>
-                            {{ item.title }}
-                        </h2>
+
+                        <div class="event-card-content">
 
 
-                        {% if item.event_date %}
-
-                            <p>
-                                {{ item.event_date.strftime('%d %B %Y') }}
-                            </p>
-
-                        {% endif %}
+                            <h2>
+                                {{ item.title }}
+                            </h2>
 
 
-                        <strong>
-                            R{{ "%.2f"|format(item.ticket_price) }}
-                        </strong>
+
+                            {% if item.event_date %}
+
+                                <div class="event-card-date">
+
+                                    📅
+
+                                    {{ item.event_date.strftime(
+                                        '%d %B %Y'
+                                    ) }}
+
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if item.venue %}
+
+                                <div class="event-card-date">
+
+                                    📍 {{ item.venue }}
+
+                                </div>
+
+                            {% endif %}
+
+
+
+                            <div class="event-card-price">
+
+                                {% if item.ticket_price == 0 %}
+
+                                    FREE
+
+                                {% else %}
+
+                                    R{{ "%.2f"|format(
+                                        item.ticket_price
+                                    ) }}
+
+                                {% endif %}
+
+                            </div>
+
+
+                        </div>
+
 
                     </a>
 
+
                 {% endfor %}
+
 
             </div>
 
+
         {% else %}
 
-            <p>
+
+            <div class="empty-state">
+
                 No ticketed events are available yet.
-            </p>
+
+            </div>
+
 
         {% endif %}
 
+
     {% endif %}
 
+
 </div>
+
 
 </body>
 
