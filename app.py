@@ -1104,6 +1104,10 @@ def ticket_qr(
     entry_code,
 ):
 
+    # =====================================================
+    # LOAD ENTRY PASS
+    # =====================================================
+
     entry_pass = (
         EntryPass.query
         .filter_by(
@@ -1113,17 +1117,66 @@ def ticket_qr(
     )
 
 
-    ticket_url = (
-        f"{PUBLIC_BASE_URL}"
-        f"/ticket/"
-        f"{entry_pass.entry_code}"
+    # =====================================================
+    # VALIDATE ORDER
+    # =====================================================
+
+    order = (
+        entry_pass.order
+    )
+
+
+    if not order:
+
+        abort(404)
+
+
+    # =====================================================
+    # ONLY PAID TICKETS GET A VALID QR
+    # =====================================================
+
+    if (
+        order.payment_status
+        != "paid"
+    ):
+
+        abort(403)
+
+
+    # =====================================================
+    # GENERATE QR
+    # =====================================================
+    #
+    # IMPORTANT:
+    #
+    # The QR contains the actual EntryPass code:
+    #
+    # KX-51QU-T8JZ
+    #
+    # It does NOT contain:
+    #
+    # - the booking reference
+    # - the order reference
+    # - the ticket URL
+    #
+    # This means the organizer scanner can read the QR
+    # directly and use the resulting value to find the
+    # EntryPass during check-in.
+    # =====================================================
+
+    qr_value = (
+        entry_pass.entry_code
     )
 
 
     image = qrcode.make(
-        ticket_url
+        qr_value
     )
 
+
+    # =====================================================
+    # WRITE QR TO MEMORY
+    # =====================================================
 
     buffer = io.BytesIO()
 
@@ -1139,12 +1192,14 @@ def ticket_qr(
     )
 
 
+    # =====================================================
+    # RETURN PNG
+    # =====================================================
+
     return Response(
         buffer.getvalue(),
         mimetype="image/png",
     )
-
-
 # ============================================================
 # ADMIN LOGIN
 # ============================================================
