@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Reserve Ticket
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="page-shell">
+
+    <div class="brand">
+        KALXA TICKETS
+    </div>
+
+
+    <div class="form-card">
+
+        <p class="eyebrow">
+            RESERVE TICKET
+        </p>
+
+
+        <h1>
+            {{ event.title }}
+        </h1>
+
+
+        <p class="ticket-price">
+            R{{ "%.2f"|format(event.ticket_price) }}
+            per ticket
+        </p>
+
+
+        {% with messages = get_flashed_messages() %}
+
+            {% for message in messages %}
+
+                <div class="alert">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <form
+            method="POST"
+            class="form-stack"
+        >
+
+            <label>
+
+                Your Name
+
+                <input
+                    type="text"
+                    name="customer_name"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Phone Number
+
+                <input
+                    type="text"
+                    name="customer_phone"
+                    required
+                >
+
+            </label>
+
+
+            <label>
+
+                Email
+                <small>
+                    Optional
+                </small>
+
+                <input
+                    type="email"
+                    name="customer_email"
+                >
+
+            </label>
+
+
+            <label>
+
+                Number of Tickets
+
+                <select
+                    name="quantity"
+                    required
+                >
+
+                    {% for quantity in range(1, 11) %}
+
+                        <option value="{{ quantity }}">
+                            {{ quantity }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Reserve Ticket
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

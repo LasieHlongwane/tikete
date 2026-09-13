@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Booking Status
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="page-shell">
+
+    <div class="brand">
+        KALXA TICKETS
+    </div>
+
+
+    <div class="form-card">
+
+        <p class="eyebrow">
+            BOOKING
+        </p>
+
+
+        <h1>
+            {{ order.event.title }}
+        </h1>
+
+
+        <p>
+            Booking Reference
+        </p>
+
+
+        <div class="reference-box">
+            {{ order.payment_reference }}
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Tickets
+            </span>
+
+            <strong>
+                {{ order.quantity }}
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Amount Due
+            </span>
+
+            <strong>
+                R{{ "%.2f"|format(order.total_amount) }}
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Payment
+            </span>
+
+            <strong>
+                {{ order.payment_status|upper }}
+            </strong>
+
+        </div>
+
+
+        {% if order.payment_status == "pending" %}
+
+            <div class="alert">
+
+                Pay the event organizer using the booking
+                reference above.
+
+                Your ticket becomes valid only after the
+                organizer confirms payment.
+
+            </div>
+
+        {% endif %}
+
+
+        {% if order.payment_status == "paid" %}
+
+            <div class="success-box">
+
+                Payment confirmed.
+
+            </div>
+
+
+            {% for pass in order.entry_passes %}
+
+                <a
+                    href="{{ url_for(
+                        'ticket_page',
+                        entry_code=pass.entry_code
+                    ) }}"
+                    class="button"
+                >
+                    Open Ticket {{ loop.index }}
+                </a>
+
+            {% endfor %}
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

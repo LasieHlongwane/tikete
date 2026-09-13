@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Kalxa Ticket Check-In
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+
+    <!-- =========================================
+         QR SCANNER LIBRARY
+    ========================================== -->
+
+    <script
+        src="https://unpkg.com/html5-qrcode"
+        type="text/javascript"
+    ></script>
+
+
+    <style>
+
+        /* =====================================================
+           CHECK-IN PAGE
+        ====================================================== */
+
+        .checkin-shell {
+
+            width: 100%;
+
+            max-width: 620px;
+
+            margin: 0 auto;
+
+            padding: 24px 16px 70px;
+        }
+
+
+        .checkin-header {
+
+            margin-bottom: 24px;
+        }
+
+
+        .checkin-eyebrow {
+
+            margin-bottom: 8px;
+
+            font-size: 10px;
+
+            font-weight: 900;
+
+            letter-spacing: 1.2px;
+
+            opacity: 0.65;
+        }
+
+
+        .checkin-header h1 {
+
+            margin-top: 0;
+
+            margin-bottom: 8px;
+        }
+
+
+        /* =====================================================
+           SECURITY NOTICE
+        ====================================================== */
+
+        .secure-session-box {
+
+            margin-bottom: 20px;
+
+            padding: 12px 14px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.12);
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 244, 223, 0.04);
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           SCANNER CARD
+        ====================================================== */
+
+        .scanner-card {
+
+            margin-top: 20px;
+
+            padding: 18px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.15);
+
+            border-radius: 16px;
+
+            background:
+                rgba(255, 255, 255, 0.025);
+        }
+
+
+        #qr-reader {
+
+            width: 100%;
+
+            overflow: hidden;
+
+            border-radius: 14px;
+
+            background: #000;
+        }
+
+
+        .scanner-actions {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+
+        .scanner-button {
+
+            min-height: 46px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #fff4df;
+
+            color: #111316;
+
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+
+        .scanner-button.secondary {
+
+            background:
+                rgba(255, 255, 255, 0.08);
+
+            color: #fff4df;
+
+            border:
+                1px solid
+                rgba(255, 255, 255, 0.10);
+        }
+
+
+        .scanner-button:disabled {
+
+            opacity: 0.45;
+
+            cursor: not-allowed;
+        }
+
+
+        .scanner-status {
+
+            margin-top: 12px;
+
+            font-size: 12px;
+
+            opacity: 0.75;
+        }
+
+
+        /* =====================================================
+           MANUAL FALLBACK
+        ====================================================== */
+
+        .manual-checkin {
+
+            margin-top: 22px;
+
+            padding-top: 20px;
+
+            border-top:
+                1px solid
+                rgba(255, 255, 255, 0.08);
+        }
+
+
+        .manual-checkin form {
+
+            display: grid;
+
+            gap: 12px;
+        }
+
+
+        .manual-checkin input {
+
+            min-height: 52px;
+
+            text-align: center;
+
+            text-transform: uppercase;
+
+            font-size: 17px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.8px;
+        }
+
+
+        /* =====================================================
+           RESULT
+        ====================================================== */
+
+        .verification-card {
+
+            margin-top: 24px;
+
+            padding: 20px;
+
+            border:
+                1px solid
+                rgba(255, 244, 223, 0.18);
+
+            border-radius: 16px;
+
+            background:
+                rgba(255, 244, 223, 0.035);
+        }
+
+
+        .verification-card h2 {
+
+            margin-top: 0;
+
+            margin-bottom: 8px;
+        }
+
+
+        .verification-row {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 11px 0;
+
+            border-bottom:
+                1px solid
+                rgba(255, 255, 255, 0.07);
+        }
+
+
+        .verification-row span {
+
+            opacity: 0.65;
+
+            font-size: 12px;
+        }
+
+
+        .verification-row strong {
+
+            text-align: right;
+        }
+
+
+        .attendee-name-box {
+
+            margin-top: 18px;
+
+            padding: 18px;
+
+            border-radius: 12px;
+
+            background: #fff4df;
+
+            color: #111316;
+
+            text-align: center;
+        }
+
+
+        .attendee-name-box small {
+
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            letter-spacing: 1px;
+
+            text-transform: uppercase;
+
+            opacity: 0.65;
+        }
+
+
+        .attendee-name-box strong {
+
+            display: block;
+
+            font-size: 24px;
+        }
+
+
+        .name-verification-note {
+
+            margin-top: 14px;
+
+            padding: 12px 14px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.05);
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+
+        .valid-box {
+
+            margin-top: 16px;
+
+            padding: 14px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 244, 223, 0.10);
+
+            font-weight: 900;
+
+            text-align: center;
+        }
+
+
+        .invalid-box {
+
+            margin-top: 16px;
+
+            padding: 14px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255, 255, 255, 0.07);
+
+            font-weight: 900;
+
+            text-align: center;
+        }
+
+
+        .checkin-submit {
+
+            margin-top: 16px;
+
+            width: 100%;
+
+            min-height: 52px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #fff4df;
+
+            color: #111316;
+
+            font-size: 15px;
+
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+
+        .back-link {
+
+            display: inline-block;
+
+            margin-bottom: 18px;
+
+            opacity: 0.8;
+        }
+
+
+        @media (
+            max-width: 550px
+        ) {
+
+            .scanner-actions {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .verification-row {
+
+                flex-direction:
+                    column;
+
+                gap:
+                    4px;
+            }
+
+
+            .verification-row strong {
+
+                text-align:
+                    left;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+
+<body class="admin-body">
+
+
+<div class="checkin-shell">
+
+
+    <!-- =========================================
+         BACK
+    ========================================== -->
+
+    <a
+        href="{{ url_for(
+            'admin_dashboard'
+        ) }}"
+        class="back-link"
+    >
+        ← Dashboard
+    </a>
+
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <div class="checkin-header">
+
+
+        <div class="checkin-eyebrow">
+            KALXA EVENT ACCESS
+        </div>
+
+
+        <h1>
+            Ticket Check-In
+        </h1>
+
+
+        <p class="muted">
+            Scan the attendee's QR ticket and confirm
+            their name before allowing entry.
+        </p>
+
+
+    </div>
+
+
+
+    <!-- =========================================
+         ORGANIZER SESSION NOTICE
+    ========================================== -->
+
+    <div class="secure-session-box">
+
+        🔒 Check-in is restricted to tickets belonging
+        to events owned by your authenticated Kalxa
+        organizer account.
+
+    </div>
+
+
+
+    <!-- =========================================
+         FLASH MESSAGES
+    ========================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert"
+                    data-category="{{ category }}"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- =========================================
+         CAMERA SCANNER
+    ========================================== -->
+
+    <div class="scanner-card">
+
+
+        <h3>
+            Scan Ticket QR
+        </h3>
+
+
+        <p class="muted">
+            Allow camera access when prompted.
+        </p>
+
+
+        <div id="qr-reader"></div>
+
+
+        <div class="scanner-actions">
+
+
+            <button
+                type="button"
+                id="start-scanner"
+                class="scanner-button"
+            >
+                Start Camera
+            </button>
+
+
+            <button
+                type="button"
+                id="stop-scanner"
+                class="scanner-button secondary"
+                disabled
+            >
+                Stop Camera
+            </button>
+
+
+        </div>
+
+
+        <div
+            id="scanner-status"
+            class="scanner-status"
+        >
+            Camera not started.
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =========================================
+         HIDDEN QR SUBMISSION
+    ========================================== -->
+    <!--
+        Only the scanned entry_code is submitted.
+
+        Organizer ownership is resolved securely
+        from the authenticated Ticketing session.
+    -->
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'admin_checkin'
+        ) }}"
+        id="qr-submit-form"
+        style="display: none;"
+    >
+
+        <input
+            type="hidden"
+            name="entry_code"
+            id="qr-entry-code"
+        >
+
+    </form>
+
+
+
+    <!-- =========================================
+         MANUAL FALLBACK
+    ========================================== -->
+
+    <div class="manual-checkin">
+
+
+        <h3>
+            Manual Code
+        </h3>
+
+
+        <p class="muted">
+            Use this if the camera cannot scan the QR.
+        </p>
+
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'admin_checkin'
+            ) }}"
+        >
+
+            <input
+                type="text"
+                name="entry_code"
+                placeholder="KX-AB12-CD34"
+                autocomplete="off"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Verify Ticket
+            </button>
+
+
+        </form>
+
+
+    </div>
+
+
+
+    <!-- =========================================
+         LOOKUP MESSAGE
+    ========================================== -->
+
+    {% if message %}
+
+        <div class="invalid-box">
+            {{ message }}
+        </div>
+
+    {% endif %}
+
+
+
+    <!-- =========================================
+         VERIFIED ENTRY PASS
+    ========================================== -->
+
+    {% if entry_pass %}
+
+
+        <div class="verification-card">
+
+
+            <p class="checkin-eyebrow">
+                TICKET VERIFICATION
+            </p>
+
+
+            <h2>
+                {{ entry_pass.order.event.title }}
+            </h2>
+
+
+
+            <!-- =================================
+                 ATTENDEE NAME
+            ================================== -->
+
+            <div class="attendee-name-box">
+
+
+                <small>
+                    Confirm Attendee Name
+                </small>
+
+
+                <strong>
+                    {{ entry_pass.order.customer_name }}
+                </strong>
+
+
+            </div>
+
+
+            <div class="name-verification-note">
+
+                Ask the attendee to state their name and
+                confirm that it matches the name shown above
+                before completing check-in.
+
+            </div>
+
+
+
+            <!-- =================================
+                 EVENT
+            ================================== -->
+
+            <div class="verification-row">
+
+                <span>
+                    Event
+                </span>
+
+                <strong>
+                    {{ entry_pass.order.event.title }}
+                </strong>
+
+            </div>
+
+
+
+            <!-- =================================
+                 ENTRY CODE
+            ================================== -->
+
+            <div class="verification-row">
+
+                <span>
+                    Entry Code
+                </span>
+
+                <strong>
+                    {{ entry_pass.entry_code }}
+                </strong>
+
+            </div>
+
+
+
+            <!-- =================================
+                 BOOKING
+            ================================== -->
+
+            <div class="verification-row">
+
+                <span>
+                    Booking Reference
+                </span>
+
+                <strong>
+                    {{ entry_pass.order.payment_reference }}
+                </strong>
+
+            </div>
+
+
+
+            <!-- =================================
+                 PAYMENT
+            ================================== -->
+
+            <div class="verification-row">
+
+                <span>
+                    Payment
+                </span>
+
+                <strong>
+                    {{ entry_pass.order.payment_status|upper }}
+                </strong>
+
+            </div>
+
+
+
+            <!-- =================================
+                 STATUS
+            ================================== -->
+
+            <div class="verification-row">
+
+                <span>
+                    Ticket Status
+                </span>
+
+                <strong>
+                    {{ entry_pass.status|upper }}
+                </strong>
+
+            </div>
+
+
+
+            <!-- =================================
+                 VENUE
+            ================================== -->
+
+            {% if entry_pass.order.event.venue %}
+
+                <div class="verification-row">
+
+                    <span>
+                        Venue
+                    </span>
+
+                    <strong>
+                        {{ entry_pass.order.event.venue }}
+                    </strong>
+
+                </div>
+
+            {% endif %}
+
+
+
+            <!-- =================================
+                 DATE
+            ================================== -->
+
+            {% if entry_pass.order.event.event_date %}
+
+                <div class="verification-row">
+
+                    <span>
+                        Event Date
+                    </span>
+
+                    <strong>
+
+                        {{ entry_pass.order.event.event_date.strftime(
+                            '%d %B %Y'
+                        ) }}
+
+                        {% if entry_pass.order.event.event_time %}
+
+                            ·
+
+                            {{ entry_pass.order.event.event_time.strftime(
+                                '%H:%M'
+                            ) }}
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+            {% endif %}
+
+
+
+            <!-- =================================
+                 VALID TICKET
+            ================================== -->
+
+            {% if
+                entry_pass.order.payment_status == "paid"
+                and
+                entry_pass.status == "valid"
+            %}
+
+
+                <div class="valid-box">
+                    ✅ VALID PAID TICKET
+                </div>
+
+
+                <!--
+                    SECURITY:
+
+                    Only pass_id is sent.
+
+                    The backend performs:
+
+                    EntryPass
+                        ↓
+                    TicketOrder
+                        ↓
+                    TicketEvent
+                        ↓
+                    kalxa_organizer_id
+
+                    and compares it with the authenticated
+                    organizer session before allowing
+                    check-in.
+                -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'admin_confirm_checkin',
+                        pass_id=entry_pass.id
+                    ) }}"
+                >
+
+                    <button
+                        type="submit"
+                        class="checkin-submit"
+                    >
+                        NAME CONFIRMED — CHECK IN
+                    </button>
+
+                </form>
+
+
+
+            <!-- =================================
+                 USED
+            ================================== -->
+
+            {% elif entry_pass.status == "used" %}
+
+
+                <div class="invalid-box">
+
+                    ❌ ALREADY USED
+
+
+                    {% if entry_pass.checked_in_at %}
+
+                        <br>
+                        <br>
+
+                        Checked in:
+
+                        {{ entry_pass.checked_in_at.strftime(
+                            '%d %B %Y %H:%M'
+                        ) }}
+
+                    {% endif %}
+
+                </div>
+
+
+
+            <!-- =================================
+                 UNPAID
+            ================================== -->
+
+            {% elif
+                entry_pass.order.payment_status
+                != "paid"
+            %}
+
+
+                <div class="invalid-box">
+                    ❌ PAYMENT NOT CONFIRMED
+                </div>
+
+
+
+            <!-- =================================
+                 INVALID
+            ================================== -->
+
+            {% else %}
+
+
+                <div class="invalid-box">
+                    ❌ INVALID TICKET
+                </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+
+    {% endif %}
+
+
+</div>
+
+
+
+<script>
+
+    // =====================================================
+    // QR SCANNER
+    // =====================================================
+
+    const startScannerButton =
+        document.getElementById(
+            "start-scanner"
+        );
+
+
+    const stopScannerButton =
+        document.getElementById(
+            "stop-scanner"
+        );
+
+
+    const scannerStatus =
+        document.getElementById(
+            "scanner-status"
+        );
+
+
+    const qrEntryCode =
+        document.getElementById(
+            "qr-entry-code"
+        );
+
+
+    const qrSubmitForm =
+        document.getElementById(
+            "qr-submit-form"
+        );
+
+
+    let qrScanner =
+        null;
+
+
+    let scannerRunning =
+        false;
+
+
+    let scanSubmitted =
+        false;
+
+
+
+    // =====================================================
+    // UPDATE STATUS
+    // =====================================================
+
+    function setScannerStatus(
+        message
+    ) {
+
+        if (
+            scannerStatus
+        ) {
+
+            scannerStatus.textContent =
+                message;
+
+        }
+
+    }
+
+
+
+    // =====================================================
+    // STOP SCANNER
+    // =====================================================
+
+    async function stopScanner() {
+
+        if (
+            !qrScanner
+            ||
+            !scannerRunning
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            await qrScanner.stop();
+
+
+            scannerRunning =
+                false;
+
+
+            if (
+                startScannerButton
+            ) {
+
+                startScannerButton.disabled =
+                    false;
+
+            }
+
+
+            if (
+                stopScannerButton
+            ) {
+
+                stopScannerButton.disabled =
+                    true;
+
+            }
+
+
+            setScannerStatus(
+                "Camera stopped."
+            );
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+                "Unable to stop scanner:",
+                error
+            );
+
+        }
+
+    }
+
+
+
+    // =====================================================
+    // SUCCESSFUL QR SCAN
+    // =====================================================
+
+    async function handleQrSuccess(
+        decodedText
+    ) {
+
+        if (
+            scanSubmitted
+        ) {
+
+            return;
+
+        }
+
+
+        scanSubmitted =
+            true;
+
+
+        setScannerStatus(
+            "Ticket detected. Verifying..."
+        );
+
+
+        if (
+            qrEntryCode
+            &&
+            qrSubmitForm
+        ) {
+
+            qrEntryCode.value =
+                decodedText;
+
+
+            try {
+
+                await stopScanner();
+
+            }
+
+            catch (
+                error
+            ) {
+
+                console.error(
+                    error
+                );
+
+            }
+
+
+            qrSubmitForm.submit();
+
+        }
+
+    }
+
+
+
+    // =====================================================
+    // START SCANNER
+    // =====================================================
+
+    async function startScanner() {
+
+        if (
+            scannerRunning
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            typeof Html5Qrcode
+            === "undefined"
+        ) {
+
+            setScannerStatus(
+                "QR scanner library could not load. Use the manual code field."
+            );
+
+            return;
+
+        }
+
+
+        scanSubmitted =
+            false;
+
+
+        qrScanner =
+            new Html5Qrcode(
+                "qr-reader"
+            );
+
+
+        try {
+
+            setScannerStatus(
+                "Starting camera..."
+            );
+
+
+            await qrScanner.start(
+
+                {
+                    facingMode:
+                        "environment"
+                },
+
+                {
+                    fps:
+                        10,
+
+                    qrbox: {
+
+                        width:
+                            250,
+
+                        height:
+                            250
+                    }
+                },
+
+                handleQrSuccess,
+
+                function() {
+
+                    // Normal scan misses are ignored.
+
+                }
+
+            );
+
+
+            scannerRunning =
+                true;
+
+
+            if (
+                startScannerButton
+            ) {
+
+                startScannerButton.disabled =
+                    true;
+
+            }
+
+
+            if (
+                stopScannerButton
+            ) {
+
+                stopScannerButton.disabled =
+                    false;
+
+            }
+
+
+            setScannerStatus(
+                "Camera active. Point it at the ticket QR."
+            );
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+                "Camera scanner error:",
+                error
+            );
+
+
+            setScannerStatus(
+                "Camera could not start. Check browser permissions or use the manual code field."
+            );
+
+
+            scannerRunning =
+                false;
+
+        }
+
+    }
+
+
+
+    // =====================================================
+    // BUTTON EVENTS
+    // =====================================================
+
+    if (
+        startScannerButton
+    ) {
+
+        startScannerButton.addEventListener(
+            "click",
+            function() {
+
+                startScanner();
+
+            }
+        );
+
+    }
+
+
+    if (
+        stopScannerButton
+    ) {
+
+        stopScannerButton.addEventListener(
+            "click",
+            function() {
+
+                stopScanner();
+
+            }
+        );
+
+    }
+
+
+
+    // =====================================================
+    // CLEAN UP CAMERA
+    // =====================================================
+
+    window.addEventListener(
+        "beforeunload",
+        function() {
+
+            if (
+                qrScanner
+                &&
+                scannerRunning
+            ) {
+
+                qrScanner.stop()
+                    .catch(
+                        function() {}
+                    );
+
+            }
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

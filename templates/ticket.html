@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Kalxa Ticket
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="page-shell">
+
+    <div class="ticket-card">
+
+        <div class="brand">
+            KALXA TICKET
+        </div>
+
+
+        <h1>
+            {{ entry_pass.order.event.title }}
+        </h1>
+
+
+        {% if entry_pass.order.event.event_date %}
+
+            <p>
+                📅
+                {{ entry_pass.order.event.event_date.strftime('%d %B %Y') }}
+            </p>
+
+        {% endif %}
+
+
+        {% if entry_pass.order.event.venue %}
+
+            <p>
+                📍
+                {{ entry_pass.order.event.venue }}
+            </p>
+
+        {% endif %}
+
+
+        <img
+            src="{{ url_for(
+                'ticket_qr',
+                entry_code=entry_pass.entry_code
+            ) }}"
+            alt="Ticket QR Code"
+            class="ticket-qr"
+        >
+
+
+        <p>
+            Entry Code
+        </p>
+
+
+        <div class="reference-box">
+            {{ entry_pass.entry_code }}
+        </div>
+
+
+        <p>
+            Holder:
+            <strong>
+                {{ entry_pass.order.customer_name }}
+            </strong>
+        </p>
+
+
+        {% if entry_pass.status == "valid" %}
+
+            <div class="success-box">
+                VALID TICKET
+            </div>
+
+        {% elif entry_pass.status == "used" %}
+
+            <div class="alert">
+                ALREADY USED
+            </div>
+
+        {% else %}
+
+            <div class="alert">
+                INVALID TICKET
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

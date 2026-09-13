@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        Kalxa Ticketing
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="admin-body">
+
+
+<div class="admin-shell">
+
+
+    <!-- =========================================
+         ORGANIZER NAVIGATION
+    ========================================== -->
+
+    <nav class="admin-nav">
+
+
+        <div>
+
+            <strong>
+                KALXA TICKETING
+            </strong>
+
+            <div class="muted">
+                Organizer Control Centre
+            </div>
+
+        </div>
+
+
+        <div class="admin-nav-actions">
+
+            <a
+                href="{{ url_for(
+                    'admin_checkin'
+                ) }}"
+                class="admin-nav-link"
+            >
+                🎟 Check In
+            </a>
+
+        </div>
+
+
+    </nav>
+
+
+
+    <!-- =========================================
+         FLASH MESSAGES
+    ========================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- =========================================
+         PAGE HEADER
+    ========================================== -->
+
+    <header class="admin-header">
+
+
+        <div>
+
+            <span class="section-kicker">
+                KALXA
+            </span>
+
+            <h1>
+                Ticketing Dashboard
+            </h1>
+
+            <p class="muted">
+                Manage ticket sales and event entry
+                for your Kalxa events.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for(
+                'admin_checkin'
+            ) }}"
+            class="button"
+        >
+            🎟 Scan Ticket
+        </a>
+
+
+    </header>
+
+
+
+    <!-- =========================================
+         SECURE KALXA CONNECTION
+    ========================================== -->
+
+    {% if active_content_item_id %}
+
+        <section class="admin-section">
+
+            <span class="section-kicker">
+                SECURE KALXA CONNECTION
+            </span>
+
+            <h2>
+                Discovery Event Connected
+            </h2>
+
+            <p class="muted">
+                This Ticketing session was securely opened
+                from one of your approved Kalxa listings.
+            </p>
+
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Kalxa Listing
+                </span>
+
+                <strong>
+                    #{{ active_content_item_id }}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Organizer
+                </span>
+
+                <strong>
+                    #{{ organizer_id }}
+                </strong>
+
+            </div>
+
+
+        </section>
+
+    {% endif %}
+
+
+
+    <!-- =========================================
+         METRICS
+    ========================================== -->
+
+    <div class="metrics">
+
+
+        <div class="metric">
+
+            <span>
+                Total Orders
+            </span>
+
+            <strong>
+                {{ total_orders }}
+            </strong>
+
+            <small class="muted">
+                Your ticket orders
+            </small>
+
+        </div>
+
+
+
+        <div class="metric">
+
+            <span>
+                Paid Orders
+            </span>
+
+            <strong>
+                {{ paid_orders }}
+            </strong>
+
+            <small class="muted">
+                Successful payments
+            </small>
+
+        </div>
+
+
+
+        <div class="metric">
+
+            <span>
+                Checked In
+            </span>
+
+            <strong>
+                {{ checked_in }}
+            </strong>
+
+            <small class="muted">
+                Tickets already used
+            </small>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =========================================
+         CURRENT EVENT TICKETING
+    ========================================== -->
+
+    <section class="admin-section">
+
+
+        <div class="admin-section-header">
+
+
+            <div>
+
+                <span class="section-kicker">
+                    EVENT SETUP
+                </span>
+
+                <h2>
+                    Kalxa Ticket Event
+                </h2>
+
+                <p class="muted">
+
+                    {% if current_ticket_event %}
+
+                        Ticketing is already active for
+                        this Kalxa event.
+
+                    {% else %}
+
+                        Configure ticket sales for the
+                        approved Kalxa event you opened.
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =====================================
+             NO DISCOVERY EVENT CONTEXT
+        ====================================== -->
+
+        {% if not active_content_item_id %}
+
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    🔒
+                </div>
+
+                <h3>
+                    Open Ticketing from Kalxa
+                </h3>
+
+                <p class="muted">
+                    For security, a ticket event cannot be
+                    created directly from this page.
+                    Open an approved event from your Kalxa
+                    Organizer Dashboard and select
+                    “Manage Tickets”.
+                </p>
+
+            </div>
+
+
+
+        <!-- =====================================
+             TICKETING ALREADY CREATED
+        ====================================== -->
+
+        {% elif current_ticket_event %}
+
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    ✅
+                </div>
+
+                <h3>
+                    Ticketing already active
+                </h3>
+
+                <p class="muted">
+                    This Kalxa listing is already connected
+                    to Ticket Event
+                    #{{ current_ticket_event.id }}.
+                </p>
+
+
+                <div
+                    class="admin-event-actions"
+                    style="margin-top: 20px;"
+                >
+
+                    <a
+                        href="{{ url_for(
+                            'event_page',
+                            event_id=current_ticket_event.id
+                        ) }}"
+                        class="button button-secondary"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View Event
+                    </a>
+
+
+                    <a
+                        href="{{ url_for(
+                            'admin_orders',
+                            event_id=current_ticket_event.id
+                        ) }}"
+                        class="button"
+                    >
+                        View Orders
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+        <!-- =====================================
+             CREATE TICKET EVENT
+        ====================================== -->
+
+        {% else %}
+
+
+            <form
+                action="{{ url_for(
+                    'admin_create_event'
+                ) }}"
+                method="POST"
+                enctype="multipart/form-data"
+                class="form-stack"
+            >
+
+
+                <!-- =============================
+                     SECURE DISCOVERY LINK
+                ============================== -->
+
+                <div class="form-group">
+
+                    <label>
+                        Kalxa Listing
+                    </label>
+
+                    <div class="summary-row">
+
+                        <span class="muted">
+                            Securely connected
+                        </span>
+
+                        <strong>
+                            #{{ active_content_item_id }}
+                        </strong>
+
+                    </div>
+
+
+                    <small class="muted">
+                        This value comes from your verified
+                        Kalxa session and cannot be changed
+                        from this form.
+                    </small>
+
+                </div>
+
+
+
+                <!-- =============================
+                     EVENT TITLE
+                ============================== -->
+
+                <div class="form-group">
+
+                    <label for="title">
+                        Event Title
+                    </label>
+
+                    <input
+                        id="title"
+                        type="text"
+                        name="title"
+                        placeholder="KwaMhlanga Saturday Groove"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- =============================
+                     DESCRIPTION
+                ============================== -->
+
+                <div class="form-group">
+
+                    <label for="description">
+                        Description
+                    </label>
+
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        placeholder="Tell customers what the event is about..."
+                    ></textarea>
+
+                </div>
+
+
+
+                <!-- =============================
+                     VENUE
+                ============================== -->
+
+                <div class="form-group">
+
+                    <label for="venue">
+                        Venue
+                    </label>
+
+                    <input
+                        id="venue"
+                        type="text"
+                        name="venue"
+                        placeholder="KwaMhlanga Community Hall"
+                    >
+
+                </div>
+
+
+
+                <!-- =============================
+                     DATE + TIME
+                ============================== -->
+
+                <div class="admin-form-grid">
+
+
+                    <div class="form-group">
+
+                        <label for="event_date">
+                            Event Date
+                        </label>
+
+                        <input
+                            id="event_date"
+                            type="date"
+                            name="event_date"
+                        >
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+                        <label for="event_time">
+                            Event Time
+                        </label>
+
+                        <input
+                            id="event_time"
+                            type="time"
+                            name="event_time"
+                        >
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =============================
+                     TICKET SETTINGS
+                ============================== -->
+
+                <div class="admin-form-grid">
+
+
+                    <div class="form-group">
+
+                        <label for="ticket_price">
+                            Ticket Price
+                        </label>
+
+
+                        <div class="input-prefix">
+
+                            <span>
+                                R
+                            </span>
+
+                            <input
+                                id="ticket_price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="ticket_price"
+                                placeholder="50.00"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+                        <label for="ticket_capacity">
+                            Ticket Capacity
+                        </label>
+
+                        <input
+                            id="ticket_capacity"
+                            type="number"
+                            min="1"
+                            name="ticket_capacity"
+                            placeholder="Example: 300"
+                        >
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =============================
+                     POSTER
+                ============================== -->
+
+                <div class="form-group">
+
+                    <label for="poster_image">
+                        Event Poster
+                    </label>
+
+                    <input
+                        id="poster_image"
+                        type="file"
+                        name="poster_image"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    >
+
+                    <small class="muted">
+                        Upload an event flyer or poster.
+                        JPG, JPEG, PNG and WEBP are supported.
+                    </small>
+
+                </div>
+
+
+
+                <!-- =============================
+                     BANK DETAILS
+                ============================== -->
+
+                <div class="admin-form-grid">
+
+
+                    <div class="form-group">
+
+                        <label for="bank_name">
+                            Bank Name
+                        </label>
+
+                        <input
+                            id="bank_name"
+                            type="text"
+                            name="bank_name"
+                            placeholder="Example: FNB"
+                        >
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+                        <label for="account_holder">
+                            Account Holder
+                        </label>
+
+                        <input
+                            id="account_holder"
+                            type="text"
+                            name="account_holder"
+                            placeholder="Account holder name"
+                        >
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="admin-form-grid">
+
+
+                    <div class="form-group">
+
+                        <label for="account_number">
+                            Account Number
+                        </label>
+
+                        <input
+                            id="account_number"
+                            type="text"
+                            name="account_number"
+                            placeholder="Account number"
+                        >
+
+                    </div>
+
+
+
+                    <div class="form-group">
+
+                        <label for="branch_code">
+                            Branch Code
+                        </label>
+
+                        <input
+                            id="branch_code"
+                            type="text"
+                            name="branch_code"
+                            placeholder="Branch code"
+                        >
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="form-group">
+
+                    <label for="payment_instructions">
+                        Payment Instructions
+                    </label>
+
+                    <textarea
+                        id="payment_instructions"
+                        name="payment_instructions"
+                        rows="3"
+                        placeholder="Example: Use your order number as payment reference."
+                    ></textarea>
+
+                </div>
+
+
+
+                <!-- =============================
+                     SUBMIT
+                ============================== -->
+
+                <button
+                    type="submit"
+                    class="button admin-primary-button"
+                >
+                    + Activate Ticketing
+                </button>
+
+
+            </form>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- =========================================
+         ORGANIZER EVENT LIST
+    ========================================== -->
+
+    <section class="admin-section">
+
+
+        <div class="admin-section-header">
+
+
+            <div>
+
+                <span class="section-kicker">
+                    EVENTS
+                </span>
+
+                <h2>
+                    Your Ticket Events
+                </h2>
+
+                <p class="muted">
+                    Only events owned by your Kalxa
+                    organizer account appear here.
+                </p>
+
+            </div>
+
+
+            <span class="admin-count-badge">
+                {{ events|length }}
+            </span>
+
+
+        </div>
+
+
+
+        {% if events %}
+
+
+            <div class="admin-event-list">
+
+
+                {% for event in events %}
+
+
+                    <article class="admin-event-row">
+
+
+                        <!-- =========================
+                             IMAGE
+                        ========================== -->
+
+                        {% if event.image_url %}
+
+                            <div class="admin-event-image">
+
+                                <img
+                                    src="{{ event.image_url }}"
+                                    alt="{{ event.title }}"
+                                    loading="lazy"
+                                >
+
+                            </div>
+
+                        {% endif %}
+
+
+
+                        <!-- =========================
+                             EVENT INFORMATION
+                        ========================== -->
+
+                        <div class="admin-event-info">
+
+
+                            <div class="admin-event-topline">
+
+                                <strong class="admin-event-title">
+                                    {{ event.title }}
+                                </strong>
+
+
+                                <span class="admin-price-badge">
+
+                                    {% if event.ticket_price == 0 %}
+
+                                        FREE
+
+                                    {% else %}
+
+                                        R{{ "%.2f"|format(
+                                            event.ticket_price
+                                        ) }}
+
+                                    {% endif %}
+
+                                </span>
+
+                            </div>
+
+
+
+                            {% if event.venue %}
+
+                                <div class="muted">
+                                    📍 {{ event.venue }}
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if event.event_date %}
+
+                                <div class="muted">
+
+                                    📅
+
+                                    {{ event.event_date.strftime(
+                                        '%d %B %Y'
+                                    ) }}
+
+                                    {% if event.event_time %}
+
+                                        ·
+
+                                        {{ event.event_time.strftime(
+                                            '%H:%M'
+                                        ) }}
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if event.ticket_capacity %}
+
+                                <div class="muted">
+                                    Capacity:
+                                    {{ event.ticket_capacity }}
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if event.kalxa_content_item_id %}
+
+                                <div class="muted">
+                                    Kalxa Listing
+                                    #{{ event.kalxa_content_item_id }}
+                                </div>
+
+                            {% endif %}
+
+
+                        </div>
+
+
+
+                        <!-- =========================
+                             ACTIONS
+                        ========================== -->
+
+                        <div class="admin-event-actions">
+
+
+                            <a
+                                href="{{ url_for(
+                                    'event_page',
+                                    event_id=event.id
+                                ) }}"
+                                class="button button-secondary"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View Event
+                            </a>
+
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_orders',
+                                    event_id=event.id
+                                ) }}"
+                                class="button"
+                            >
+                                View Orders
+                            </a>
+
+
+                        </div>
+
+
+                    </article>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    🎟
+                </div>
+
+                <h3>
+                    No ticket events yet
+                </h3>
+
+                <p class="muted">
+                    Open an approved event from your
+                    Kalxa Organizer Dashboard to activate
+                    ticketing for it.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- =========================================
+         CHECK-IN
+    ========================================== -->
+
+    <section class="admin-section admin-checkin-card">
+
+
+        <div>
+
+            <span class="section-kicker">
+                EVENT ENTRY
+            </span>
+
+            <h2>
+                Ready for event day?
+            </h2>
+
+            <p class="muted">
+                Open the Kalxa ticket scanner to validate
+                customer tickets at the entrance.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for(
+                'admin_checkin'
+            ) }}"
+            class="button"
+        >
+            🎟 Open Check-In
+        </a>
+
+
+    </section>
+
+
+</div>
+
+
+</body>
+
+</html>

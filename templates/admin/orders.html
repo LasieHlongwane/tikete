@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b0c0e"
+    >
+
+    <title>
+        {{ event.title }} Orders | Kalxa Ticketing
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body class="admin-body">
+
+
+<div class="admin-shell">
+
+
+    <!-- =========================================
+         NAVIGATION
+    ========================================== -->
+
+    <nav class="admin-nav">
+
+
+        <div>
+
+            <strong>
+                KALXA TICKETING
+            </strong>
+
+            <div class="muted">
+                Organizer Control Centre
+            </div>
+
+        </div>
+
+
+        <div class="admin-nav-actions">
+
+
+            <a
+                href="{{ url_for(
+                    'admin_dashboard'
+                ) }}"
+                class="admin-nav-link"
+            >
+                ← Dashboard
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'admin_checkin'
+                ) }}"
+                class="admin-nav-link"
+            >
+                🎟 Check In
+            </a>
+
+
+        </div>
+
+
+    </nav>
+
+
+
+    <!-- =========================================
+         FLASH MESSAGES
+    ========================================== -->
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- =========================================
+         PAGE HEADER
+    ========================================== -->
+
+    <header class="admin-header">
+
+
+        <div>
+
+            <span class="section-kicker">
+                TICKET ORDERS
+            </span>
+
+            <h1>
+                {{ event.title }}
+            </h1>
+
+
+            <p class="muted">
+
+                {% if event.venue %}
+
+                    📍 {{ event.venue }}
+
+                {% endif %}
+
+
+                {% if event.event_date %}
+
+                    {% if event.venue %}
+                        ·
+                    {% endif %}
+
+                    📅
+                    {{ event.event_date.strftime(
+                        '%d %B %Y'
+                    ) }}
+
+                {% endif %}
+
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for(
+                'event_page',
+                event_id=event.id
+            ) }}"
+            class="button button-secondary"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            View Public Event
+        </a>
+
+
+    </header>
+
+
+
+    <!-- =========================================
+         EVENT SUMMARY
+    ========================================== -->
+
+    <section class="admin-section">
+
+
+        <div class="admin-section-header">
+
+            <div>
+
+                <span class="section-kicker">
+                    EVENT
+                </span>
+
+                <h2>
+                    Order Management
+                </h2>
+
+                <p class="muted">
+                    Confirm payments and access tickets
+                    belonging to this event.
+                </p>
+
+            </div>
+
+
+            <span class="admin-count-badge">
+                {{ orders|length }}
+            </span>
+
+        </div>
+
+
+
+        <div class="summary-row">
+
+            <span class="muted">
+                Ticket Event
+            </span>
+
+            <strong>
+                #{{ event.id }}
+            </strong>
+
+        </div>
+
+
+        {% if event.kalxa_content_item_id %}
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Kalxa Listing
+                </span>
+
+                <strong>
+                    #{{ event.kalxa_content_item_id }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if event.ticket_capacity %}
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Capacity
+                </span>
+
+                <strong>
+                    {{ event.ticket_capacity }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+
+        <div class="summary-row">
+
+            <span class="muted">
+                Paid Tickets
+            </span>
+
+            <strong>
+                {{ event.paid_ticket_count }}
+            </strong>
+
+        </div>
+
+
+        {% if event.ticket_capacity %}
+
+            <div class="summary-row">
+
+                <span class="muted">
+                    Remaining Tickets
+                </span>
+
+                <strong>
+                    {{ event.remaining_tickets }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- =========================================
+         ORDERS
+    ========================================== -->
+
+    <section class="admin-section">
+
+
+        <div class="admin-section-header">
+
+            <div>
+
+                <span class="section-kicker">
+                    CUSTOMERS
+                </span>
+
+                <h2>
+                    Ticket Orders
+                </h2>
+
+                <p class="muted">
+                    Only orders belonging to this event
+                    are shown here.
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        {% if orders %}
+
+
+            <div class="table-wrap">
+
+                <table>
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Reference
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Tickets
+                            </th>
+
+                            <th>
+                                Amount
+                            </th>
+
+                            <th>
+                                Payment
+                            </th>
+
+                            <th>
+                                Tickets / Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                        {% for order in orders %}
+
+                            <tr>
+
+
+                                <!-- =====================
+                                     REFERENCE
+                                ====================== -->
+
+                                <td>
+
+                                    <strong>
+                                        {{ order.payment_reference }}
+                                    </strong>
+
+                                </td>
+
+
+
+                                <!-- =====================
+                                     CUSTOMER
+                                ====================== -->
+
+                                <td>
+
+                                    <strong>
+                                        {{ order.customer_name }}
+                                    </strong>
+
+
+                                    {% if order.customer_phone %}
+
+                                        <br>
+
+                                        <small class="muted">
+                                            {{ order.customer_phone }}
+                                        </small>
+
+                                    {% endif %}
+
+
+                                    {% if order.customer_email %}
+
+                                        <br>
+
+                                        <small class="muted">
+                                            {{ order.customer_email }}
+                                        </small>
+
+                                    {% endif %}
+
+                                </td>
+
+
+
+                                <!-- =====================
+                                     QUANTITY
+                                ====================== -->
+
+                                <td>
+                                    {{ order.quantity }}
+                                </td>
+
+
+
+                                <!-- =====================
+                                     AMOUNT
+                                ====================== -->
+
+                                <td>
+
+                                    R{{ "%.2f"|format(
+                                        order.total_amount
+                                    ) }}
+
+                                </td>
+
+
+
+                                <!-- =====================
+                                     PAYMENT STATUS
+                                ====================== -->
+
+                                <td>
+
+
+                                    {% if order.payment_status == "paid" %}
+
+                                        <span class="admin-price-badge">
+                                            PAID
+                                        </span>
+
+
+                                    {% elif order.payment_status == "pending" %}
+
+                                        <span class="admin-count-badge">
+                                            PENDING
+                                        </span>
+
+
+                                    {% else %}
+
+                                        <span class="admin-count-badge">
+                                            {{ order.payment_status|upper }}
+                                        </span>
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+
+                                <!-- =====================
+                                     ACTIONS
+                                ====================== -->
+
+                                <td>
+
+
+                                    {% if order.payment_status == "pending" %}
+
+
+                                        <!--
+                                            SECURITY:
+
+                                            Only order.id is submitted.
+
+                                            The backend validates:
+
+                                            order
+                                                ↓
+                                            TicketEvent
+                                                ↓
+                                            kalxa_organizer_id
+                                                ↓
+                                            current organizer session
+
+                                            No organizer_id is sent by
+                                            this form.
+                                        -->
+
+
+                                        <form
+                                            action="{{ url_for(
+                                                'admin_mark_paid',
+                                                order_id=order.id
+                                            ) }}"
+                                            method="POST"
+                                        >
+
+                                            <button
+                                                type="submit"
+                                                class="small-button"
+                                            >
+                                                Confirm Payment
+                                            </button>
+
+                                        </form>
+
+
+                                    {% elif order.payment_status == "paid" %}
+
+
+                                        {% if order.entry_passes %}
+
+
+                                            {% for pass in order.entry_passes %}
+
+                                                <div
+                                                    style="
+                                                        margin-bottom: 8px;
+                                                    "
+                                                >
+
+                                                    <a
+                                                        href="{{ url_for(
+                                                            'ticket_page',
+                                                            entry_code=pass.entry_code
+                                                        ) }}"
+                                                        class="admin-nav-link"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        Ticket
+                                                        {{ loop.index }}
+                                                    </a>
+
+
+                                                    <small class="muted">
+
+                                                        ·
+
+                                                        {{ pass.status|upper }}
+
+                                                    </small>
+
+                                                </div>
+
+                                            {% endfor %}
+
+
+                                        {% else %}
+
+                                            <span class="muted">
+                                                Passes not generated
+                                            </span>
+
+                                        {% endif %}
+
+
+                                    {% else %}
+
+                                        <span class="muted">
+                                            No action available
+                                        </span>
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                            </tr>
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+
+
+        {% else %}
+
+
+            <!-- =====================================
+                 EMPTY STATE
+            ====================================== -->
+
+            <div class="admin-empty-state">
+
+                <div class="admin-empty-icon">
+                    🎟
+                </div>
+
+                <h3>
+                    No ticket orders yet
+                </h3>
+
+                <p class="muted">
+                    Orders will appear here when customers
+                    begin booking tickets for this event.
+                </p>
+
+
+                <a
+                    href="{{ url_for(
+                        'event_page',
+                        event_id=event.id
+                    ) }}"
+                    class="button"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="margin-top: 18px;"
+                >
+                    View Ticket Page
+                </a>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- =========================================
+         CHECK-IN CTA
+    ========================================== -->
+
+    <section class="admin-section admin-checkin-card">
+
+
+        <div>
+
+            <span class="section-kicker">
+                EVENT ENTRY
+            </span>
+
+            <h2>
+                Event Check-In
+            </h2>
+
+            <p class="muted">
+                Validate paid attendee tickets using
+                QR scanning or manual entry codes.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for(
+                'admin_checkin'
+            ) }}"
+            class="button"
+        >
+            🎟 Open Check-In
+        </a>
+
+
+    </section>
+
+
+</div>
+
+
+</body>
+
+</html>
