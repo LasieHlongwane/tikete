@@ -4,7 +4,7 @@ import secrets
 import string
 import uuid
 from datetime import datetime
-
+from werkzeug.utils import secure_filename
 import qrcode
 
 from dotenv import load_dotenv
