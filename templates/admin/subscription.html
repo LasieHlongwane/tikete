@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Subscription | Kalxa Ticketing</title>
+    <style>
+        *{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55}.shell{width:min(900px,calc(100% - 28px));margin:0 auto;padding:22px 0 60px}.nav,.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px}.nav{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;margin-bottom:20px}.brand{font-size:14px;font-weight:900}.nav a{margin-left:10px;color:#334155;text-decoration:none;font-size:12px;font-weight:750}.card{padding:22px;margin-bottom:18px}.hero{padding:28px;background:#111;color:#fff}.eyebrow{margin:0 0 7px;color:#64748b;font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}.hero .eyebrow{color:#94a3b8}h1{margin:0 0 8px;font-size:clamp(30px,7vw,42px);letter-spacing:-.04em}h2{margin:0 0 14px;font-size:20px}.hero p{margin:0;color:#cbd5e1;font-size:13px}.status-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.status{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase}.status.active{background:#dcfce7;color:#166534}.status.inactive,.status.expired{background:#fff7ed;color:#9a3412}.status.suspended{background:#fef2f2;color:#991b1b}.price{margin-top:8px;font-size:36px;line-height:1;font-weight:900;letter-spacing:-.04em}.muted{color:#64748b;font-size:13px}.bank-grid{display:grid;gap:9px;margin-top:15px}.bank-row{display:flex;justify-content:space-between;gap:18px;padding:11px 13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}.bank-row span{color:#64748b;font-size:12px}.bank-row strong{text-align:right;font-size:12px;overflow-wrap:anywhere}.reference{margin-top:16px;padding:15px;background:#fffdf5;border:1px solid #f1e6bb;border-radius:12px}.reference strong{display:block;margin-top:4px;font-size:19px;letter-spacing:.03em}.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 15px;background:#111;color:#fff;border:1px solid #111;border-radius:10px;text-decoration:none;font-size:12px;font-weight:850;cursor:pointer}.button-full{width:100%}.history{display:grid;gap:9px}.payment-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:13px;background:#fafafa;border:1px solid #e8edf2;border-radius:11px}.payment-row strong{display:block;font-size:13px}.payment-row small{color:#64748b}.flash-wrapper{display:grid;gap:8px;margin-bottom:16px}.alert{padding:11px 13px;border-radius:10px;font-size:12px;font-weight:700;background:#f8fafc;border:1px solid #e2e8f0}.alert[data-category="success"]{color:#166534;background:#f0fdf4;border-color:#bbf7d0}.alert[data-category="error"]{color:#991b1b;background:#fef2f2;border-color:#fecaca}@media(max-width:620px){.nav{align-items:flex-start;flex-direction:column}.bank-row{flex-direction:column;gap:4px}.bank-row strong{text-align:left}.payment-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="shell">
+    <nav class="nav">
+        <div class="brand">KALXA TICKETING</div>
+        <div><a href="{{ url_for('admin_dashboard') }}">Dashboard</a><a href="{{ url_for('organizer_logout') }}">Logout</a></div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-wrapper">
+                {% for category, message in messages %}<div class="alert" data-category="{{ category }}">{{ message }}</div>{% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <section class="card hero">
+        <p class="eyebrow">ORGANIZER SUBSCRIPTION</p>
+        <h1>{{ subscription_plan_name }}</h1>
+        <p>Pay Kalxa for software access. Ticket proceeds from attendees remain separate and continue to go to the event organizer.</p>
+    </section>
+
+    <section class="card">
+        <div class="status-row">
+            <div>
+                <p class="eyebrow">CURRENT ACCESS</p>
+                <span class="status {% if subscription_active %}active{% else %}{{ subscription_status }}{% endif %}">{% if subscription_active %}ACTIVE{% else %}{{ subscription_status }}{% endif %}</span>
+            </div>
+            <div><div class="price">R{{ "%.2f"|format(subscription_price) }}</div><div class="muted">{{ subscription_period_days }} days</div></div>
+        </div>
+        {% if subscription_expires_at %}<p class="muted">Current access expires: <strong>{{ subscription_expires_at.strftime('%d %B %Y') }}</strong></p>{% endif %}
+
+        {% if subscription_status == "suspended" %}
+            <p class="muted">Your account is suspended. Contact Kalxa before attempting to renew.</p>
+        {% elif not pending_payment %}
+            <form method="POST" action="{{ url_for('admin_request_subscription_payment') }}">
+                <button type="submit" class="button button-full">{% if subscription_active %}Request 30-Day Renewal{% else %}Activate Subscription{% endif %}</button>
+            </form>
+        {% endif %}
+    </section>
+
+    {% if pending_payment %}
+    <section class="card">
+        <p class="eyebrow">PAYMENT PENDING</p>
+        <h2>Pay Kalxa</h2>
+        <p class="muted">Send <strong>R{{ "%.2f"|format(pending_payment.amount) }}</strong> using the banking details below.</p>
+        {% if bank_details.bank_name or bank_details.account_holder or bank_details.account_number or bank_details.branch_code %}
+            <div class="bank-grid">
+                {% if bank_details.bank_name %}<div class="bank-row"><span>Bank</span><strong>{{ bank_details.bank_name }}</strong></div>{% endif %}
+                {% if bank_details.account_holder %}<div class="bank-row"><span>Account Holder</span><strong>{{ bank_details.account_holder }}</strong></div>{% endif %}
+                {% if bank_details.account_number %}<div class="bank-row"><span>Account Number</span><strong>{{ bank_details.account_number }}</strong></div>{% endif %}
+                {% if bank_details.branch_code %}<div class="bank-row"><span>Branch Code</span><strong>{{ bank_details.branch_code }}</strong></div>{% endif %}
+            </div>
+        {% else %}<p class="muted">Kalxa banking details have not yet been configured by the platform administrator.</p>{% endif %}
+        <div class="reference"><span class="muted">Use this exact payment reference</span><strong>{{ pending_payment.payment_reference }}</strong></div>
+        {% if bank_details.instructions %}<p class="muted">{{ bank_details.instructions }}</p>{% endif %}
+        <p class="muted">After payment, Kalxa Super Admin confirms the transaction. Your 30-day access is then activated or added after your current expiry date.</p>
+    </section>
+    {% endif %}
+
+    <section class="card">
+        <h2>Payment History</h2>
+        {% if payments %}
+            <div class="history">
+                {% for payment in payments %}
+                    <div class="payment-row">
+                        <div><strong>{{ payment.payment_reference }}</strong><small>{{ payment.plan_name }} · R{{ "%.2f"|format(payment.amount) }} · {{ payment.created_at.strftime('%d %B %Y') }}</small></div>
+                        <span class="status {% if payment.payment_status == 'paid' %}active{% elif payment.payment_status == 'cancelled' %}suspended{% else %}inactive{% endif %}">{{ payment.payment_status }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}<p class="muted">No subscription payment history yet.</p>{% endif %}
+    </section>
+</div>
+</body>
+</html>
