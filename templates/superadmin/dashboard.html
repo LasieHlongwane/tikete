@@ -62,7 +62,7 @@
         .hero p { margin: 0; color: #cbd5e1; font-size: 13px; }
         .metrics {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -190,7 +190,71 @@
             <strong>{{ suspended_organizers }}</strong>
         </div>
 
+        <div class="metric">
+            <span>Pending Payments</span>
+            <strong>{{ pending_subscription_count }}</strong>
+        </div>
+
     </div>
+
+    <section class="section">
+
+        <div class="section-head">
+            <h2>Pending Subscription Payments</h2>
+        </div>
+
+        {% if pending_subscription_payments %}
+
+            <div class="list">
+
+                {% for payment in pending_subscription_payments %}
+
+                    <div class="row">
+
+                        <div>
+                            <strong>
+                                {{ payment.organizer.display_name }}
+                            </strong>
+
+                            <small>
+                                {{ payment.payment_reference }}
+                                · R{{ "%.2f"|format(payment.amount) }}
+                            </small>
+                        </div>
+
+                        <div>
+                            <span class="status inactive">
+                                PENDING
+                            </span>
+
+                            <a
+                                href="{{ url_for(
+                                    'superadmin_organizer_detail',
+                                    organizer_id=payment.organizer_id
+                                ) }}"
+                                class="button"
+                                style="margin-left: 8px;"
+                            >
+                                Review
+                            </a>
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p>
+                No subscription payments are waiting for confirmation.
+            </p>
+
+        {% endif %}
+
+    </section>
+
 
     <section class="section">
 
