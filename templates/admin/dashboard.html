@@ -1984,6 +1984,16 @@
 
             <a
                 href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="admin-nav-link"
+            >
+                Subscription
+            </a>
+
+
+            <a
+                href="{{ url_for(
                     'admin_checkin'
                 ) }}"
                 class="admin-nav-link"
@@ -2126,9 +2136,23 @@
 
                 </div>
 
-                <span class="subscription-badge active">
-                    ACTIVE
-                </span>
+                <div>
+
+                    <span class="subscription-badge active">
+                        ACTIVE
+                    </span>
+
+                    <a
+                        href="{{ url_for(
+                            'admin_subscription'
+                        ) }}"
+                        class="button button-secondary"
+                        style="margin-left: 8px;"
+                    >
+                        Manage Subscription
+                    </a>
+
+                </div>
 
             </div>
 
@@ -2218,12 +2242,26 @@
 
                 </div>
 
-                <span
-                    class="subscription-badge
-                    {{ subscription_status }}"
-                >
-                    {{ subscription_status|upper }}
-                </span>
+                <div>
+
+                    <span
+                        class="subscription-badge
+                        {{ subscription_status }}"
+                    >
+                        {{ subscription_status|upper }}
+                    </span>
+
+                    <a
+                        href="{{ url_for(
+                            'admin_subscription'
+                        ) }}"
+                        class="button"
+                        style="margin-left: 8px;"
+                    >
+                        Activate / Renew
+                    </a>
+
+                </div>
 
             </div>
 
@@ -2582,6 +2620,32 @@
                     </p>
 
                 {% endif %}
+
+
+                {% if pending_subscription_payment %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 12px;"
+                    >
+                        Payment request pending:
+                        <strong>
+                            {{ pending_subscription_payment.payment_reference }}
+                        </strong>
+                    </p>
+
+                {% endif %}
+
+
+                <a
+                    href="{{ url_for(
+                        'admin_subscription'
+                    ) }}"
+                    class="button"
+                    style="margin-top: 16px;"
+                >
+                    View Subscription
+                </a>
 
 
             </div>
@@ -3366,5 +3430,3 @@
 </body>
 
 </html>
-
-   
