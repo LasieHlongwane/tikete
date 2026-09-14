@@ -78,15 +78,53 @@ class Organizer(db.Model):
 
 
     # ========================================================
-    # OPTIONAL KALXA DISCOVERY LINK
+    # SUBSCRIPTION / SaaS ACCESS
     # ========================================================
     #
-    # Kalxa Ticketing is now a standalone product.
+    # Possible subscription_status values:
     #
-    # This field is only an optional external reference back
-    # to an organizer from Kalxa Discovery.
+    # inactive
+    # active
+    # expired
+    # suspended
     #
-    # It does NOT determine ownership inside Ticketing.
+    # An organizer may still log in and view existing records
+    # when inactive/expired. New event creation is controlled
+    # by is_subscription_active.
+    # ========================================================
+
+    subscription_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="inactive",
+        index=True,
+    )
+
+    subscription_started_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    subscription_expires_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    suspended_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    suspension_reason = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # OPTIONAL KALXA DISCOVERY LINK
     # ========================================================
 
     kalxa_discovery_organizer_id = db.Column(
@@ -170,12 +208,89 @@ class Organizer(db.Model):
         )
 
 
+    # ========================================================
+    # SUBSCRIPTION HELPERS
+    # ========================================================
+
+    @property
+    def is_suspended(self):
+
+        return (
+            not self.active
+            or self.subscription_status
+            == "suspended"
+        )
+
+
+    @property
+    def is_subscription_active(self):
+
+        if not self.active:
+            return False
+
+        if (
+            self.subscription_status
+            != "active"
+        ):
+            return False
+
+        if (
+            self.subscription_expires_at
+            is None
+        ):
+            return False
+
+        return (
+            self.subscription_expires_at
+            > datetime.utcnow()
+        )
+
+
+    @property
+    def effective_subscription_status(self):
+
+        if self.is_suspended:
+            return "suspended"
+
+        if (
+            self.subscription_status
+            == "active"
+            and self.subscription_expires_at
+            and self.subscription_expires_at
+            <= datetime.utcnow()
+        ):
+            return "expired"
+
+        return (
+            self.subscription_status
+            or "inactive"
+        )
+
+
+    @property
+    def subscription_days_remaining(self):
+
+        if not self.is_subscription_active:
+            return 0
+
+        delta = (
+            self.subscription_expires_at
+            - datetime.utcnow()
+        )
+
+        return max(
+            0,
+            delta.days,
+        )
+
+
     def __repr__(self):
 
         return (
             "<Organizer "
             f"id={self.id} "
-            f"email={self.email}>"
+            f"email={self.email} "
+            f"subscription={self.effective_subscription_status}>"
         )
 
 
@@ -188,32 +303,11 @@ class TicketEvent(db.Model):
     __tablename__ = "ticket_events"
 
 
-    # ========================================================
-    # PRIMARY KEY
-    # ========================================================
-
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-
-    # ========================================================
-    # LOCAL TICKETING OWNERSHIP
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # This is now the REAL ownership relationship inside
-    # Kalxa Ticketing.
-    #
-    # Every new event created through Ticketing belongs to
-    # one local Organizer account.
-    #
-    # nullable=True is intentional during migration so that
-    # old production events can continue to exist while they
-    # are assigned to organizer accounts.
-    # ========================================================
 
     organizer_id = db.Column(
         db.Integer,
@@ -225,17 +319,6 @@ class TicketEvent(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # OPTIONAL KALXA DISCOVERY REFERENCES
-    # ========================================================
-    #
-    # These fields are no longer Ticketing ownership fields.
-    #
-    # They remain only so Ticketing can optionally know which
-    # Discovery organizer / content item sent traffic into
-    # Ticketing.
-    # ========================================================
 
     kalxa_organizer_id = db.Column(
         db.Integer,
@@ -249,10 +332,6 @@ class TicketEvent(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # EVENT INFORMATION
-    # ========================================================
 
     title = db.Column(
         db.String(200),
@@ -281,15 +360,6 @@ class TicketEvent(db.Model):
     )
 
 
-    # ========================================================
-    # ORGANIZER SNAPSHOT
-    # ========================================================
-    #
-    # These are display/contact snapshots.
-    #
-    # Ownership is determined only by organizer_id.
-    # ========================================================
-
     organizer_name = db.Column(
         db.String(150),
         nullable=True,
@@ -301,19 +371,11 @@ class TicketEvent(db.Model):
     )
 
 
-    # ========================================================
-    # EVENT POSTER
-    # ========================================================
-
     image_url = db.Column(
         db.String(500),
         nullable=True,
     )
 
-
-    # ========================================================
-    # TICKETING
-    # ========================================================
 
     ticket_price = db.Column(
         db.Numeric(
@@ -336,17 +398,6 @@ class TicketEvent(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # CURRENT / MANUAL PAYMENT DETAILS
-    # ========================================================
-    #
-    # These are retained for compatibility with your current
-    # manual payment confirmation flow.
-    #
-    # Later, direct organizer payment-provider configuration
-    # should move to Organizer-level settings.
-    # ========================================================
 
     bank_name = db.Column(
         db.String(100),
@@ -374,10 +425,6 @@ class TicketEvent(db.Model):
     )
 
 
-    # ========================================================
-    # TIMESTAMPS
-    # ========================================================
-
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -393,10 +440,6 @@ class TicketEvent(db.Model):
     )
 
 
-    # ========================================================
-    # RELATIONSHIPS
-    # ========================================================
-
     organizer = db.relationship(
         "Organizer",
         back_populates="events",
@@ -409,10 +452,6 @@ class TicketEvent(db.Model):
         cascade="all, delete-orphan",
     )
 
-
-    # ========================================================
-    # OWNERSHIP HELPERS
-    # ========================================================
 
     @property
     def has_owner(self):
@@ -445,10 +484,6 @@ class TicketEvent(db.Model):
             is not None
         )
 
-
-    # ========================================================
-    # TICKET HELPERS
-    # ========================================================
 
     @property
     def paid_ticket_count(self):
@@ -499,8 +534,7 @@ class TicketEvent(db.Model):
         return max(
             0,
             self.ticket_capacity
-            -
-            self.paid_ticket_count,
+            - self.paid_ticket_count,
         )
 
 
@@ -578,19 +612,11 @@ class TicketOrder(db.Model):
     __tablename__ = "ticket_orders"
 
 
-    # ========================================================
-    # PRIMARY KEY
-    # ========================================================
-
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-
-    # ========================================================
-    # EVENT
-    # ========================================================
 
     event_id = db.Column(
         db.Integer,
@@ -602,10 +628,6 @@ class TicketOrder(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # CUSTOMER
-    # ========================================================
 
     customer_name = db.Column(
         db.String(150),
@@ -622,10 +644,6 @@ class TicketOrder(db.Model):
         nullable=True,
     )
 
-
-    # ========================================================
-    # ORDER
-    # ========================================================
 
     quantity = db.Column(
         db.Integer,
@@ -650,10 +668,6 @@ class TicketOrder(db.Model):
     )
 
 
-    # ========================================================
-    # PAYMENT
-    # ========================================================
-
     payment_reference = db.Column(
         db.String(50),
         nullable=False,
@@ -674,10 +688,6 @@ class TicketOrder(db.Model):
     )
 
 
-    # ========================================================
-    # TIMESTAMPS
-    # ========================================================
-
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -693,10 +703,6 @@ class TicketOrder(db.Model):
     )
 
 
-    # ========================================================
-    # RELATIONSHIPS
-    # ========================================================
-
     event = db.relationship(
         "TicketEvent",
         back_populates="orders",
@@ -710,19 +716,13 @@ class TicketOrder(db.Model):
     )
 
 
-    # ========================================================
-    # OWNERSHIP HELPERS
-    # ========================================================
-
     @property
     def organizer_id(self):
 
         if not self.event:
             return None
 
-        return (
-            self.event.organizer_id
-        )
+        return self.event.organizer_id
 
 
     def belongs_to_organizer(
@@ -733,16 +733,10 @@ class TicketOrder(db.Model):
         if not self.event:
             return False
 
-        return (
-            self.event.belongs_to_organizer(
-                organizer_id
-            )
+        return self.event.belongs_to_organizer(
+            organizer_id
         )
 
-
-    # ========================================================
-    # STATUS HELPERS
-    # ========================================================
 
     @property
     def is_paid(self):
@@ -790,19 +784,11 @@ class EntryPass(db.Model):
     __tablename__ = "entry_passes"
 
 
-    # ========================================================
-    # PRIMARY KEY
-    # ========================================================
-
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-
-    # ========================================================
-    # ORDER
-    # ========================================================
 
     order_id = db.Column(
         db.Integer,
@@ -815,10 +801,6 @@ class EntryPass(db.Model):
     )
 
 
-    # ========================================================
-    # ENTRY CODE
-    # ========================================================
-
     entry_code = db.Column(
         db.String(50),
         nullable=False,
@@ -827,10 +809,6 @@ class EntryPass(db.Model):
     )
 
 
-    # ========================================================
-    # STATUS
-    # ========================================================
-
     status = db.Column(
         db.String(30),
         nullable=False,
@@ -838,10 +816,6 @@ class EntryPass(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # TIMESTAMPS
-    # ========================================================
 
     issued_at = db.Column(
         db.DateTime,
@@ -856,10 +830,6 @@ class EntryPass(db.Model):
     )
 
 
-    # ========================================================
-    # RELATIONSHIPS
-    # ========================================================
-
     order = db.relationship(
         "TicketOrder",
         back_populates="entry_passes",
@@ -872,10 +842,6 @@ class EntryPass(db.Model):
         cascade="all, delete-orphan",
     )
 
-
-    # ========================================================
-    # OWNERSHIP HELPERS
-    # ========================================================
 
     @property
     def event(self):
@@ -892,9 +858,7 @@ class EntryPass(db.Model):
         if not self.event:
             return None
 
-        return (
-            self.event.organizer_id
-        )
+        return self.event.organizer_id
 
 
     def belongs_to_organizer(
@@ -905,16 +869,10 @@ class EntryPass(db.Model):
         if not self.order:
             return False
 
-        return (
-            self.order.belongs_to_organizer(
-                organizer_id
-            )
+        return self.order.belongs_to_organizer(
+            organizer_id
         )
 
-
-    # ========================================================
-    # CHECK-IN HELPERS
-    # ========================================================
 
     @property
     def is_valid(self):
@@ -957,19 +915,11 @@ class CheckIn(db.Model):
     __tablename__ = "checkins"
 
 
-    # ========================================================
-    # PRIMARY KEY
-    # ========================================================
-
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-
-    # ========================================================
-    # ENTRY PASS
-    # ========================================================
 
     entry_pass_id = db.Column(
         db.Integer,
@@ -981,10 +931,6 @@ class CheckIn(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # CHECK-IN DETAILS
-    # ========================================================
 
     checked_in_at = db.Column(
         db.DateTime,
@@ -999,19 +945,11 @@ class CheckIn(db.Model):
     )
 
 
-    # ========================================================
-    # RELATIONSHIPS
-    # ========================================================
-
     entry_pass = db.relationship(
         "EntryPass",
         back_populates="checkins",
     )
 
-
-    # ========================================================
-    # OWNERSHIP HELPERS
-    # ========================================================
 
     @property
     def event(self):
@@ -1019,9 +957,7 @@ class CheckIn(db.Model):
         if not self.entry_pass:
             return None
 
-        return (
-            self.entry_pass.event
-        )
+        return self.entry_pass.event
 
 
     @property
@@ -1030,9 +966,7 @@ class CheckIn(db.Model):
         if not self.event:
             return None
 
-        return (
-            self.event.organizer_id
-        )
+        return self.event.organizer_id
 
 
     def belongs_to_organizer(
@@ -1069,19 +1003,11 @@ class KalxaBridgeTokenUse(db.Model):
     __tablename__ = "kalxa_bridge_token_uses"
 
 
-    # ========================================================
-    # PRIMARY KEY
-    # ========================================================
-
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
-
-    # ========================================================
-    # ONE-TIME TOKEN ID
-    # ========================================================
 
     bridge_id = db.Column(
         db.String(100),
@@ -1090,10 +1016,6 @@ class KalxaBridgeTokenUse(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # EXTERNAL DISCOVERY REFERENCES
-    # ========================================================
 
     kalxa_organizer_id = db.Column(
         db.Integer,
@@ -1107,10 +1029,6 @@ class KalxaBridgeTokenUse(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # CONSUMED
-    # ========================================================
 
     consumed_at = db.Column(
         db.DateTime,
