@@ -2162,7 +2162,8 @@ def home():
     events = (
         TicketEvent.query
         .filter_by(
-            active=True
+            active=True,
+            status="published",
         )
         .order_by(
             TicketEvent.event_date.asc(),
@@ -2676,6 +2677,7 @@ def event_page(
         .filter_by(
             id=event_id,
             active=True,
+            status="published",
         )
         .first_or_404()
     )
@@ -2708,9 +2710,45 @@ def reserve_ticket(
         .filter_by(
             id=event_id,
             active=True,
+            status="published",
         )
         .first_or_404()
     )
+
+
+    if not event.sales_open:
+
+        flash(
+            (
+                "Ticket sales are currently paused "
+                "for this event."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if event.is_sold_out:
+
+        flash(
+            "This event is sold out.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=
+                    event.id,
+            )
+        )
 
 
     if request.method == "POST":
@@ -4476,7 +4514,13 @@ def admin_create_event():
             payment_instructions,
 
         active=
-            True,
+            False,
+
+        status=
+            "draft",
+
+        sales_open=
+            False,
     )
 
 
@@ -4548,7 +4592,997 @@ def admin_create_event():
 
 
     flash(
-        "Ticket event created successfully.",
+        (
+            "Ticket event created as a draft. "
+            "Review it, then publish when ready."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER - EDIT EVENT
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/edit",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_edit_event(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    if event.is_closed:
+
+        flash(
+            (
+                "Closed events are read-only. "
+                "Orders and check-in history remain available."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    if request.method == "POST":
+
+        title = (
+            request.form.get(
+                "title",
+                "",
+            )
+            .strip()
+        )
+
+
+        if not title:
+
+            flash(
+                "Event title is required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=
+                    event,
+            )
+
+
+        event_date = None
+        event_time = None
+
+
+        event_date_raw = (
+            request.form.get(
+                "event_date",
+                "",
+            )
+            .strip()
+        )
+
+
+        event_time_raw = (
+            request.form.get(
+                "event_time",
+                "",
+            )
+            .strip()
+        )
+
+
+        if event_date_raw:
+
+            try:
+
+                event_date = (
+                    datetime.strptime(
+                        event_date_raw,
+                        "%Y-%m-%d",
+                    )
+                    .date()
+                )
+
+            except ValueError:
+
+                flash(
+                    "Invalid event date.",
+                    "error",
+                )
+
+                return render_template(
+                    "admin/edit_event.html",
+                    event=
+                        event,
+                )
+
+
+        if event_time_raw:
+
+            try:
+
+                event_time = (
+                    datetime.strptime(
+                        event_time_raw,
+                        "%H:%M",
+                    )
+                    .time()
+                )
+
+            except ValueError:
+
+                flash(
+                    "Invalid event time.",
+                    "error",
+                )
+
+                return render_template(
+                    "admin/edit_event.html",
+                    event=
+                        event,
+                )
+
+
+        try:
+
+            ticket_price = Decimal(
+                str(
+                    request.form.get(
+                        "ticket_price",
+                        "0",
+                    )
+                    or "0"
+                )
+            )
+
+        except InvalidOperation:
+
+            flash(
+                "Please enter a valid ticket price.",
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=
+                    event,
+            )
+
+
+        if ticket_price < 0:
+
+            flash(
+                "Ticket price cannot be negative.",
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=
+                    event,
+            )
+
+
+        ticket_capacity = (
+            request.form.get(
+                "ticket_capacity",
+                type=int,
+            )
+        )
+
+
+        if (
+            ticket_capacity is not None
+            and ticket_capacity < 1
+        ):
+
+            flash(
+                (
+                    "Ticket capacity must be at least "
+                    "1 when provided."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=
+                    event,
+            )
+
+
+        if (
+            ticket_capacity is not None
+            and ticket_capacity
+            < event.paid_ticket_count
+        ):
+
+            flash(
+                (
+                    "Ticket capacity cannot be lower "
+                    "than tickets already sold."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=
+                    event,
+            )
+
+
+        poster_image = (
+            request.files.get(
+                "poster_image"
+            )
+        )
+
+
+        new_poster_path = None
+        new_image_url = None
+
+
+        if (
+            poster_image
+            and poster_image.filename
+        ):
+
+            original_filename = (
+                secure_filename(
+                    poster_image.filename
+                )
+            )
+
+
+            if "." not in original_filename:
+
+                flash(
+                    (
+                        "Poster must be a JPG, JPEG, "
+                        "PNG or WEBP image."
+                    ),
+                    "error",
+                )
+
+                return render_template(
+                    "admin/edit_event.html",
+                    event=
+                        event,
+                )
+
+
+            extension = (
+                original_filename
+                .rsplit(
+                    ".",
+                    1,
+                )[1]
+                .lower()
+            )
+
+
+            allowed_extensions = {
+                "jpg",
+                "jpeg",
+                "png",
+                "webp",
+            }
+
+
+            if extension not in allowed_extensions:
+
+                flash(
+                    (
+                        "Poster must be a JPG, JPEG, "
+                        "PNG or WEBP image."
+                    ),
+                    "error",
+                )
+
+                return render_template(
+                    "admin/edit_event.html",
+                    event=
+                        event,
+                )
+
+
+            filename = (
+                f"{uuid.uuid4().hex}.{extension}"
+            )
+
+
+            upload_folder = (
+                os.path.join(
+                    current_app.root_path,
+                    "static",
+                    "uploads",
+                    "events",
+                )
+            )
+
+
+            os.makedirs(
+                upload_folder,
+                exist_ok=True,
+            )
+
+
+            new_poster_path = (
+                os.path.join(
+                    upload_folder,
+                    filename,
+                )
+            )
+
+
+            try:
+
+                poster_image.save(
+                    new_poster_path
+                )
+
+            except Exception as error:
+
+                current_app.logger.exception(
+                    (
+                        "[Ticketing] Failed to update "
+                        "event poster event_id=%s error=%s"
+                    ),
+                    event.id,
+                    error,
+                )
+
+                flash(
+                    "Unable to upload the new poster.",
+                    "error",
+                )
+
+                return render_template(
+                    "admin/edit_event.html",
+                    event=
+                        event,
+                )
+
+
+            new_image_url = (
+                url_for(
+                    "static",
+                    filename=(
+                        f"uploads/events/{filename}"
+                    ),
+                )
+            )
+
+
+        event.title = title
+
+        event.description = (
+            request.form.get(
+                "description",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.venue = (
+            request.form.get(
+                "venue",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.event_date = (
+            event_date
+        )
+
+        event.event_time = (
+            event_time
+        )
+
+        event.ticket_price = (
+            ticket_price
+        )
+
+        event.ticket_capacity = (
+            ticket_capacity
+        )
+
+        event.bank_name = (
+            request.form.get(
+                "bank_name",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.account_holder = (
+            request.form.get(
+                "account_holder",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.account_number = (
+            request.form.get(
+                "account_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.branch_code = (
+            request.form.get(
+                "branch_code",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.payment_instructions = (
+            request.form.get(
+                "payment_instructions",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        event.organizer_name = (
+            organizer.display_name
+        )
+
+        event.organizer_phone = (
+            organizer.phone
+        )
+
+
+        if new_image_url:
+
+            event.image_url = (
+                new_image_url
+            )
+
+
+        try:
+
+            db.session.commit()
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            if (
+                new_poster_path
+                and os.path.exists(
+                    new_poster_path
+                )
+            ):
+
+                try:
+
+                    os.remove(
+                        new_poster_path
+                    )
+
+                except Exception:
+
+                    pass
+
+
+            current_app.logger.exception(
+                (
+                    "[Ticketing] Failed to update event "
+                    "event_id=%s organizer_id=%s error=%s"
+                ),
+                event.id,
+                organizer.id,
+                error,
+            )
+
+
+            flash(
+                "Event update failed.",
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=
+                    event,
+            )
+
+
+        flash(
+            "Event details updated.",
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    return render_template(
+        "admin/edit_event.html",
+        event=
+            event,
+    )
+
+
+# ============================================================
+# ORGANIZER - PUBLISH EVENT
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/publish",
+    methods=[
+        "POST",
+    ],
+)
+def admin_publish_event(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    if event.is_closed:
+
+        flash(
+            "Closed events cannot be published again.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    event.status = (
+        "published"
+    )
+
+    event.active = True
+
+    event.published_at = (
+        event.published_at
+        or datetime.utcnow()
+    )
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticketing] Failed to publish event "
+                "event_id=%s error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+        flash(
+            "Unable to publish the event.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    flash(
+        (
+            "Event published. "
+            "Ticket sales are still paused until you open them."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER - OPEN TICKET SALES
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/sales/open",
+    methods=[
+        "POST",
+    ],
+)
+def admin_open_event_sales(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    if not event.is_published:
+
+        flash(
+            "Publish the event before opening ticket sales.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    if event.is_sold_out:
+
+        flash(
+            "Ticket sales cannot open because the event is sold out.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    event.sales_open = True
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticketing] Failed to open sales "
+                "event_id=%s error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+        flash(
+            "Unable to open ticket sales.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    flash(
+        "Ticket sales are now open.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER - PAUSE TICKET SALES
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/sales/pause",
+    methods=[
+        "POST",
+    ],
+)
+def admin_pause_event_sales(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    event.sales_open = False
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticketing] Failed to pause sales "
+                "event_id=%s error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+        flash(
+            "Unable to pause ticket sales.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    flash(
+        "Ticket sales paused.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER - CLOSE EVENT
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/close",
+    methods=[
+        "POST",
+    ],
+)
+def admin_close_event(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    if event.is_closed:
+
+        flash(
+            "This event is already closed.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    event.status = (
+        "closed"
+    )
+
+    event.sales_open = False
+
+    event.active = False
+
+    event.closed_at = (
+        datetime.utcnow()
+    )
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticketing] Failed to close event "
+                "event_id=%s error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+        flash(
+            "Unable to close the event.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    flash(
+        (
+            "Event closed. "
+            "Orders and check-in history have been preserved."
+        ),
         "success",
     )
 
