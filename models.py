@@ -72,7 +72,48 @@ class Organizer(db.Model):
     active = db.Column(
         db.Boolean,
         nullable=False,
-        default=True,
+        default=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # EVENT LIFECYCLE
+    # ========================================================
+    #
+    # draft
+    # published
+    # closed
+    #
+    # status controls the event lifecycle.
+    #
+    # sales_open is intentionally separate so an organizer can
+    # keep an event published while temporarily pausing sales.
+    # ========================================================
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="draft",
+        index=True,
+    )
+
+    sales_open = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+    )
+
+    published_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    closed_at = db.Column(
+        db.DateTime,
+        nullable=True,
         index=True,
     )
 
@@ -685,6 +726,73 @@ class TicketEvent(db.Model):
             self.kalxa_content_item_id
             is not None
         )
+
+
+    # ========================================================
+    # EVENT LIFECYCLE HELPERS
+    # ========================================================
+
+    @property
+    def is_draft(self):
+
+        return (
+            self.status
+            == "draft"
+        )
+
+
+    @property
+    def is_published(self):
+
+        return (
+            self.status
+            == "published"
+        )
+
+
+    @property
+    def is_closed(self):
+
+        return (
+            self.status
+            == "closed"
+        )
+
+
+    @property
+    def is_public(self):
+
+        return (
+            self.status
+            == "published"
+            and self.active
+        )
+
+
+    @property
+    def can_accept_orders(self):
+
+        return (
+            self.is_public
+            and self.sales_open
+            and not self.is_sold_out
+        )
+
+
+    @property
+    def lifecycle_label(self):
+
+        if self.status == "published":
+
+            if self.sales_open:
+                return "Published · Sales Open"
+
+            return "Published · Sales Paused"
+
+        if self.status == "closed":
+            return "Closed"
+
+        return "Draft"
 
 
     @property
