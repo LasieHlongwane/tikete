@@ -1566,6 +1566,83 @@ def organizer_ticketing_dashboard():
 
 
 # ============================================================
+# TRACK MY TICKET
+# ============================================================
+
+@app.route(
+    "/track",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def track_ticket():
+
+    if request.method == "POST":
+
+        reference = (
+            request.form.get(
+                "reference",
+                "",
+            )
+            .strip()
+            .upper()
+        )
+
+
+        if not reference:
+
+            flash(
+                "Please enter your booking reference.",
+                "error",
+            )
+
+            return render_template(
+                "track_ticket.html"
+            )
+
+
+        order = (
+            TicketOrder.query
+            .filter_by(
+                payment_reference=
+                    reference
+            )
+            .first()
+        )
+
+
+        if not order:
+
+            flash(
+                (
+                    "We could not find a booking with "
+                    "that reference. Please check it "
+                    "and try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "track_ticket.html"
+            )
+
+
+        return redirect(
+            url_for(
+                "booking_status",
+                reference=
+                    order.payment_reference,
+            )
+        )
+
+
+    return render_template(
+        "track_ticket.html"
+    )
+
+
+# ============================================================
 # BOOKING STATUS
 # ============================================================
 
@@ -3266,4 +3343,3 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-
