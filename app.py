@@ -715,27 +715,20 @@ def organizer_signup():
             )
 
 
-        session.clear()
-
-
-        session[
-            ORGANIZER_SESSION_KEY
-        ] = organizer.id
-
 
         flash(
-            (
-                "Welcome to Kalxa Ticketing. "
-                "Your organizer account is ready."
-            ),
-            "success",
-        )
+         (
+          "Organizer account created successfully. "
+          "Please sign in."
+         ),
+          "success",
+         )
 
 
         return redirect(
-            url_for(
-                "admin_dashboard"
-            )
+         url_for(
+          "organizer_login"
+         )
         )
 
 
