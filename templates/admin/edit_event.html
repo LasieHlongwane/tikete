@@ -10,46 +10,26 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
-
     <title>
-        Kalxa Tickets
+        Edit Event | Kalxa Ticketing
     </title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/style.css'
-        ) }}"
-    >
 
 
     <style>
 
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
         * {
-            box-sizing: border-box;
-        }
-
-
-        html {
-            scroll-behavior: smooth;
+            box-sizing:
+                border-box;
         }
 
 
         body {
 
-            margin: 0;
+            margin:
+                0;
 
             background:
-                #ffffff;
+                #f6f7f9;
 
             color:
                 #111827;
@@ -64,53 +44,28 @@
                 Arial,
                 sans-serif;
 
-            font-size:
-                16px;
-
             line-height:
-                1.6;
-
-            -webkit-font-smoothing:
-                antialiased;
+                1.55;
         }
 
 
-        a {
-            color: inherit;
-        }
-
-
-        .muted {
-            color:
-                #64748b;
-        }
-
-
-        /* =====================================================
-           PAGE
-        ===================================================== */
-
-        .page-shell {
+        .shell {
 
             width:
-                100%;
-
-            max-width:
-                1100px;
+                min(
+                    900px,
+                    calc(100% - 28px)
+                );
 
             margin:
                 0 auto;
 
             padding:
-                24px 18px 70px;
+                22px 0 60px;
         }
 
 
-        /* =====================================================
-           TOP BAR
-        ===================================================== */
-
-        .topbar {
+        .nav {
 
             display:
                 flex;
@@ -122,223 +77,13 @@
                 space-between;
 
             gap:
-                16px;
-
-            margin-bottom:
-                28px;
-
-            padding-bottom:
                 14px;
 
-            border-bottom:
-                1px solid #eef2f7;
-        }
-
-
-        .brand {
-
-            color:
-                #111111;
-
-            font-size:
-                15px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.02em;
-
-            text-decoration:
-                none;
-        }
-
-
-        .topbar-actions {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                10px;
-
-            flex-wrap:
-                wrap;
-
-            justify-content:
-                flex-end;
-        }
-
-
-        .topbar-link {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                38px;
+            margin-bottom:
+                20px;
 
             padding:
-                8px 11px;
-
-            color:
-                #334155;
-
-            border-radius:
-                10px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                750;
-
-            text-decoration:
-                none;
-
-            transition:
-                background 0.15s ease,
-                color 0.15s ease;
-        }
-
-
-        .topbar-link:hover {
-
-            background:
-                #f8fafc;
-
-            color:
-                #111827;
-        }
-
-
-        .topbar-link.track-link {
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-        }
-
-
-        .topbar-link.track-link:hover {
-
-            background:
-                #27272a;
-
-            color:
-                #ffffff;
-        }
-
-
-        /* =====================================================
-           TYPOGRAPHY
-        ===================================================== */
-
-        .eyebrow {
-
-            margin:
-                0 0 8px;
-
-            color:
-                #64748b;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.14em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        h1 {
-
-            margin:
-                0 0 14px;
-
-            color:
-                #111827;
-
-            font-size:
-                clamp(
-                    34px,
-                    7vw,
-                    54px
-                );
-
-            line-height:
-                1.02;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.05em;
-        }
-
-
-        h2 {
-
-            margin:
-                0;
-
-            color:
-                #111827;
-
-            font-size:
-                21px;
-
-            line-height:
-                1.2;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                -0.03em;
-        }
-
-
-        /* =====================================================
-           DETAIL CARD
-        ===================================================== */
-
-        .event-detail {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                minmax(0, 1.15fr)
-                minmax(320px, 0.85fr);
-
-            gap:
-                34px;
-
-            align-items:
-                start;
-
-            padding:
-                26px;
+                14px 16px;
 
             background:
                 #ffffff;
@@ -347,315 +92,399 @@
                 1px solid #e5e7eb;
 
             border-radius:
-                24px;
-
-            box-shadow:
-                0 12px 40px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.06
-                );
+                16px;
         }
 
 
-        .event-detail-image-wrap {
+        .brand {
 
-            overflow:
-                hidden;
+            font-size:
+                14px;
+
+            font-weight:
+                900;
+        }
+
+
+        .nav-links {
+
+            display:
+                flex;
+
+            gap:
+                8px;
+
+            flex-wrap:
+                wrap;
+        }
+
+
+        .nav a {
+
+            padding:
+                8px 10px;
+
+            color:
+                #334155;
+
+            border-radius:
+                9px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                12px;
+
+            font-weight:
+                750;
+        }
+
+
+        .hero {
+
+            margin-bottom:
+                18px;
+
+            padding:
+                26px;
 
             background:
-                #f8fafc;
+                #111111;
+
+            color:
+                #ffffff;
 
             border-radius:
                 18px;
         }
 
 
-        .event-detail-image {
-
-            width:
-                100%;
-
-            height:
-                auto;
-
-            min-height:
-                360px;
-
-            display:
-                block;
-
-            object-fit:
-                cover;
-        }
-
-
-        .event-detail-content {
-
-            min-width:
-                0;
-        }
-
-
-        .event-description {
+        .eyebrow {
 
             margin:
-                0 0 22px;
+                0 0 7px;
 
             color:
-                #475569;
-
-            font-size:
-                15px;
-
-            line-height:
-                1.75;
-        }
-
-
-        /* =====================================================
-           ORGANIZER
-        ===================================================== */
-
-        .organizer-card {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                14px;
-
-            margin:
-                0 0 22px;
-
-            padding:
-                14px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                14px;
-        }
-
-
-        .organizer-label {
-
-            display:
-                block;
-
-            margin-bottom:
-                2px;
-
-            color:
-                #64748b;
+                #94a3b8;
 
             font-size:
                 10px;
 
             font-weight:
-                800;
+                850;
 
             letter-spacing:
-                0.08em;
+                0.13em;
 
             text-transform:
                 uppercase;
         }
 
 
-        .organizer-name {
+        .hero h1 {
+
+            margin:
+                0 0 8px;
+
+            font-size:
+                clamp(
+                    28px,
+                    6vw,
+                    40px
+                );
+
+            line-height:
+                1.05;
+
+            letter-spacing:
+                -0.04em;
+        }
+
+
+        .hero p {
+
+            margin:
+                0;
+
+            color:
+                #cbd5e1;
+
+            font-size:
+                13px;
+        }
+
+
+        .status {
+
+            display:
+                inline-flex;
+
+            margin-top:
+                14px;
+
+            padding:
+                6px 9px;
+
+            border-radius:
+                999px;
+
+            background:
+                #ffffff;
 
             color:
                 #111827;
 
             font-size:
-                14px;
-
-            font-weight:
-                850;
-        }
-
-
-        .organizer-phone {
-
-            color:
-                #64748b;
-
-            font-size:
-                12px;
-
-            text-decoration:
-                none;
-        }
-
-
-        /* =====================================================
-           EVENT META
-        ===================================================== */
-
-        .event-meta-list {
-
-            display:
-                grid;
-
-            gap:
                 10px;
 
-            margin:
-                24px 0;
-        }
-
-
-        .event-meta {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                10px;
-
-            padding:
-                12px 14px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #334155;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                12px;
-
-            font-size:
-                13px;
-
             font-weight:
-                650;
+                900;
+
+            text-transform:
+                uppercase;
         }
 
 
-        /* =====================================================
-           TICKET BOX
-        ===================================================== */
+        .card {
 
-        .ticket-box {
-
-            margin-top:
-                24px;
+            margin-bottom:
+                18px;
 
             padding:
                 22px;
 
             background:
-                #f8fafc;
+                #ffffff;
 
             border:
-                1px solid #e2e8f0;
+                1px solid #e5e7eb;
 
             border-radius:
                 18px;
         }
 
 
-        .ticket-label {
-
-            display:
-                block;
-
-            margin-bottom:
-                5px;
-
-            color:
-                #64748b;
-
-            font-size:
-                11px;
-
-            font-weight:
-                800;
-
-            letter-spacing:
-                0.08em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .ticket-price {
-
-            color:
-                #111827;
-
-            font-size:
-                clamp(
-                    32px,
-                    6vw,
-                    42px
-                );
-
-            line-height:
-                1;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.045em;
-        }
-
-
-        .ticket-availability {
+        .card h2 {
 
             margin:
-                10px 0 0;
+                0 0 5px;
+
+            font-size:
+                20px;
+
+            letter-spacing:
+                -0.025em;
+        }
+
+
+        .card-copy {
+
+            margin:
+                0 0 18px;
 
             color:
                 #64748b;
 
             font-size:
                 12px;
+        }
+
+
+        .form-stack {
+
+            display:
+                grid;
+
+            gap:
+                16px;
+        }
+
+
+        .grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                14px;
+        }
+
+
+        .group {
+
+            display:
+                grid;
+
+            gap:
+                7px;
+        }
+
+
+        label {
+
+            color:
+                #334155;
+
+            font-size:
+                12px;
 
             font-weight:
-                650;
+                800;
         }
 
 
-        .ticket-availability.low {
+        input,
+        textarea {
+
+            width:
+                100%;
+
+            padding:
+                11px 12px;
+
+            background:
+                #ffffff !important;
 
             color:
-                #b45309;
+                #111827 !important;
+
+            border:
+                1px solid #cbd5e1;
+
+            border-radius:
+                10px;
+
+            outline:
+                none;
+
+            font:
+                inherit;
+
+            opacity:
+                1 !important;
+
+            pointer-events:
+                auto !important;
+
+            user-select:
+                text !important;
+
+            -webkit-user-select:
+                text !important;
+
+            cursor:
+                text;
         }
 
 
-        .ticket-availability.sold-out {
+        input[type="date"],
+        input[type="time"],
+        input[type="number"],
+        input[type="file"] {
+
+            pointer-events:
+                auto !important;
+
+            cursor:
+                pointer;
+        }
+
+
+        input:disabled,
+        textarea:disabled,
+        input[readonly],
+        textarea[readonly] {
+
+            opacity:
+                1;
+
+            pointer-events:
+                auto;
+        }
+
+
+        input {
+
+            min-height:
+                46px;
+        }
+
+
+        textarea {
+
+            resize:
+                vertical;
+        }
+
+
+        input:focus,
+        textarea:focus {
+
+            border-color:
+                #111827;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    17,
+                    24,
+                    39,
+                    0.06
+                );
+        }
+
+
+        small {
 
             color:
-                #b91c1c;
+                #94a3b8;
+
+            font-size:
+                11px;
         }
 
 
-        /* =====================================================
-           BUTTON
-        ===================================================== */
+        .poster-preview {
+
+            width:
+                100%;
+
+            max-height:
+                340px;
+
+            display:
+                block;
+
+            margin-bottom:
+                14px;
+
+            object-fit:
+                cover;
+
+            border-radius:
+                12px;
+        }
+
+
+        .actions {
+
+            display:
+                flex;
+
+            gap:
+                10px;
+
+            flex-wrap:
+                wrap;
+        }
+
 
         .button {
 
@@ -668,17 +497,11 @@
             justify-content:
                 center;
 
-            width:
-                100%;
-
             min-height:
-                52px;
-
-            margin-top:
-                18px;
+                44px;
 
             padding:
-                12px 18px;
+                10px 15px;
 
             background:
                 #111111;
@@ -690,331 +513,104 @@
                 1px solid #111111;
 
             border-radius:
-                12px;
+                10px;
 
             text-decoration:
                 none;
 
+            font:
+                inherit;
+
             font-size:
-                15px;
+                12px;
 
             font-weight:
                 850;
 
             cursor:
                 pointer;
-
-            transition:
-                background 0.16s ease,
-                transform 0.16s ease,
-                box-shadow 0.16s ease;
         }
 
 
-        .button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 8px 20px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.1
-                );
-        }
-
-
-        .button.disabled {
-
-            background:
-                #e5e7eb;
-
-            color:
-                #94a3b8;
-
-            border-color:
-                #e5e7eb;
-
-            cursor:
-                not-allowed;
-
-            box-shadow:
-                none;
-
-            transform:
-                none;
-        }
-
-
-        /* =====================================================
-           EVENT LIST
-        ===================================================== */
-
-        .event-list-header {
-
-            margin-bottom:
-                24px;
-        }
-
-
-        .event-list-header h1 {
-
-            margin-bottom:
-                8px;
-        }
-
-
-        .event-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    3,
-                    minmax(0, 1fr)
-                );
-
-            gap:
-                18px;
-        }
-
-
-        .event-card {
-
-            overflow:
-                hidden;
-
-            display:
-                flex;
-
-            flex-direction:
-                column;
+        .button-secondary {
 
             background:
                 #ffffff;
 
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                18px;
-
-            text-decoration:
-                none;
-
-            box-shadow:
-                0 8px 28px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.045
-                );
-
-            transition:
-                transform 0.18s ease,
-                box-shadow 0.18s ease,
-                border-color 0.18s ease;
-        }
-
-
-        .event-card:hover {
-
-            transform:
-                translateY(-3px);
-
-            border-color:
-                #cbd5e1;
-
-            box-shadow:
-                0 14px 32px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.08
-                );
-        }
-
-
-        .event-image {
-
-            width:
-                100%;
-
-            height:
-                220px;
-
-            display:
-                block;
-
-            object-fit:
-                cover;
-
-            background:
-                #f1f5f9;
-        }
-
-
-        .event-card-content {
-
-            display:
-                flex;
-
-            flex:
-                1;
-
-            flex-direction:
-                column;
-
-            padding:
-                18px;
-        }
-
-
-        .event-card-date {
-
-            margin-top:
-                8px;
-
-            color:
-                #64748b;
-
-            font-size:
-                12px;
-        }
-
-
-        .event-card-organizer {
-
-            margin-top:
-                10px;
-
-            color:
-                #475569;
-
-            font-size:
-                12px;
-
-            font-weight:
-                700;
-        }
-
-
-        .event-card-price {
-
-            margin-top:
-                auto;
-
-            padding-top:
-                18px;
-
             color:
                 #111827;
 
-            font-size:
-                18px;
-
-            font-weight:
-                900;
+            border-color:
+                #dbe3ec;
         }
 
 
-        .event-card-status {
+        .flash-wrapper {
 
-            margin-top:
-                6px;
+            display:
+                grid;
 
-            color:
-                #64748b;
+            gap:
+                8px;
 
-            font-size:
-                11px;
-
-            font-weight:
-                700;
+            margin-bottom:
+                16px;
         }
 
 
-        /* =====================================================
-           EMPTY STATE
-        ===================================================== */
-
-        .empty-state {
+        .alert {
 
             padding:
-                34px 22px;
+                11px 13px;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                10px;
 
             background:
                 #f8fafc;
 
+            font-size:
+                12px;
+
+            font-weight:
+                700;
+        }
+
+
+        .alert[data-category="success"] {
+
             color:
-                #64748b;
+                #166534;
 
-            border:
-                1px dashed #cbd5e1;
+            background:
+                #f0fdf4;
 
-            border-radius:
-                16px;
-
-            text-align:
-                center;
+            border-color:
+                #bbf7d0;
         }
 
 
-        /* =====================================================
-           MOBILE
-        ===================================================== */
+        .alert[data-category="error"] {
 
-        @media (
-            max-width: 850px
-        ) {
+            color:
+                #991b1b;
 
-            .event-detail {
+            background:
+                #fef2f2;
 
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .event-detail-image {
-
-                min-height:
-                    280px;
-            }
-
-
-            .event-grid {
-
-                grid-template-columns:
-                    repeat(
-                        2,
-                        minmax(0, 1fr)
-                    );
-            }
-
+            border-color:
+                #fecaca;
         }
 
 
         @media (
-            max-width: 560px
+            max-width: 680px
         ) {
 
-            .page-shell {
-
-                padding:
-                    18px 14px 50px;
-            }
-
-
-            .topbar {
+            .nav {
 
                 align-items:
                     flex-start;
@@ -1024,64 +620,24 @@
             }
 
 
-            .topbar-actions {
-
-                width:
-                    100%;
-
-                justify-content:
-                    flex-start;
-            }
-
-
-            .topbar-link {
-
-                flex:
-                    0 0 auto;
-            }
-
-
-            .event-detail {
-
-                gap:
-                    22px;
-
-                padding:
-                    16px;
-
-                border-radius:
-                    18px;
-            }
-
-
-            .event-detail-image {
-
-                min-height:
-                    220px;
-
-                border-radius:
-                    14px;
-            }
-
-
-            .ticket-box {
-
-                padding:
-                    18px;
-            }
-
-
-            .event-grid {
+            .grid {
 
                 grid-template-columns:
                     1fr;
             }
 
 
-            .event-image {
+            .actions {
 
-                height:
-                    210px;
+                flex-direction:
+                    column;
+            }
+
+
+            .button {
+
+                width:
+                    100%;
             }
 
         }
@@ -1094,615 +650,499 @@
 <body>
 
 
-<div class="page-shell">
+<div class="shell">
 
 
-    <!-- =========================================
-         TOP BAR
-    ========================================== -->
+    <nav class="nav">
 
-    <div class="topbar">
-
-
-        <a
-            href="{{ url_for(
-                'home'
-            ) }}"
-            class="brand"
-        >
+        <div class="brand">
             KALXA TICKETING
-        </a>
+        </div>
 
-
-        <div class="topbar-actions">
-
-
-            <!-- =============================
-                 PUBLIC ATTENDEE ACTION
-            ============================== -->
+        <div class="nav-links">
 
             <a
                 href="{{ url_for(
-                    'track_ticket'
+                    'admin_dashboard'
                 ) }}"
-                class="topbar-link track-link"
             >
-                Track My Ticket
+                Dashboard
             </a>
 
+            <a
+                href="{{ url_for(
+                    'admin_orders',
+                    event_id=event.id
+                ) }}"
+            >
+                Orders
+            </a>
 
-            {% if session.get('ticketing_organizer_id') %}
-
-                <a
-                    href="{{ url_for(
-                        'admin_dashboard'
-                    ) }}"
-                    class="topbar-link"
-                >
-                    Organizer Dashboard
-                </a>
-
+            {% if event.status == "published" %}
 
                 <a
                     href="{{ url_for(
-                        'organizer_logout'
+                        'event_page',
+                        event_id=event.id
                     ) }}"
-                    class="topbar-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
                 >
-                    Logout
-                </a>
-
-
-            {% else %}
-
-                <a
-                    href="{{ url_for(
-                        'organizer_login'
-                    ) }}"
-                    class="topbar-link"
-                >
-                    Organizer Login
-                </a>
-
-
-                <a
-                    href="{{ url_for(
-                        'organizer_signup'
-                    ) }}"
-                    class="topbar-link"
-                >
-                    Create Account
+                    Public Event
                 </a>
 
             {% endif %}
 
-
         </div>
 
-
-    </div>
-
+    </nav>
 
 
-    {% if event %}
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
 
 
-        <!-- =====================================
-             SINGLE EVENT
-        ====================================== -->
+    <header class="hero">
 
-        <div class="event-detail">
+        <p class="eyebrow">
+            EDIT EVENT
+        </p>
+
+        <h1>
+            {{ event.title }}
+        </h1>
+
+        <p>
+            Update event details without affecting existing
+            ticket orders or check-in history.
+        </p>
+
+        <span class="status">
+            {{ event.lifecycle_label }}
+        </span>
+
+    </header>
 
 
-            <!-- =================================
-                 EVENT IMAGE
-            ================================== -->
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+        class="form-stack"
+    >
 
-            {% if event.image_url %}
 
-                <div class="event-detail-image-wrap">
+        <section class="card">
+
+            <h2>
+                Event Details
+            </h2>
+
+            <p class="card-copy">
+                Change the public event information.
+            </p>
+
+
+            <div class="form-stack">
+
+
+                <div class="group">
+
+                    <label for="title">
+                        Event Title
+                    </label>
+
+                    <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        autocomplete="off"
+                        value="{{ event.title }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="group">
+
+                    <label for="description">
+                        Description
+                    </label>
+
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="5"
+                    >{{ event.description or '' }}</textarea>
+
+                </div>
+
+
+                <div class="group">
+
+                    <label for="venue">
+                        Venue
+                    </label>
+
+                    <input
+                        id="venue"
+                        name="venue"
+                        type="text"
+                        autocomplete="off"
+                        value="{{ event.venue or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="grid">
+
+                    <div class="group">
+
+                        <label for="event_date">
+                            Event Date
+                        </label>
+
+                        <input
+                            id="event_date"
+                            name="event_date"
+                            type="date"
+                            value="{% if event.event_date %}{{ event.event_date.strftime('%Y-%m-%d') }}{% endif %}"
+                        >
+
+                    </div>
+
+
+                    <div class="group">
+
+                        <label for="event_time">
+                            Event Time
+                        </label>
+
+                        <input
+                            id="event_time"
+                            name="event_time"
+                            type="time"
+                            value="{% if event.event_time %}{{ event.event_time.strftime('%H:%M') }}{% endif %}"
+                        >
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                Ticket Setup
+            </h2>
+
+            <p class="card-copy">
+                Capacity cannot be reduced below tickets
+                that have already been sold.
+            </p>
+
+
+            <div class="grid">
+
+                <div class="group">
+
+                    <label for="ticket_price">
+                        Ticket Price
+                    </label>
+
+                    <input
+                        id="ticket_price"
+                        name="ticket_price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value="{{ '%.2f'|format(event.ticket_price) }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="group">
+
+                    <label for="ticket_capacity">
+                        Ticket Capacity
+                    </label>
+
+                    <input
+                        id="ticket_capacity"
+                        name="ticket_capacity"
+                        type="number"
+                        min="{{ event.paid_ticket_count if event.paid_ticket_count > 0 else 1 }}"
+                        value="{{ event.ticket_capacity or '' }}"
+                    >
+
+                    <small>
+                        Tickets already sold:
+                        {{ event.paid_ticket_count }}
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="group"
+                style="margin-top: 16px;"
+            >
+
+                <label for="poster_image">
+                    Replace Event Poster
+                </label>
+
+                {% if event.image_url %}
 
                     <img
                         src="{{ event.image_url }}"
                         alt="{{ event.title }}"
-                        class="event-detail-image"
+                        class="poster-preview"
+                    >
+
+                {% endif %}
+
+                <input
+                    id="poster_image"
+                    name="poster_image"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                >
+
+                <small>
+                    Leave empty to keep the current poster.
+                </small>
+
+            </div>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                Attendee Payment Details
+            </h2>
+
+            <p class="card-copy">
+                These are the organizer bank details attendees
+                use for the current manual ticket payment flow.
+            </p>
+
+
+            <div class="grid">
+
+                <div class="group">
+
+                    <label for="bank_name">
+                        Bank Name
+                    </label>
+
+                    <input
+                        id="bank_name"
+                        name="bank_name"
+                        type="text"
+                        autocomplete="off"
+                        value="{{ event.bank_name or '' }}"
                     >
 
                 </div>
 
-            {% endif %}
 
-
-
-            <!-- =================================
-                 EVENT CONTENT
-            ================================== -->
-
-            <div class="event-detail-content">
-
-
-                <p class="eyebrow">
-                    KALXA EVENT
-                </p>
-
-
-                <h1>
-                    {{ event.title }}
-                </h1>
-
-
-
-                <!-- =============================
-                     ORGANIZER
-                ============================== -->
-
-                {% if event.organizer_name or event.organizer %}
-
-                    <div class="organizer-card">
-
-
-                        <div>
-
-
-                            <span class="organizer-label">
-                                Hosted by
-                            </span>
-
-
-                            <div class="organizer-name">
-
-                                {% if event.organizer %}
-
-                                    {{ event.organizer.display_name }}
-
-                                {% else %}
-
-                                    {{ event.organizer_name }}
-
-                                {% endif %}
-
-                            </div>
-
-
-                        </div>
-
-
-                        {% if event.organizer_phone %}
-
-                            <a
-                                href="tel:{{ event.organizer_phone }}"
-                                class="organizer-phone"
-                            >
-                                {{ event.organizer_phone }}
-                            </a>
-
-                        {% elif event.organizer and event.organizer.phone %}
-
-                            <a
-                                href="tel:{{ event.organizer.phone }}"
-                                class="organizer-phone"
-                            >
-                                {{ event.organizer.phone }}
-                            </a>
-
-                        {% endif %}
-
-
-                    </div>
-
-                {% endif %}
-
-
-
-                {% if event.description %}
-
-                    <p class="event-description">
-                        {{ event.description }}
-                    </p>
-
-                {% endif %}
-
-
-
-                <!-- =============================
-                     EVENT INFORMATION
-                ============================== -->
-
-                <div class="event-meta-list">
-
-
-                    {% if event.event_date %}
-
-                        <div class="event-meta">
-
-                            <span>
-                                📅
-                            </span>
-
-                            <span>
-                                {{ event.event_date.strftime(
-                                    '%d %B %Y'
-                                ) }}
-                            </span>
-
-                        </div>
-
-                    {% endif %}
-
-
-
-                    {% if event.event_time %}
-
-                        <div class="event-meta">
-
-                            <span>
-                                🕒
-                            </span>
-
-                            <span>
-                                {{ event.event_time.strftime(
-                                    '%H:%M'
-                                ) }}
-                            </span>
-
-                        </div>
-
-                    {% endif %}
-
-
-
-                    {% if event.venue %}
-
-                        <div class="event-meta">
-
-                            <span>
-                                📍
-                            </span>
-
-                            <span>
-                                {{ event.venue }}
-                            </span>
-
-                        </div>
-
-                    {% endif %}
-
-
-                </div>
-
-
-
-                <!-- =============================
-                     TICKET INFORMATION
-                ============================== -->
-
-                <div class="ticket-box">
-
-
-                    <span class="ticket-label">
-                        Ticket Price
-                    </span>
-
-
-                    <div class="ticket-price">
-
-                        {% if event.ticket_price == 0 %}
-
-                            FREE
-
-                        {% else %}
-
-                            R{{ "%.2f"|format(
-                                event.ticket_price
-                            ) }}
-
-                        {% endif %}
-
-                    </div>
-
-
-
-                    {% if event.ticket_capacity is not none %}
-
-
-                        {% if event.is_sold_out %}
-
-                            <p class="ticket-availability sold-out">
-                                SOLD OUT
-                            </p>
-
-
-                        {% elif event.remaining_tickets <= 10 %}
-
-                            <p class="ticket-availability low">
-
-                                Only
-                                {{ event.remaining_tickets }}
-                                ticket(s) remaining
-
-                            </p>
-
-
-                        {% else %}
-
-                            <p class="ticket-availability">
-
-                                {{ event.remaining_tickets }}
-                                ticket(s) remaining
-
-                            </p>
-
-                        {% endif %}
-
-
-                    {% else %}
-
-                        <p class="ticket-availability">
-                            Tickets available
-                        </p>
-
-                    {% endif %}
-
-
-
-                    {% if event.is_sold_out %}
-
-                        <button
-                            class="button disabled"
-                            disabled
-                        >
-                            SOLD OUT
-                        </button>
-
-
-                    {% elif not event.sales_open %}
-
-                        <button
-                            class="button disabled"
-                            disabled
-                        >
-                            SALES PAUSED
-                        </button>
-
-
-                    {% else %}
-
-                        <a
-                            href="{{ url_for(
-                                'reserve_ticket',
-                                event_id=event.id
-                            ) }}"
-                            class="button"
-                        >
-                            Buy Ticket
-                        </a>
-
-                    {% endif %}
-
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-
-    {% else %}
-
-
-        <!-- =====================================
-             EVENT LIST
-        ====================================== -->
-
-        <div class="event-list-header">
-
-
-            <p class="eyebrow">
-                KALXA EVENTS
-            </p>
-
-
-            <h1>
-                Ticketed Events
-            </h1>
-
-
-            <p class="muted">
-
-                Discover events and buy directly
-                from the organizer.
-
-            </p>
-
-
-        </div>
-
-
-
-        {% if events %}
-
-
-            <div class="event-grid">
-
-
-                {% for item in events %}
-
-
-                    <a
-                        href="{{ url_for(
-                            'event_page',
-                            event_id=item.id
-                        ) }}"
-                        class="event-card"
+                <div class="group">
+
+                    <label for="account_holder">
+                        Account Holder
+                    </label>
+
+                    <input
+                        id="account_holder"
+                        name="account_holder"
+                        type="text"
+                        autocomplete="off"
+                        value="{{ event.account_holder or '' }}"
                     >
 
-
-                        {% if item.image_url %}
-
-                            <img
-                                src="{{ item.image_url }}"
-                                alt="{{ item.title }}"
-                                class="event-image"
-                                loading="lazy"
-                            >
-
-                        {% endif %}
-
-
-
-                        <div class="event-card-content">
-
-
-                            <h2>
-                                {{ item.title }}
-                            </h2>
-
-
-
-                            {% if item.organizer %}
-
-                                <div class="event-card-organizer">
-
-                                    Hosted by
-                                    {{ item.organizer.display_name }}
-
-                                </div>
-
-
-                            {% elif item.organizer_name %}
-
-                                <div class="event-card-organizer">
-
-                                    Hosted by
-                                    {{ item.organizer_name }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if item.event_date %}
-
-                                <div class="event-card-date">
-
-                                    📅
-
-                                    {{ item.event_date.strftime(
-                                        '%d %B %Y'
-                                    ) }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if item.event_time %}
-
-                                <div class="event-card-date">
-
-                                    🕒
-
-                                    {{ item.event_time.strftime(
-                                        '%H:%M'
-                                    ) }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if item.venue %}
-
-                                <div class="event-card-date">
-
-                                    📍 {{ item.venue }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            <div class="event-card-price">
-
-                                {% if item.ticket_price == 0 %}
-
-                                    FREE
-
-                                {% else %}
-
-                                    R{{ "%.2f"|format(
-                                        item.ticket_price
-                                    ) }}
-
-                                {% endif %}
-
-                            </div>
-
-
-
-                            {% if item.is_sold_out %}
-
-                                <div class="event-card-status">
-                                    SOLD OUT
-                                </div>
-
-
-                            {% elif item.ticket_capacity is not none %}
-
-                                <div class="event-card-status">
-
-                                    {{ item.remaining_tickets }}
-                                    remaining
-
-                                </div>
-
-                            {% else %}
-
-                                <div class="event-card-status">
-                                    Tickets available
-                                </div>
-
-                            {% endif %}
-
-
-                        </div>
-
-
-                    </a>
-
-
-                {% endfor %}
-
+                </div>
 
             </div>
 
 
-        {% else %}
+            <div
+                class="grid"
+                style="margin-top: 14px;"
+            >
+
+                <div class="group">
+
+                    <label for="account_number">
+                        Account Number
+                    </label>
+
+                    <input
+                        id="account_number"
+                        name="account_number"
+                        type="text"
+                        autocomplete="off"
+                        value="{{ event.account_number or '' }}"
+                    >
+
+                </div>
 
 
-            <div class="empty-state">
+                <div class="group">
 
-                No ticketed events are available yet.
+                    <label for="branch_code">
+                        Branch Code
+                    </label>
+
+                    <input
+                        id="branch_code"
+                        name="branch_code"
+                        type="text"
+                        autocomplete="off"
+                        value="{{ event.branch_code or '' }}"
+                    >
+
+                </div>
 
             </div>
 
 
-        {% endif %}
+            <div
+                class="group"
+                style="margin-top: 14px;"
+            >
+
+                <label for="payment_instructions">
+                    Payment Instructions
+                </label>
+
+                <textarea
+                    id="payment_instructions"
+                    name="payment_instructions"
+                    rows="4"
+                >{{ event.payment_instructions or '' }}</textarea>
+
+            </div>
+
+        </section>
 
 
-    {% endif %}
+        <div class="actions">
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Save Changes
+            </button>
+
+            <a
+                href="{{ url_for(
+                    'admin_dashboard'
+                ) }}"
+                class="button button-secondary"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+
+    </form>
 
 
 </div>
 
 
+
+<script>
+
+    // =========================================================
+    // EDIT FORM SAFETY
+    // =========================================================
+    //
+    // The edit page must never render its form controls as
+    // disabled/read-only. This also protects against accidental
+    // attributes introduced by browser extensions or future CSS.
+    // =========================================================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            const editableControls = document.querySelectorAll(
+                "form input, form textarea"
+            );
+
+            editableControls.forEach(
+                function (control) {
+
+                    control.removeAttribute(
+                        "readonly"
+                    );
+
+                    control.removeAttribute(
+                        "disabled"
+                    );
+
+                    control.style.pointerEvents =
+                        "auto";
+
+                    control.style.opacity =
+                        "1";
+                }
+            );
+
+
+            const titleInput = document.getElementById(
+                "title"
+            );
+
+            if (titleInput) {
+
+                titleInput.focus();
+            }
+
+        }
+    );
+
+</script>
+
 </body>
 
 </html>
+
