@@ -1,23 +1,21 @@
+# ============================================================
+# KALXA TICKETING - APP
+# ============================================================
+
 import io
 import os
 import secrets
 import string
 import uuid
 from datetime import datetime
-from werkzeug.utils import secure_filename
+
 import qrcode
 
 from dotenv import load_dotenv
-
-from itsdangerous import (
-    URLSafeTimedSerializer,
-    BadSignature,
-    SignatureExpired,
-)
-
 from flask import (
     Flask,
     Response,
+    abort,
     current_app,
     flash,
     redirect,
@@ -25,18 +23,23 @@ from flask import (
     request,
     session,
     url_for,
-    abort,
 )
-
 from flask_migrate import Migrate
+from itsdangerous import (
+    BadSignature,
+    SignatureExpired,
+    URLSafeTimedSerializer,
+)
+from werkzeug.utils import secure_filename
 
 from models import (
-    db,
+    CheckIn,
+    EntryPass,
+    KalxaBridgeTokenUse,
+    Organizer,
     TicketEvent,
     TicketOrder,
-    EntryPass,
-    CheckIn,
-    KalxaBridgeTokenUse,
+    db,
 )
 
 
@@ -60,14 +63,16 @@ app = Flask(
 # SECRET KEY
 # ============================================================
 
-app.config["SECRET_KEY"] = (
-    os.environ.get(
-        "SECRET_KEY"
-    )
+app.config[
+    "SECRET_KEY"
+] = os.environ.get(
+    "SECRET_KEY"
 )
 
 
-if not app.config["SECRET_KEY"]:
+if not app.config[
+    "SECRET_KEY"
+]:
 
     raise RuntimeError(
         "SECRET_KEY is not configured."
@@ -78,10 +83,8 @@ if not app.config["SECRET_KEY"]:
 # DATABASE
 # ============================================================
 
-database_url = (
-    os.environ.get(
-        "DATABASE_URL"
-    )
+database_url = os.environ.get(
+    "DATABASE_URL"
 )
 
 
@@ -90,7 +93,7 @@ if not database_url:
     raise RuntimeError(
         (
             "DATABASE_URL is not configured. "
-            "Kalxa Ticketing now requires PostgreSQL."
+            "Kalxa Ticketing requires PostgreSQL."
         )
     )
 
@@ -133,21 +136,15 @@ app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = database_url
 
-
 app.config[
     "SQLALCHEMY_TRACK_MODIFICATIONS"
 ] = False
 
-
 app.config[
     "SQLALCHEMY_ENGINE_OPTIONS"
 ] = {
-
-    "pool_pre_ping":
-        True,
-
-    "pool_recycle":
-        300,
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
 }
 
 
@@ -158,7 +155,6 @@ app.config[
 db.init_app(
     app
 )
-
 
 migrate = Migrate(
     app,
@@ -178,23 +174,198 @@ PUBLIC_BASE_URL = (
     .rstrip("/")
 )
 
+
 # ============================================================
-# ADMIN AUTH
+# ORGANIZER SESSION
 # ============================================================
 
-def require_admin():
+ORGANIZER_SESSION_KEY = (
+    "ticketing_organizer_id"
+)
 
-    if not session.get(
-        "kalxa_ticketing_admin"
-    ):
 
-        return redirect(
-            url_for(
-                "admin_login"
-            )
+# ============================================================
+# NORMALIZE EMAIL
+# ============================================================
+
+def normalize_email(
+    value,
+):
+
+    return (
+        str(
+            value
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+# ============================================================
+# CURRENT ORGANIZER
+# ============================================================
+
+def get_current_organizer():
+
+    organizer_id = (
+        session.get(
+            ORGANIZER_SESSION_KEY
+        )
+    )
+
+
+    if not organizer_id:
+
+        return None
+
+
+    try:
+
+        organizer_id = int(
+            organizer_id
         )
 
-    return None
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        session.pop(
+            ORGANIZER_SESSION_KEY,
+            None,
+        )
+
+        return None
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if (
+        not organizer
+        or not organizer.active
+    ):
+
+        session.pop(
+            ORGANIZER_SESSION_KEY,
+            None,
+        )
+
+        return None
+
+
+    return organizer
+
+
+# ============================================================
+# REQUIRE ORGANIZER
+# ============================================================
+
+def require_ticketing_organizer():
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if organizer:
+
+        return None
+
+
+    flash(
+        (
+            "Please sign in to your "
+            "Kalxa Ticketing organizer account."
+        ),
+        "error",
+    )
+
+
+    return redirect(
+        url_for(
+            "organizer_login"
+        )
+    )
+
+
+# ============================================================
+# OPTIONAL DISCOVERY CONTEXT
+# ============================================================
+
+def get_ticketing_content_item_id():
+
+    content_item_id = (
+        session.get(
+            "kalxa_content_item_id"
+        )
+    )
+
+
+    if not content_item_id:
+
+        return None
+
+
+    try:
+
+        return int(
+            content_item_id
+        )
+
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        session.pop(
+            "kalxa_content_item_id",
+            None,
+        )
+
+        return None
+
+
+def get_ticketing_legacy_kalxa_organizer_id():
+
+    organizer_id = (
+        session.get(
+            "kalxa_organizer_id"
+        )
+    )
+
+
+    if not organizer_id:
+
+        return None
+
+
+    try:
+
+        return int(
+            organizer_id
+        )
+
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        session.pop(
+            "kalxa_organizer_id",
+            None,
+        )
+
+        return None
 
 
 # ============================================================
@@ -228,7 +399,8 @@ def generate_payment_reference():
         exists = (
             TicketOrder.query
             .filter_by(
-                payment_reference=reference
+                payment_reference=
+                    reference
             )
             .first()
         )
@@ -317,6 +489,686 @@ def home():
 
 
 # ============================================================
+# ORGANIZER SIGNUP
+# ============================================================
+
+@app.route(
+    "/organizer/signup",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def organizer_signup():
+
+    if get_current_organizer():
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    if request.method == "POST":
+
+        name = (
+            request.form.get(
+                "name",
+                "",
+            )
+            .strip()
+        )
+
+
+        business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        email = normalize_email(
+            request.form.get(
+                "email",
+                "",
+            )
+        )
+
+
+        phone = (
+            request.form.get(
+                "phone",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        password = (
+            request.form.get(
+                "password",
+                ""
+            )
+        )
+
+
+        password_confirm = (
+            request.form.get(
+                "password_confirm",
+                ""
+            )
+        )
+
+
+        if (
+            not name
+            or not email
+            or not password
+        ):
+
+            flash(
+                (
+                    "Name, email and password "
+                    "are required."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_signup"
+                )
+            )
+
+
+        if (
+            len(
+                password
+            )
+            < 8
+        ):
+
+            flash(
+                (
+                    "Password must be at least "
+                    "8 characters."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_signup"
+                )
+            )
+
+
+        if (
+            password
+            != password_confirm
+        ):
+
+            flash(
+                "Passwords do not match.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_signup"
+                )
+            )
+
+
+        existing = (
+            Organizer.query
+            .filter_by(
+                email=email
+            )
+            .first()
+        )
+
+
+        if existing:
+
+            flash(
+                (
+                    "An organizer account already "
+                    "exists with that email."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_login"
+                )
+            )
+
+
+        organizer = Organizer(
+
+            name=
+                name,
+
+            business_name=
+                business_name,
+
+            email=
+                email,
+
+            phone=
+                phone,
+
+            active=
+                True,
+        )
+
+
+        organizer.set_password(
+            password
+        )
+
+
+        try:
+
+            db.session.add(
+                organizer
+            )
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Organizer Signup] "
+                    "Unable to create organizer "
+                    "email=%s error=%s"
+                ),
+                email,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Unable to create your account. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_signup"
+                )
+            )
+
+
+        session.clear()
+
+
+        session[
+            ORGANIZER_SESSION_KEY
+        ] = organizer.id
+
+
+        flash(
+            (
+                "Welcome to Kalxa Ticketing. "
+                "Your organizer account is ready."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+
+        <meta charset="UTF-8">
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        >
+
+        <title>
+            Create Organizer Account | Kalxa Ticketing
+        </title>
+
+        <link
+            rel="stylesheet"
+            href="/static/css/style.css"
+        >
+
+    </head>
+
+    <body class="admin-body">
+
+        <div class="admin-login-card">
+
+            <h1>
+                Kalxa Ticketing
+            </h1>
+
+            <p>
+                Create your organizer account
+            </p>
+
+            <form method="POST">
+
+                <label>
+
+                    Your Name
+
+                    <input
+                        type="text"
+                        name="name"
+                        required
+                    >
+
+                </label>
+
+                <label>
+
+                    Organizer / Brand Name
+
+                    <input
+                        type="text"
+                        name="business_name"
+                    >
+
+                </label>
+
+                <label>
+
+                    Email
+
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                        autocomplete="email"
+                    >
+
+                </label>
+
+                <label>
+
+                    Phone
+
+                    <input
+                        type="tel"
+                        name="phone"
+                    >
+
+                </label>
+
+                <label>
+
+                    Password
+
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        minlength="8"
+                        autocomplete="new-password"
+                    >
+
+                </label>
+
+                <label>
+
+                    Confirm Password
+
+                    <input
+                        type="password"
+                        name="password_confirm"
+                        required
+                        minlength="8"
+                        autocomplete="new-password"
+                    >
+
+                </label>
+
+                <button
+                    type="submit"
+                    class="button"
+                >
+                    Create Organizer Account
+                </button>
+
+            </form>
+
+            <p>
+                Already have an account?
+                <a href="/organizer/login">
+                    Sign in
+                </a>
+            </p>
+
+        </div>
+
+    </body>
+    </html>
+    """
+
+
+# ============================================================
+# ORGANIZER LOGIN
+# ============================================================
+
+@app.route(
+    "/organizer/login",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def organizer_login():
+
+    if get_current_organizer():
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    if request.method == "POST":
+
+        email = normalize_email(
+            request.form.get(
+                "email",
+                "",
+            )
+        )
+
+
+        password = (
+            request.form.get(
+                "password",
+                ""
+            )
+        )
+
+
+        organizer = (
+            Organizer.query
+            .filter_by(
+                email=email
+            )
+            .first()
+        )
+
+
+        if (
+            not organizer
+            or not organizer.active
+            or not organizer.check_password(
+                password
+            )
+        ):
+
+            flash(
+                "Invalid email or password.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "organizer_login"
+                )
+            )
+
+
+        # ====================================================
+        # PRESERVE OPTIONAL DISCOVERY CONTEXT
+        # ====================================================
+
+        pending_kalxa_organizer_id = (
+            session.get(
+                "pending_kalxa_organizer_id"
+            )
+        )
+
+
+        pending_content_item_id = (
+            session.get(
+                "pending_kalxa_content_item_id"
+            )
+        )
+
+
+        session.clear()
+
+
+        session[
+            ORGANIZER_SESSION_KEY
+        ] = organizer.id
+
+
+        if pending_kalxa_organizer_id:
+
+            session[
+                "kalxa_organizer_id"
+            ] = (
+                pending_kalxa_organizer_id
+            )
+
+
+        if pending_content_item_id:
+
+            session[
+                "kalxa_content_item_id"
+            ] = (
+                pending_content_item_id
+            )
+
+
+        # ====================================================
+        # OPTIONAL DISCOVERY ACCOUNT LINK
+        # ====================================================
+
+        if (
+            pending_kalxa_organizer_id
+            and organizer.kalxa_discovery_organizer_id
+            is None
+        ):
+
+            organizer.kalxa_discovery_organizer_id = (
+                int(
+                    pending_kalxa_organizer_id
+                )
+            )
+
+
+            try:
+
+                db.session.commit()
+
+
+            except Exception:
+
+                db.session.rollback()
+
+
+        flash(
+            (
+                "Welcome back to "
+                "Kalxa Ticketing."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+
+        <meta charset="UTF-8">
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        >
+
+        <title>
+            Organizer Login | Kalxa Ticketing
+        </title>
+
+        <link
+            rel="stylesheet"
+            href="/static/css/style.css"
+        >
+
+    </head>
+
+    <body class="admin-body">
+
+        <div class="admin-login-card">
+
+            <h1>
+                Kalxa Ticketing
+            </h1>
+
+            <p>
+                Organizer Login
+            </p>
+
+            <form method="POST">
+
+                <label>
+
+                    Email
+
+                    <input
+                        type="email"
+                        name="email"
+                        required
+                        autocomplete="email"
+                    >
+
+                </label>
+
+                <label>
+
+                    Password
+
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                    >
+
+                </label>
+
+                <button
+                    type="submit"
+                    class="button"
+                >
+                    Sign In
+                </button>
+
+            </form>
+
+            <p>
+                New organizer?
+                <a href="/organizer/signup">
+                    Create an account
+                </a>
+            </p>
+
+        </div>
+
+    </body>
+    </html>
+    """
+
+
+# ============================================================
+# ORGANIZER LOGOUT
+# ============================================================
+
+@app.route(
+    "/organizer/logout"
+)
+def organizer_logout():
+
+    session.clear()
+
+
+    return redirect(
+        url_for(
+            "organizer_login"
+        )
+    )
+
+
+# ============================================================
+# LEGACY ADMIN LOGIN / LOGOUT URLS
+# ============================================================
+#
+# These old URLs are kept so existing bookmarks do not break.
+#
+# They now redirect into the organizer account system.
+# ============================================================
+
+@app.route(
+    "/admin/login"
+)
+def admin_login():
+
+    return redirect(
+        url_for(
+            "organizer_login"
+        )
+    )
+
+
+@app.route(
+    "/admin/logout"
+)
+def admin_logout():
+
+    return redirect(
+        url_for(
+            "organizer_logout"
+        )
+    )
+
+
+# ============================================================
 # EVENT PAGE
 # ============================================================
 
@@ -371,10 +1223,6 @@ def reserve_ticket(
 
     if request.method == "POST":
 
-        # ====================================================
-        # CUSTOMER
-        # ====================================================
-
         customer_name = (
             request.form.get(
                 "customer_name",
@@ -408,10 +1256,6 @@ def reserve_ticket(
             type=int,
         )
 
-
-        # ====================================================
-        # VALIDATION
-        # ====================================================
 
         if (
             not customer_name
@@ -452,10 +1296,6 @@ def reserve_ticket(
             )
 
 
-        # ====================================================
-        # CAPACITY
-        # ====================================================
-
         if (
             event.ticket_capacity
             is not None
@@ -482,10 +1322,6 @@ def reserve_ticket(
                 )
 
 
-        # ====================================================
-        # ORDER TOTAL
-        # ====================================================
-
         ticket_price = (
             event.ticket_price
         )
@@ -498,65 +1334,79 @@ def reserve_ticket(
         )
 
 
-        # ====================================================
-        # PAYMENT REFERENCE
-        # ====================================================
-
         reference = (
             generate_payment_reference()
         )
 
 
-        # ====================================================
-        # CREATE ORDER
-        # ====================================================
-
         order = TicketOrder(
 
-            event_id=(
-                event.id
-            ),
+            event_id=
+                event.id,
 
-            customer_name=(
-                customer_name
-            ),
+            customer_name=
+                customer_name,
 
-            customer_phone=(
-                customer_phone
-            ),
+            customer_phone=
+                customer_phone,
 
-            customer_email=(
-                customer_email
-            ),
+            customer_email=
+                customer_email,
 
-            quantity=(
-                quantity
-            ),
+            quantity=
+                quantity,
 
-            ticket_price=(
-                ticket_price
-            ),
+            ticket_price=
+                ticket_price,
 
-            total_amount=(
-                total_amount
-            ),
+            total_amount=
+                total_amount,
 
-            payment_reference=(
-                reference
-            ),
+            payment_reference=
+                reference,
 
-            payment_status=(
-                "pending"
-            ),
+            payment_status=
+                "pending",
         )
 
 
-        db.session.add(
-            order
-        )
+        try:
+
+            db.session.add(
+                order
+            )
+
+            db.session.commit()
 
 
-        db.session.commit()
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Ticket Order] "
+                    "Unable to create order "
+                    "event_id=%s error=%s"
+                ),
+                event.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Unable to reserve your tickets. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "reserve_ticket.html",
+                event=event,
+            )
 
 
         return redirect(
@@ -573,9 +1423,17 @@ def reserve_ticket(
     )
 
 
-
 # ============================================================
-# KALXA DISCOVERY → TICKETING BRIDGE
+# OPTIONAL KALXA DISCOVERY -> TICKETING BRIDGE
+# ============================================================
+#
+# Ticketing is now standalone.
+#
+# The Discovery bridge remains available as an optional
+# traffic / context integration.
+#
+# A Discovery organizer is NOT automatically authenticated
+# as a Ticketing organizer anymore.
 # ============================================================
 
 def get_kalxa_bridge_serializer():
@@ -598,17 +1456,19 @@ def get_kalxa_bridge_serializer():
 
 
     return URLSafeTimedSerializer(
-        secret_key=bridge_secret,
-        salt="kalxa-ticketing-bridge-v1",
+        secret_key=
+            bridge_secret,
+
+        salt=
+            "kalxa-ticketing-bridge-v1",
     )
-    
-    
-# ============================================================
-# KALXA ORGANIZER AUTH BRIDGE
-# ============================================================
+
+
 @app.route(
     "/auth/kalxa",
-    methods=["POST"],
+    methods=[
+        "POST",
+    ],
 )
 def kalxa_auth_bridge():
 
@@ -631,18 +1491,6 @@ def kalxa_auth_bridge():
     )
 
 
-    # =====================================================
-    # VERIFY SIGNATURE + EXPIRY
-    # =====================================================
-    #
-    # Token lifetime:
-    #
-    # 90 seconds
-    #
-    # Discovery only needs enough time to redirect the
-    # organizer into Ticketing.
-    # =====================================================
-
     try:
 
         payload = serializer.loads(
@@ -656,34 +1504,22 @@ def kalxa_auth_bridge():
         flash(
             (
                 "Your secure Kalxa Ticketing link "
-                "expired. Open Ticketing again "
-                "from your Kalxa dashboard."
+                "expired. Please open it again."
             ),
             "error",
         )
 
         return redirect(
             url_for(
-                "ticketing_access_error"
+                "organizer_login"
             )
         )
 
 
     except BadSignature:
 
-        current_app.logger.warning(
-            (
-                "[Kalxa Bridge] Invalid signed "
-                "ticketing token."
-            )
-        )
-
         abort(403)
 
-
-    # =====================================================
-    # VALIDATE PAYLOAD
-    # =====================================================
 
     if (
         payload.get("aud")
@@ -708,7 +1544,7 @@ def kalxa_auth_bridge():
     )
 
 
-    organizer_id = (
+    kalxa_organizer_id = (
         payload.get(
             "organizer_id"
         )
@@ -724,7 +1560,7 @@ def kalxa_auth_bridge():
 
     if (
         not bridge_id
-        or organizer_id is None
+        or kalxa_organizer_id is None
         or content_item_id is None
     ):
 
@@ -733,13 +1569,14 @@ def kalxa_auth_bridge():
 
     try:
 
-        organizer_id = int(
-            organizer_id
+        kalxa_organizer_id = int(
+            kalxa_organizer_id
         )
 
         content_item_id = int(
             content_item_id
         )
+
 
     except (
         TypeError,
@@ -749,22 +1586,11 @@ def kalxa_auth_bridge():
         abort(403)
 
 
-    if (
-        organizer_id <= 0
-        or content_item_id <= 0
-    ):
-
-        abort(403)
-
-
-    # =====================================================
-    # ONE-TIME TOKEN PROTECTION
-    # =====================================================
-
     already_used = (
         KalxaBridgeTokenUse.query
         .filter_by(
-            bridge_id=bridge_id
+            bridge_id=
+                bridge_id
         )
         .first()
     )
@@ -772,32 +1598,19 @@ def kalxa_auth_bridge():
 
     if already_used:
 
-        current_app.logger.warning(
-            (
-                "[Kalxa Bridge] Replayed bridge "
-                "token bridge_id=%s"
-            ),
-            bridge_id,
-        )
-
         abort(403)
 
 
-    token_use = (
-        KalxaBridgeTokenUse(
+    token_use = KalxaBridgeTokenUse(
 
-            bridge_id=(
-                bridge_id
-            ),
+        bridge_id=
+            bridge_id,
 
-            kalxa_organizer_id=(
-                organizer_id
-            ),
+        kalxa_organizer_id=
+            kalxa_organizer_id,
 
-            kalxa_content_item_id=(
-                content_item_id
-            ),
-        )
+        kalxa_content_item_id=
+            content_item_id,
     )
 
 
@@ -810,194 +1623,89 @@ def kalxa_auth_bridge():
         db.session.commit()
 
 
-    except Exception as error:
+    except Exception:
 
         db.session.rollback()
-
-
-        current_app.logger.exception(
-            (
-                "[Kalxa Bridge] Unable to consume "
-                "bridge token error=%s"
-            ),
-            error,
-        )
 
         abort(403)
 
 
-    # =====================================================
-    # CREATE TICKETING SESSION
-    # =====================================================
+    # ========================================================
+    # STORE TEMPORARY DISCOVERY CONTEXT
+    # ========================================================
 
-    session.clear()
+    session[
+        "pending_kalxa_organizer_id"
+    ] = kalxa_organizer_id
 
 
     session[
-        "kalxa_organizer_id"
-    ] = organizer_id
-
-
-    session[
-        "kalxa_content_item_id"
+        "pending_kalxa_content_item_id"
     ] = content_item_id
 
 
-    current_app.logger.info(
-        (
-            "[Kalxa Bridge] Organizer authenticated "
-            "organizer_id=%s "
-            "content_item_id=%s"
-        ),
-        organizer_id,
-        content_item_id,
+    organizer = (
+        get_current_organizer()
     )
 
 
-    # =====================================================
-    # CONTINUE TO TICKETING ADMIN DASHBOARD
-    # =====================================================
-    #
-    # The admin dashboard reads:
-    #
-    # session["kalxa_organizer_id"]
-    # session["kalxa_content_item_id"]
-    #
-    # and uses that secure context to display/create the
-    # TicketEvent for the approved Kalxa Discovery event.
-    # =====================================================
+    if organizer:
 
-    return redirect(
-        url_for(
-            "admin_dashboard"
-        )
-    )
-
-    
-# ============================================================
-# CURRENT TICKETING ORGANIZER
-# ============================================================
-
-def get_ticketing_organizer_id():
-
-    organizer_id = (
-        session.get(
+        session[
             "kalxa_organizer_id"
-        )
-    )
+        ] = kalxa_organizer_id
 
 
-    if not organizer_id:
-
-        return None
-
-
-    try:
-
-        return int(
-            organizer_id
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        session.pop(
-            "kalxa_organizer_id",
-            None,
-        )
-
-        return None
-        
-   
-
-
-# ============================================================
-# CURRENT KALXA CONTENT ITEM
-# ============================================================
-
-def get_ticketing_content_item_id():
-
-    content_item_id = (
-        session.get(
+        session[
             "kalxa_content_item_id"
+        ] = content_item_id
+
+
+        if (
+            organizer.kalxa_discovery_organizer_id
+            is None
+        ):
+
+            organizer.kalxa_discovery_organizer_id = (
+                kalxa_organizer_id
+            )
+
+
+            try:
+
+                db.session.commit()
+
+
+            except Exception:
+
+                db.session.rollback()
+
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
         )
-    )
-
-
-    if not content_item_id:
-
-        return None
-
-
-    try:
-
-        return int(
-            content_item_id
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        session.pop(
-            "kalxa_content_item_id",
-            None,
-        )
-
-        return None
-
-   
-        
-def require_ticketing_organizer():
-
-    organizer_id = (
-        get_ticketing_organizer_id()
-    )
-
-
-    if organizer_id:
-
-        return None
 
 
     flash(
         (
-            "Open Kalxa Ticketing from your "
-            "Kalxa organizer dashboard."
+            "Sign in to your Kalxa Ticketing "
+            "organizer account to continue."
         ),
-        "error",
+        "success",
     )
 
 
     return redirect(
         url_for(
-            "ticketing_access_error"
+            "organizer_login"
         )
     )
-    
-    
+
+
 # ============================================================
-# ORGANIZER TICKETING DASHBOARD
-# ============================================================
-# ============================================================
-# ORGANIZER TICKETING DASHBOARD
-# ============================================================
-#
-# Legacy / compatibility route.
-#
-# Ticketing now uses /admin as the single organizer-scoped
-# dashboard because /admin reads both:
-#
-# - kalxa_organizer_id
-# - kalxa_content_item_id
-#
-# from the secure bridge session.
-#
-# Keeping this route prevents old links from breaking while
-# ensuring every organizer reaches the correct dashboard.
+# ORGANIZER DASHBOARD COMPATIBILITY URL
 # ============================================================
 
 @app.route(
@@ -1005,41 +1713,22 @@ def require_ticketing_organizer():
 )
 def organizer_ticketing_dashboard():
 
-    # ========================================================
-    # REQUIRE ORGANIZER SESSION
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
 
 
     if auth:
+
         return auth
 
-
-    # ========================================================
-    # REDIRECT TO MAIN TICKETING DASHBOARD
-    # ========================================================
 
     return redirect(
         url_for(
             "admin_dashboard"
         )
     )
-    
-@app.route(
-    "/ticketing/access"
-)
-def ticketing_access_error():
 
-    return """
-    <h2>Kalxa Ticketing</h2>
-    <p>
-        Please open Ticketing from your
-        Kalxa Organizer Dashboard.
-    </p>
-    """, 401
 
 # ============================================================
 # BOOKING STATUS
@@ -1055,7 +1744,8 @@ def booking_status(
     order = (
         TicketOrder.query
         .filter_by(
-            payment_reference=reference
+            payment_reference=
+                reference
         )
         .first_or_404()
     )
@@ -1081,7 +1771,8 @@ def ticket_page(
     entry_pass = (
         EntryPass.query
         .filter_by(
-            entry_code=entry_code
+            entry_code=
+                entry_code
         )
         .first_or_404()
     )
@@ -1089,7 +1780,8 @@ def ticket_page(
 
     return render_template(
         "ticket.html",
-        entry_pass=entry_pass,
+        entry_pass=
+            entry_pass,
     )
 
 
@@ -1104,22 +1796,15 @@ def ticket_qr(
     entry_code,
 ):
 
-    # =====================================================
-    # LOAD ENTRY PASS
-    # =====================================================
-
     entry_pass = (
         EntryPass.query
         .filter_by(
-            entry_code=entry_code
+            entry_code=
+                entry_code
         )
         .first_or_404()
     )
 
-
-    # =====================================================
-    # VALIDATE ORDER
-    # =====================================================
 
     order = (
         entry_pass.order
@@ -1131,10 +1816,6 @@ def ticket_qr(
         abort(404)
 
 
-    # =====================================================
-    # ONLY PAID TICKETS GET A VALID QR
-    # =====================================================
-
     if (
         order.payment_status
         != "paid"
@@ -1142,27 +1823,6 @@ def ticket_qr(
 
         abort(403)
 
-
-    # =====================================================
-    # GENERATE QR
-    # =====================================================
-    #
-    # IMPORTANT:
-    #
-    # The QR contains the actual EntryPass code:
-    #
-    # KX-51QU-T8JZ
-    #
-    # It does NOT contain:
-    #
-    # - the booking reference
-    # - the order reference
-    # - the ticket URL
-    #
-    # This means the organizer scanner can read the QR
-    # directly and use the resulting value to find the
-    # EntryPass during check-in.
-    # =====================================================
 
     qr_value = (
         entry_pass.entry_code
@@ -1173,10 +1833,6 @@ def ticket_qr(
         qr_value
     )
 
-
-    # =====================================================
-    # WRITE QR TO MEMORY
-    # =====================================================
 
     buffer = io.BytesIO()
 
@@ -1192,206 +1848,14 @@ def ticket_qr(
     )
 
 
-    # =====================================================
-    # RETURN PNG
-    # =====================================================
-
     return Response(
         buffer.getvalue(),
         mimetype="image/png",
     )
-# ============================================================
-# ADMIN LOGIN
-# ============================================================
-
-@app.route(
-    "/admin/login",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-def admin_login():
-
-    # ========================================================
-    # ALREADY LOGGED IN
-    # ========================================================
-
-    if session.get(
-        "kalxa_ticketing_admin"
-    ):
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # LOGIN
-    # ========================================================
-
-    if request.method == "POST":
-
-        supplied_password = (
-            request.form.get(
-                "password",
-                "",
-            )
-            .strip()
-        )
-
-
-        expected_password = (
-            os.environ.get(
-                "ADMIN_PASSWORD",
-                "",
-            )
-            .strip()
-        )
-
-
-        current_app.logger.info(
-            (
-                "Admin login attempt. "
-                "supplied_length=%s "
-                "expected_length=%s"
-            ),
-            len(supplied_password),
-            len(expected_password),
-        )
-
-
-        if (
-            expected_password
-            and
-            secrets.compare_digest(
-                supplied_password,
-                expected_password,
-            )
-        ):
-
-            session.clear()
-
-
-            session[
-                "kalxa_ticketing_admin"
-            ] = True
-
-
-            flash(
-                "Welcome to Kalxa Ticketing.",
-                "success",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        flash(
-            "Invalid admin password.",
-            "error",
-        )
-
-
-    # ========================================================
-    # LOGIN PAGE
-    # ========================================================
-
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-
-    <head>
-
-        <meta charset="UTF-8">
-
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-        >
-
-        <title>
-            Kalxa Ticketing Admin
-        </title>
-
-        <link
-            rel="stylesheet"
-            href="/static/css/style.css"
-        >
-
-    </head>
-
-    <body class="admin-body">
-
-        <div class="admin-login-card">
-
-            <h1>
-                Kalxa Ticketing
-            </h1>
-
-            <p>
-                Organizer Control Centre
-            </p>
-
-            <form method="POST">
-
-                <label>
-
-                    Admin Password
-
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                        autocomplete="current-password"
-                    >
-
-                </label>
-
-                <button
-                    type="submit"
-                    class="button"
-                >
-                    Enter Dashboard
-                </button>
-
-            </form>
-
-        </div>
-
-    </body>
-
-    </html>
-    """
 
 
 # ============================================================
-# ADMIN LOGOUT
-# ============================================================
-
-@app.route(
-    "/admin/logout"
-)
-def admin_logout():
-
-    session.clear()
-
-
-    return redirect(
-        url_for(
-            "admin_login"
-        )
-    )
-
-
-# ============================================================
-# ADMIN DASHBOARD
+# ORGANIZER DASHBOARD
 # ============================================================
 
 @app.route(
@@ -1399,21 +1863,18 @@ def admin_logout():
 )
 def admin_dashboard():
 
-    # ========================================================
-    # REQUIRE ORGANIZER SESSION
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
 
 
     if auth:
+
         return auth
 
 
-    organizer_id = (
-        get_ticketing_organizer_id()
+    organizer = (
+        get_current_organizer()
     )
 
 
@@ -1421,14 +1882,6 @@ def admin_dashboard():
         get_ticketing_content_item_id()
     )
 
-
-    # ========================================================
-    # CURRENT DISCOVERY EVENT
-    # ========================================================
-    #
-    # This is the ContentItem used when the organizer clicked
-    # "Manage Tickets" inside Kalxa Discovery.
-    # ========================================================
 
     current_ticket_event = None
 
@@ -1438,27 +1891,22 @@ def admin_dashboard():
         current_ticket_event = (
             TicketEvent.query
             .filter_by(
-                kalxa_content_item_id=(
-                    active_content_item_id
-                ),
-                kalxa_organizer_id=(
-                    organizer_id
-                ),
+
+                organizer_id=
+                    organizer.id,
+
+                kalxa_content_item_id=
+                    active_content_item_id,
             )
             .first()
         )
 
 
-    # ========================================================
-    # ORGANIZER EVENTS ONLY
-    # ========================================================
-
     events = (
         TicketEvent.query
         .filter_by(
-            kalxa_organizer_id=(
-                organizer_id
-            )
+            organizer_id=
+                organizer.id
         )
         .order_by(
             TicketEvent.created_at.desc()
@@ -1467,20 +1915,18 @@ def admin_dashboard():
     )
 
 
-    # ========================================================
-    # ORGANIZER ORDERS ONLY
-    # ========================================================
-
     organizer_orders = (
         TicketOrder.query
+
         .join(
             TicketEvent,
             TicketOrder.event_id
             == TicketEvent.id,
         )
+
         .filter(
-            TicketEvent.kalxa_organizer_id
-            == organizer_id
+            TicketEvent.organizer_id
+            == organizer.id
         )
     )
 
@@ -1492,80 +1938,78 @@ def admin_dashboard():
 
     paid_orders = (
         organizer_orders
+
         .filter(
             TicketOrder.payment_status
             == "paid"
         )
+
         .count()
     )
 
 
-    # ========================================================
-    # ORGANIZER CHECK-INS ONLY
-    # ========================================================
-
     checked_in = (
         EntryPass.query
+
         .join(
             TicketOrder,
             EntryPass.order_id
             == TicketOrder.id,
         )
+
         .join(
             TicketEvent,
             TicketOrder.event_id
             == TicketEvent.id,
         )
+
         .filter(
-            TicketEvent.kalxa_organizer_id
-            == organizer_id
+            TicketEvent.organizer_id
+            == organizer.id
         )
+
         .filter(
             EntryPass.status
             == "used"
         )
+
         .count()
     )
 
 
-    # ========================================================
-    # RENDER
-    # ========================================================
-
     return render_template(
         "admin/dashboard.html",
 
-        events=(
-            events
-        ),
+        events=
+            events,
 
-        total_orders=(
-            total_orders
-        ),
+        total_orders=
+            total_orders,
 
-        paid_orders=(
-            paid_orders
-        ),
+        paid_orders=
+            paid_orders,
 
-        checked_in=(
-            checked_in
-        ),
+        checked_in=
+            checked_in,
 
-        organizer_id=(
-            organizer_id
-        ),
+        organizer=
+            organizer,
 
-        active_content_item_id=(
-            active_content_item_id
-        ),
+        organizer_id=
+            organizer.id,
 
-        current_ticket_event=(
-            current_ticket_event
-        ),
+        active_content_item_id=
+            active_content_item_id,
+
+        current_ticket_event=
+            current_ticket_event,
     )
+
+
 # ============================================================
-# ADMIN CREATE EVENT
+# CREATE EVENT
 # ============================================================
+
 @app.route(
     "/admin/events/new",
     methods=[
@@ -1574,26 +2018,18 @@ def admin_dashboard():
 )
 def admin_create_event():
 
-    # ========================================================
-    # REQUIRE VERIFIED KALXA ORGANIZER SESSION
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # This route NO LONGER uses require_admin().
-    #
-    # Ticket event ownership comes from the secure
-    # Discovery -> Ticketing authentication bridge.
-    # ========================================================
+    auth = (
+        require_ticketing_organizer()
+    )
 
-    auth = require_ticketing_organizer()
 
     if auth:
+
         return auth
 
 
-    kalxa_organizer_id = (
-        get_ticketing_organizer_id()
+    organizer = (
+        get_current_organizer()
     )
 
 
@@ -1602,100 +2038,51 @@ def admin_create_event():
     )
 
 
-    # ========================================================
-    # REQUIRE DISCOVERY EVENT CONTEXT
-    # ========================================================
-
-    if not kalxa_content_item_id:
-
-        current_app.logger.warning(
-            (
-                "[Ticketing] Organizer attempted to create "
-                "an event without a Kalxa content context. "
-                "organizer_id=%s"
-            ),
-            kalxa_organizer_id,
-        )
-
-
-        flash(
-            (
-                "Open Ticketing from an approved event "
-                "inside your Kalxa Organizer Dashboard."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # DUPLICATE / OWNERSHIP PROTECTION
-    # ========================================================
-    #
-    # One Kalxa Discovery listing should normally create
-    # only one TicketEvent.
-    #
-    # If the content item is already linked to another
-    # organizer, something is wrong and access is denied.
-    # ========================================================
-
-    existing_event = (
-        TicketEvent.query
-        .filter_by(
-            kalxa_content_item_id=(
-                kalxa_content_item_id
-            )
-        )
-        .first()
+    kalxa_organizer_id = (
+        get_ticketing_legacy_kalxa_organizer_id()
     )
 
 
-    if existing_event:
+    # ========================================================
+    # DUPLICATE DISCOVERY LINK PROTECTION
+    # ========================================================
 
-        if (
-            existing_event.kalxa_organizer_id
-            != kalxa_organizer_id
-        ):
+    if kalxa_content_item_id:
 
-            current_app.logger.error(
+        existing_event = (
+            TicketEvent.query
+            .filter_by(
+                kalxa_content_item_id=
+                    kalxa_content_item_id
+            )
+            .first()
+        )
+
+
+        if existing_event:
+
+            if (
+                existing_event.organizer_id
+                != organizer.id
+            ):
+
+                abort(403)
+
+
+            flash(
                 (
-                    "[Ticketing Security] Content ownership "
-                    "collision. "
-                    "session_organizer_id=%s "
-                    "content_item_id=%s "
-                    "existing_event_id=%s "
-                    "existing_owner_id=%s"
+                    "Ticketing has already been created "
+                    "for this linked Kalxa event."
                 ),
-                kalxa_organizer_id,
-                kalxa_content_item_id,
-                existing_event.id,
-                existing_event.kalxa_organizer_id,
+                "error",
             )
 
 
-            abort(403)
-
-
-        flash(
-            (
-                "Ticketing has already been created "
-                "for this Kalxa event."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
+            return redirect(
+                url_for(
+                    "admin_dashboard"
+                )
             )
-        )
 
 
     # ========================================================
@@ -1829,7 +2216,10 @@ def admin_create_event():
     ):
 
         flash(
-            "Please enter a valid ticket price.",
+            (
+                "Please enter a valid "
+                "ticket price."
+            ),
             "error",
         )
 
@@ -1916,25 +2306,6 @@ def admin_create_event():
         )
 
 
-        if not original_filename:
-
-            flash(
-                "Invalid poster filename.",
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        # ====================================================
-        # VALIDATE FILE EXTENSION
-        # ====================================================
-
         if (
             "."
             not in original_filename
@@ -1995,18 +2366,10 @@ def admin_create_event():
             )
 
 
-        # ====================================================
-        # UNIQUE FILE NAME
-        # ====================================================
-
         filename = (
             f"{uuid.uuid4().hex}.{extension}"
         )
 
-
-        # ====================================================
-        # UPLOAD DIRECTORY
-        # ====================================================
 
         upload_folder = (
             os.path.join(
@@ -2032,10 +2395,6 @@ def admin_create_event():
         )
 
 
-        # ====================================================
-        # SAVE POSTER
-        # ====================================================
-
         try:
 
             poster_image.save(
@@ -2048,15 +2407,10 @@ def admin_create_event():
             current_app.logger.exception(
                 (
                     "[Ticketing] Failed to save "
-                    "event poster. "
-                    "organizer_id=%s "
-                    "content_item_id=%s "
-                    "title=%s "
-                    "error=%s"
+                    "event poster "
+                    "organizer_id=%s error=%s"
                 ),
-                kalxa_organizer_id,
-                kalxa_content_item_id,
-                title,
+                organizer.id,
                 error,
             )
 
@@ -2076,10 +2430,6 @@ def admin_create_event():
                 )
             )
 
-
-        # ====================================================
-        # PUBLIC STATIC URL
-        # ====================================================
 
         image_url = (
             url_for(
@@ -2146,33 +2496,30 @@ def admin_create_event():
 
 
     # ========================================================
-    # CREATE TICKET EVENT
+    # CREATE EVENT
     # ========================================================
     #
     # SECURITY:
     #
-    # Neither kalxa_organizer_id nor kalxa_content_item_id
-    # comes from request.form.
+    # organizer_id comes only from the authenticated local
+    # organizer session.
     #
-    # Both come from the verified session created by the
-    # signed Discovery authentication bridge.
+    # Optional Discovery IDs are metadata only.
     # ========================================================
 
     event = TicketEvent(
 
-        kalxa_organizer_id=(
-            kalxa_organizer_id
-        ),
+        organizer_id=
+            organizer.id,
 
-        kalxa_content_item_id=(
-            kalxa_content_item_id
-        ),
+        kalxa_organizer_id=
+            kalxa_organizer_id,
 
+        kalxa_content_item_id=
+            kalxa_content_item_id,
 
-        title=(
-            title
-        ),
-
+        title=
+            title,
 
         description=(
             request.form.get(
@@ -2183,7 +2530,6 @@ def admin_create_event():
             or None
         ),
 
-
         venue=(
             request.form.get(
                 "venue",
@@ -2193,96 +2539,52 @@ def admin_create_event():
             or None
         ),
 
+        event_date=
+            event_date,
 
-        event_date=(
-            event_date
-        ),
+        event_time=
+            event_time,
 
+        organizer_name=
+            organizer.display_name,
 
-        event_time=(
-            event_time
-        ),
+        organizer_phone=
+            organizer.phone,
 
+        image_url=
+            image_url,
 
-        # ====================================================
-        # ORGANIZER DISPLAY SNAPSHOT
-        # ====================================================
-        #
-        # Ownership is NOT determined from these fields.
-        #
-        # We leave them empty for now because the secure
-        # bridge currently transfers organizer IDs only.
-        #
-        # Later we can safely transfer organizer display
-        # name/phone as signed token claims.
-        # ====================================================
+        ticket_price=
+            ticket_price,
 
-        organizer_name=None,
+        ticket_capacity=
+            ticket_capacity,
 
-        organizer_phone=None,
+        bank_name=
+            bank_name,
 
+        account_holder=
+            account_holder,
 
-        # ====================================================
-        # POSTER
-        # ====================================================
+        account_number=
+            account_number,
 
-        image_url=(
-            image_url
-        ),
+        branch_code=
+            branch_code,
 
+        payment_instructions=
+            payment_instructions,
 
-        # ====================================================
-        # TICKETS
-        # ====================================================
-
-        ticket_price=(
-            ticket_price
-        ),
-
-        ticket_capacity=(
-            ticket_capacity
-        ),
-
-
-        # ====================================================
-        # PAYMENT DETAILS
-        # ====================================================
-
-        bank_name=(
-            bank_name
-        ),
-
-        account_holder=(
-            account_holder
-        ),
-
-        account_number=(
-            account_number
-        ),
-
-        branch_code=(
-            branch_code
-        ),
-
-        payment_instructions=(
-            payment_instructions
-        ),
-
-
-        active=True,
+        active=
+            True,
     )
 
-
-    # ========================================================
-    # SAVE EVENT
-    # ========================================================
 
     try:
 
         db.session.add(
             event
         )
-
 
         db.session.commit()
 
@@ -2291,10 +2593,6 @@ def admin_create_event():
 
         db.session.rollback()
 
-
-        # ====================================================
-        # DELETE POSTER IF DB SAVE FAILED
-        # ====================================================
 
         if (
             poster_path
@@ -2315,22 +2613,19 @@ def admin_create_event():
                 current_app.logger.exception(
                     (
                         "[Ticketing] Failed to remove "
-                        "poster after event creation "
-                        "failed."
+                        "poster after event save failure."
                     )
                 )
 
 
         current_app.logger.exception(
             (
-                "[Ticketing] Failed to create event. "
+                "[Ticketing] Failed to create event "
                 "organizer_id=%s "
-                "content_item_id=%s "
                 "title=%s "
                 "error=%s"
             ),
-            kalxa_organizer_id,
-            kalxa_content_item_id,
+            organizer.id,
             title,
             error,
         )
@@ -2352,23 +2647,6 @@ def admin_create_event():
         )
 
 
-    # ========================================================
-    # SUCCESS LOG
-    # ========================================================
-
-    current_app.logger.info(
-        (
-            "[Ticketing] Ticket event created "
-            "event_id=%s "
-            "organizer_id=%s "
-            "content_item_id=%s"
-        ),
-        event.id,
-        event.kalxa_organizer_id,
-        event.kalxa_content_item_id,
-    )
-
-
     flash(
         "Ticket event created successfully.",
         "success",
@@ -2381,9 +2659,11 @@ def admin_create_event():
         )
     )
 
+
 # ============================================================
-# ADMIN ORDERS
+# ORGANIZER ORDERS
 # ============================================================
+
 @app.route(
     "/admin/events/<int:event_id>/orders"
 )
@@ -2391,61 +2671,39 @@ def admin_orders(
     event_id,
 ):
 
-    # ========================================================
-    # REQUIRE VERIFIED ORGANIZER SESSION
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
 
 
-    organizer_id = (
-        get_ticketing_organizer_id()
+    organizer = (
+        get_current_organizer()
     )
 
-
-    # ========================================================
-    # FIND EVENT OWNED BY THIS ORGANIZER
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # Do not:
-    #
-    # TicketEvent.query.get_or_404(event_id)
-    #
-    # because that would allow Organizer #7 to manually
-    # request Organizer #12's event URL.
-    # ========================================================
 
     event = (
         TicketEvent.query
         .filter_by(
-            id=(
-                event_id
-            ),
-            kalxa_organizer_id=(
-                organizer_id
-            ),
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
         )
         .first_or_404()
     )
 
 
-    # ========================================================
-    # ORDERS FOR THIS OWNED EVENT ONLY
-    # ========================================================
-
     orders = (
         TicketOrder.query
         .filter_by(
-            event_id=(
+            event_id=
                 event.id
-            )
         )
         .order_by(
             TicketOrder.created_at.desc()
@@ -2454,35 +2712,21 @@ def admin_orders(
     )
 
 
-    current_app.logger.info(
-        (
-            "[Ticketing Orders] Organizer opened orders "
-            "organizer_id=%s "
-            "event_id=%s "
-            "order_count=%s"
-        ),
-        organizer_id,
-        event.id,
-        len(
-            orders
-        ),
-    )
-
-
     return render_template(
         "admin/orders.html",
 
-        event=(
-            event
-        ),
+        event=
+            event,
 
-        orders=(
-            orders
-        ),
+        orders=
+            orders,
     )
+
+
 # ============================================================
 # MARK PAYMENT PAID
 # ============================================================
+
 @app.route(
     "/admin/orders/<int:order_id>/mark-paid",
     methods=[
@@ -2493,41 +2737,20 @@ def admin_mark_paid(
     order_id,
 ):
 
-    # ========================================================
-    # REQUIRE VERIFIED ORGANIZER SESSION
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
 
 
-    organizer_id = (
-        get_ticketing_organizer_id()
+    organizer = (
+        get_current_organizer()
     )
 
-
-    # ========================================================
-    # FIND ORDER OWNED BY THIS ORGANIZER
-    # ========================================================
-    #
-    # Ownership chain:
-    #
-    # TicketOrder
-    #     ↓
-    # TicketEvent
-    #     ↓
-    # kalxa_organizer_id
-    #
-    # This prevents Organizer #7 from manually submitting:
-    #
-    # /admin/orders/999/mark-paid
-    #
-    # when order #999 belongs to Organizer #12.
-    # ========================================================
 
     order = (
         TicketOrder.query
@@ -2544,84 +2767,18 @@ def admin_mark_paid(
         )
 
         .filter(
-            TicketEvent.kalxa_organizer_id
-            == organizer_id
+            TicketEvent.organizer_id
+            == organizer.id
         )
 
         .first_or_404()
     )
 
 
-    # ========================================================
-    # DEFENSIVE EVENT CHECK
-    # ========================================================
-
     event = (
         order.event
     )
 
-
-    if not event:
-
-        current_app.logger.error(
-            (
-                "[Ticketing Payment] Order has no "
-                "event relationship "
-                "organizer_id=%s "
-                "order_id=%s"
-            ),
-            organizer_id,
-            order.id,
-        )
-
-
-        flash(
-            (
-                "This order is not linked to a valid "
-                "ticket event."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # OWNERSHIP DOUBLE-CHECK
-    # ========================================================
-
-    if (
-        event.kalxa_organizer_id
-        != organizer_id
-    ):
-
-        current_app.logger.warning(
-            (
-                "[Ticketing Security] Cross-organizer "
-                "payment confirmation blocked "
-                "session_organizer_id=%s "
-                "order_id=%s "
-                "event_id=%s "
-                "event_owner_id=%s"
-            ),
-            organizer_id,
-            order.id,
-            event.id,
-            event.kalxa_organizer_id,
-        )
-
-
-        abort(403)
-
-
-    # ========================================================
-    # ALREADY PAID
-    # ========================================================
 
     if (
         order.payment_status
@@ -2637,16 +2794,11 @@ def admin_mark_paid(
         return redirect(
             url_for(
                 "admin_orders",
-                event_id=(
-                    event.id
-                ),
+                event_id=
+                    event.id,
             )
         )
 
-
-    # ========================================================
-    # FINAL CAPACITY CHECK
-    # ========================================================
 
     if (
         event.ticket_capacity
@@ -2663,24 +2815,6 @@ def admin_mark_paid(
             > remaining
         ):
 
-            current_app.logger.warning(
-                (
-                    "[Ticketing Payment] Capacity "
-                    "confirmation blocked "
-                    "organizer_id=%s "
-                    "event_id=%s "
-                    "order_id=%s "
-                    "quantity=%s "
-                    "remaining=%s"
-                ),
-                organizer_id,
-                event.id,
-                order.id,
-                order.quantity,
-                remaining,
-            )
-
-
             flash(
                 (
                     "Cannot confirm payment because "
@@ -2693,16 +2827,11 @@ def admin_mark_paid(
             return redirect(
                 url_for(
                     "admin_orders",
-                    event_id=(
-                        event.id
-                    ),
+                    event_id=
+                        event.id,
                 )
             )
 
-
-    # ========================================================
-    # MARK PAID
-    # ========================================================
 
     now = (
         datetime.utcnow()
@@ -2719,10 +2848,6 @@ def admin_mark_paid(
     )
 
 
-    # ========================================================
-    # GENERATE ONE ENTRY PASS PER TICKET
-    # ========================================================
-
     existing_pass_count = (
         len(
             order.entry_passes
@@ -2737,41 +2862,13 @@ def admin_mark_paid(
     )
 
 
-    # ========================================================
-    # DEFENSIVE PASS COUNT CHECK
-    # ========================================================
-    #
-    # If somehow more passes exist than ordered quantity,
-    # do not create more.
-    # ========================================================
-
     if (
         passes_to_create
         < 0
     ):
 
-        current_app.logger.warning(
-            (
-                "[Ticketing Payment] Order has more "
-                "entry passes than quantity "
-                "organizer_id=%s "
-                "order_id=%s "
-                "quantity=%s "
-                "existing_passes=%s"
-            ),
-            organizer_id,
-            order.id,
-            order.quantity,
-            existing_pass_count,
-        )
-
-
         passes_to_create = 0
 
-
-    # ========================================================
-    # CREATE PASSES
-    # ========================================================
 
     for _ in range(
         passes_to_create
@@ -2779,17 +2876,14 @@ def admin_mark_paid(
 
         entry_pass = EntryPass(
 
-            order_id=(
-                order.id
-            ),
+            order_id=
+                order.id,
 
-            entry_code=(
-                generate_entry_code()
-            ),
+            entry_code=
+                generate_entry_code(),
 
-            status=(
-                "valid"
-            ),
+            status=
+                "valid",
         )
 
 
@@ -2797,10 +2891,6 @@ def admin_mark_paid(
             entry_pass
         )
 
-
-    # ========================================================
-    # SAVE
-    # ========================================================
 
     try:
 
@@ -2814,15 +2904,13 @@ def admin_mark_paid(
 
         current_app.logger.exception(
             (
-                "[Ticketing Payment] Failed to confirm "
-                "ticket payment "
+                "[Ticketing Payment] "
+                "Failed to confirm ticket payment "
                 "organizer_id=%s "
-                "event_id=%s "
                 "order_id=%s "
                 "error=%s"
             ),
-            organizer_id,
-            event.id,
+            organizer.id,
             order.id,
             error,
         )
@@ -2840,32 +2928,10 @@ def admin_mark_paid(
         return redirect(
             url_for(
                 "admin_orders",
-                event_id=(
-                    event.id
-                ),
+                event_id=
+                    event.id,
             )
         )
-
-
-    # ========================================================
-    # SUCCESS LOG
-    # ========================================================
-
-    current_app.logger.info(
-        (
-            "[Ticketing Payment] Payment confirmed "
-            "organizer_id=%s "
-            "event_id=%s "
-            "order_id=%s "
-            "quantity=%s "
-            "passes_created=%s"
-        ),
-        organizer_id,
-        event.id,
-        order.id,
-        order.quantity,
-        passes_to_create,
-    )
 
 
     flash(
@@ -2880,9 +2946,8 @@ def admin_mark_paid(
     return redirect(
         url_for(
             "admin_orders",
-            event_id=(
-                event.id
-            ),
+            event_id=
+                event.id,
         )
     )
 
@@ -2890,6 +2955,7 @@ def admin_mark_paid(
 # ============================================================
 # CHECK-IN PAGE
 # ============================================================
+
 @app.route(
     "/admin/checkin",
     methods=[
@@ -2899,33 +2965,24 @@ def admin_mark_paid(
 )
 def admin_checkin():
 
-    # ========================================================
-    # REQUIRE VERIFIED ORGANIZER SESSION
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
 
 
-    organizer_id = (
-        get_ticketing_organizer_id()
+    organizer = (
+        get_current_organizer()
     )
 
 
     entry_pass = None
     message = None
 
-
-    # ========================================================
-    # ACCEPT:
-    #
-    # 1. MANUAL ENTRY CODE
-    # 2. FULL QR TICKET URL
-    # ========================================================
 
     if (
         request.method
@@ -2953,15 +3010,10 @@ def admin_checkin():
 
                 entry_pass=None,
 
-                message=(
-                    message
-                ),
+                message=
+                    message,
             )
 
-
-        # ====================================================
-        # NORMALIZE
-        # ====================================================
 
         entry_code = (
             raw_value
@@ -2969,10 +3021,6 @@ def admin_checkin():
             .upper()
         )
 
-
-        # ====================================================
-        # EXTRACT CODE FROM FULL TICKET URL
-        # ====================================================
 
         if (
             "/TICKET/"
@@ -2997,22 +3045,6 @@ def admin_checkin():
             )
 
 
-        # ====================================================
-        # LOOK UP PASS + OWNERSHIP CHAIN
-        # ====================================================
-        #
-        # EntryPass
-        #    ↓
-        # TicketOrder
-        #    ↓
-        # TicketEvent
-        #    ↓
-        # kalxa_organizer_id
-        #
-        # This ensures Organizer #7 can only scan tickets
-        # belonging to Organizer #7's own events.
-        # ====================================================
-
         entry_pass = (
             EntryPass.query
 
@@ -3034,17 +3066,13 @@ def admin_checkin():
             )
 
             .filter(
-                TicketEvent.kalxa_organizer_id
-                == organizer_id
+                TicketEvent.organizer_id
+                == organizer.id
             )
 
             .first()
         )
 
-
-        # ====================================================
-        # NOT FOUND / NOT OWNED
-        # ====================================================
 
         if not entry_pass:
 
@@ -3052,22 +3080,6 @@ def admin_checkin():
                 "Ticket not found for your events."
             )
 
-
-            current_app.logger.warning(
-                (
-                    "[Ticketing Check-In] Ticket lookup "
-                    "failed or ownership mismatch "
-                    "organizer_id=%s "
-                    "entry_code=%s"
-                ),
-                organizer_id,
-                entry_code,
-            )
-
-
-        # ====================================================
-        # DEFENSIVE RELATIONSHIP CHECK
-        # ====================================================
 
         elif (
             not entry_pass.order
@@ -3078,51 +3090,6 @@ def admin_checkin():
                 "This ticket record is incomplete."
             )
 
-
-            current_app.logger.error(
-                (
-                    "[Ticketing Check-In] Broken ticket "
-                    "relationship "
-                    "organizer_id=%s "
-                    "entry_pass_id=%s"
-                ),
-                organizer_id,
-                entry_pass.id,
-            )
-
-
-        # ====================================================
-        # OWNERSHIP DOUBLE-CHECK
-        # ====================================================
-
-        elif (
-            entry_pass.order.event.kalxa_organizer_id
-            != organizer_id
-        ):
-
-            entry_pass = None
-
-
-            message = (
-                "Ticket not found for your events."
-            )
-
-
-            current_app.logger.warning(
-                (
-                    "[Ticketing Security] Cross-organizer "
-                    "check-in attempt blocked "
-                    "organizer_id=%s "
-                    "entry_code=%s"
-                ),
-                organizer_id,
-                entry_code,
-            )
-
-
-        # ====================================================
-        # PAYMENT STATUS
-        # ====================================================
 
         elif (
             entry_pass.order.payment_status
@@ -3135,10 +3102,6 @@ def admin_checkin():
             )
 
 
-        # ====================================================
-        # ALREADY USED
-        # ====================================================
-
         elif (
             entry_pass.status
             == "used"
@@ -3148,10 +3111,6 @@ def admin_checkin():
                 "This ticket has already been used."
             )
 
-
-        # ====================================================
-        # INVALID STATUS
-        # ====================================================
 
         elif (
             entry_pass.status
@@ -3163,43 +3122,21 @@ def admin_checkin():
             )
 
 
-        # ====================================================
-        # VALID TICKET
-        # ====================================================
-
-        else:
-
-            current_app.logger.info(
-                (
-                    "[Ticketing Check-In] Valid ticket found "
-                    "organizer_id=%s "
-                    "event_id=%s "
-                    "entry_pass_id=%s "
-                    "entry_code=%s"
-                ),
-                organizer_id,
-                entry_pass.order.event.id,
-                entry_pass.id,
-                entry_pass.entry_code,
-            )
-
-
     return render_template(
         "admin/checkin.html",
 
-        entry_pass=(
-            entry_pass
-        ),
+        entry_pass=
+            entry_pass,
 
-        message=(
-            message
-        ),
+        message=
+            message,
     )
 
 
 # ============================================================
 # CONFIRM CHECK-IN
 # ============================================================
+
 @app.route(
     "/admin/checkin/<int:pass_id>",
     methods=[
@@ -3210,46 +3147,20 @@ def admin_confirm_checkin(
     pass_id,
 ):
 
-    # ========================================================
-    # REQUIRE VERIFIED ORGANIZER SESSION
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
 
 
-    organizer_id = (
-        get_ticketing_organizer_id()
+    organizer = (
+        get_current_organizer()
     )
 
-
-    # ========================================================
-    # FIND PASS OWNED BY THIS ORGANIZER
-    # ========================================================
-    #
-    # SECURITY:
-    #
-    # Do not use:
-    #
-    # EntryPass.query.get_or_404(pass_id)
-    #
-    # because a malicious organizer could manually submit
-    # another organizer's pass ID.
-    #
-    # Ownership chain:
-    #
-    # EntryPass
-    #     ↓
-    # TicketOrder
-    #     ↓
-    # TicketEvent
-    #     ↓
-    # kalxa_organizer_id
-    # ========================================================
 
     entry_pass = (
         EntryPass.query
@@ -3272,34 +3183,18 @@ def admin_confirm_checkin(
         )
 
         .filter(
-            TicketEvent.kalxa_organizer_id
-            == organizer_id
+            TicketEvent.organizer_id
+            == organizer.id
         )
 
         .first_or_404()
     )
 
 
-    # ========================================================
-    # DEFENSIVE RELATIONSHIP CHECK
-    # ========================================================
-
     if (
         not entry_pass.order
         or not entry_pass.order.event
     ):
-
-        current_app.logger.error(
-            (
-                "[Ticketing Check-In] Broken pass "
-                "relationship "
-                "organizer_id=%s "
-                "entry_pass_id=%s"
-            ),
-            organizer_id,
-            entry_pass.id,
-        )
-
 
         flash(
             (
@@ -3316,43 +3211,6 @@ def admin_confirm_checkin(
             )
         )
 
-
-    # ========================================================
-    # OWNERSHIP DOUBLE-CHECK
-    # ========================================================
-
-    event = (
-        entry_pass.order.event
-    )
-
-
-    if (
-        event.kalxa_organizer_id
-        != organizer_id
-    ):
-
-        current_app.logger.warning(
-            (
-                "[Ticketing Security] Cross-organizer "
-                "check-in blocked "
-                "session_organizer_id=%s "
-                "entry_pass_id=%s "
-                "event_id=%s "
-                "event_owner_id=%s"
-            ),
-            organizer_id,
-            entry_pass.id,
-            event.id,
-            event.kalxa_organizer_id,
-        )
-
-
-        abort(403)
-
-
-    # ========================================================
-    # PAYMENT MUST BE PAID
-    # ========================================================
 
     if (
         entry_pass.order.payment_status
@@ -3375,10 +3233,6 @@ def admin_confirm_checkin(
         )
 
 
-    # ========================================================
-    # PASS MUST STILL BE VALID
-    # ========================================================
-
     if (
         entry_pass.status
         != "valid"
@@ -3400,19 +3254,11 @@ def admin_confirm_checkin(
         )
 
 
-    # ========================================================
-    # CHECK FOR EXISTING CHECK-IN
-    # ========================================================
-    #
-    # This provides another layer of duplicate protection.
-    # ========================================================
-
     existing_checkin = (
         CheckIn.query
         .filter_by(
-            entry_pass_id=(
+            entry_pass_id=
                 entry_pass.id
-            )
         )
         .first()
     )
@@ -3420,22 +3266,11 @@ def admin_confirm_checkin(
 
     if existing_checkin:
 
-        current_app.logger.warning(
-            (
-                "[Ticketing Check-In] Duplicate check-in "
-                "blocked "
-                "organizer_id=%s "
-                "entry_pass_id=%s "
-                "checkin_id=%s"
-            ),
-            organizer_id,
-            entry_pass.id,
-            existing_checkin.id,
-        )
-
-
         flash(
-            "This ticket has already been checked in.",
+            (
+                "This ticket has already "
+                "been checked in."
+            ),
             "error",
         )
 
@@ -3446,10 +3281,6 @@ def admin_confirm_checkin(
             )
         )
 
-
-    # ========================================================
-    # MARK PASS USED
-    # ========================================================
 
     now = (
         datetime.utcnow()
@@ -3466,22 +3297,16 @@ def admin_confirm_checkin(
     )
 
 
-    # ========================================================
-    # CREATE CHECK-IN AUDIT RECORD
-    # ========================================================
-
     checkin = CheckIn(
 
-        entry_pass_id=(
-            entry_pass.id
-        ),
+        entry_pass_id=
+            entry_pass.id,
 
-        checked_in_at=(
-            now
-        ),
+        checked_in_at=
+            now,
 
         checked_in_by=(
-            f"organizer:{organizer_id}"
+            f"organizer:{organizer.id}"
         ),
     )
 
@@ -3490,10 +3315,6 @@ def admin_confirm_checkin(
         checkin
     )
 
-
-    # ========================================================
-    # SAVE
-    # ========================================================
 
     try:
 
@@ -3507,15 +3328,13 @@ def admin_confirm_checkin(
 
         current_app.logger.exception(
             (
-                "[Ticketing Check-In] Ticket check-in "
-                "failed "
+                "[Ticketing Check-In] "
+                "Ticket check-in failed "
                 "organizer_id=%s "
-                "event_id=%s "
                 "entry_pass_id=%s "
                 "error=%s"
             ),
-            organizer_id,
-            event.id,
+            organizer.id,
             entry_pass.id,
             error,
         )
@@ -3537,25 +3356,6 @@ def admin_confirm_checkin(
         )
 
 
-    # ========================================================
-    # SUCCESS LOG
-    # ========================================================
-
-    current_app.logger.info(
-        (
-            "[Ticketing Check-In] Ticket checked in "
-            "organizer_id=%s "
-            "event_id=%s "
-            "order_id=%s "
-            "entry_pass_id=%s"
-        ),
-        organizer_id,
-        event.id,
-        entry_pass.order.id,
-        entry_pass.id,
-    )
-
-
     flash(
         "Ticket checked in successfully.",
         "success",
@@ -3567,6 +3367,7 @@ def admin_confirm_checkin(
             "admin_checkin"
         )
     )
+
 
 # ============================================================
 # HEALTH
