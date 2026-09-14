@@ -538,6 +538,49 @@
         }
 
 
+        .button:hover {
+
+            background:
+                #27272a;
+        }
+
+
+        .button-secondary {
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border:
+                1px solid #d1d5db;
+        }
+
+
+        .button-secondary:hover {
+
+            background:
+                #f8fafc;
+        }
+
+
+        .track-copy {
+
+            margin-top:
+                16px;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+
+            text-align:
+                center;
+        }
+
+
         @media (
             max-width: 560px
         ) {
@@ -748,6 +791,16 @@
                     {% endif %}
 
 
+                    <a
+                        href="{{ url_for(
+                            'track_ticket'
+                        ) }}"
+                        class="button button-secondary"
+                    >
+                        Track My Ticket
+                    </a>
+
+
                 </section>
 
 
@@ -915,6 +968,30 @@
 
                         Keep your booking reference safe until the
                         event is complete.
+
+                    </div>
+
+
+                    <!-- =============================
+                         TRACK MY TICKET
+                    ============================== -->
+
+                    <a
+                        href="{{ url_for(
+                            'track_ticket'
+                        ) }}"
+                        class="button button-secondary"
+                    >
+                        Track My Ticket
+                    </a>
+
+
+                    <div class="track-copy">
+
+                        Already paid?
+                        Use Track My Ticket later to check
+                        whether the organizer has confirmed
+                        your payment and released your QR ticket.
 
                     </div>
 
