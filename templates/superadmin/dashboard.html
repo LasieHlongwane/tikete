@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Super Admin | Kalxa Ticketing</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .shell {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 22px 0 60px;
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+        .brand { font-size: 14px; font-weight: 900; }
+        .nav-links { display: flex; gap: 8px; flex-wrap: wrap; }
+        .nav-links a {
+            padding: 8px 11px;
+            border-radius: 9px;
+            color: #334155;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .nav-links a:hover { background: #f1f5f9; }
+        .hero {
+            margin-bottom: 20px;
+            padding: 28px;
+            color: #ffffff;
+            background: #111111;
+            border-radius: 20px;
+        }
+        .eyebrow {
+            margin: 0 0 6px;
+            color: #cbd5e1;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(30px, 5vw, 44px);
+            letter-spacing: -0.04em;
+        }
+        .hero p { margin: 0; color: #cbd5e1; font-size: 13px; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .metric, .section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+        .metric { padding: 18px; }
+        .metric span { color: #64748b; font-size: 11px; font-weight: 800; }
+        .metric strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 30px;
+            letter-spacing: -0.04em;
+        }
+        .section { padding: 22px; }
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        h2 { margin: 0; font-size: 20px; }
+        .button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 40px;
+            padding: 9px 13px;
+            background: #111111;
+            color: #ffffff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 850;
+        }
+        .list { display: grid; gap: 10px; }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 13px;
+            background: #fafafa;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+        }
+        .row strong { display: block; font-size: 14px; }
+        .row small { color: #64748b; }
+        .status {
+            display: inline-flex;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .status.active { background: #dcfce7; color: #166534; }
+        .status.inactive, .status.expired { background: #fff7ed; color: #9a3412; }
+        .status.suspended { background: #fef2f2; color: #991b1b; }
+        @media (max-width: 780px) {
+            .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px) {
+            .nav { align-items: flex-start; flex-direction: column; }
+            .metrics { grid-template-columns: 1fr; }
+            .row { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+
+    <nav class="nav">
+        <div class="brand">
+            KALXA TICKETING · SUPER ADMIN
+        </div>
+
+        <div class="nav-links">
+            <a href="{{ url_for('superadmin_dashboard') }}">
+                Dashboard
+            </a>
+            <a href="{{ url_for('superadmin_organizers') }}">
+                Organizers
+            </a>
+            <a href="{{ url_for('superadmin_logout') }}">
+                Logout
+            </a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <p class="eyebrow">
+            PLATFORM CONTROL CENTRE
+        </p>
+        <h1>
+            Kalxa Super Admin
+        </h1>
+        <p>
+            Manage organizer access, subscriptions and platform participation.
+        </p>
+    </header>
+
+    <div class="metrics">
+
+        <div class="metric">
+            <span>Total Organizers</span>
+            <strong>{{ total_organizers }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Active Subscriptions</span>
+            <strong>{{ active_subscriptions }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Inactive / Expired</span>
+            <strong>{{ inactive_or_expired }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Suspended</span>
+            <strong>{{ suspended_organizers }}</strong>
+        </div>
+
+    </div>
+
+    <section class="section">
+
+        <div class="section-head">
+            <h2>Recent Organizers</h2>
+
+            <a
+                href="{{ url_for('superadmin_organizers') }}"
+                class="button"
+            >
+                View All Organizers
+            </a>
+        </div>
+
+        {% if recent_organizers %}
+
+            <div class="list">
+
+                {% for organizer in recent_organizers %}
+
+                    <div class="row">
+
+                        <div>
+                            <strong>
+                                {{ organizer.display_name }}
+                            </strong>
+
+                            <small>
+                                {{ organizer.email }}
+                            </small>
+                        </div>
+
+                        <div>
+                            <span
+                                class="status {{ organizer.effective_subscription_status }}"
+                            >
+                                {{ organizer.effective_subscription_status }}
+                            </span>
+
+                            <a
+                                href="{{ url_for(
+                                    'superadmin_organizer_detail',
+                                    organizer_id=organizer.id
+                                ) }}"
+                                class="button"
+                                style="margin-left: 8px;"
+                            >
+                                Open
+                            </a>
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p>
+                No organizers have registered yet.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+</div>
+</body>
+</html>
