@@ -301,6 +301,97 @@
 
     <section class="card">
 
+        <h2>Subscription Payments</h2>
+
+        {% if subscription_payments %}
+
+            <div class="event-list">
+
+                {% for payment in subscription_payments %}
+
+                    <div class="event-row">
+
+                        <strong>
+                            {{ payment.payment_reference }}
+                        </strong>
+
+                        <div class="meta">
+                            {{ payment.plan_name }}
+                            · R{{ "%.2f"|format(payment.amount) }}
+                            · {{ payment.payment_status|upper }}
+                            · {{ payment.created_at.strftime('%d %B %Y %H:%M') }}
+                        </div>
+
+                        {% if payment.payment_status == "pending" %}
+
+                            <div
+                                style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"
+                            >
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'superadmin_confirm_subscription_payment',
+                                        payment_id=payment.id
+                                    ) }}"
+                                    style="display:inline;"
+                                >
+                                    <button type="submit">
+                                        Confirm Payment
+                                    </button>
+                                </form>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'superadmin_cancel_subscription_payment',
+                                        payment_id=payment.id
+                                    ) }}"
+                                    style="display:inline;"
+                                    class="danger"
+                                >
+                                    <button type="submit">
+                                        Cancel Request
+                                    </button>
+                                </form>
+
+                            </div>
+
+                        {% elif payment.payment_status == "paid" %}
+
+                            <div class="meta" style="margin-top:8px;">
+                                {% if payment.subscription_start %}
+                                    Access starts:
+                                    {{ payment.subscription_start.strftime('%d %B %Y') }}
+                                {% endif %}
+
+                                {% if payment.subscription_end %}
+                                    · Access ends:
+                                    {{ payment.subscription_end.strftime('%d %B %Y') }}
+                                {% endif %}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p class="meta">
+                No subscription payment records yet.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="card">
+
         <h2>Account Controls</h2>
 
         {% if organizer.effective_subscription_status == "suspended" %}
