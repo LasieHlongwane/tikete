@@ -755,6 +755,73 @@
                 anywhere;
         }
 
+        .subscription-badge {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                6px 9px;
+
+            border-radius:
+                999px;
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.04em;
+
+            text-transform:
+                uppercase;
+        }
+
+        .subscription-badge.active {
+
+            background:
+                #dcfce7;
+
+            color:
+                #166534;
+
+            border:
+                1px solid #bbf7d0;
+        }
+
+        .subscription-badge.inactive,
+        .subscription-badge.expired {
+
+            background:
+                #fff7ed;
+
+            color:
+                #9a3412;
+
+            border:
+                1px solid #fed7aa;
+        }
+
+        .subscription-badge.suspended {
+
+            background:
+                #fef2f2;
+
+            color:
+                #991b1b;
+
+            border:
+                1px solid #fecaca;
+        }
+
         .metrics {
 
             display:
@@ -843,6 +910,101 @@
 
             font-size:
                 11px;
+        }
+
+
+        /* =====================================================
+           SUBSCRIPTION NOTICE
+        ===================================================== */
+
+        .subscription-card {
+
+            margin-bottom:
+                22px;
+
+            padding:
+                22px;
+
+            border-radius:
+                18px;
+
+            box-shadow:
+                0 8px 28px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.04
+                );
+        }
+
+        .subscription-card.active {
+
+            background:
+                #f0fdf4;
+
+            border:
+                1px solid #bbf7d0;
+        }
+
+        .subscription-card.restricted {
+
+            background:
+                #fff7ed;
+
+            border:
+                1px solid #fed7aa;
+        }
+
+        .subscription-card.suspended {
+
+            background:
+                #fef2f2;
+
+            border:
+                1px solid #fecaca;
+        }
+
+        .subscription-card-row {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            justify-content:
+                space-between;
+
+            gap:
+                18px;
+        }
+
+        .subscription-card h3 {
+
+            margin:
+                0 0 6px;
+
+            color:
+                #111827;
+
+            font-size:
+                18px;
+
+            font-weight:
+                900;
+        }
+
+        .subscription-card p {
+
+            margin:
+                0;
+
+            color:
+                #64748b;
+
+            font-size:
+                13px;
         }
 
 
@@ -1707,6 +1869,12 @@
                     100%;
             }
 
+            .subscription-card-row {
+
+                flex-direction:
+                    column;
+            }
+
         }
 
 
@@ -1921,15 +2089,156 @@
 
 
     <!-- =========================================
+         SUBSCRIPTION STATUS
+    ========================================== -->
+
+    {% if subscription_active %}
+
+        <section class="subscription-card active">
+
+            <div class="subscription-card-row">
+
+                <div>
+
+                    <span class="section-kicker">
+                        KALXA SUBSCRIPTION
+                    </span>
+
+                    <h3>
+                        Subscription Active
+                    </h3>
+
+                    <p>
+
+                        Your organizer account can create
+                        and publish new ticket events.
+
+                        {% if subscription_expires_at %}
+
+                            Access expires on
+                            {{ subscription_expires_at.strftime(
+                                '%d %B %Y'
+                            ) }}.
+
+                        {% endif %}
+
+                    </p>
+
+                </div>
+
+                <span class="subscription-badge active">
+                    ACTIVE
+                </span>
+
+            </div>
+
+        </section>
+
+
+    {% elif subscription_status == "suspended" %}
+
+        <section class="subscription-card suspended">
+
+            <div class="subscription-card-row">
+
+                <div>
+
+                    <span class="section-kicker">
+                        KALXA SUBSCRIPTION
+                    </span>
+
+                    <h3>
+                        Organizer Account Suspended
+                    </h3>
+
+                    <p>
+
+                        New event creation is disabled.
+                        Your existing event records remain
+                        available, but Kalxa Super Admin must
+                        reactivate this organizer account.
+
+                    </p>
+
+                </div>
+
+                <span class="subscription-badge suspended">
+                    SUSPENDED
+                </span>
+
+            </div>
+
+        </section>
+
+
+    {% else %}
+
+        <section class="subscription-card restricted">
+
+            <div class="subscription-card-row">
+
+                <div>
+
+                    <span class="section-kicker">
+                        KALXA SUBSCRIPTION
+                    </span>
+
+                    <h3>
+
+                        {% if subscription_status == "expired" %}
+
+                            Subscription Expired
+
+                        {% else %}
+
+                            Subscription Inactive
+
+                        {% endif %}
+
+                    </h3>
+
+                    <p>
+
+                        You can still view your dashboard,
+                        existing events, orders and check-in
+                        records, but you cannot create new
+                        ticket events until your Kalxa
+                        subscription is activated.
+
+                        {% if subscription_expires_at %}
+
+                            Previous access ended on
+                            {{ subscription_expires_at.strftime(
+                                '%d %B %Y'
+                            ) }}.
+
+                        {% endif %}
+
+                    </p>
+
+                </div>
+
+                <span
+                    class="subscription-badge
+                    {{ subscription_status }}"
+                >
+                    {{ subscription_status|upper }}
+                </span>
+
+            </div>
+
+        </section>
+
+    {% endif %}
+
+
+
+    <!-- =========================================
          OVERVIEW
     ========================================== -->
 
     <div class="overview-grid">
 
-
-        <!-- =====================================
-             ACCOUNT
-        ====================================== -->
 
         {% if organizer %}
 
@@ -1992,6 +2301,53 @@
                     {% endif %}
 
 
+                    <div class="account-meta-row">
+
+                        <span class="account-meta-label">
+                            Subscription
+                        </span>
+
+                        <span class="account-meta-value">
+
+                            <span
+                                class="subscription-badge
+                                {% if subscription_active %}
+                                    active
+                                {% else %}
+                                    {{ subscription_status }}
+                                {% endif %}"
+                            >
+                                {% if subscription_active %}
+                                    ACTIVE
+                                {% else %}
+                                    {{ subscription_status|upper }}
+                                {% endif %}
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+                    {% if subscription_expires_at %}
+
+                        <div class="account-meta-row">
+
+                            <span class="account-meta-label">
+                                Subscription Expires
+                            </span>
+
+                            <span class="account-meta-value">
+                                {{ subscription_expires_at.strftime(
+                                    '%d %B %Y'
+                                ) }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
                 </div>
 
 
@@ -2000,10 +2356,6 @@
         {% endif %}
 
 
-
-        <!-- =====================================
-             METRICS
-        ====================================== -->
 
         <div class="metrics">
 
@@ -2163,8 +2515,79 @@
         </div>
 
 
+        {% if not subscription_active %}
 
-        {% if active_content_item_id and current_ticket_event %}
+
+            <!-- =================================
+                 SUBSCRIPTION RESTRICTION
+            ================================== -->
+
+            <div class="admin-empty-state">
+
+
+                <div class="admin-empty-icon">
+                    🔒
+                </div>
+
+
+                <h3>
+                    Event creation is locked
+                </h3>
+
+
+                <p class="muted">
+
+                    Your Kalxa Ticketing subscription must
+                    be active before you can create or
+                    publish a new ticket event.
+
+                </p>
+
+
+                {% if subscription_status == "suspended" %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 8px;"
+                    >
+
+                        This organizer account is currently
+                        suspended. Contact Kalxa support or
+                        Super Admin for reactivation.
+
+                    </p>
+
+                {% elif subscription_status == "expired" %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 8px;"
+                    >
+
+                        Renew your subscription to unlock
+                        event creation again.
+
+                    </p>
+
+                {% else %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 8px;"
+                    >
+
+                        Your subscription has not yet been
+                        activated by Kalxa.
+
+                    </p>
+
+                {% endif %}
+
+
+            </div>
+
+
+        {% elif active_content_item_id and current_ticket_event %}
 
 
             <!-- =================================
@@ -2242,10 +2665,6 @@
                 class="form-stack"
             >
 
-
-                <!-- =============================
-                     EVENT DETAILS
-                ============================== -->
 
                 <div class="form-panel">
 
@@ -2382,10 +2801,6 @@
 
 
 
-                <!-- =============================
-                     TICKET SETUP
-                ============================== -->
-
                 <div class="form-panel">
 
 
@@ -2478,10 +2893,6 @@
                 </div>
 
 
-
-                <!-- =============================
-                     PAYMENT DETAILS
-                ============================== -->
 
                 <div class="form-panel">
 
@@ -2617,10 +3028,6 @@
                 </div>
 
 
-
-                <!-- =============================
-                     SUBMIT
-                ============================== -->
 
                 <button
                     type="submit"
@@ -2884,8 +3291,17 @@
 
                 <p class="muted">
 
-                    Create your first event above.
-                    It will appear here as soon as it is saved.
+                    {% if subscription_active %}
+
+                        Create your first event above.
+                        It will appear here as soon as it is saved.
+
+                    {% else %}
+
+                        Your events will appear here once your
+                        subscription is active and you create one.
+
+                    {% endif %}
 
                 </p>
 
@@ -2950,3 +3366,5 @@
 </body>
 
 </html>
+
+   
