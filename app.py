@@ -3939,10 +3939,11 @@ def admin_dashboard():
 @app.route(
     "/admin/events/new",
     methods=[
+        "GET",
         "POST",
     ],
 )
-def admin_create_event():
+def admin_new_event():
 
     auth = (
         require_ticketing_organizer()
@@ -3969,6 +3970,44 @@ def admin_create_event():
     if subscription_auth:
 
         return subscription_auth
+
+
+    if request.method == "GET":
+
+        active_content_item_id = (
+            get_ticketing_content_item_id()
+        )
+
+        current_ticket_event = None
+
+
+        if active_content_item_id:
+
+            current_ticket_event = (
+                TicketEvent.query
+                .filter_by(
+                    organizer_id=
+                        organizer.id,
+
+                    kalxa_content_item_id=
+                        active_content_item_id,
+                )
+                .first()
+            )
+
+
+        return render_template(
+            "admin/new_event.html",
+
+            organizer=
+                organizer,
+
+            active_content_item_id=
+                active_content_item_id,
+
+            current_ticket_event=
+                current_ticket_event,
+        )
 
 
     kalxa_content_item_id = (
