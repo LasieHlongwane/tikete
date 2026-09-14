@@ -613,10 +613,8 @@ def organizer_signup():
                 "error",
             )
 
-            return redirect(
-                url_for(
-                    "organizer_signup"
-                )
+            return render_template(
+                "organizer/signup.html"
             )
 
 
@@ -635,10 +633,8 @@ def organizer_signup():
                 "error",
             )
 
-            return redirect(
-                url_for(
-                    "organizer_signup"
-                )
+            return render_template(
+                "organizer/signup.html"
             )
 
 
@@ -652,10 +648,8 @@ def organizer_signup():
                 "error",
             )
 
-            return redirect(
-                url_for(
-                    "organizer_signup"
-                )
+            return render_template(
+                "organizer/signup.html"
             )
 
 
@@ -742,16 +736,10 @@ def organizer_signup():
                 "error",
             )
 
-            return redirect(
-                url_for(
-                    "organizer_signup"
-                )
+            return render_template(
+                "organizer/signup.html"
             )
 
-
-        # ====================================================
-        # ACCOUNT CREATED - REQUIRE A FRESH LOGIN
-        # ====================================================
 
         session.clear()
 
@@ -772,139 +760,9 @@ def organizer_signup():
         )
 
 
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-
-        <meta charset="UTF-8">
-
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-        >
-
-        <title>
-            Create Organizer Account | Kalxa Ticketing
-        </title>
-
-        <link
-            rel="stylesheet"
-            href="/static/css/style.css"
-        >
-
-    </head>
-
-    <body class="admin-body">
-
-        <div class="admin-login-card">
-
-            <h1>
-                Kalxa Ticketing
-            </h1>
-
-            <p>
-                Create your organizer account
-            </p>
-
-            <form method="POST">
-
-                <label>
-
-                    Your Name
-
-                    <input
-                        type="text"
-                        name="name"
-                        required
-                    >
-
-                </label>
-
-                <label>
-
-                    Organizer / Brand Name
-
-                    <input
-                        type="text"
-                        name="business_name"
-                    >
-
-                </label>
-
-                <label>
-
-                    Email
-
-                    <input
-                        type="email"
-                        name="email"
-                        required
-                        autocomplete="email"
-                    >
-
-                </label>
-
-                <label>
-
-                    Phone
-
-                    <input
-                        type="tel"
-                        name="phone"
-                    >
-
-                </label>
-
-                <label>
-
-                    Password
-
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                        minlength="8"
-                        autocomplete="new-password"
-                    >
-
-                </label>
-
-                <label>
-
-                    Confirm Password
-
-                    <input
-                        type="password"
-                        name="password_confirm"
-                        required
-                        minlength="8"
-                        autocomplete="new-password"
-                    >
-
-                </label>
-
-                <button
-                    type="submit"
-                    class="button"
-                >
-                    Create Organizer Account
-                </button>
-
-            </form>
-
-            <p>
-                Already have an account?
-                <a href="/organizer/login">
-                    Sign in
-                </a>
-            </p>
-
-        </div>
-
-    </body>
-    </html>
-    """
+    return render_template(
+        "organizer/signup.html"
+    )
 
 
 # ============================================================
@@ -989,16 +847,10 @@ def organizer_login():
                 "error",
             )
 
-            return redirect(
-                url_for(
-                    "organizer_login"
-                )
+            return render_template(
+                "organizer/login.html"
             )
 
-
-        # ====================================================
-        # PRESERVE OPTIONAL DISCOVERY CONTEXT
-        # ====================================================
 
         pending_kalxa_organizer_id = (
             session.get(
@@ -1055,10 +907,6 @@ def organizer_login():
             )
 
 
-        # ====================================================
-        # OPTIONAL DISCOVERY ACCOUNT LINK
-        # ====================================================
-
         if (
             pending_kalxa_organizer_id
             and organizer.kalxa_discovery_organizer_id
@@ -1098,90 +946,9 @@ def organizer_login():
         )
 
 
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-
-        <meta charset="UTF-8">
-
-        <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-        >
-
-        <title>
-            Organizer Login | Kalxa Ticketing
-        </title>
-
-        <link
-            rel="stylesheet"
-            href="/static/css/style.css"
-        >
-
-    </head>
-
-    <body class="admin-body">
-
-        <div class="admin-login-card">
-
-            <h1>
-                Kalxa Ticketing
-            </h1>
-
-            <p>
-                Organizer Login
-            </p>
-
-            <form method="POST">
-
-                <label>
-
-                    Email
-
-                    <input
-                        type="email"
-                        name="email"
-                        required
-                        autocomplete="email"
-                    >
-
-                </label>
-
-                <label>
-
-                    Password
-
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                        autocomplete="current-password"
-                    >
-
-                </label>
-
-                <button
-                    type="submit"
-                    class="button"
-                >
-                    Sign In
-                </button>
-
-            </form>
-
-            <p>
-                New organizer?
-                <a href="/organizer/signup">
-                    Create an account
-                </a>
-            </p>
-
-        </div>
-
-    </body>
-    </html>
-    """
+    return render_template(
+        "organizer/login.html"
+    )
 
 
 # ============================================================
@@ -3499,3 +3266,4 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
+
