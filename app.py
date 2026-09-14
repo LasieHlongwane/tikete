@@ -80,6 +80,40 @@ if not app.config[
 
 
 # ============================================================
+# SESSION COOKIE CONFIGURATION
+# ============================================================
+#
+# Render serves the production app over HTTPS.
+# These settings make organizer login cookies explicit and
+# stable across the login -> dashboard redirect.
+# ============================================================
+
+app.config[
+    "SESSION_COOKIE_HTTPONLY"
+] = True
+
+app.config[
+    "SESSION_COOKIE_SAMESITE"
+] = "Lax"
+
+app.config[
+    "SESSION_COOKIE_SECURE"
+] = (
+    os.environ.get(
+        "RENDER",
+        ""
+    )
+    .strip()
+    .lower()
+    in {
+        "1",
+        "true",
+        "yes",
+    }
+)
+
+
+# ============================================================
 # DATABASE
 # ============================================================
 
@@ -715,20 +749,26 @@ def organizer_signup():
             )
 
 
+        # ====================================================
+        # ACCOUNT CREATED - REQUIRE A FRESH LOGIN
+        # ====================================================
+
+        session.clear()
+
 
         flash(
-         (
-          "Organizer account created successfully. "
-          "Please sign in."
-         ),
-          "success",
-         )
+            (
+                "Organizer account created successfully. "
+                "Please sign in."
+            ),
+            "success",
+        )
 
 
         return redirect(
-         url_for(
-          "organizer_login"
-         )
+            url_for(
+                "organizer_login"
+            )
         )
 
 
@@ -916,13 +956,33 @@ def organizer_login():
         )
 
 
-        if (
-            not organizer
-            or not organizer.active
-            or not organizer.check_password(
+        password_ok = (
+            organizer is not None
+            and organizer.active
+            and organizer.check_password(
                 password
             )
-        ):
+        )
+
+
+        current_app.logger.info(
+            (
+                "[Organizer Login] attempt "
+                "email=%s found=%s active=%s "
+                "password_ok=%s"
+            ),
+            email,
+            organizer is not None,
+            (
+                organizer.active
+                if organizer
+                else None
+            ),
+            password_ok,
+        )
+
+
+        if not password_ok:
 
             flash(
                 "Invalid email or password.",
@@ -960,6 +1020,21 @@ def organizer_login():
         session[
             ORGANIZER_SESSION_KEY
         ] = organizer.id
+
+
+        session.permanent = True
+
+
+        current_app.logger.info(
+            (
+                "[Organizer Login] authenticated "
+                "organizer_id=%s session_key=%s"
+            ),
+            organizer.id,
+            session.get(
+                ORGANIZER_SESSION_KEY
+            ),
+        )
 
 
         if pending_kalxa_organizer_id:
@@ -1698,41 +1773,6 @@ def kalxa_auth_bridge():
 
 
 # ============================================================
-# ORGANIZER ADMIN COMPATIBILITY ROUTE
-# ============================================================
-#
-# Some old links / templates may still point to:
-#
-# /organizer/admin
-#
-# The real organizer dashboard now lives at:
-#
-# /admin
-#
-# Keep this redirect so those links do not produce a 404.
-# ============================================================
-
-@app.route(
-    "/organizer/admin"
-)
-def organizer_admin_redirect():
-
-    auth = (
-        require_ticketing_organizer()
-    )
-
-
-    if auth:
-
-        return auth
-
-
-    return redirect(
-        url_for(
-            "admin_dashboard"
-        )
-    )
-# ============================================================
 # ORGANIZER DASHBOARD COMPATIBILITY URL
 # ============================================================
 
@@ -1883,6 +1923,32 @@ def ticket_qr(
 
 
 # ============================================================
+# ORGANIZER ADMIN COMPATIBILITY ROUTE
+# ============================================================
+
+@app.route(
+    "/organizer/admin"
+)
+def organizer_admin_redirect():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+
+
+# ============================================================
 # ORGANIZER DASHBOARD
 # ============================================================
 
@@ -1903,6 +1969,18 @@ def admin_dashboard():
 
     organizer = (
         get_current_organizer()
+    )
+
+
+    current_app.logger.info(
+        (
+            "[Organizer Dashboard] session organizer_id=%s"
+        ),
+        (
+            organizer.id
+            if organizer
+            else None
+        ),
     )
 
 
