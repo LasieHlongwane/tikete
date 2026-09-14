@@ -1698,6 +1698,41 @@ def kalxa_auth_bridge():
 
 
 # ============================================================
+# ORGANIZER ADMIN COMPATIBILITY ROUTE
+# ============================================================
+#
+# Some old links / templates may still point to:
+#
+# /organizer/admin
+#
+# The real organizer dashboard now lives at:
+#
+# /admin
+#
+# Keep this redirect so those links do not produce a 404.
+# ============================================================
+
+@app.route(
+    "/organizer/admin"
+)
+def organizer_admin_redirect():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+# ============================================================
 # ORGANIZER DASHBOARD COMPATIBILITY URL
 # ============================================================
 
