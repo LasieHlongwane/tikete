@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Create Event Ticket | Kalxa Ticketing
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing:
+                border-box;
+        }
+
+
+        body {
+
+            margin:
+                0;
+
+            background:
+                #f6f7f9;
+
+            color:
+                #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            line-height:
+                1.55;
+        }
+
+
+        .shell {
+
+            width:
+                min(
+                    920px,
+                    calc(100% - 28px)
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                22px 0 60px;
+        }
+
+
+        .nav {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                14px;
+
+            margin-bottom:
+                20px;
+
+            padding:
+                14px 16px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                16px;
+        }
+
+
+        .brand {
+
+            font-size:
+                14px;
+
+            font-weight:
+                900;
+        }
+
+
+        .nav-links {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+            flex-wrap:
+                wrap;
+        }
+
+
+        .nav a {
+
+            padding:
+                8px 10px;
+
+            color:
+                #334155;
+
+            border-radius:
+                9px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                12px;
+
+            font-weight:
+                750;
+        }
+
+
+        .hero {
+
+            margin-bottom:
+                18px;
+
+            padding:
+                28px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b0c0e 0%,
+                    #18181b 100%
+                );
+
+            color:
+                #ffffff;
+
+            border-radius:
+                20px;
+        }
+
+
+        .eyebrow {
+
+            margin:
+                0 0 7px;
+
+            color:
+                #94a3b8;
+
+            font-size:
+                10px;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                0.13em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .hero h1 {
+
+            margin:
+                0 0 8px;
+
+            font-size:
+                clamp(
+                    30px,
+                    6vw,
+                    42px
+                );
+
+            line-height:
+                1.05;
+
+            letter-spacing:
+                -0.04em;
+        }
+
+
+        .hero p {
+
+            margin:
+                0;
+
+            color:
+                #cbd5e1;
+
+            font-size:
+                13px;
+        }
+
+
+        .card {
+
+            margin-bottom:
+                18px;
+
+            padding:
+                22px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                18px;
+        }
+
+
+        .card h2 {
+
+            margin:
+                0 0 5px;
+
+            font-size:
+                20px;
+        }
+
+
+        .card-copy {
+
+            margin:
+                0 0 18px;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+        }
+
+
+        .form-stack {
+
+            display:
+                grid;
+
+            gap:
+                16px;
+        }
+
+
+        .grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                14px;
+        }
+
+
+        .group {
+
+            display:
+                grid;
+
+            gap:
+                7px;
+        }
+
+
+        label {
+
+            color:
+                #334155;
+
+            font-size:
+                12px;
+
+            font-weight:
+                800;
+        }
+
+
+        input,
+        textarea {
+
+            width:
+                100%;
+
+            padding:
+                11px 12px;
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border:
+                1px solid #cbd5e1;
+
+            border-radius:
+                10px;
+
+            outline:
+                none;
+
+            font:
+                inherit;
+        }
+
+
+        input {
+
+            min-height:
+                46px;
+        }
+
+
+        textarea {
+
+            resize:
+                vertical;
+        }
+
+
+        input:focus,
+        textarea:focus {
+
+            border-color:
+                #111827;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    17,
+                    24,
+                    39,
+                    0.06
+                );
+        }
+
+
+        small {
+
+            color:
+                #94a3b8;
+
+            font-size:
+                11px;
+        }
+
+
+        .payment-note {
+
+            margin-bottom:
+                16px;
+
+            padding:
+                12px 14px;
+
+            background:
+                #fffdf5;
+
+            border:
+                1px solid #f1e6bb;
+
+            border-radius:
+                11px;
+
+            color:
+                #78674c;
+
+            font-size:
+                12px;
+        }
+
+
+        .actions {
+
+            display:
+                flex;
+
+            gap:
+                10px;
+
+            flex-wrap:
+                wrap;
+        }
+
+
+        .button {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                46px;
+
+            padding:
+                11px 16px;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border:
+                1px solid #111111;
+
+            border-radius:
+                10px;
+
+            text-decoration:
+                none;
+
+            font:
+                inherit;
+
+            font-size:
+                12px;
+
+            font-weight:
+                850;
+
+            cursor:
+                pointer;
+        }
+
+
+        .button-secondary {
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border-color:
+                #dbe3ec;
+        }
+
+
+        .button-primary {
+
+            min-width:
+                220px;
+        }
+
+
+        .flash-wrapper {
+
+            display:
+                grid;
+
+            gap:
+                8px;
+
+            margin-bottom:
+                16px;
+        }
+
+
+        .alert {
+
+            padding:
+                11px 13px;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                10px;
+
+            background:
+                #f8fafc;
+
+            font-size:
+                12px;
+
+            font-weight:
+                700;
+        }
+
+
+        .alert[data-category="error"] {
+
+            color:
+                #991b1b;
+
+            background:
+                #fef2f2;
+
+            border-color:
+                #fecaca;
+        }
+
+
+        @media (
+            max-width: 680px
+        ) {
+
+            .nav {
+
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+            }
+
+
+            .grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .actions {
+
+                flex-direction:
+                    column;
+            }
+
+
+            .button {
+
+                width:
+                    100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="shell">
+
+
+    <nav class="nav">
+
+        <div class="brand">
+            KALXA TICKETING
+        </div>
+
+        <div class="nav-links">
+
+            <a
+                href="{{ url_for(
+                    'admin_dashboard'
+                ) }}"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+            >
+                Subscription
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'admin_checkin'
+                ) }}"
+            >
+                🎟 Check In
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'organizer_logout'
+                ) }}"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <header class="hero">
+
+        <p class="eyebrow">
+            CREATE EVENT
+        </p>
+
+        <h1>
+            New Ticket Event
+        </h1>
+
+        <p>
+            Add the event details, ticket price and capacity.
+            New events are saved as drafts first.
+        </p>
+
+    </header>
+
+
+    {% if active_content_item_id and current_ticket_event %}
+
+        <section class="card">
+
+            <h2>
+                Linked event already exists
+            </h2>
+
+            <p class="card-copy">
+                Discovery listing
+                #{{ active_content_item_id }}
+                is already connected to Ticket Event
+                #{{ current_ticket_event.id }}.
+            </p>
+
+            <div class="actions">
+
+                {% if current_ticket_event.status == "published" %}
+
+                    <a
+                        href="{{ url_for(
+                            'event_page',
+                            event_id=current_ticket_event.id
+                        ) }}"
+                        class="button button-secondary"
+                        target="_blank"
+                    >
+                        View Event
+                    </a>
+
+                {% endif %}
+
+                <a
+                    href="{{ url_for(
+                        'admin_orders',
+                        event_id=current_ticket_event.id
+                    ) }}"
+                    class="button"
+                >
+                    View Orders
+                </a>
+
+            </div>
+
+        </section>
+
+    {% else %}
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="form-stack"
+        >
+
+
+            <section class="card">
+
+                <h2>
+                    Event Details
+                </h2>
+
+                <p class="card-copy">
+                    Public information attendees will see.
+                </p>
+
+
+                <div class="form-stack">
+
+                    {% if active_content_item_id %}
+
+                        <div class="group">
+
+                            <label>
+                                Linked Discovery Listing
+                            </label>
+
+                            <input
+                                type="text"
+                                value="#{{ active_content_item_id }}"
+                                disabled
+                            >
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="group">
+
+                        <label for="title">
+                            Event Title
+                        </label>
+
+                        <input
+                            id="title"
+                            name="title"
+                            type="text"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="group">
+
+                        <label for="description">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="5"
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="group">
+
+                        <label for="venue">
+                            Venue
+                        </label>
+
+                        <input
+                            id="venue"
+                            name="venue"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="grid">
+
+                        <div class="group">
+
+                            <label for="event_date">
+                                Event Date
+                            </label>
+
+                            <input
+                                id="event_date"
+                                name="event_date"
+                                type="date"
+                            >
+
+                        </div>
+
+
+                        <div class="group">
+
+                            <label for="event_time">
+                                Event Time
+                            </label>
+
+                            <input
+                                id="event_time"
+                                name="event_time"
+                                type="time"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section class="card">
+
+                <h2>
+                    Ticket Setup
+                </h2>
+
+                <p class="card-copy">
+                    Set the selling price and available capacity.
+                </p>
+
+
+                <div class="grid">
+
+                    <div class="group">
+
+                        <label for="ticket_price">
+                            Ticket Price
+                        </label>
+
+                        <input
+                            id="ticket_price"
+                            name="ticket_price"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="group">
+
+                        <label for="ticket_capacity">
+                            Ticket Capacity
+                        </label>
+
+                        <input
+                            id="ticket_capacity"
+                            name="ticket_capacity"
+                            type="number"
+                            min="1"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="group"
+                    style="margin-top: 16px;"
+                >
+
+                    <label for="poster_image">
+                        Event Poster
+                    </label>
+
+                    <input
+                        id="poster_image"
+                        name="poster_image"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    >
+
+                    <small>
+                        JPG, JPEG, PNG and WEBP supported.
+                    </small>
+
+                </div>
+
+            </section>
+
+
+            <section class="card">
+
+                <h2>
+                    Payment Details
+                </h2>
+
+                <p class="card-copy">
+                    Current manual payment configuration.
+                </p>
+
+
+                <div class="payment-note">
+                    ℹ️ For now, organizers confirm payments
+                    manually. Direct payment-provider connection
+                    will be added later.
+                </div>
+
+
+                <div class="grid">
+
+                    <div class="group">
+
+                        <label for="bank_name">
+                            Bank Name
+                        </label>
+
+                        <input
+                            id="bank_name"
+                            name="bank_name"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="group">
+
+                        <label for="account_holder">
+                            Account Holder
+                        </label>
+
+                        <input
+                            id="account_holder"
+                            name="account_holder"
+                            type="text"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="grid"
+                    style="margin-top: 14px;"
+                >
+
+                    <div class="group">
+
+                        <label for="account_number">
+                            Account Number
+                        </label>
+
+                        <input
+                            id="account_number"
+                            name="account_number"
+                            type="text"
+                        >
+
+                    </div>
+
+
+                    <div class="group">
+
+                        <label for="branch_code">
+                            Branch Code
+                        </label>
+
+                        <input
+                            id="branch_code"
+                            name="branch_code"
+                            type="text"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="group"
+                    style="margin-top: 14px;"
+                >
+
+                    <label for="payment_instructions">
+                        Payment Instructions
+                    </label>
+
+                    <textarea
+                        id="payment_instructions"
+                        name="payment_instructions"
+                        rows="4"
+                    ></textarea>
+
+                </div>
+
+            </section>
+
+
+            <div class="actions">
+
+                <button
+                    type="submit"
+                    class="button button-primary"
+                >
+                    + Save Event as Draft
+                </button>
+
+                <a
+                    href="{{ url_for(
+                        'admin_dashboard'
+                    ) }}"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+
+        </form>
+
+    {% endif %}
+
+
+</div>
+
+
+</body>
+
+</html>
