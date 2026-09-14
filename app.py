@@ -7,7 +7,7 @@ import os
 import secrets
 import string
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import qrcode
 
@@ -30,6 +30,7 @@ from itsdangerous import (
     SignatureExpired,
     URLSafeTimedSerializer,
 )
+from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 from models import (
@@ -219,6 +220,47 @@ ORGANIZER_SESSION_KEY = (
 
 
 # ============================================================
+# SUPER ADMIN SESSION
+# ============================================================
+
+SUPERADMIN_SESSION_KEY = (
+    "ticketing_superadmin"
+)
+
+
+# ============================================================
+# SUPER ADMIN CREDENTIAL CONFIG
+# ============================================================
+#
+# Configure these in Render:
+#
+# SUPERADMIN_EMAIL
+# SUPERADMIN_PASSWORD_HASH
+#
+# Generate a password hash locally with:
+#
+# python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('YOUR_PASSWORD'))"
+# ============================================================
+
+SUPERADMIN_EMAIL = (
+    os.environ.get(
+        "SUPERADMIN_EMAIL",
+        "",
+    )
+    .strip()
+    .lower()
+)
+
+SUPERADMIN_PASSWORD_HASH = (
+    os.environ.get(
+        "SUPERADMIN_PASSWORD_HASH",
+        "",
+    )
+    .strip()
+)
+
+
+# ============================================================
 # NORMALIZE EMAIL
 # ============================================================
 
@@ -326,6 +368,88 @@ def require_ticketing_organizer():
     return redirect(
         url_for(
             "organizer_login"
+        )
+    )
+
+
+# ============================================================
+# REQUIRE ACTIVE ORGANIZER SUBSCRIPTION
+# ============================================================
+
+def require_active_subscription(
+    organizer,
+):
+
+    if (
+        organizer
+        and organizer.is_subscription_active
+    ):
+
+        return None
+
+
+    if organizer:
+
+        status = (
+            organizer.effective_subscription_status
+        )
+
+    else:
+
+        status = "inactive"
+
+
+    flash(
+        (
+            "Your Kalxa Ticketing subscription is "
+            f"{status}. An active subscription is "
+            "required to create new events."
+        ),
+        "error",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
+        )
+    )
+
+
+# ============================================================
+# CURRENT SUPER ADMIN
+# ============================================================
+
+def is_superadmin_authenticated():
+
+    return (
+        session.get(
+            SUPERADMIN_SESSION_KEY
+        )
+        is True
+    )
+
+
+# ============================================================
+# REQUIRE SUPER ADMIN
+# ============================================================
+
+def require_superadmin():
+
+    if is_superadmin_authenticated():
+
+        return None
+
+
+    flash(
+        "Please sign in as Kalxa Super Admin.",
+        "error",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_login"
         )
     )
 
@@ -493,6 +617,991 @@ def generate_entry_code():
         if not exists:
 
             return code
+
+
+# ============================================================
+# SUPER ADMIN LOGIN
+# ============================================================
+
+@app.route(
+    "/superadmin/login",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def superadmin_login():
+
+    if is_superadmin_authenticated():
+
+        return redirect(
+            url_for(
+                "superadmin_dashboard"
+            )
+        )
+
+
+    if request.method == "POST":
+
+        email = normalize_email(
+            request.form.get(
+                "email",
+                "",
+            )
+        )
+
+
+        password = (
+            request.form.get(
+                "password",
+                ""
+            )
+        )
+
+
+        if (
+            not SUPERADMIN_EMAIL
+            or not SUPERADMIN_PASSWORD_HASH
+        ):
+
+            current_app.logger.error(
+                (
+                    "[Super Admin] Missing "
+                    "SUPERADMIN_EMAIL or "
+                    "SUPERADMIN_PASSWORD_HASH."
+                )
+            )
+
+
+            flash(
+                (
+                    "Super Admin credentials are not "
+                    "configured on the server."
+                ),
+                "error",
+            )
+
+
+            return render_template(
+                "superadmin/login.html"
+            )
+
+
+        email_ok = (
+            secrets.compare_digest(
+                email,
+                SUPERADMIN_EMAIL,
+            )
+        )
+
+
+        password_ok = (
+            check_password_hash(
+                SUPERADMIN_PASSWORD_HASH,
+                password,
+            )
+            if password
+            else False
+        )
+
+
+        if (
+            not email_ok
+            or not password_ok
+        ):
+
+            current_app.logger.warning(
+                (
+                    "[Super Admin] Invalid login "
+                    "attempt email=%s"
+                ),
+                email,
+            )
+
+
+            flash(
+                "Invalid Super Admin credentials.",
+                "error",
+            )
+
+
+            return render_template(
+                "superadmin/login.html"
+            )
+
+
+        session.clear()
+
+
+        session[
+            SUPERADMIN_SESSION_KEY
+        ] = True
+
+
+        session.permanent = True
+
+
+        current_app.logger.info(
+            "[Super Admin] Login successful."
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_dashboard"
+            )
+        )
+
+
+    return render_template(
+        "superadmin/login.html"
+    )
+
+
+# ============================================================
+# SUPER ADMIN LOGOUT
+# ============================================================
+
+@app.route(
+    "/superadmin/logout"
+)
+def superadmin_logout():
+
+    session.clear()
+
+
+    return redirect(
+        url_for(
+            "superadmin_login"
+        )
+    )
+
+
+# ============================================================
+# SUPER ADMIN DASHBOARD
+# ============================================================
+
+@app.route(
+    "/superadmin"
+)
+def superadmin_dashboard():
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    total_organizers = (
+        Organizer.query.count()
+    )
+
+
+    active_subscriptions = (
+        Organizer.query
+        .filter(
+            Organizer.active.is_(True)
+        )
+        .filter(
+            Organizer.subscription_status
+            == "active"
+        )
+        .filter(
+            Organizer.subscription_expires_at
+            > now
+        )
+        .count()
+    )
+
+
+    suspended_organizers = (
+        Organizer.query
+        .filter(
+            Organizer.subscription_status
+            == "suspended"
+        )
+        .count()
+    )
+
+
+    inactive_or_expired = (
+        total_organizers
+        - active_subscriptions
+        - suspended_organizers
+    )
+
+
+    recent_organizers = (
+        Organizer.query
+        .order_by(
+            Organizer.created_at.desc()
+        )
+        .limit(10)
+        .all()
+    )
+
+
+    return render_template(
+        "superadmin/dashboard.html",
+
+        total_organizers=
+            total_organizers,
+
+        active_subscriptions=
+            active_subscriptions,
+
+        suspended_organizers=
+            suspended_organizers,
+
+        inactive_or_expired=
+            max(
+                0,
+                inactive_or_expired,
+            ),
+
+        recent_organizers=
+            recent_organizers,
+    )
+
+
+# ============================================================
+# SUPER ADMIN - ALL ORGANIZERS
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers"
+)
+def superadmin_organizers():
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizers = (
+        Organizer.query
+        .order_by(
+            Organizer.created_at.desc()
+        )
+        .all()
+    )
+
+
+    return render_template(
+        "superadmin/organizers.html",
+        organizers=
+            organizers,
+    )
+
+
+# ============================================================
+# SUPER ADMIN - ORGANIZER PROFILE
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>"
+)
+def superadmin_organizer_detail(
+    organizer_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+
+        abort(404)
+
+
+    events = (
+        TicketEvent.query
+        .filter_by(
+            organizer_id=
+                organizer.id
+        )
+        .order_by(
+            TicketEvent.created_at.desc()
+        )
+        .all()
+    )
+
+
+    orders = (
+        TicketOrder.query
+        .join(
+            TicketEvent,
+            TicketOrder.event_id
+            == TicketEvent.id,
+        )
+        .filter(
+            TicketEvent.organizer_id
+            == organizer.id
+        )
+        .order_by(
+            TicketOrder.created_at.desc()
+        )
+        .all()
+    )
+
+
+    paid_orders = sum(
+        1
+        for order in orders
+        if order.payment_status
+        == "paid"
+    )
+
+
+    paid_tickets = sum(
+        (
+            order.quantity
+            or 0
+        )
+        for order in orders
+        if order.payment_status
+        == "paid"
+    )
+
+
+    return render_template(
+        "superadmin/organizer_detail.html",
+
+        organizer=
+            organizer,
+
+        events=
+            events,
+
+        orders=
+            orders,
+
+        paid_orders=
+            paid_orders,
+
+        paid_tickets=
+            paid_tickets,
+    )
+
+
+# ============================================================
+# SUPER ADMIN - ACTIVATE / EXTEND SUBSCRIPTION
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/activate",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_activate_subscription(
+    organizer_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+
+        abort(404)
+
+
+    if (
+        organizer.subscription_status
+        == "suspended"
+        or not organizer.active
+    ):
+
+        flash(
+            (
+                "Reactivate this organizer account "
+                "before activating the subscription."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    days = request.form.get(
+        "days",
+        30,
+        type=int,
+    )
+
+
+    if (
+        not days
+        or days < 1
+        or days > 3650
+    ):
+
+        flash(
+            (
+                "Subscription extension must be "
+                "between 1 and 3650 days."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        organizer.subscription_expires_at
+        and organizer.subscription_expires_at
+        > now
+    ):
+
+        base_date = (
+            organizer.subscription_expires_at
+        )
+
+    else:
+
+        base_date = now
+
+
+    if not organizer.subscription_started_at:
+
+        organizer.subscription_started_at = (
+            now
+        )
+
+
+    organizer.subscription_expires_at = (
+        base_date
+        + timedelta(
+            days=days
+        )
+    )
+
+
+    organizer.subscription_status = (
+        "active"
+    )
+
+
+    organizer.active = True
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Super Admin] Failed to activate "
+                "subscription organizer_id=%s error=%s"
+            ),
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            "Subscription update failed.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    flash(
+        (
+            f"Subscription activated/extended "
+            f"by {days} day(s)."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=
+                organizer.id,
+        )
+    )
+
+
+# ============================================================
+# SUPER ADMIN - SET EXACT EXPIRY DATE
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/set-expiry",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_set_subscription_expiry(
+    organizer_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+
+        abort(404)
+
+
+    expiry_raw = (
+        request.form.get(
+            "subscription_expires_on",
+            "",
+        )
+        .strip()
+    )
+
+
+    try:
+
+        expiry_date = (
+            datetime.strptime(
+                expiry_raw,
+                "%Y-%m-%d",
+            )
+        )
+
+
+        expiry_at = (
+            expiry_date.replace(
+                hour=23,
+                minute=59,
+                second=59,
+                microsecond=0,
+            )
+        )
+
+
+    except ValueError:
+
+        flash(
+            "Please enter a valid expiry date.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    organizer.subscription_expires_at = (
+        expiry_at
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        organizer.subscription_status
+        != "suspended"
+        and organizer.active
+    ):
+
+        if expiry_at > now:
+
+            organizer.subscription_status = (
+                "active"
+            )
+
+
+            if not organizer.subscription_started_at:
+
+                organizer.subscription_started_at = (
+                    now
+                )
+
+        else:
+
+            organizer.subscription_status = (
+                "expired"
+            )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Super Admin] Failed to set "
+                "subscription expiry organizer_id=%s "
+                "error=%s"
+            ),
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            "Subscription expiry update failed.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    flash(
+        "Subscription expiry date updated.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=
+                organizer.id,
+        )
+    )
+
+
+# ============================================================
+# SUPER ADMIN - SUSPEND ORGANIZER
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/suspend",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_suspend_organizer(
+    organizer_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+
+        abort(404)
+
+
+    reason = (
+        request.form.get(
+            "reason",
+            "",
+        )
+        .strip()
+        or "Suspended by Kalxa Super Admin."
+    )
+
+
+    organizer.active = False
+
+    organizer.subscription_status = (
+        "suspended"
+    )
+
+    organizer.suspended_at = (
+        datetime.utcnow()
+    )
+
+    organizer.suspension_reason = (
+        reason
+    )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Super Admin] Failed to suspend "
+                "organizer_id=%s error=%s"
+            ),
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            "Organizer suspension failed.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    flash(
+        "Organizer suspended.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=
+                organizer.id,
+        )
+    )
+
+
+# ============================================================
+# SUPER ADMIN - REACTIVATE ORGANIZER
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/reactivate",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_reactivate_organizer(
+    organizer_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+
+        abort(404)
+
+
+    organizer.active = True
+
+    organizer.suspended_at = None
+
+    organizer.suspension_reason = None
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        organizer.subscription_expires_at
+        and organizer.subscription_expires_at
+        > now
+    ):
+
+        organizer.subscription_status = (
+            "active"
+        )
+
+    elif organizer.subscription_expires_at:
+
+        organizer.subscription_status = (
+            "expired"
+        )
+
+    else:
+
+        organizer.subscription_status = (
+            "inactive"
+        )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Super Admin] Failed to reactivate "
+                "organizer_id=%s error=%s"
+            ),
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            "Organizer reactivation failed.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    flash(
+        "Organizer account reactivated.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=
+                organizer.id,
+        )
+    )
 
 
 # ============================================================
@@ -1953,6 +3062,15 @@ def admin_dashboard():
 
         current_ticket_event=
             current_ticket_event,
+
+        subscription_active=
+            organizer.is_subscription_active,
+
+        subscription_status=
+            organizer.effective_subscription_status,
+
+        subscription_expires_at=
+            organizer.subscription_expires_at,
     )
 
 
@@ -1981,6 +3099,18 @@ def admin_create_event():
     organizer = (
         get_current_organizer()
     )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
 
 
     kalxa_content_item_id = (
