@@ -16,7 +16,7 @@
     >
 
     <title>
-        Kalxa Ticketing
+        Organizer Dashboard | Kalxa Ticketing
     </title>
 
     <link
@@ -27,10 +27,1734 @@
         ) }}"
     >
 
+
+    <style>
+
+        /* =====================================================
+           RESET
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+
+            margin: 0;
+
+            background:
+                #f6f7f9;
+
+            color:
+                #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            font-size:
+                15px;
+
+            line-height:
+                1.55;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+
+        /* =====================================================
+           PAGE SHELL
+        ===================================================== */
+
+        .admin-shell {
+
+            width:
+                min(
+                    1180px,
+                    calc(100% - 32px)
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                22px 0 60px;
+        }
+
+
+        /* =====================================================
+           TOP NAV
+        ===================================================== */
+
+        .admin-nav {
+
+            position:
+                sticky;
+
+            top:
+                14px;
+
+            z-index:
+                20;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                18px;
+
+            margin-bottom:
+                28px;
+
+            padding:
+                14px 16px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.94
+                );
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                16px;
+
+            box-shadow:
+                0 10px 30px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.06
+                );
+
+            backdrop-filter:
+                blur(16px);
+        }
+
+        .brand-block {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                12px;
+
+            min-width:
+                0;
+        }
+
+        .brand-mark {
+
+            width:
+                38px;
+
+            height:
+                38px;
+
+            display:
+                grid;
+
+            place-items:
+                center;
+
+            flex:
+                0 0 auto;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border-radius:
+                11px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.03em;
+        }
+
+        .brand-copy {
+            min-width: 0;
+        }
+
+        .brand-title {
+
+            display:
+                block;
+
+            color:
+                #111827;
+
+            font-size:
+                13px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                0.03em;
+        }
+
+        .brand-subtitle {
+
+            display:
+                block;
+
+            overflow:
+                hidden;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+
+            text-overflow:
+                ellipsis;
+
+            white-space:
+                nowrap;
+        }
+
+        .admin-nav-actions {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+            flex-wrap:
+                wrap;
+
+            justify-content:
+                flex-end;
+        }
+
+        .admin-nav-link {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                38px;
+
+            padding:
+                9px 12px;
+
+            color:
+                #334155;
+
+            border-radius:
+                10px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                13px;
+
+            font-weight:
+                750;
+
+            transition:
+                background 0.15s ease,
+                color 0.15s ease;
+        }
+
+        .admin-nav-link:hover {
+
+            background:
+                #f1f5f9;
+
+            color:
+                #111827;
+        }
+
+        .admin-nav-link.logout {
+
+            color:
+                #991b1b;
+        }
+
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
+
+        .flash-wrapper {
+
+            display:
+                grid;
+
+            gap:
+                10px;
+
+            margin-bottom:
+                20px;
+        }
+
+        .alert {
+
+            padding:
+                13px 15px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #dbe3ec;
+
+            border-radius:
+                12px;
+
+            color:
+                #334155;
+
+            font-size:
+                13px;
+
+            font-weight:
+                650;
+
+            box-shadow:
+                0 5px 18px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.04
+                );
+        }
+
+        .alert[data-category="success"] {
+
+            border-color:
+                #bbf7d0;
+
+            background:
+                #f0fdf4;
+
+            color:
+                #166534;
+        }
+
+        .alert[data-category="error"] {
+
+            border-color:
+                #fecaca;
+
+            background:
+                #fef2f2;
+
+            color:
+                #991b1b;
+        }
+
+
+        /* =====================================================
+           HERO HEADER
+        ===================================================== */
+
+        .admin-header {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                minmax(0, 1fr)
+                auto;
+
+            gap:
+                24px;
+
+            align-items:
+                center;
+
+            margin-bottom:
+                22px;
+
+            padding:
+                30px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b0c0e 0%,
+                    #18181b 100%
+                );
+
+            color:
+                #ffffff;
+
+            border-radius:
+                22px;
+
+            box-shadow:
+                0 18px 42px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.14
+                );
+        }
+
+        .section-kicker {
+
+            display:
+                inline-block;
+
+            margin-bottom:
+                8px;
+
+            color:
+                #94a3b8;
+
+            font-size:
+                10px;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                0.13em;
+
+            text-transform:
+                uppercase;
+        }
+
+        .admin-header .section-kicker {
+            color: #cbd5e1;
+        }
+
+        .admin-header h1 {
+
+            margin:
+                0 0 10px;
+
+            color:
+                #ffffff;
+
+            font-size:
+                clamp(
+                    30px,
+                    5vw,
+                    44px
+                );
+
+            line-height:
+                1.05;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.045em;
+        }
+
+        .admin-header p {
+
+            max-width:
+                640px;
+
+            margin:
+                0;
+
+            color:
+                #cbd5e1;
+
+            font-size:
+                14px;
+        }
+
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
+
+        .button {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                44px;
+
+            padding:
+                11px 16px;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border:
+                1px solid #111111;
+
+            border-radius:
+                11px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                13px;
+
+            font-weight:
+                850;
+
+            cursor:
+                pointer;
+
+            transition:
+                transform 0.15s ease,
+                box-shadow 0.15s ease,
+                background 0.15s ease;
+        }
+
+        .button:hover {
+
+            background:
+                #27272a;
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 8px 20px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.1
+                );
+        }
+
+        .button-light {
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border-color:
+                #ffffff;
+        }
+
+        .button-light:hover {
+
+            background:
+                #f8fafc;
+        }
+
+        .button-secondary {
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border-color:
+                #dbe3ec;
+        }
+
+        .button-secondary:hover {
+
+            background:
+                #f8fafc;
+        }
+
+        .button-full {
+            width: 100%;
+        }
+
+
+        /* =====================================================
+           ACCOUNT + METRICS
+        ===================================================== */
+
+        .overview-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                minmax(260px, 0.82fr)
+                minmax(0, 2.18fr);
+
+            gap:
+                18px;
+
+            margin-bottom:
+                22px;
+        }
+
+        .account-card,
+        .admin-section {
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                18px;
+
+            box-shadow:
+                0 8px 28px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.045
+                );
+        }
+
+        .account-card {
+
+            padding:
+                20px;
+        }
+
+        .account-name {
+
+            margin:
+                0 0 16px;
+
+            font-size:
+                22px;
+
+            line-height:
+                1.15;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.035em;
+        }
+
+        .account-meta {
+
+            display:
+                grid;
+
+            gap:
+                10px;
+        }
+
+        .account-meta-row {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            justify-content:
+                space-between;
+
+            gap:
+                14px;
+
+            padding-top:
+                10px;
+
+            border-top:
+                1px solid #eef2f7;
+        }
+
+        .account-meta-label {
+
+            color:
+                #94a3b8;
+
+            font-size:
+                11px;
+
+            font-weight:
+                700;
+        }
+
+        .account-meta-value {
+
+            min-width:
+                0;
+
+            color:
+                #334155;
+
+            font-size:
+                12px;
+
+            font-weight:
+                750;
+
+            text-align:
+                right;
+
+            overflow-wrap:
+                anywhere;
+        }
+
+        .metrics {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                12px;
+        }
+
+        .metric {
+
+            min-width:
+                0;
+
+            padding:
+                18px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                16px;
+
+            box-shadow:
+                0 6px 22px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.04
+                );
+        }
+
+        .metric-label {
+
+            display:
+                block;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                800;
+        }
+
+        .metric strong {
+
+            display:
+                block;
+
+            margin:
+                7px 0 3px;
+
+            color:
+                #111827;
+
+            font-size:
+                30px;
+
+            line-height:
+                1;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.04em;
+        }
+
+        .metric small {
+
+            color:
+                #94a3b8;
+
+            font-size:
+                11px;
+        }
+
+
+        /* =====================================================
+           DISCOVERY CONNECTION
+        ===================================================== */
+
+        .discovery-card {
+
+            margin-bottom:
+                22px;
+
+            padding:
+                18px 20px;
+
+            background:
+                #fffdf5;
+
+            border:
+                1px solid #f0e6bd;
+
+            border-radius:
+                16px;
+        }
+
+        .discovery-row {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                18px;
+        }
+
+        .discovery-card h3 {
+
+            margin:
+                0 0 4px;
+
+            font-size:
+                15px;
+        }
+
+        .discovery-card p {
+
+            margin:
+                0;
+
+            color:
+                #78716c;
+
+            font-size:
+                12px;
+        }
+
+        .discovery-badge {
+
+            flex:
+                0 0 auto;
+
+            padding:
+                8px 10px;
+
+            background:
+                #fff8dc;
+
+            color:
+                #854d0e;
+
+            border:
+                1px solid #facc15;
+
+            border-radius:
+                999px;
+
+            font-size:
+                11px;
+
+            font-weight:
+                850;
+        }
+
+
+        /* =====================================================
+           SECTIONS
+        ===================================================== */
+
+        .admin-section {
+
+            margin-bottom:
+                22px;
+
+            padding:
+                24px;
+        }
+
+        .admin-section-header {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            justify-content:
+                space-between;
+
+            gap:
+                18px;
+
+            margin-bottom:
+                22px;
+        }
+
+        .admin-section h2 {
+
+            margin:
+                0 0 6px;
+
+            font-size:
+                23px;
+
+            line-height:
+                1.15;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.035em;
+        }
+
+        .admin-section h3 {
+
+            margin:
+                0;
+
+            color:
+                #111827;
+
+            font-size:
+                16px;
+
+            font-weight:
+                850;
+        }
+
+        .muted {
+
+            color:
+                #64748b;
+        }
+
+        .admin-section p.muted {
+
+            margin:
+                0;
+
+            font-size:
+                13px;
+        }
+
+        .admin-count-badge {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-width:
+                34px;
+
+            height:
+                34px;
+
+            padding:
+                0 11px;
+
+            background:
+                #f1f5f9;
+
+            color:
+                #334155;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                999px;
+
+            font-size:
+                12px;
+
+            font-weight:
+                850;
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .form-stack {
+
+            display:
+                grid;
+
+            gap:
+                20px;
+        }
+
+        .form-panel {
+
+            padding:
+                20px;
+
+            background:
+                #fafafa;
+
+            border:
+                1px solid #eceff3;
+
+            border-radius:
+                15px;
+        }
+
+        .form-panel-header {
+
+            margin-bottom:
+                18px;
+        }
+
+        .form-panel-header h3 {
+
+            margin:
+                0 0 4px;
+        }
+
+        .form-panel-header p {
+
+            margin:
+                0;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+        }
+
+        .form-group {
+
+            display:
+                grid;
+
+            gap:
+                7px;
+        }
+
+        .form-group label {
+
+            color:
+                #334155;
+
+            font-size:
+                12px;
+
+            font-weight:
+                800;
+        }
+
+        .form-group input,
+        .form-group textarea {
+
+            width:
+                100%;
+
+            padding:
+                12px 13px;
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border:
+                1px solid #d7dee7;
+
+            border-radius:
+                10px;
+
+            outline:
+                none;
+
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        .form-group input {
+
+            min-height:
+                46px;
+        }
+
+        .form-group textarea {
+
+            resize:
+                vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+
+            border-color:
+                #111827;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    17,
+                    24,
+                    39,
+                    0.06
+                );
+        }
+
+        .form-group small {
+
+            color:
+                #94a3b8;
+
+            font-size:
+                11px;
+        }
+
+        .admin-form-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                16px;
+        }
+
+        .input-prefix {
+
+            display:
+                flex;
+
+            align-items:
+                stretch;
+        }
+
+        .input-prefix span {
+
+            display:
+                grid;
+
+            place-items:
+                center;
+
+            min-width:
+                42px;
+
+            background:
+                #f1f5f9;
+
+            color:
+                #475569;
+
+            border:
+                1px solid #d7dee7;
+
+            border-right:
+                0;
+
+            border-radius:
+                10px 0 0 10px;
+
+            font-weight:
+                850;
+        }
+
+        .input-prefix input {
+
+            border-radius:
+                0 10px 10px 0;
+        }
+
+        .payment-note {
+
+            display:
+                flex;
+
+            gap:
+                10px;
+
+            align-items:
+                flex-start;
+
+            margin-bottom:
+                18px;
+
+            padding:
+                12px 14px;
+
+            background:
+                #fffdf5;
+
+            border:
+                1px solid #f1e6bb;
+
+            border-radius:
+                11px;
+
+            color:
+                #78674c;
+
+            font-size:
+                12px;
+        }
+
+
+        /* =====================================================
+           EVENT LIST
+        ===================================================== */
+
+        .admin-event-list {
+
+            display:
+                grid;
+
+            gap:
+                12px;
+        }
+
+        .admin-event-row {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                92px
+                minmax(0, 1fr)
+                auto;
+
+            gap:
+                16px;
+
+            align-items:
+                center;
+
+            padding:
+                14px;
+
+            background:
+                #fbfcfd;
+
+            border:
+                1px solid #e8edf2;
+
+            border-radius:
+                14px;
+        }
+
+        .admin-event-image {
+
+            width:
+                92px;
+
+            height:
+                92px;
+
+            overflow:
+                hidden;
+
+            background:
+                #f1f5f9;
+
+            border-radius:
+                11px;
+        }
+
+        .admin-event-image img {
+
+            width:
+                100%;
+
+            height:
+                100%;
+
+            display:
+                block;
+
+            object-fit:
+                cover;
+        }
+
+        .admin-event-info {
+
+            min-width:
+                0;
+        }
+
+        .admin-event-topline {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                10px;
+
+            flex-wrap:
+                wrap;
+
+            margin-bottom:
+                8px;
+        }
+
+        .admin-event-title {
+
+            color:
+                #111827;
+
+            font-size:
+                16px;
+
+            font-weight:
+                900;
+        }
+
+        .admin-price-badge {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            padding:
+                4px 8px;
+
+            background:
+                #eef2ff;
+
+            color:
+                #3730a3;
+
+            border-radius:
+                999px;
+
+            font-size:
+                10px;
+
+            font-weight:
+                850;
+        }
+
+        .event-meta-line {
+
+            margin-top:
+                4px;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+        }
+
+        .event-stats-line {
+
+            display:
+                flex;
+
+            gap:
+                12px;
+
+            flex-wrap:
+                wrap;
+
+            margin-top:
+                8px;
+
+            color:
+                #475569;
+
+            font-size:
+                11px;
+
+            font-weight:
+                750;
+        }
+
+        .admin-event-actions {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+            flex-wrap:
+                wrap;
+
+            justify-content:
+                flex-end;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .admin-empty-state {
+
+            padding:
+                34px 20px;
+
+            background:
+                #fafafa;
+
+            border:
+                1px dashed #cbd5e1;
+
+            border-radius:
+                14px;
+
+            text-align:
+                center;
+        }
+
+        .admin-empty-icon {
+
+            width:
+                46px;
+
+            height:
+                46px;
+
+            display:
+                grid;
+
+            place-items:
+                center;
+
+            margin:
+                0 auto 12px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                13px;
+
+            font-size:
+                20px;
+        }
+
+        .admin-empty-state h3 {
+
+            margin:
+                0 0 6px;
+        }
+
+
+        /* =====================================================
+           CHECK-IN CARD
+        ===================================================== */
+
+        .admin-checkin-card {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                24px;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border-color:
+                #111111;
+        }
+
+        .admin-checkin-card h2 {
+            color: #ffffff;
+        }
+
+        .admin-checkin-card .section-kicker {
+            color: #cbd5e1;
+        }
+
+        .admin-checkin-card .muted {
+            color: #cbd5e1;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 960px
+        ) {
+
+            .overview-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+            .metrics {
+
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
+
+        }
+
+
+        @media (
+            max-width: 760px
+        ) {
+
+            .admin-shell {
+
+                width:
+                    min(
+                        100% - 22px,
+                        1180px
+                    );
+
+                padding-top:
+                    12px;
+            }
+
+            .admin-nav {
+
+                position:
+                    static;
+
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+            }
+
+            .admin-nav-actions {
+
+                width:
+                    100%;
+
+                justify-content:
+                    flex-start;
+            }
+
+            .admin-header {
+
+                grid-template-columns:
+                    1fr;
+
+                padding:
+                    24px 20px;
+            }
+
+            .admin-header .button {
+
+                width:
+                    100%;
+            }
+
+            .admin-form-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+            .admin-event-row {
+
+                grid-template-columns:
+                    72px
+                    minmax(0, 1fr);
+            }
+
+            .admin-event-image {
+
+                width:
+                    72px;
+
+                height:
+                    72px;
+            }
+
+            .admin-event-actions {
+
+                grid-column:
+                    1 / -1;
+
+                justify-content:
+                    stretch;
+            }
+
+            .admin-event-actions .button {
+
+                flex:
+                    1;
+            }
+
+            .admin-checkin-card {
+
+                align-items:
+                    stretch;
+
+                flex-direction:
+                    column;
+            }
+
+            .admin-checkin-card .button {
+
+                width:
+                    100%;
+            }
+
+        }
+
+
+        @media (
+            max-width: 520px
+        ) {
+
+            .metrics {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+            .admin-section {
+
+                padding:
+                    18px;
+            }
+
+            .form-panel {
+
+                padding:
+                    16px;
+            }
+
+            .admin-event-row {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+            .admin-event-image {
+
+                width:
+                    100%;
+
+                height:
+                    180px;
+            }
+
+        }
+
+    </style>
+
 </head>
 
 
-<body class="admin-body">
+<body>
 
 
 <div class="admin-shell">
@@ -43,25 +1767,36 @@
     <nav class="admin-nav">
 
 
-        <div>
+        <div class="brand-block">
 
-            <strong>
-                KALXA TICKETING
-            </strong>
 
-            <div class="muted">
+            <div class="brand-mark">
+                K
+            </div>
 
-                {% if organizer %}
 
-                    {{ organizer.display_name }}
+            <div class="brand-copy">
 
-                {% else %}
+                <span class="brand-title">
+                    KALXA TICKETING
+                </span>
 
-                    Organizer Control Centre
+                <span class="brand-subtitle">
 
-                {% endif %}
+                    {% if organizer %}
+
+                        {{ organizer.display_name }}
+
+                    {% else %}
+
+                        Organizer Control Centre
+
+                    {% endif %}
+
+                </span>
 
             </div>
+
 
         </div>
 
@@ -93,7 +1828,7 @@
                 href="{{ url_for(
                     'organizer_logout'
                 ) }}"
-                class="admin-nav-link"
+                class="admin-nav-link logout"
             >
                 Logout
             </a>
@@ -138,7 +1873,7 @@
 
 
     <!-- =========================================
-         PAGE HEADER
+         HERO
     ========================================== -->
 
     <header class="admin-header">
@@ -146,20 +1881,27 @@
 
         <div>
 
+
             <span class="section-kicker">
-                KALXA TICKETING
+                ORGANIZER CONTROL CENTRE
             </span>
 
+
             <h1>
-                Organizer Dashboard
+                Your events.
+                Your audience.
+                Your ticketing.
             </h1>
 
-            <p class="muted">
 
-                Create events, manage ticket sales,
-                view attendees and control event entry.
+            <p>
+
+                Create ticketed events, manage sales,
+                track attendance and control entry from
+                one organizer dashboard.
 
             </p>
+
 
         </div>
 
@@ -168,7 +1910,7 @@
             href="{{ url_for(
                 'admin_checkin'
             ) }}"
-            class="button"
+            class="button button-light"
         >
             🎟 Scan Ticket
         </a>
@@ -179,218 +1921,212 @@
 
 
     <!-- =========================================
-         ORGANIZER ACCOUNT
+         OVERVIEW
     ========================================== -->
 
-    {% if organizer %}
-
-        <section class="admin-section">
+    <div class="overview-grid">
 
 
-            <span class="section-kicker">
-                ORGANIZER ACCOUNT
-            </span>
+        <!-- =====================================
+             ACCOUNT
+        ====================================== -->
+
+        {% if organizer %}
+
+            <section class="account-card">
 
 
-            <h2>
-                {{ organizer.display_name }}
-            </h2>
-
-
-            <div class="summary-row">
-
-                <span class="muted">
-                    Organizer ID
+                <span class="section-kicker">
+                    ORGANIZER ACCOUNT
                 </span>
 
-                <strong>
-                    #{{ organizer.id }}
-                </strong>
 
-            </div>
-
-
-            <div class="summary-row">
-
-                <span class="muted">
-                    Email
-                </span>
-
-                <strong>
-                    {{ organizer.email }}
-                </strong>
-
-            </div>
+                <h2 class="account-name">
+                    {{ organizer.display_name }}
+                </h2>
 
 
-            {% if organizer.phone %}
+                <div class="account-meta">
 
-                <div class="summary-row">
 
-                    <span class="muted">
-                        Phone
-                    </span>
+                    <div class="account-meta-row">
 
-                    <strong>
-                        {{ organizer.phone }}
-                    </strong>
+                        <span class="account-meta-label">
+                            Organizer ID
+                        </span>
+
+                        <span class="account-meta-value">
+                            #{{ organizer.id }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="account-meta-row">
+
+                        <span class="account-meta-label">
+                            Email
+                        </span>
+
+                        <span class="account-meta-value">
+                            {{ organizer.email }}
+                        </span>
+
+                    </div>
+
+
+                    {% if organizer.phone %}
+
+                        <div class="account-meta-row">
+
+                            <span class="account-meta-label">
+                                Phone
+                            </span>
+
+                            <span class="account-meta-value">
+                                {{ organizer.phone }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
 
                 </div>
 
-            {% endif %}
 
+            </section>
 
-        </section>
-
-    {% endif %}
+        {% endif %}
 
 
 
-    <!-- =========================================
-         OPTIONAL KALXA DISCOVERY CONNECTION
-    ========================================== -->
+        <!-- =====================================
+             METRICS
+        ====================================== -->
 
-    {% if active_content_item_id %}
-
-        <section class="admin-section">
+        <div class="metrics">
 
 
-            <span class="section-kicker">
-                KALXA DISCOVERY
-            </span>
+            <div class="metric">
 
-
-            <h2>
-                Discovery Event Connected
-            </h2>
-
-
-            <p class="muted">
-
-                This Ticketing session includes an optional
-                connection to a Kalxa Discovery listing.
-
-                Ticketing remains independent and your
-                organizer account owns the ticket event.
-
-            </p>
-
-
-            <div class="summary-row">
-
-                <span class="muted">
-                    Kalxa Listing
+                <span class="metric-label">
+                    Events
                 </span>
 
                 <strong>
-                    #{{ active_content_item_id }}
+                    {{ events|length }}
                 </strong>
+
+                <small>
+                    Created events
+                </small>
 
             </div>
 
 
-            {% if current_ticket_event %}
+            <div class="metric">
 
-                <div class="summary-row">
+                <span class="metric-label">
+                    Total Orders
+                </span>
 
-                    <span class="muted">
-                        Ticket Event
-                    </span>
+                <strong>
+                    {{ total_orders }}
+                </strong>
 
-                    <strong>
-                        #{{ current_ticket_event.id }}
-                    </strong>
+                <small>
+                    Ticket orders
+                </small>
 
-                </div>
-
-            {% endif %}
-
-
-        </section>
-
-    {% endif %}
+            </div>
 
 
+            <div class="metric">
 
-    <!-- =========================================
-         METRICS
-    ========================================== -->
+                <span class="metric-label">
+                    Paid Orders
+                </span>
 
-    <div class="metrics">
+                <strong>
+                    {{ paid_orders }}
+                </strong>
 
+                <small>
+                    Confirmed payments
+                </small>
 
-        <div class="metric">
-
-            <span>
-                Events
-            </span>
-
-            <strong>
-                {{ events|length }}
-            </strong>
-
-            <small class="muted">
-                Your ticket events
-            </small>
-
-        </div>
+            </div>
 
 
+            <div class="metric">
 
-        <div class="metric">
+                <span class="metric-label">
+                    Checked In
+                </span>
 
-            <span>
-                Total Orders
-            </span>
+                <strong>
+                    {{ checked_in }}
+                </strong>
 
-            <strong>
-                {{ total_orders }}
-            </strong>
+                <small>
+                    Tickets used
+                </small>
 
-            <small class="muted">
-                Ticket orders received
-            </small>
+            </div>
 
-        </div>
-
-
-
-        <div class="metric">
-
-            <span>
-                Paid Orders
-            </span>
-
-            <strong>
-                {{ paid_orders }}
-            </strong>
-
-            <small class="muted">
-                Confirmed payments
-            </small>
-
-        </div>
-
-
-
-        <div class="metric">
-
-            <span>
-                Checked In
-            </span>
-
-            <strong>
-                {{ checked_in }}
-            </strong>
-
-            <small class="muted">
-                Tickets already used
-            </small>
 
         </div>
 
 
     </div>
+
+
+
+    <!-- =========================================
+         OPTIONAL DISCOVERY CONNECTION
+    ========================================== -->
+
+    {% if active_content_item_id %}
+
+        <section class="discovery-card">
+
+
+            <div class="discovery-row">
+
+
+                <div>
+
+                    <span class="section-kicker">
+                        KALXA DISCOVERY
+                    </span>
+
+                    <h3>
+                        Discovery listing connected
+                    </h3>
+
+                    <p>
+
+                        This session includes optional context
+                        from Kalxa Discovery. Your Ticketing
+                        account still owns the event.
+
+                    </p>
+
+                </div>
+
+
+                <span class="discovery-badge">
+                    Listing #{{ active_content_item_id }}
+                </span>
+
+
+            </div>
+
+
+        </section>
+
+    {% endif %}
 
 
 
@@ -411,13 +2147,13 @@
                 </span>
 
                 <h2>
-                    Create Ticket Event
+                    New Ticket Event
                 </h2>
 
                 <p class="muted">
 
-                    Create an event directly inside Kalxa
-                    Ticketing and start selling tickets.
+                    Add the event details, set your ticket
+                    price and capacity, then publish it.
 
                 </p>
 
@@ -428,12 +2164,12 @@
 
 
 
-        <!-- =====================================
-             LINKED DISCOVERY EVENT ALREADY EXISTS
-        ====================================== -->
-
         {% if active_content_item_id and current_ticket_event %}
 
+
+            <!-- =================================
+                 LINKED EVENT ALREADY EXISTS
+            ================================== -->
 
             <div class="admin-empty-state">
 
@@ -444,15 +2180,15 @@
 
 
                 <h3>
-                    Linked ticket event already active
+                    Linked ticket event is already active
                 </h3>
 
 
                 <p class="muted">
 
-                    Kalxa Discovery listing
+                    Discovery listing
                     #{{ active_content_item_id }}
-                    is already linked to Ticket Event
+                    is already connected to Ticket Event
                     #{{ current_ticket_event.id }}.
 
                 </p>
@@ -460,7 +2196,7 @@
 
                 <div
                     class="admin-event-actions"
-                    style="margin-top: 20px;"
+                    style="margin-top: 18px;"
                 >
 
 
@@ -508,201 +2244,133 @@
 
 
                 <!-- =============================
-                     OPTIONAL DISCOVERY CONTEXT
+                     EVENT DETAILS
                 ============================== -->
 
-                {% if active_content_item_id %}
-
-                    <div class="form-group">
+                <div class="form-panel">
 
 
-                        <label>
-                            Kalxa Discovery Listing
-                        </label>
+                    <div class="form-panel-header">
 
+                        <h3>
+                            Event Details
+                        </h3>
 
-                        <div class="summary-row">
-
-                            <span class="muted">
-                                Optional linked listing
-                            </span>
-
-                            <strong>
-                                #{{ active_content_item_id }}
-                            </strong>
-
-                        </div>
-
-
-                        <small class="muted">
-
-                            This event will also remember the
-                            Discovery listing that opened
-                            Ticketing.
-
-                        </small>
-
-
-                    </div>
-
-                {% endif %}
-
-
-
-                <!-- =============================
-                     EVENT TITLE
-                ============================== -->
-
-                <div class="form-group">
-
-
-                    <label for="title">
-                        Event Title
-                    </label>
-
-
-                    <input
-                        id="title"
-                        type="text"
-                        name="title"
-                        placeholder="KwaMhlanga Saturday Groove"
-                        required
-                    >
-
-
-                </div>
-
-
-
-                <!-- =============================
-                     DESCRIPTION
-                ============================== -->
-
-                <div class="form-group">
-
-
-                    <label for="description">
-                        Description
-                    </label>
-
-
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="4"
-                        placeholder="Tell attendees what the event is about..."
-                    ></textarea>
-
-
-                </div>
-
-
-
-                <!-- =============================
-                     VENUE
-                ============================== -->
-
-                <div class="form-group">
-
-
-                    <label for="venue">
-                        Venue
-                    </label>
-
-
-                    <input
-                        id="venue"
-                        type="text"
-                        name="venue"
-                        placeholder="KwaMhlanga Community Hall"
-                    >
-
-
-                </div>
-
-
-
-                <!-- =============================
-                     DATE + TIME
-                ============================== -->
-
-                <div class="admin-form-grid">
-
-
-                    <div class="form-group">
-
-
-                        <label for="event_date">
-                            Event Date
-                        </label>
-
-
-                        <input
-                            id="event_date"
-                            type="date"
-                            name="event_date"
-                        >
-
+                        <p>
+                            Public information attendees will see.
+                        </p>
 
                     </div>
 
 
-
-                    <div class="form-group">
-
-
-                        <label for="event_time">
-                            Event Time
-                        </label>
+                    <div class="form-stack">
 
 
-                        <input
-                            id="event_time"
-                            type="time"
-                            name="event_time"
-                        >
+                        {% if active_content_item_id %}
+
+                            <div class="form-group">
+
+                                <label>
+                                    Linked Discovery Listing
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value="#{{ active_content_item_id }}"
+                                    disabled
+                                >
+
+                                <small>
+                                    This optional link comes from
+                                    your Kalxa Discovery session.
+                                </small>
+
+                            </div>
+
+                        {% endif %}
 
 
-                    </div>
+                        <div class="form-group">
 
-
-                </div>
-
-
-
-                <!-- =============================
-                     TICKET SETTINGS
-                ============================== -->
-
-                <div class="admin-form-grid">
-
-
-                    <div class="form-group">
-
-
-                        <label for="ticket_price">
-                            Ticket Price
-                        </label>
-
-
-                        <div class="input-prefix">
-
-
-                            <span>
-                                R
-                            </span>
-
+                            <label for="title">
+                                Event Title
+                            </label>
 
                             <input
-                                id="ticket_price"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                name="ticket_price"
-                                placeholder="50.00"
+                                id="title"
+                                type="text"
+                                name="title"
+                                placeholder="KwaMhlanga Saturday Groove"
                                 required
                             >
 
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="description">
+                                Description
+                            </label>
+
+                            <textarea
+                                id="description"
+                                name="description"
+                                rows="4"
+                                placeholder="Tell attendees what the event is about..."
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="venue">
+                                Venue
+                            </label>
+
+                            <input
+                                id="venue"
+                                type="text"
+                                name="venue"
+                                placeholder="KwaMhlanga Community Hall"
+                            >
+
+                        </div>
+
+
+                        <div class="admin-form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="event_date">
+                                    Event Date
+                                </label>
+
+                                <input
+                                    id="event_date"
+                                    type="date"
+                                    name="event_date"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="event_time">
+                                    Event Time
+                                </label>
+
+                                <input
+                                    id="event_time"
+                                    type="time"
+                                    name="event_time"
+                                >
+
+                            </div>
+
 
                         </div>
 
@@ -710,23 +2378,99 @@
                     </div>
 
 
+                </div>
 
-                    <div class="form-group">
 
 
-                        <label for="ticket_capacity">
-                            Ticket Capacity
+                <!-- =============================
+                     TICKET SETUP
+                ============================== -->
+
+                <div class="form-panel">
+
+
+                    <div class="form-panel-header">
+
+                        <h3>
+                            Ticket Setup
+                        </h3>
+
+                        <p>
+                            Set the selling price and available capacity.
+                        </p>
+
+                    </div>
+
+
+                    <div class="admin-form-grid">
+
+
+                        <div class="form-group">
+
+                            <label for="ticket_price">
+                                Ticket Price
+                            </label>
+
+                            <div class="input-prefix">
+
+                                <span>
+                                    R
+                                </span>
+
+                                <input
+                                    id="ticket_price"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="ticket_price"
+                                    placeholder="50.00"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="ticket_capacity">
+                                Ticket Capacity
+                            </label>
+
+                            <input
+                                id="ticket_capacity"
+                                type="number"
+                                min="1"
+                                name="ticket_capacity"
+                                placeholder="Example: 300"
+                            >
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div
+                        class="form-group"
+                        style="margin-top: 16px;"
+                    >
+
+                        <label for="poster_image">
+                            Event Poster
                         </label>
 
-
                         <input
-                            id="ticket_capacity"
-                            type="number"
-                            min="1"
-                            name="ticket_capacity"
-                            placeholder="Example: 300"
+                            id="poster_image"
+                            type="file"
+                            name="poster_image"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                         >
 
+                        <small>
+                            JPG, JPEG, PNG and WEBP supported.
+                        </small>
 
                     </div>
 
@@ -736,181 +2480,138 @@
 
 
                 <!-- =============================
-                     POSTER
+                     PAYMENT DETAILS
                 ============================== -->
 
-                <div class="form-group">
+                <div class="form-panel">
 
 
-                    <label for="poster_image">
-                        Event Poster
-                    </label>
+                    <div class="form-panel-header">
+
+                        <h3>
+                            Payment Details
+                        </h3>
+
+                        <p>
+                            Current manual payment configuration.
+                        </p>
+
+                    </div>
 
 
-                    <input
-                        id="poster_image"
-                        type="file"
-                        name="poster_image"
-                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    <div class="payment-note">
+
+                        <span>
+                            ℹ️
+                        </span>
+
+                        <span>
+
+                            For now, organizers confirm payments
+                            manually. Direct payment-provider
+                            connection will be added later.
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-form-grid">
+
+
+                        <div class="form-group">
+
+                            <label for="bank_name">
+                                Bank Name
+                            </label>
+
+                            <input
+                                id="bank_name"
+                                type="text"
+                                name="bank_name"
+                                placeholder="Example: FNB"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="account_holder">
+                                Account Holder
+                            </label>
+
+                            <input
+                                id="account_holder"
+                                type="text"
+                                name="account_holder"
+                                placeholder="Account holder name"
+                            >
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div
+                        class="admin-form-grid"
+                        style="margin-top: 16px;"
                     >
 
 
-                    <small class="muted">
+                        <div class="form-group">
 
-                        Upload an event flyer or poster.
-                        JPG, JPEG, PNG and WEBP are supported.
+                            <label for="account_number">
+                                Account Number
+                            </label>
 
-                    </small>
+                            <input
+                                id="account_number"
+                                type="text"
+                                name="account_number"
+                                placeholder="Account number"
+                            >
 
-
-                </div>
-
-
-
-                <!-- =============================
-                     CURRENT PAYMENT DETAILS
-                ============================== -->
-
-                <div class="admin-section-header">
+                        </div>
 
 
-                    <div>
+                        <div class="form-group">
 
+                            <label for="branch_code">
+                                Branch Code
+                            </label>
 
-                        <span class="section-kicker">
-                            PAYMENT DETAILS
-                        </span>
+                            <input
+                                id="branch_code"
+                                type="text"
+                                name="branch_code"
+                                placeholder="Branch code"
+                            >
 
-
-                        <h3>
-                            Current Payment Setup
-                        </h3>
-
-
-                        <p class="muted">
-
-                            These fields support the current
-                            manual payment-confirmation flow.
-
-                            Direct payment-provider connection
-                            will be added in a later phase.
-
-                        </p>
+                        </div>
 
 
                     </div>
 
 
-                </div>
+                    <div
+                        class="form-group"
+                        style="margin-top: 16px;"
+                    >
 
-
-
-                <div class="admin-form-grid">
-
-
-                    <div class="form-group">
-
-
-                        <label for="bank_name">
-                            Bank Name
+                        <label for="payment_instructions">
+                            Payment Instructions
                         </label>
 
-
-                        <input
-                            id="bank_name"
-                            type="text"
-                            name="bank_name"
-                            placeholder="Example: FNB"
-                        >
-
+                        <textarea
+                            id="payment_instructions"
+                            name="payment_instructions"
+                            rows="3"
+                            placeholder="Example: Use your order number as payment reference."
+                        ></textarea>
 
                     </div>
-
-
-
-                    <div class="form-group">
-
-
-                        <label for="account_holder">
-                            Account Holder
-                        </label>
-
-
-                        <input
-                            id="account_holder"
-                            type="text"
-                            name="account_holder"
-                            placeholder="Account holder name"
-                        >
-
-
-                    </div>
-
-
-                </div>
-
-
-
-                <div class="admin-form-grid">
-
-
-                    <div class="form-group">
-
-
-                        <label for="account_number">
-                            Account Number
-                        </label>
-
-
-                        <input
-                            id="account_number"
-                            type="text"
-                            name="account_number"
-                            placeholder="Account number"
-                        >
-
-
-                    </div>
-
-
-
-                    <div class="form-group">
-
-
-                        <label for="branch_code">
-                            Branch Code
-                        </label>
-
-
-                        <input
-                            id="branch_code"
-                            type="text"
-                            name="branch_code"
-                            placeholder="Branch code"
-                        >
-
-
-                    </div>
-
-
-                </div>
-
-
-
-                <div class="form-group">
-
-
-                    <label for="payment_instructions">
-                        Payment Instructions
-                    </label>
-
-
-                    <textarea
-                        id="payment_instructions"
-                        name="payment_instructions"
-                        rows="3"
-                        placeholder="Example: Use your order number as payment reference."
-                    ></textarea>
 
 
                 </div>
@@ -923,7 +2624,7 @@
 
                 <button
                     type="submit"
-                    class="button admin-primary-button"
+                    class="button button-full"
                 >
                     + Create Ticket Event
                 </button>
@@ -951,24 +2652,20 @@
 
             <div>
 
-
                 <span class="section-kicker">
-                    EVENTS
+                    YOUR EVENTS
                 </span>
 
-
                 <h2>
-                    Your Ticket Events
+                    Ticket Events
                 </h2>
-
 
                 <p class="muted">
 
-                    Only events owned by your Kalxa
-                    Ticketing organizer account appear here.
+                    Manage the events owned by this
+                    organizer account.
 
                 </p>
-
 
             </div>
 
@@ -994,14 +2691,9 @@
                     <article class="admin-event-row">
 
 
-                        <!-- =========================
-                             IMAGE
-                        ========================== -->
-
                         {% if event.image_url %}
 
                             <div class="admin-event-image">
-
 
                                 <img
                                     src="{{ event.image_url }}"
@@ -1009,16 +2701,15 @@
                                     loading="lazy"
                                 >
 
-
                             </div>
+
+                        {% else %}
+
+                            <div class="admin-event-image"></div>
 
                         {% endif %}
 
 
-
-                        <!-- =========================
-                             EVENT INFORMATION
-                        ========================== -->
 
                         <div class="admin-event-info">
 
@@ -1033,7 +2724,6 @@
 
                                 <span class="admin-price-badge">
 
-
                                     {% if event.ticket_price == 0 %}
 
                                         FREE
@@ -1046,7 +2736,6 @@
 
                                     {% endif %}
 
-
                                 </span>
 
 
@@ -1056,7 +2745,7 @@
 
                             {% if event.venue %}
 
-                                <div class="muted">
+                                <div class="event-meta-line">
                                     📍 {{ event.venue }}
                                 </div>
 
@@ -1066,15 +2755,13 @@
 
                             {% if event.event_date %}
 
-                                <div class="muted">
-
+                                <div class="event-meta-line">
 
                                     📅
 
                                     {{ event.event_date.strftime(
                                         '%d %B %Y'
                                     ) }}
-
 
                                     {% if event.event_time %}
 
@@ -1086,37 +2773,39 @@
 
                                     {% endif %}
 
-
                                 </div>
 
                             {% endif %}
 
 
 
-                            {% if event.ticket_capacity %}
+                            <div class="event-stats-line">
 
-                                <div class="muted">
-
-                                    Capacity:
-                                    {{ event.ticket_capacity }}
-
-                                </div>
-
-                            {% endif %}
+                                <span>
+                                    Sold:
+                                    {{ event.paid_ticket_count }}
+                                </span>
 
 
+                                {% if event.ticket_capacity %}
 
-                            <div class="muted">
+                                    <span>
+                                        Capacity:
+                                        {{ event.ticket_capacity }}
+                                    </span>
 
-                                Sold:
-                                {{ event.paid_ticket_count }}
+                                {% endif %}
+
 
                                 {% if event.remaining_tickets is not none %}
 
-                                    · Remaining:
-                                    {{ event.remaining_tickets }}
+                                    <span>
+                                        Remaining:
+                                        {{ event.remaining_tickets }}
+                                    </span>
 
                                 {% endif %}
+
 
                             </div>
 
@@ -1124,9 +2813,9 @@
 
                             {% if event.kalxa_content_item_id %}
 
-                                <div class="muted">
+                                <div class="event-meta-line">
 
-                                    Kalxa Discovery Listing
+                                    Linked to Kalxa Discovery
                                     #{{ event.kalxa_content_item_id }}
 
                                 </div>
@@ -1137,10 +2826,6 @@
                         </div>
 
 
-
-                        <!-- =========================
-                             ACTIONS
-                        ========================== -->
 
                         <div class="admin-event-actions">
 
@@ -1165,7 +2850,7 @@
                                 ) }}"
                                 class="button"
                             >
-                                View Orders
+                                Orders
                             </a>
 
 
@@ -1200,9 +2885,7 @@
                 <p class="muted">
 
                     Create your first event above.
-
-                    You no longer need to create the event
-                    in Kalxa Discovery first.
+                    It will appear here as soon as it is saved.
 
                 </p>
 
@@ -1239,8 +2922,8 @@
 
             <p class="muted">
 
-                Open the Kalxa ticket scanner to validate
-                attendee tickets at the entrance.
+                Validate attendee QR tickets at the entrance
+                and prevent duplicate entry.
 
             </p>
 
@@ -1252,7 +2935,7 @@
             href="{{ url_for(
                 'admin_checkin'
             ) }}"
-            class="button"
+            class="button button-light"
         >
             🎟 Open Check-In
         </a>
