@@ -76,48 +76,6 @@ class Organizer(db.Model):
         index=True,
     )
 
-
-    # ========================================================
-    # EVENT LIFECYCLE
-    # ========================================================
-    #
-    # draft
-    # published
-    # closed
-    #
-    # status controls the event lifecycle.
-    #
-    # sales_open is intentionally separate so an organizer can
-    # keep an event published while temporarily pausing sales.
-    # ========================================================
-
-    status = db.Column(
-        db.String(30),
-        nullable=False,
-        default="draft",
-        index=True,
-    )
-
-    sales_open = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=False,
-        index=True,
-    )
-
-    published_at = db.Column(
-        db.DateTime,
-        nullable=True,
-        index=True,
-    )
-
-    closed_at = db.Column(
-        db.DateTime,
-        nullable=True,
-        index=True,
-    )
-
-
     # ========================================================
     # SUBSCRIPTION / SaaS ACCESS
     # ========================================================
@@ -637,7 +595,50 @@ class TicketEvent(db.Model):
     active = db.Column(
         db.Boolean,
         nullable=False,
-        default=True,
+        default=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # EVENT LIFECYCLE
+    # ========================================================
+    #
+    # Possible status values:
+    #
+    # draft
+    # published
+    # closed
+    #
+    # status controls the event lifecycle.
+    #
+    # sales_open is separate so a published event can remain
+    # publicly visible while ticket sales are temporarily paused.
+    # ========================================================
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="draft",
+        index=True,
+    )
+
+    sales_open = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+    )
+
+    published_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    closed_at = db.Column(
+        db.DateTime,
+        nullable=True,
         index=True,
     )
 
