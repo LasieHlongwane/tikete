@@ -4641,8 +4641,89 @@ def admin_new_event():
 
     return redirect(
         url_for(
-            "admin_dashboard"
+            "admin_event_control",
+            event_id=event.id,
         )
+    )
+
+
+# ============================================================
+# EVENT CONTROL CENTRE
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>"
+)
+def admin_event_control(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+    organizer = (
+        get_current_organizer()
+    )
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+        )
+        .first_or_404()
+    )
+
+    orders = (
+        TicketOrder.query
+        .filter_by(
+            event_id=event.id
+        )
+        .order_by(
+            TicketOrder.created_at.desc()
+        )
+        .all()
+    )
+
+    recent_orders = orders[:8]
+
+    total_orders = len(orders)
+
+    paid_orders = sum(
+        1
+        for order in orders
+        if order.payment_status == "paid"
+    )
+
+    pending_orders = sum(
+        1
+        for order in orders
+        if order.payment_status == "pending"
+    )
+
+    cancelled_orders = sum(
+        1
+        for order in orders
+        if order.payment_status == "cancelled"
+    )
+
+    return render_template(
+        "admin/event_control.html",
+        organizer=organizer,
+        event=event,
+        recent_orders=recent_orders,
+        total_orders=total_orders,
+        paid_orders=paid_orders,
+        pending_orders=pending_orders,
+        cancelled_orders=cancelled_orders,
+        paid_tickets=event.paid_ticket_count,
+        checked_in=event.checked_in_ticket_count,
+        revenue=event.paid_revenue,
+        remaining_tickets=event.remaining_tickets,
     )
 
 
@@ -5192,7 +5273,8 @@ def admin_edit_event(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5255,7 +5337,8 @@ def admin_publish_event(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5296,7 +5379,8 @@ def admin_publish_event(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5368,7 +5452,8 @@ def admin_open_event_sales(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5382,7 +5467,8 @@ def admin_open_event_sales(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5414,7 +5500,8 @@ def admin_open_event_sales(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5501,7 +5588,8 @@ def admin_pause_event_sales(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5570,7 +5658,8 @@ def admin_close_event(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -5612,7 +5701,8 @@ def admin_close_event(
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                "admin_event_control",
+                event_id=event.id,
             )
         )
 
@@ -6359,7 +6449,7 @@ def health():
 
 # ============================================================
 # LOCAL RUN
-# ============================================================
+# ======
 
 if __name__ == "__main__":
 
