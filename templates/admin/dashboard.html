@@ -2917,128 +2917,15 @@
 
                         <div class="admin-event-actions">
 
-
-                            {% if event.status == "published" %}
-
-                                <a
-                                    href="{{ url_for(
-                                        'event_page',
-                                        event_id=event.id
-                                    ) }}"
-                                    class="button button-secondary"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    View Event
-                                </a>
-
-                            {% endif %}
-
-
-                            {% if event.status != "closed" %}
-
-                                <a
-                                    href="{{ url_for(
-                                        'admin_edit_event',
-                                        event_id=event.id
-                                    ) }}"
-                                    class="button button-secondary"
-                                >
-                                    Edit
-                                </a>
-
-                            {% endif %}
-
-
                             <a
                                 href="{{ url_for(
-                                    'admin_orders',
+                                    'admin_event_control',
                                     event_id=event.id
                                 ) }}"
-                                class="button button-secondary"
+                                class="button"
                             >
-                                Orders
+                                Manage Event
                             </a>
-
-
-                            {% if event.status == "draft" %}
-
-                                <form
-                                    method="POST"
-                                    action="{{ url_for(
-                                        'admin_publish_event',
-                                        event_id=event.id
-                                    ) }}"
-                                    class="event-action-form"
-                                >
-                                    <button
-                                        type="submit"
-                                        class="button button-success"
-                                    >
-                                        Publish
-                                    </button>
-                                </form>
-
-                            {% elif event.status == "published" %}
-
-                                {% if event.sales_open %}
-
-                                    <form
-                                        method="POST"
-                                        action="{{ url_for(
-                                            'admin_pause_event_sales',
-                                            event_id=event.id
-                                        ) }}"
-                                        class="event-action-form"
-                                    >
-                                        <button
-                                            type="submit"
-                                            class="button button-warning"
-                                        >
-                                            Pause Sales
-                                        </button>
-                                    </form>
-
-                                {% else %}
-
-                                    <form
-                                        method="POST"
-                                        action="{{ url_for(
-                                            'admin_open_event_sales',
-                                            event_id=event.id
-                                        ) }}"
-                                        class="event-action-form"
-                                    >
-                                        <button
-                                            type="submit"
-                                            class="button button-success"
-                                        >
-                                            Open Sales
-                                        </button>
-                                    </form>
-
-                                {% endif %}
-
-
-                                <form
-                                    method="POST"
-                                    action="{{ url_for(
-                                        'admin_close_event',
-                                        event_id=event.id
-                                    ) }}"
-                                    class="event-action-form"
-                                    onsubmit="return confirm('Close this event? Ticket sales will stop and the public event page will be removed. Orders and check-in history will remain.');"
-                                >
-                                    <button
-                                        type="submit"
-                                        class="button button-danger"
-                                    >
-                                        Close Event
-                                    </button>
-                                </form>
-
-                            {% endif %}
-
 
                         </div>
 
@@ -3072,8 +2959,8 @@
 
                     {% if subscription_active %}
 
-                        Create your first event above.
-                        It will appear here as soon as it is saved.
+                        Create your first event using the
+                        Create Event Ticket button above.
 
                     {% else %}
 
