@@ -126,6 +126,12 @@
 
             margin-bottom:
                 28px;
+
+            padding-bottom:
+                14px;
+
+            border-bottom:
+                1px solid #eef2f7;
         }
 
 
@@ -161,13 +167,34 @@
 
             flex-wrap:
                 wrap;
+
+            justify-content:
+                flex-end;
         }
 
 
         .topbar-link {
 
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                38px;
+
+            padding:
+                8px 11px;
+
             color:
                 #334155;
+
+            border-radius:
+                10px;
 
             font-size:
                 13px;
@@ -177,13 +204,43 @@
 
             text-decoration:
                 none;
+
+            transition:
+                background 0.15s ease,
+                color 0.15s ease;
         }
 
 
         .topbar-link:hover {
 
+            background:
+                #f8fafc;
+
             color:
                 #111827;
+        }
+
+
+        .topbar-link.track-link {
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border:
+                1px solid #111111;
+        }
+
+
+        .topbar-link.track-link:hover {
+
+            background:
+                #27272a;
+
+            color:
+                #ffffff;
         }
 
 
@@ -961,13 +1018,26 @@
 
                 align-items:
                     flex-start;
+
+                flex-direction:
+                    column;
             }
 
 
             .topbar-actions {
 
+                width:
+                    100%;
+
                 justify-content:
-                    flex-end;
+                    flex-start;
+            }
+
+
+            .topbar-link {
+
+                flex:
+                    0 0 auto;
             }
 
 
@@ -1045,6 +1115,20 @@
 
 
         <div class="topbar-actions">
+
+
+            <!-- =============================
+                 PUBLIC ATTENDEE ACTION
+            ============================== -->
+
+            <a
+                href="{{ url_for(
+                    'track_ticket'
+                ) }}"
+                class="topbar-link track-link"
+            >
+                Track My Ticket
+            </a>
 
 
             {% if session.get('ticketing_organizer_id') %}
