@@ -30,17 +30,8 @@
 
     <style>
 
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
         * {
             box-sizing: border-box;
-        }
-
-
-        html {
-            scroll-behavior: smooth;
         }
 
 
@@ -48,8 +39,10 @@
 
             margin: 0;
 
+            min-height: 100vh;
+
             background:
-                #ffffff;
+                #f6f7f9;
 
             color:
                 #111827;
@@ -65,7 +58,7 @@
                 sans-serif;
 
             font-size:
-                16px;
+                15px;
 
             line-height:
                 1.6;
@@ -75,57 +68,51 @@
         }
 
 
-        /* =====================================================
-           PAGE
-        ===================================================== */
-
         .page-shell {
 
             width:
-                100%;
-
-            max-width:
-                620px;
+                min(
+                    680px,
+                    calc(100% - 28px)
+                );
 
             margin:
                 0 auto;
 
             padding:
-                32px 18px 70px;
+                30px 0 60px;
         }
 
 
-        /* =====================================================
-           BRAND
-        ===================================================== */
-
         .brand {
 
+            display:
+                inline-block;
+
             margin-bottom:
-                28px;
+                22px;
 
             color:
                 #111111;
 
             font-size:
-                15px;
+                14px;
 
             font-weight:
                 900;
+
+            text-decoration:
+                none;
 
             letter-spacing:
                 -0.02em;
         }
 
 
-        /* =====================================================
-           CARD
-        ===================================================== */
+        .booking-card {
 
-        .form-card {
-
-            padding:
-                28px;
+            overflow:
+                hidden;
 
             background:
                 #ffffff;
@@ -137,59 +124,71 @@
                 22px;
 
             box-shadow:
-                0 10px 34px
+                0 14px 40px
                 rgba(
                     15,
                     23,
                     42,
-                    0.06
+                    0.07
                 );
         }
 
 
-        /* =====================================================
-           TYPOGRAPHY
-        ===================================================== */
+        .booking-header {
+
+            padding:
+                28px;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+        }
+
 
         .eyebrow {
 
-            margin:
-                0 0 8px;
+            display:
+                block;
+
+            margin-bottom:
+                8px;
 
             color:
-                #64748b;
+                #cbd5e1;
 
             font-size:
-                11px;
+                10px;
 
             font-weight:
                 850;
 
             letter-spacing:
-                0.14em;
+                0.13em;
 
             text-transform:
                 uppercase;
         }
 
 
-        h1 {
+        .booking-header h1 {
 
             margin:
-                0 0 24px;
+                0;
 
             color:
-                #111827;
+                #ffffff;
 
             font-size:
                 clamp(
-                    30px,
+                    28px,
                     7vw,
-                    42px
+                    40px
                 );
 
             line-height:
-                1.05;
+                1.06;
 
             font-weight:
                 900;
@@ -199,21 +198,203 @@
         }
 
 
-        .muted {
+        .booking-body {
 
-            color:
-                #64748b;
+            padding:
+                26px;
         }
 
 
-        /* =====================================================
-           BOOKING REFERENCE
-        ===================================================== */
+        .status-grid {
 
-        .reference-label {
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                12px;
 
             margin-bottom:
-                8px;
+                22px;
+        }
+
+
+        .status-box {
+
+            padding:
+                15px;
+
+            background:
+                #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                13px;
+        }
+
+
+        .status-label {
+
+            display:
+                block;
+
+            margin-bottom:
+                5px;
+
+            color:
+                #64748b;
+
+            font-size:
+                10px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.08em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .status-value {
+
+            color:
+                #111827;
+
+            font-size:
+                15px;
+
+            font-weight:
+                850;
+
+            overflow-wrap:
+                anywhere;
+        }
+
+
+        .amount {
+
+            font-size:
+                22px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.03em;
+        }
+
+
+        .pending {
+
+            color:
+                #b45309;
+        }
+
+
+        .paid {
+
+            color:
+                #15803d;
+        }
+
+
+        .section {
+
+            margin-top:
+                22px;
+
+            padding-top:
+                22px;
+
+            border-top:
+                1px solid #e5e7eb;
+        }
+
+
+        .section h2 {
+
+            margin:
+                0 0 6px;
+
+            color:
+                #111827;
+
+            font-size:
+                19px;
+
+            line-height:
+                1.2;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.03em;
+        }
+
+
+        .section p {
+
+            margin:
+                0;
+
+            color:
+                #64748b;
+
+            font-size:
+                13px;
+        }
+
+
+        .bank-details {
+
+            display:
+                grid;
+
+            gap:
+                10px;
+
+            margin-top:
+                16px;
+        }
+
+
+        .bank-row {
+
+            display:
+                flex;
+
+            justify-content:
+                space-between;
+
+            gap:
+                18px;
+
+            padding:
+                12px 14px;
+
+            background:
+                #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                11px;
+        }
+
+
+        .bank-label {
 
             color:
                 #64748b;
@@ -226,270 +407,88 @@
         }
 
 
-        .reference-box {
-
-            margin-bottom:
-                22px;
-
-            padding:
-                16px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                14px;
-
-            text-align:
-                center;
-
-            font-family:
-                ui-monospace,
-                SFMono-Regular,
-                Menlo,
-                Monaco,
-                Consolas,
-                monospace;
-
-            font-size:
-                18px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                0.08em;
-
-            word-break:
-                break-word;
-        }
-
-
-        /* =====================================================
-           SUMMARY
-        ===================================================== */
-
-        .summary-box {
-
-            margin-top:
-                4px;
-
-            border-top:
-                1px solid #eef2f7;
-        }
-
-
-        .summary-row {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                20px;
-
-            padding:
-                14px 0;
-
-            border-bottom:
-                1px solid #eef2f7;
-        }
-
-
-        .summary-row span {
-
-            color:
-                #64748b;
-
-            font-size:
-                13px;
-
-            font-weight:
-                650;
-        }
-
-
-        .summary-row strong {
+        .bank-value {
 
             color:
                 #111827;
 
             font-size:
-                14px;
+                12px;
 
             font-weight:
                 850;
 
             text-align:
                 right;
+
+            overflow-wrap:
+                anywhere;
         }
 
 
-        /* =====================================================
-           STATUS BADGES
-        ===================================================== */
+        .reference-box {
 
-        .status-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                30px;
+            margin-top:
+                16px;
 
             padding:
-                5px 10px;
+                15px;
+
+            background:
+                #fffdf5;
+
+            border:
+                1px solid #f1e6bb;
 
             border-radius:
-                999px;
+                12px;
+        }
+
+
+        .reference-box strong {
+
+            display:
+                block;
+
+            margin-top:
+                4px;
+
+            color:
+                #111827;
 
             font-size:
-                11px;
-
-            font-weight:
-                850;
+                18px;
 
             letter-spacing:
-                0.04em;
-
-            text-transform:
-                uppercase;
+                0.03em;
         }
 
 
-        .status-paid {
+        .notice {
+
+            margin-top:
+                18px;
+
+            padding:
+                14px;
 
             background:
-                #f0fdf4;
-
-            color:
-                #166534;
-
-            border:
-                1px solid #bbf7d0;
-        }
-
-
-        .status-pending {
-
-            background:
-                #fffbeb;
-
-            color:
-                #92400e;
-
-            border:
-                1px solid #fde68a;
-        }
-
-
-        .status-neutral {
-
-            background:
-                #f1f5f9;
+                #f8fafc;
 
             color:
                 #475569;
 
             border:
                 1px solid #e2e8f0;
-        }
-
-
-        /* =====================================================
-           ALERTS
-        ===================================================== */
-
-        .alert {
-
-            margin-top:
-                22px;
-
-            padding:
-                16px;
-
-            background:
-                #fffbeb;
-
-            color:
-                #92400e;
-
-            border:
-                1px solid #fde68a;
 
             border-radius:
-                14px;
+                12px;
 
             font-size:
-                13px;
+                12px;
 
             line-height:
                 1.65;
-        }
-
-
-        .success-box {
-
-            margin-top:
-                22px;
-
-            padding:
-                16px;
-
-            background:
-                #f0fdf4;
-
-            color:
-                #166534;
-
-            border:
-                1px solid #bbf7d0;
-
-            border-radius:
-                14px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                800;
-
-            text-align:
-                center;
-        }
-
-
-        /* =====================================================
-           TICKET ACTIONS
-        ===================================================== */
-
-        .ticket-actions {
-
-            display:
-                grid;
-
-            gap:
-                10px;
-
-            margin-top:
-                16px;
         }
 
 
@@ -508,7 +507,10 @@
                 100%;
 
             min-height:
-                50px;
+                48px;
+
+            margin-top:
+                20px;
 
             padding:
                 12px 18px;
@@ -523,7 +525,7 @@
                 1px solid #111111;
 
             border-radius:
-                12px;
+                11px;
 
             text-decoration:
                 none;
@@ -532,57 +534,9 @@
                 14px;
 
             font-weight:
-                800;
-
-            transition:
-                transform 0.16s ease,
-                background 0.16s ease,
-                box-shadow 0.16s ease;
+                850;
         }
 
-
-        .button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 7px 18px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.09
-                );
-        }
-
-
-        /* =====================================================
-           FOOTER NOTE
-        ===================================================== */
-
-        .booking-note {
-
-            margin-top:
-                22px;
-
-            color:
-                #94a3b8;
-
-            font-size:
-                11px;
-
-            text-align:
-                center;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
 
         @media (
             max-width: 560px
@@ -590,32 +544,40 @@
 
             .page-shell {
 
-                padding:
-                    22px 14px 50px;
-            }
-
-
-            .form-card {
-
-                padding:
-                    20px;
-
-                border-radius:
+                padding-top:
                     18px;
             }
 
 
-            .summary-row {
+            .booking-header,
+            .booking-body {
 
-                align-items:
-                    flex-start;
+                padding:
+                    20px;
             }
 
 
-            .reference-box {
+            .status-grid {
 
-                font-size:
-                    16px;
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .bank-row {
+
+                flex-direction:
+                    column;
+
+                gap:
+                    4px;
+            }
+
+
+            .bank-value {
+
+                text-align:
+                    left;
             }
 
         }
@@ -631,205 +593,338 @@
 <div class="page-shell">
 
 
-    <!-- =========================================
-         BRAND
-    ========================================== -->
-
-    <div class="brand">
+    <a
+        href="{{ url_for(
+            'home'
+        ) }}"
+        class="brand"
+    >
         KALXA TICKETING
-    </div>
+    </a>
 
 
 
-    <!-- =========================================
-         BOOKING CARD
-    ========================================== -->
-
-    <div class="form-card">
-
-
-        <p class="eyebrow">
-            BOOKING STATUS
-        </p>
-
-
-        <h1>
-            {{ order.event.title }}
-        </h1>
-
+    <div class="booking-card">
 
 
         <!-- =====================================
-             BOOKING REFERENCE
+             HEADER
         ====================================== -->
 
-        <div class="reference-label">
-            Booking Reference
-        </div>
+        <div class="booking-header">
 
 
-        <div class="reference-box">
-            {{ order.payment_reference }}
+            <span class="eyebrow">
+                BOOKING STATUS
+            </span>
+
+
+            <h1>
+                {{ order.event.title }}
+            </h1>
+
+
         </div>
 
 
 
-        <!-- =====================================
-             BOOKING SUMMARY
-        ====================================== -->
-
-        <div class="summary-box">
+        <div class="booking-body">
 
 
-            <div class="summary-row">
+            <!-- =================================
+                 ORDER SUMMARY
+            ================================== -->
 
-                <span>
-                    Tickets
-                </span>
+            <div class="status-grid">
 
-                <strong>
-                    {{ order.quantity }}
-                </strong>
+
+                <div class="status-box">
+
+                    <span class="status-label">
+                        Booking Reference
+                    </span>
+
+                    <div class="status-value">
+                        {{ order.payment_reference }}
+                    </div>
+
+                </div>
+
+
+
+                <div class="status-box">
+
+                    <span class="status-label">
+                        Tickets
+                    </span>
+
+                    <div class="status-value">
+                        {{ order.quantity }}
+                    </div>
+
+                </div>
+
+
+
+                <div class="status-box">
+
+                    <span class="status-label">
+                        Amount Due
+                    </span>
+
+                    <div class="status-value amount">
+                        R{{ "%.2f"|format(order.total_amount) }}
+                    </div>
+
+                </div>
+
+
+
+                <div class="status-box">
+
+                    <span class="status-label">
+                        Payment
+                    </span>
+
+                    <div
+                        class="status-value
+                        {% if order.payment_status == 'paid' %}
+                            paid
+                        {% else %}
+                            pending
+                        {% endif %}"
+                    >
+
+                        {{ order.payment_status|upper }}
+
+                    </div>
+
+                </div>
+
 
             </div>
 
 
-            <div class="summary-row">
 
-                <span>
-                    Amount Due
-                </span>
-
-                <strong>
-                    R{{ "%.2f"|format(
-                        order.total_amount
-                    ) }}
-                </strong>
-
-            </div>
+            {% if order.payment_status == "paid" %}
 
 
-            <div class="summary-row">
+                <!-- =============================
+                     PAID
+                ============================== -->
 
-                <span>
-                    Payment
-                </span>
-
-                <strong>
-
-                    {% if order.payment_status == "paid" %}
-
-                        <span
-                            class="
-                                status-badge
-                                status-paid
-                            "
-                        >
-                            Paid
-                        </span>
+                <section class="section">
 
 
-                    {% elif order.payment_status == "pending" %}
+                    <h2>
+                        Payment Confirmed
+                    </h2>
 
-                        <span
-                            class="
-                                status-badge
-                                status-pending
-                            "
-                        >
-                            Pending
-                        </span>
+
+                    <p>
+
+                        Your payment has been confirmed.
+                        Your valid Kalxa entry ticket is now available.
+
+                    </p>
+
+
+                    {% if order.entry_passes %}
+
+                        {% for entry_pass in order.entry_passes %}
+
+                            <a
+                                href="{{ url_for(
+                                    'ticket_page',
+                                    entry_code=entry_pass.entry_code
+                                ) }}"
+                                class="button"
+                            >
+                                View Ticket {{ loop.index }}
+                            </a>
+
+                        {% endfor %}
+
+                    {% endif %}
+
+
+                </section>
+
+
+            {% else %}
+
+
+                <!-- =============================
+                     PAYMENT DETAILS
+                ============================== -->
+
+                <section class="section">
+
+
+                    <h2>
+                        Pay the Event Organizer
+                    </h2>
+
+
+                    <p>
+
+                        Send the amount due directly to the
+                        organizer using the banking details below.
+
+                    </p>
+
+
+
+                    {% if order.event.bank_name
+                        or order.event.account_holder
+                        or order.event.account_number
+                        or order.event.branch_code %}
+
+
+                        <div class="bank-details">
+
+
+                            {% if order.event.bank_name %}
+
+                                <div class="bank-row">
+
+                                    <span class="bank-label">
+                                        Bank
+                                    </span>
+
+                                    <span class="bank-value">
+                                        {{ order.event.bank_name }}
+                                    </span>
+
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if order.event.account_holder %}
+
+                                <div class="bank-row">
+
+                                    <span class="bank-label">
+                                        Account Holder
+                                    </span>
+
+                                    <span class="bank-value">
+                                        {{ order.event.account_holder }}
+                                    </span>
+
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if order.event.account_number %}
+
+                                <div class="bank-row">
+
+                                    <span class="bank-label">
+                                        Account Number
+                                    </span>
+
+                                    <span class="bank-value">
+                                        {{ order.event.account_number }}
+                                    </span>
+
+                                </div>
+
+                            {% endif %}
+
+
+
+                            {% if order.event.branch_code %}
+
+                                <div class="bank-row">
+
+                                    <span class="bank-label">
+                                        Branch Code
+                                    </span>
+
+                                    <span class="bank-value">
+                                        {{ order.event.branch_code }}
+                                    </span>
+
+                                </div>
+
+                            {% endif %}
+
+
+                        </div>
 
 
                     {% else %}
 
-                        <span
-                            class="
-                                status-badge
-                                status-neutral
-                            "
-                        >
-                            {{ order.payment_status }}
-                        </span>
+
+                        <div class="notice">
+
+                            The organizer has not added banking
+                            details for this event yet.
+
+                            Please contact the organizer before
+                            sending payment.
+
+                        </div>
+
 
                     {% endif %}
 
-                </strong>
-
-            </div>
 
 
-        </div>
+                    <div class="reference-box">
 
+                        <span class="status-label">
+                            Use this payment reference
+                        </span>
 
+                        <strong>
+                            {{ order.payment_reference }}
+                        </strong>
 
-        <!-- =====================================
-             PENDING PAYMENT
-        ====================================== -->
-
-        {% if order.payment_status == "pending" %}
-
-            <div class="alert">
-
-                Pay the event organizer using the booking
-                reference shown above.
-
-                <br>
-                <br>
-
-                Your ticket becomes valid only after the
-                organizer confirms your payment.
-
-            </div>
-
-        {% endif %}
+                    </div>
 
 
 
-        <!-- =====================================
-             PAID
-        ====================================== -->
+                    {% if order.event.payment_instructions %}
 
-        {% if order.payment_status == "paid" %}
+                        <div class="notice">
 
-            <div class="success-box">
-                ✓ Payment confirmed. Your ticket is ready.
-            </div>
+                            <strong>
+                                Organizer instructions:
+                            </strong>
+
+                            <br>
+
+                            {{ order.event.payment_instructions }}
+
+                        </div>
+
+                    {% endif %}
 
 
-            {% if order.entry_passes %}
 
-                <div class="ticket-actions">
+                    <div class="notice">
 
-                    {% for pass in order.entry_passes %}
+                        Your ticket becomes valid only after the
+                        organizer confirms your payment.
 
-                        <a
-                            href="{{ url_for(
-                                'ticket_page',
-                                entry_code=pass.entry_code
-                            ) }}"
-                            class="button"
-                        >
-                            Open Ticket {{ loop.index }}
-                        </a>
+                        Keep your booking reference safe until the
+                        event is complete.
 
-                    {% endfor %}
+                    </div>
 
-                </div>
+
+                </section>
+
 
             {% endif %}
 
-        {% endif %}
 
-
-
-        <!-- =====================================
-             FOOTER NOTE
-        ====================================== -->
-
-        <div class="booking-note">
-            Keep your booking reference safe until the
-            event is complete.
         </div>
 
 
