@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Organizers | Kalxa Super Admin</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .shell {
+            width: min(1100px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 22px 0 60px;
+        }
+        .nav, .section {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: center;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+        .brand { font-size: 14px; font-weight: 900; }
+        .nav a {
+            margin-left: 10px;
+            color: #334155;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 750;
+        }
+        .section { padding: 22px; }
+        h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.04em; }
+        .intro { margin: 0 0 20px; color: #64748b; font-size: 13px; }
+        .list { display: grid; gap: 10px; }
+        .row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 16px;
+            align-items: center;
+            padding: 14px;
+            background: #fafafa;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+        }
+        .name { font-size: 15px; font-weight: 900; }
+        .meta { margin-top: 4px; color: #64748b; font-size: 12px; }
+        .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .status {
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .status.active { background: #dcfce7; color: #166534; }
+        .status.inactive, .status.expired { background: #fff7ed; color: #9a3412; }
+        .status.suspended { background: #fef2f2; color: #991b1b; }
+        .button {
+            padding: 8px 11px;
+            background: #111111;
+            color: #ffffff;
+            border-radius: 9px;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 850;
+        }
+        @media(max-width: 620px) {
+            .nav { align-items: flex-start; flex-direction: column; }
+            .row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+
+    <nav class="nav">
+        <div class="brand">
+            KALXA TICKETING · SUPER ADMIN
+        </div>
+        <div>
+            <a href="{{ url_for('superadmin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('superadmin_logout') }}">Logout</a>
+        </div>
+    </nav>
+
+    <section class="section">
+
+        <h1>Organizers</h1>
+
+        <p class="intro">
+            View organizer accounts and manage their Kalxa subscription access.
+        </p>
+
+        {% if organizers %}
+
+            <div class="list">
+
+                {% for organizer in organizers %}
+
+                    <div class="row">
+
+                        <div>
+                            <div class="name">
+                                {{ organizer.display_name }}
+                            </div>
+
+                            <div class="meta">
+                                {{ organizer.email }}
+                                · Organizer #{{ organizer.id }}
+                            </div>
+
+                            {% if organizer.subscription_expires_at %}
+                                <div class="meta">
+                                    Expires:
+                                    {{ organizer.subscription_expires_at.strftime('%d %B %Y') }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="actions">
+
+                            <span
+                                class="status {{ organizer.effective_subscription_status }}"
+                            >
+                                {{ organizer.effective_subscription_status }}
+                            </span>
+
+                            <a
+                                href="{{ url_for(
+                                    'superadmin_organizer_detail',
+                                    organizer_id=organizer.id
+                                ) }}"
+                                class="button"
+                            >
+                                Manage
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p>No organizer accounts found.</p>
+
+        {% endif %}
+
+    </section>
