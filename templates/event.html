@@ -2313,10 +2313,20 @@
             );
 
 
-        if (!card) {
+        if (
+            !card
+            ||
+            !installButton
+            ||
+            !dismissButton
+        ) {
             return;
         }
 
+
+        // ====================================================
+        // ALREADY INSTALLED?
+        // ====================================================
 
         const isStandalone =
             window.matchMedia(
@@ -2338,32 +2348,77 @@
             );
 
 
+        if (
+            dismissed
+            === "true"
+        ) {
+            return;
+        }
+
+
+        // ====================================================
+        // DEVICE / BROWSER
+        // ====================================================
+
         const userAgent =
-            window.navigator.userAgent
-            || "";
+            (
+                window.navigator.userAgent
+                || ""
+            ).toLowerCase();
 
 
         const isIos =
-            /iphone|ipad|ipod/i.test(
+            /iphone|ipad|ipod/.test(
                 userAgent
             );
+
+
+        const isAndroid =
+            /android/.test(
+                userAgent
+            );
+
+
+        const isEdge =
+            /edg\//.test(
+                userAgent
+            );
+
+
+        const isChrome =
+            /chrome\//.test(
+                userAgent
+            )
+            &&
+            !isEdge;
 
 
         let deferredPrompt =
             null;
 
 
-        function showCard() {
+        // ====================================================
+        // SHOW INSTALL CARD
+        //
+        // IMPORTANT:
+        // Do NOT wait for beforeinstallprompt.
+        //
+        // The browser owns that event and may choose not to
+        // dispatch it. Kalxa should still show its own install
+        // call-to-action.
+        // ====================================================
 
-            if (dismissed === "true") {
-                return;
-            }
+        function showCard() {
 
             card.classList.add(
                 "show"
             );
         }
 
+
+        // ====================================================
+        // IOS INSTRUCTIONS
+        // ====================================================
 
         function showIosInstructions() {
 
@@ -2372,8 +2427,8 @@
 
             copy.textContent =
                 (
-                    "Install Kalxa from Safari before "
-                    + "enabling push notifications."
+                    "Install Kalxa from your browser "
+                    + "before enabling push notifications."
                 );
 
             installButton.hidden =
@@ -2386,14 +2441,68 @@
         }
 
 
-        if (isIos) {
+        // ====================================================
+        // MANUAL FALLBACK
+        // ====================================================
 
-            window.setTimeout(
-                showIosInstructions,
-                900
-            );
+        function showManualInstallSteps() {
+
+            title.textContent =
+                "Install Kalxa";
+
+            installButton.hidden =
+                true;
+
+
+            if (isEdge) {
+
+                copy.innerHTML =
+                    (
+                        "In Edge, open <strong>⋯</strong> "
+                        + "→ <strong>Apps</strong> "
+                        + "→ <strong>Install this site as an app</strong>."
+                    );
+
+            } else if (
+                isChrome
+                &&
+                !isAndroid
+            ) {
+
+                copy.innerHTML =
+                    (
+                        "In Chrome, open <strong>⋮</strong> "
+                        + "and choose <strong>Install page as app</strong> "
+                        + "or <strong>Save and share → Install page as app</strong>."
+                    );
+
+            } else if (isAndroid) {
+
+                copy.innerHTML =
+                    (
+                        "Open your browser menu <strong>⋮</strong> "
+                        + "and choose <strong>Install app</strong> "
+                        + "or <strong>Add to Home screen</strong>."
+                    );
+
+            } else {
+
+                copy.innerHTML =
+                    (
+                        "Open your browser menu and choose "
+                        + "<strong>Install app</strong> or "
+                        + "<strong>Add to Home Screen</strong>."
+                    );
+            }
+
+
+            showCard();
         }
 
+
+        // ====================================================
+        // CAPTURE NATIVE INSTALL PROMPT WHEN AVAILABLE
+        // ====================================================
 
         window.addEventListener(
             "beforeinstallprompt",
@@ -2404,32 +2513,83 @@
                 deferredPrompt =
                     event;
 
+                installButton.hidden =
+                    false;
+
+                installButton.textContent =
+                    "Install Kalxa";
+
                 showCard();
             }
         );
 
 
+        // ====================================================
+        // ALWAYS SHOW KALXA CTA
+        // ====================================================
+
+        window.setTimeout(
+            () => {
+
+                if (isIos) {
+
+                    showIosInstructions();
+
+                } else {
+
+                    showCard();
+                }
+            },
+            700
+        );
+
+
+        // ====================================================
+        // INSTALL BUTTON
+        // ====================================================
+
         installButton.addEventListener(
             "click",
             async () => {
 
-                if (!deferredPrompt) {
+                if (
+                    deferredPrompt
+                ) {
+
+                    deferredPrompt.prompt();
+
+
+                    try {
+
+                        const choice =
+                            await deferredPrompt.userChoice;
+
+                        console.log(
+                            "[Kalxa PWA] Install choice:",
+                            choice.outcome
+                        );
+
+                    } finally {
+
+                        deferredPrompt =
+                            null;
+                    }
+
+
                     return;
                 }
 
-                deferredPrompt.prompt();
 
-                try {
-                    await deferredPrompt.userChoice;
-                } finally {
-                    deferredPrompt = null;
-                    card.classList.remove(
-                        "show"
-                    );
-                }
+                // Browser did not provide a native prompt.
+                // Show manual steps instead of doing nothing.
+                showManualInstallSteps();
             }
         );
 
+
+        // ====================================================
+        // DISMISS
+        // ====================================================
 
         dismissButton.addEventListener(
             "click",
@@ -2447,12 +2607,24 @@
         );
 
 
+        // ====================================================
+        // INSTALL COMPLETE
+        // ====================================================
+
         window.addEventListener(
             "appinstalled",
             () => {
 
+                localStorage.removeItem(
+                    "kalxa_pwa_install_dismissed"
+                );
+
                 card.classList.remove(
                     "show"
+                );
+
+                console.log(
+                    "[Kalxa PWA] Installed successfully."
                 );
             }
         );
