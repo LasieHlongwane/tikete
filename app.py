@@ -3440,9 +3440,392 @@ def home():
 
     return render_template(
         "event.html",
-        events=events,
-        event=None,
+
+        events=
+            events,
+
+        event=
+            None,
+
+        firebase_config=
+            FIREBASE_WEB_CONFIG,
+
+        firebase_vapid_key=
+            FIREBASE_VAPID_KEY,
+
+        firebase_push_configured=
+            firebase_web_push_configured(),
     )
+
+
+# ============================================================
+# PUBLIC EVENT POSTER
+# ============================================================
+
+@app.route(
+    "/event/<int:event_id>/poster"
+)
+def event_poster(
+    event_id,
+):
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id
+        )
+        .first_or_404()
+    )
+
+
+    if (
+        not event.poster_image_data
+        or not event.poster_image_mimetype
+    ):
+
+        return (
+            "Poster not found.",
+            404,
+        )
+
+
+    response = Response(
+        event.poster_image_data,
+        mimetype=
+            event.poster_image_mimetype,
+    )
+
+    response.headers[
+        "Cache-Control"
+    ] = "public, max-age=3600"
+
+    return response
+
+
+# ============================================================
+# PUBLIC ATTENDEE - ENABLE PUSH FROM HOME PAGE
+# ============================================================
+
+@app.route(
+    "/notifications/subscribe-public",
+    methods=["POST"],
+)
+def notification_subscribe_public():
+
+    if not firebase_web_push_configured():
+
+        return {
+            "ok": False,
+            "error": "Firebase Web Push is not configured.",
+        }, 503
+
+
+    payload = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    phone = (
+        str(
+            payload.get(
+                "phone",
+                ""
+            )
+        )
+        .strip()
+    )
+
+    installation_id = (
+        str(
+            payload.get(
+                "installation_id",
+                ""
+            )
+        )
+        .strip()
+    )
+
+
+    phone_normalized = (
+        normalize_attendee_phone(
+            phone
+        )
+    )
+
+
+    if not phone_normalized:
+
+        return {
+            "ok": False,
+            "error": "Please enter a valid phone number.",
+        }, 400
+
+
+    if (
+        not installation_id
+        or len(
+            installation_id
+        ) > 255
+    ):
+
+        return {
+            "ok": False,
+            "error": "Invalid Firebase installation ID.",
+        }, 400
+
+
+    now = datetime.utcnow()
+
+
+    contact = (
+        AttendeeContact.query
+        .filter_by(
+            phone_normalized=
+                phone_normalized
+        )
+        .first()
+    )
+
+
+    if not contact:
+
+        contact = AttendeeContact(
+            name=
+                None,
+
+            phone=
+                phone,
+
+            phone_normalized=
+                phone_normalized,
+
+            email=
+                None,
+
+            notification_consent=
+                True,
+
+            consented_at=
+                now,
+
+            opted_out_at=
+                None,
+        )
+
+        db.session.add(
+            contact
+        )
+
+        db.session.flush()
+
+
+    else:
+
+        contact.phone = (
+            phone
+            or contact.phone
+        )
+
+        contact.notification_consent = True
+        contact.consented_at = now
+        contact.opted_out_at = None
+
+
+    subscription = (
+        PushSubscription.query
+        .filter_by(
+            firebase_installation_id=
+                installation_id
+        )
+        .first()
+    )
+
+
+    if not subscription:
+
+        subscription = PushSubscription(
+            contact_id=
+                contact.id,
+
+            firebase_installation_id=
+                installation_id,
+
+            active=
+                True,
+
+            registered_at=
+                now,
+
+            last_seen_at=
+                now,
+
+            disabled_at=
+                None,
+        )
+
+        db.session.add(
+            subscription
+        )
+
+
+    else:
+
+        subscription.contact_id = contact.id
+        subscription.active = True
+        subscription.last_seen_at = now
+        subscription.disabled_at = None
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Public Push Subscribe] "
+                "Failed phone=%s error=%s"
+            ),
+            phone_normalized,
+            error,
+        )
+
+        return {
+            "ok": False,
+            "error": (
+                "Notification subscription could not be saved."
+            ),
+        }, 500
+
+
+    return {
+        "ok": True,
+        "message": "Kalxa notifications are enabled.",
+    }
+
+
+# ============================================================
+# PUBLIC ATTENDEE - DISABLE PUSH ON THIS DEVICE
+# ============================================================
+
+@app.route(
+    "/notifications/unsubscribe-public",
+    methods=["POST"],
+)
+def notification_unsubscribe_public():
+
+    payload = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+    installation_id = (
+        str(
+            payload.get(
+                "installation_id",
+                ""
+            )
+        )
+        .strip()
+    )
+
+
+    if not installation_id:
+
+        return {
+            "ok": False,
+            "error": "Installation ID is required.",
+        }, 400
+
+
+    subscription = (
+        PushSubscription.query
+        .filter_by(
+            firebase_installation_id=
+                installation_id
+        )
+        .first()
+    )
+
+
+    if not subscription:
+
+        return {
+            "ok": True,
+            "message": "Notifications are already off.",
+        }
+
+
+    now = datetime.utcnow()
+
+    subscription.active = False
+    subscription.disabled_at = now
+
+    contact = subscription.contact
+
+
+    if contact:
+
+        other_active = (
+            PushSubscription.query
+            .filter(
+                PushSubscription.contact_id
+                == contact.id,
+
+                PushSubscription.id
+                != subscription.id,
+
+                PushSubscription.active
+                .is_(True),
+
+                PushSubscription.disabled_at
+                .is_(None),
+            )
+            .first()
+        )
+
+
+        if not other_active:
+
+            contact.notification_consent = False
+            contact.opted_out_at = now
+
+
+    try:
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Public Push Unsubscribe] "
+                "Failed installation_id=%s error=%s"
+            ),
+            installation_id,
+            error,
+        )
+
+        return {
+            "ok": False,
+            "error": "Unable to turn notifications off.",
+        }, 500
+
+
+    return {
+        "ok": True,
+        "message": "Notifications are off on this device.",
+    }
 
 
 # ============================================================
@@ -6360,6 +6743,10 @@ def admin_new_event():
     # ========================================================
     # EVENT POSTER
     # ========================================================
+    #
+    # Store poster bytes in PostgreSQL so the image survives
+    # Render deploys and restarts.
+    # ========================================================
 
     poster_image = (
         request.files.get(
@@ -6368,7 +6755,12 @@ def admin_new_event():
     )
 
 
-    image_url = None
+    poster_image_data = None
+    poster_image_mimetype = None
+    poster_image_filename = None
+
+    # Kept as None so the existing exception cleanup remains
+    # safe even though local-disk storage is no longer used.
     poster_path = None
 
 
@@ -6384,19 +6776,12 @@ def admin_new_event():
         )
 
 
-        if (
-            "."
-            not in original_filename
-        ):
+        if "." not in original_filename:
 
             flash(
-                (
-                    "Poster must be a JPG, JPEG, "
-                    "PNG or WEBP image."
-                ),
+                "Poster must be a JPG, JPEG, PNG or WEBP image.",
                 "error",
             )
-
 
             return redirect(
                 url_for(
@@ -6415,27 +6800,60 @@ def admin_new_event():
         )
 
 
-        allowed_extensions = {
-            "jpg",
-            "jpeg",
-            "png",
-            "webp",
+        mimetype_lookup = {
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "webp": "image/webp",
         }
 
 
+        if extension not in mimetype_lookup:
+
+            flash(
+                "Poster must be a JPG, JPEG, PNG or WEBP image.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_dashboard"
+                )
+            )
+
+
+        poster_image_data = poster_image.read()
+
+
+        if not poster_image_data:
+
+            flash(
+                "The poster image is empty.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_dashboard"
+                )
+            )
+
+
         if (
-            extension
-            not in allowed_extensions
+            len(
+                poster_image_data
+            )
+            > (
+                5
+                * 1024
+                * 1024
+            )
         ):
 
             flash(
-                (
-                    "Poster must be a JPG, JPEG, "
-                    "PNG or WEBP image."
-                ),
+                "Poster must be 5 MB or smaller.",
                 "error",
             )
-
 
             return redirect(
                 url_for(
@@ -6444,78 +6862,14 @@ def admin_new_event():
             )
 
 
-        filename = (
-            f"{uuid.uuid4().hex}.{extension}"
+        poster_image_mimetype = (
+            mimetype_lookup[
+                extension
+            ]
         )
 
-
-        upload_folder = (
-            os.path.join(
-                current_app.root_path,
-                "static",
-                "uploads",
-                "events",
-            )
-        )
-
-
-        os.makedirs(
-            upload_folder,
-            exist_ok=True,
-        )
-
-
-        poster_path = (
-            os.path.join(
-                upload_folder,
-                filename,
-            )
-        )
-
-
-        try:
-
-            poster_image.save(
-                poster_path
-            )
-
-
-        except Exception as error:
-
-            current_app.logger.exception(
-                (
-                    "[Ticketing] Failed to save "
-                    "event poster "
-                    "organizer_id=%s error=%s"
-                ),
-                organizer.id,
-                error,
-            )
-
-
-            flash(
-                (
-                    "The event poster could not be "
-                    "uploaded. Please try again."
-                ),
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        image_url = (
-            url_for(
-                "static",
-                filename=(
-                    f"uploads/events/{filename}"
-                ),
-            )
+        poster_image_filename = (
+            original_filename
         )
 
 
@@ -6630,7 +6984,16 @@ def admin_new_event():
             organizer.phone,
 
         image_url=
-            image_url,
+            None,
+
+        poster_image_data=
+            poster_image_data,
+
+        poster_image_mimetype=
+            poster_image_mimetype,
+
+        poster_image_filename=
+            poster_image_filename,
 
         ticket_price=
             ticket_price,
@@ -7083,6 +7446,11 @@ def admin_edit_event(
         )
 
 
+        new_poster_image_data = None
+        new_poster_image_mimetype = None
+        new_poster_image_filename = None
+
+        # Keep old cleanup code safe.
         new_poster_path = None
         new_image_url = None
 
@@ -7102,10 +7470,7 @@ def admin_edit_event(
             if "." not in original_filename:
 
                 flash(
-                    (
-                        "Poster must be a JPG, JPEG, "
-                        "PNG or WEBP image."
-                    ),
+                    "Poster must be a JPG, JPEG, PNG or WEBP image.",
                     "error",
                 )
 
@@ -7126,21 +7491,18 @@ def admin_edit_event(
             )
 
 
-            allowed_extensions = {
-                "jpg",
-                "jpeg",
-                "png",
-                "webp",
+            mimetype_lookup = {
+                "jpg": "image/jpeg",
+                "jpeg": "image/jpeg",
+                "png": "image/png",
+                "webp": "image/webp",
             }
 
 
-            if extension not in allowed_extensions:
+            if extension not in mimetype_lookup:
 
                 flash(
-                    (
-                        "Poster must be a JPG, JPEG, "
-                        "PNG or WEBP image."
-                    ),
+                    "Poster must be a JPG, JPEG, PNG or WEBP image.",
                     "error",
                 )
 
@@ -7151,54 +7513,15 @@ def admin_edit_event(
                 )
 
 
-            filename = (
-                f"{uuid.uuid4().hex}.{extension}"
+            new_poster_image_data = (
+                poster_image.read()
             )
 
 
-            upload_folder = (
-                os.path.join(
-                    current_app.root_path,
-                    "static",
-                    "uploads",
-                    "events",
-                )
-            )
-
-
-            os.makedirs(
-                upload_folder,
-                exist_ok=True,
-            )
-
-
-            new_poster_path = (
-                os.path.join(
-                    upload_folder,
-                    filename,
-                )
-            )
-
-
-            try:
-
-                poster_image.save(
-                    new_poster_path
-                )
-
-            except Exception as error:
-
-                current_app.logger.exception(
-                    (
-                        "[Ticketing] Failed to update "
-                        "event poster event_id=%s error=%s"
-                    ),
-                    event.id,
-                    error,
-                )
+            if not new_poster_image_data:
 
                 flash(
-                    "Unable to upload the new poster.",
+                    "The poster image is empty.",
                     "error",
                 )
 
@@ -7209,13 +7532,37 @@ def admin_edit_event(
                 )
 
 
-            new_image_url = (
-                url_for(
-                    "static",
-                    filename=(
-                        f"uploads/events/{filename}"
-                    ),
+            if (
+                len(
+                    new_poster_image_data
                 )
+                > (
+                    5
+                    * 1024
+                    * 1024
+                )
+            ):
+
+                flash(
+                    "Poster must be 5 MB or smaller.",
+                    "error",
+                )
+
+                return render_template(
+                    "admin/edit_event.html",
+                    event=
+                        event,
+                )
+
+
+            new_poster_image_mimetype = (
+                mimetype_lookup[
+                    extension
+                ]
+            )
+
+            new_poster_image_filename = (
+                original_filename
             )
 
 
@@ -7309,11 +7656,22 @@ def admin_edit_event(
         )
 
 
-        if new_image_url:
+        if new_poster_image_data:
 
-            event.image_url = (
-                new_image_url
+            event.poster_image_data = (
+                new_poster_image_data
             )
+
+            event.poster_image_mimetype = (
+                new_poster_image_mimetype
+            )
+
+            event.poster_image_filename = (
+                new_poster_image_filename
+            )
+
+            # Old local Render URL is no longer needed.
+            event.image_url = None
 
 
         try:
