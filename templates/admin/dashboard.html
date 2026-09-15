@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -322,32 +322,6 @@
 
             color:
                 #991b1b;
-        }
-
-
-        .admin-nav-link.create-event-link {
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            padding:
-                9px 14px;
-
-            border:
-                1px solid #111111;
-        }
-
-
-        .admin-nav-link.create-event-link:hover {
-
-            background:
-                #27272a;
-
-            color:
-                #ffffff;
         }
 
 
@@ -1473,107 +1447,6 @@
 
 
         /* =====================================================
-           EVENT LIFECYCLE
-        ===================================================== */
-
-        .event-status-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            padding:
-                4px 8px;
-
-            border-radius:
-                999px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                900;
-
-            text-transform:
-                uppercase;
-        }
-
-        .event-status-badge.draft {
-
-            background:
-                #f1f5f9;
-
-            color:
-                #475569;
-        }
-
-        .event-status-badge.published {
-
-            background:
-                #dcfce7;
-
-            color:
-                #166534;
-        }
-
-        .event-status-badge.paused {
-
-            background:
-                #fff7ed;
-
-            color:
-                #9a3412;
-        }
-
-        .event-status-badge.closed {
-
-            background:
-                #e5e7eb;
-
-            color:
-                #374151;
-        }
-
-        .event-action-form {
-
-            display:
-                inline-flex;
-
-            margin:
-                0;
-        }
-
-        .button-success {
-
-            background:
-                #166534;
-
-            border-color:
-                #166534;
-        }
-
-        .button-warning {
-
-            background:
-                #9a3412;
-
-            border-color:
-                #9a3412;
-        }
-
-        .button-danger {
-
-            background:
-                #991b1b;
-
-            border-color:
-                #991b1b;
-        }
-
-
-        /* =====================================================
            EVENT LIST
         ===================================================== */
 
@@ -1763,6 +1636,38 @@
 
             justify-content:
                 flex-end;
+        }
+
+
+        .delete-event-form {
+
+            margin: 0;
+        }
+
+
+        .button-danger {
+
+            background:
+                #fff1f2;
+
+            color:
+                #be123c;
+
+            border:
+                1px solid #fecdd3;
+
+            cursor:
+                pointer;
+        }
+
+
+        .button-danger:hover {
+
+            background:
+                #ffe4e6;
+
+            color:
+                #9f1239;
         }
 
 
@@ -1981,6 +1886,23 @@
                     1;
             }
 
+
+            .delete-event-form {
+
+                display:
+                    flex;
+
+                flex:
+                    1;
+            }
+
+
+            .delete-event-form .button {
+
+                width:
+                    100%;
+            }
+
             .admin-checkin-card {
 
                 align-items:
@@ -2106,30 +2028,6 @@
                 class="admin-nav-link"
             >
                 Dashboard
-            </a>
-
-
-            {% if subscription_active %}
-
-                <a
-                    href="{{ url_for(
-                        'admin_new_event'
-                    ) }}"
-                    class="admin-nav-link create-event-link"
-                >
-                    + Create Event Ticket
-                </a>
-
-            {% endif %}
-
-
-            <a
-                href="{{ url_for(
-                    'admin_subscription'
-                ) }}"
-                class="admin-nav-link"
-            >
-                Subscription
             </a>
 
 
@@ -2277,23 +2175,9 @@
 
                 </div>
 
-                <div>
-
-                    <span class="subscription-badge active">
-                        ACTIVE
-                    </span>
-
-                    <a
-                        href="{{ url_for(
-                            'admin_subscription'
-                        ) }}"
-                        class="button button-secondary"
-                        style="margin-left: 8px;"
-                    >
-                        Manage Subscription
-                    </a>
-
-                </div>
+                <span class="subscription-badge active">
+                    ACTIVE
+                </span>
 
             </div>
 
@@ -2383,26 +2267,12 @@
 
                 </div>
 
-                <div>
-
-                    <span
-                        class="subscription-badge
-                        {{ subscription_status }}"
-                    >
-                        {{ subscription_status|upper }}
-                    </span>
-
-                    <a
-                        href="{{ url_for(
-                            'admin_subscription'
-                        ) }}"
-                        class="button"
-                        style="margin-left: 8px;"
-                    >
-                        Activate / Renew
-                    </a>
-
-                </div>
+                <span
+                    class="subscription-badge
+                    {{ subscription_status }}"
+                >
+                    {{ subscription_status|upper }}
+                </span>
 
             </div>
 
@@ -2662,43 +2532,568 @@
 
 
     <!-- =========================================
-         CREATE EVENT SHORTCUT
+         CREATE EVENT
     ========================================== -->
 
-    {% if not subscription_active %}
+    <section class="admin-section">
 
-        <section class="admin-section">
+
+        <div class="admin-section-header">
+
+
+            <div>
+
+                <span class="section-kicker">
+                    CREATE EVENT
+                </span>
+
+                <h2>
+                    New Ticket Event
+                </h2>
+
+                <p class="muted">
+
+                    Add the event details, set your ticket
+                    price and capacity, then publish it.
+
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+        {% if not subscription_active %}
+
+
+            <!-- =================================
+                 SUBSCRIPTION RESTRICTION
+            ================================== -->
 
             <div class="admin-empty-state">
+
 
                 <div class="admin-empty-icon">
                     🔒
                 </div>
 
+
                 <h3>
                     Event creation is locked
                 </h3>
 
+
                 <p class="muted">
-                    Activate your Kalxa Ticketing subscription
-                    to create a new ticket event.
+
+                    Your Kalxa Ticketing subscription must
+                    be active before you can create or
+                    publish a new ticket event.
+
                 </p>
 
-                <a
-                    href="{{ url_for(
-                        'admin_subscription'
-                    ) }}"
-                    class="button"
-                    style="margin-top: 16px;"
-                >
-                    View Subscription
-                </a>
+
+                {% if subscription_status == "suspended" %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 8px;"
+                    >
+
+                        This organizer account is currently
+                        suspended. Contact Kalxa support or
+                        Super Admin for reactivation.
+
+                    </p>
+
+                {% elif subscription_status == "expired" %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 8px;"
+                    >
+
+                        Renew your subscription to unlock
+                        event creation again.
+
+                    </p>
+
+                {% else %}
+
+                    <p
+                        class="muted"
+                        style="margin-top: 8px;"
+                    >
+
+                        Your subscription has not yet been
+                        activated by Kalxa.
+
+                    </p>
+
+                {% endif %}
+
 
             </div>
 
-        </section>
 
-    {% endif %}
+        {% elif active_content_item_id and current_ticket_event %}
+
+
+            <!-- =================================
+                 LINKED EVENT ALREADY EXISTS
+            ================================== -->
+
+            <div class="admin-empty-state">
+
+
+                <div class="admin-empty-icon">
+                    ✅
+                </div>
+
+
+                <h3>
+                    Linked ticket event is already active
+                </h3>
+
+
+                <p class="muted">
+
+                    Discovery listing
+                    #{{ active_content_item_id }}
+                    is already connected to Ticket Event
+                    #{{ current_ticket_event.id }}.
+
+                </p>
+
+
+                <div
+                    class="admin-event-actions"
+                    style="margin-top: 18px;"
+                >
+
+
+                    <a
+                        href="{{ url_for(
+                            'event_page',
+                            event_id=current_ticket_event.id
+                        ) }}"
+                        class="button button-secondary"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View Event
+                    </a>
+
+
+                    <a
+                        href="{{ url_for(
+                            'admin_orders',
+                            event_id=current_ticket_event.id
+                        ) }}"
+                        class="button"
+                    >
+                        View Orders
+                    </a>
+
+
+                </div>
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <form
+                action="{{ url_for(
+                    'admin_create_event'
+                ) }}"
+                method="POST"
+                enctype="multipart/form-data"
+                class="form-stack"
+            >
+
+
+                <div class="form-panel">
+
+
+                    <div class="form-panel-header">
+
+                        <h3>
+                            Event Details
+                        </h3>
+
+                        <p>
+                            Public information attendees will see.
+                        </p>
+
+                    </div>
+
+
+                    <div class="form-stack">
+
+
+                        {% if active_content_item_id %}
+
+                            <div class="form-group">
+
+                                <label>
+                                    Linked Discovery Listing
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value="#{{ active_content_item_id }}"
+                                    disabled
+                                >
+
+                                <small>
+                                    This optional link comes from
+                                    your Kalxa Discovery session.
+                                </small>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <div class="form-group">
+
+                            <label for="title">
+                                Event Title
+                            </label>
+
+                            <input
+                                id="title"
+                                type="text"
+                                name="title"
+                                placeholder="KwaMhlanga Saturday Groove"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="description">
+                                Description
+                            </label>
+
+                            <textarea
+                                id="description"
+                                name="description"
+                                rows="4"
+                                placeholder="Tell attendees what the event is about..."
+                            ></textarea>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="venue">
+                                Venue
+                            </label>
+
+                            <input
+                                id="venue"
+                                type="text"
+                                name="venue"
+                                placeholder="KwaMhlanga Community Hall"
+                            >
+
+                        </div>
+
+
+                        <div class="admin-form-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="event_date">
+                                    Event Date
+                                </label>
+
+                                <input
+                                    id="event_date"
+                                    type="date"
+                                    name="event_date"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="event_time">
+                                    Event Time
+                                </label>
+
+                                <input
+                                    id="event_time"
+                                    type="time"
+                                    name="event_time"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="form-panel">
+
+
+                    <div class="form-panel-header">
+
+                        <h3>
+                            Ticket Setup
+                        </h3>
+
+                        <p>
+                            Set the selling price and available capacity.
+                        </p>
+
+                    </div>
+
+
+                    <div class="admin-form-grid">
+
+
+                        <div class="form-group">
+
+                            <label for="ticket_price">
+                                Ticket Price
+                            </label>
+
+                            <div class="input-prefix">
+
+                                <span>
+                                    R
+                                </span>
+
+                                <input
+                                    id="ticket_price"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="ticket_price"
+                                    placeholder="50.00"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="ticket_capacity">
+                                Ticket Capacity
+                            </label>
+
+                            <input
+                                id="ticket_capacity"
+                                type="number"
+                                min="1"
+                                name="ticket_capacity"
+                                placeholder="Example: 300"
+                            >
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div
+                        class="form-group"
+                        style="margin-top: 16px;"
+                    >
+
+                        <label for="poster_image">
+                            Event Poster
+                        </label>
+
+                        <input
+                            id="poster_image"
+                            type="file"
+                            name="poster_image"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        >
+
+                        <small>
+                            JPG, JPEG, PNG and WEBP supported.
+                        </small>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="form-panel">
+
+
+                    <div class="form-panel-header">
+
+                        <h3>
+                            Payment Details
+                        </h3>
+
+                        <p>
+                            Current manual payment configuration.
+                        </p>
+
+                    </div>
+
+
+                    <div class="payment-note">
+
+                        <span>
+                            ℹ️
+                        </span>
+
+                        <span>
+
+                            For now, organizers confirm payments
+                            manually. Direct payment-provider
+                            connection will be added later.
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-form-grid">
+
+
+                        <div class="form-group">
+
+                            <label for="bank_name">
+                                Bank Name
+                            </label>
+
+                            <input
+                                id="bank_name"
+                                type="text"
+                                name="bank_name"
+                                placeholder="Example: FNB"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="account_holder">
+                                Account Holder
+                            </label>
+
+                            <input
+                                id="account_holder"
+                                type="text"
+                                name="account_holder"
+                                placeholder="Account holder name"
+                            >
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div
+                        class="admin-form-grid"
+                        style="margin-top: 16px;"
+                    >
+
+
+                        <div class="form-group">
+
+                            <label for="account_number">
+                                Account Number
+                            </label>
+
+                            <input
+                                id="account_number"
+                                type="text"
+                                name="account_number"
+                                placeholder="Account number"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="branch_code">
+                                Branch Code
+                            </label>
+
+                            <input
+                                id="branch_code"
+                                type="text"
+                                name="branch_code"
+                                placeholder="Branch code"
+                            >
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div
+                        class="form-group"
+                        style="margin-top: 16px;"
+                    >
+
+                        <label for="payment_instructions">
+                            Payment Instructions
+                        </label>
+
+                        <textarea
+                            id="payment_instructions"
+                            name="payment_instructions"
+                            rows="3"
+                            placeholder="Example: Use your order number as payment reference."
+                        ></textarea>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <button
+                    type="submit"
+                    class="button button-full"
+                >
+                    + Create Ticket Event
+                </button>
+
+
+            </form>
+
+
+        {% endif %}
+
+
+    </section>
+
 
 
     <!-- =========================================
@@ -2752,12 +3147,19 @@
                     <article class="admin-event-row">
 
 
-                        {% if event.image_url %}
+                        {% if event.poster_image_mimetype or event.image_url %}
 
                             <div class="admin-event-image">
 
                                 <img
-                                    src="{{ event.image_url }}"
+                                    src="{{
+        url_for(
+            'event_poster',
+            event_id=event.id
+        )
+        if event.poster_image_mimetype
+        else event.image_url
+    }}"
                                     alt="{{ event.title }}"
                                     loading="lazy"
                                 >
@@ -2798,33 +3200,6 @@
                                     {% endif %}
 
                                 </span>
-
-
-                                {% if event.status == "draft" %}
-
-                                    <span class="event-status-badge draft">
-                                        Draft
-                                    </span>
-
-                                {% elif event.status == "closed" %}
-
-                                    <span class="event-status-badge closed">
-                                        Closed
-                                    </span>
-
-                                {% elif event.sales_open %}
-
-                                    <span class="event-status-badge published">
-                                        Sales Open
-                                    </span>
-
-                                {% else %}
-
-                                    <span class="event-status-badge paused">
-                                        Sales Paused
-                                    </span>
-
-                                {% endif %}
 
 
                             </div>
@@ -2917,15 +3292,51 @@
 
                         <div class="admin-event-actions">
 
+
                             <a
                                 href="{{ url_for(
-                                    'admin_event_control',
+                                    'event_page',
+                                    event_id=event.id
+                                ) }}"
+                                class="button button-secondary"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View Event
+                            </a>
+
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_orders',
                                     event_id=event.id
                                 ) }}"
                                 class="button"
                             >
-                                Manage Event
+                                Orders
                             </a>
+
+
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'admin_delete_event',
+                                    event_id=event.id
+                                ) }}"
+                                class="delete-event-form"
+                                onsubmit="return confirm(
+                                    'Delete this event from your dashboard? '
+                                    + 'Ticket and order history will be kept.'
+                                );"
+                            >
+                                <button
+                                    type="submit"
+                                    class="button button-danger"
+                                >
+                                    Delete Event
+                                </button>
+                            </form>
+
 
                         </div>
 
@@ -2959,8 +3370,8 @@
 
                     {% if subscription_active %}
 
-                        Create your first event using the
-                        Create Event Ticket button above.
+                        Create your first event above.
+                        It will appear here as soon as it is saved.
 
                     {% else %}
 
