@@ -3,6 +3,7 @@
 # ============================================================
 
 import io
+import json
 import os
 import secrets
 import string
@@ -35,10 +36,12 @@ from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 from models import (
+    AttendeeContact,
     CheckIn,
     EntryPass,
     KalxaBridgeTokenUse,
     Organizer,
+    PushSubscription,
     SubscriptionPayment,
     TicketEvent,
     TicketOrder,
@@ -211,6 +214,106 @@ PUBLIC_BASE_URL = (
     .rstrip("/")
 )
 
+# ============================================================
+# FIREBASE WEB PUSH
+# ============================================================
+#
+# These values come from:
+# Firebase Console -> Project Settings -> Your Web App
+#
+# FIREBASE_VAPID_KEY comes from:
+# Project Settings -> Cloud Messaging -> Web Push certificates
+#
+# These are browser-facing Firebase web configuration values.
+# The private Firebase service-account credentials are NOT
+# required until Stage 2, when Kalxa starts sending campaigns.
+# ============================================================
+
+FIREBASE_WEB_CONFIG = {
+
+    "apiKey": (
+        os.environ.get(
+            "FIREBASE_API_KEY",
+            "",
+        )
+        .strip()
+    ),
+
+    "authDomain": (
+        os.environ.get(
+            "FIREBASE_AUTH_DOMAIN",
+            "",
+        )
+        .strip()
+    ),
+
+    "projectId": (
+        os.environ.get(
+            "FIREBASE_PROJECT_ID",
+            "",
+        )
+        .strip()
+    ),
+
+    "storageBucket": (
+        os.environ.get(
+            "FIREBASE_STORAGE_BUCKET",
+            "",
+        )
+        .strip()
+    ),
+
+    "messagingSenderId": (
+        os.environ.get(
+            "FIREBASE_MESSAGING_SENDER_ID",
+            "",
+        )
+        .strip()
+    ),
+
+    "appId": (
+        os.environ.get(
+            "FIREBASE_APP_ID",
+            "",
+        )
+        .strip()
+    ),
+}
+
+
+FIREBASE_VAPID_KEY = (
+    os.environ.get(
+        "FIREBASE_VAPID_KEY",
+        "",
+    )
+    .strip()
+)
+
+
+def firebase_web_push_configured():
+
+    required_values = (
+        FIREBASE_WEB_CONFIG.get(
+            "apiKey"
+        ),
+        FIREBASE_WEB_CONFIG.get(
+            "projectId"
+        ),
+        FIREBASE_WEB_CONFIG.get(
+            "messagingSenderId"
+        ),
+        FIREBASE_WEB_CONFIG.get(
+            "appId"
+        ),
+        FIREBASE_VAPID_KEY,
+    )
+
+
+    return all(
+        required_values
+    )
+
+
 
 # ============================================================
 # ORGANIZER SESSION
@@ -359,6 +462,71 @@ def normalize_email(
         .strip()
         .lower()
     )
+
+
+# ============================================================
+# NORMALIZE ATTENDEE PHONE FOR AUDIENCE
+# ============================================================
+
+def normalize_attendee_phone(
+    value,
+):
+
+    raw = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+    )
+
+
+    digits = "".join(
+        character
+        for character in raw
+        if character.isdigit()
+    )
+
+
+    if (
+        len(digits)
+        == 10
+        and digits.startswith(
+            "0"
+        )
+    ):
+
+        return (
+            "+27"
+            + digits[1:]
+        )
+
+
+    if (
+        len(digits)
+        == 11
+        and digits.startswith(
+            "27"
+        )
+    ):
+
+        return (
+            "+"
+            + digits
+        )
+
+
+    if raw.startswith(
+        "+"
+    ) and digits:
+
+        return (
+            "+"
+            + digits
+        )
+
+
+    return digits
 
 
 # ============================================================
@@ -3360,8 +3528,674 @@ def booking_status(
 
     return render_template(
         "booking_status.html",
-        order=order,
+
+        order=
+            order,
+
+        firebase_config=
+            FIREBASE_WEB_CONFIG,
+
+        firebase_vapid_key=
+            FIREBASE_VAPID_KEY,
+
+        firebase_push_configured=
+            firebase_web_push_configured(),
     )
+
+
+# ============================================================
+# FIREBASE MESSAGING SERVICE WORKER
+# ============================================================
+#
+# Served at the root of the domain so the service worker can
+# control the whole Kalxa Ticketing origin.
+# ============================================================
+
+@app.route(
+    "/firebase-messaging-sw.js"
+)
+def firebase_messaging_service_worker():
+
+    if not firebase_web_push_configured():
+
+        return Response(
+            (
+                "// Firebase Web Push is not configured.\n"
+            ),
+            mimetype=
+                "application/javascript",
+        )
+
+
+    config_json = json.dumps(
+        FIREBASE_WEB_CONFIG
+    )
+
+
+    service_worker = f"""
+importScripts(
+    "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"
+);
+
+importScripts(
+    "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging-compat.js"
+);
+
+firebase.initializeApp(
+    {config_json}
+);
+
+const messaging =
+    firebase.messaging();
+
+
+messaging.onBackgroundMessage(
+    (payload) => {{
+
+        const notification =
+            payload.notification
+            || {{}};
+
+        const data =
+            payload.data
+            || {{}};
+
+        const title =
+            notification.title
+            || "Kalxa Ticketing";
+
+        const options = {{
+
+            body:
+                notification.body
+                || data.body
+                || "",
+
+            icon:
+                data.icon
+                || "/static/icons/lac-192.png",
+
+            badge:
+                data.badge
+                || "/static/icons/lac-192.png",
+
+            data: {{
+
+                url:
+                    data.url
+                    || "/",
+            }},
+        }};
+
+
+        self.registration.showNotification(
+            title,
+            options
+        );
+    }}
+);
+
+
+self.addEventListener(
+    "notificationclick",
+    (event) => {{
+
+        event.notification.close();
+
+
+        const targetUrl =
+            (
+                event.notification.data
+                && event.notification.data.url
+            )
+            || "/";
+
+
+        event.waitUntil(
+
+            clients.matchAll(
+                {{
+                    type: "window",
+                    includeUncontrolled: true,
+                }}
+            )
+            .then(
+                (clientList) => {{
+
+                    for (
+                        const client
+                        of clientList
+                    ) {{
+
+                        if (
+                            "focus"
+                            in client
+                        ) {{
+
+                            client.navigate(
+                                targetUrl
+                            );
+
+                            return (
+                                client.focus()
+                            );
+                        }}
+                    }}
+
+
+                    if (
+                        clients.openWindow
+                    ) {{
+
+                        return (
+                            clients.openWindow(
+                                targetUrl
+                            )
+                        );
+                    }}
+                }}
+            )
+        );
+    }}
+);
+"""
+
+
+    response = Response(
+        service_worker,
+        mimetype=
+            "application/javascript",
+    )
+
+
+    response.headers[
+        "Cache-Control"
+    ] = (
+        "no-cache, no-store, must-revalidate"
+    )
+
+
+    return response
+
+
+# ============================================================
+# ATTENDEE - ENABLE PUSH NOTIFICATIONS
+# ============================================================
+
+@app.route(
+    "/notifications/subscribe",
+    methods=[
+        "POST",
+    ],
+)
+def notification_subscribe():
+
+    if not firebase_web_push_configured():
+
+        return {
+            "ok": False,
+            "error": (
+                "Firebase Web Push is not configured."
+            ),
+        }, 503
+
+
+    payload = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    reference = (
+        str(
+            payload.get(
+                "reference",
+                ""
+            )
+        )
+        .strip()
+        .upper()
+    )
+
+
+    installation_id = (
+        str(
+            payload.get(
+                "installation_id",
+                ""
+            )
+        )
+        .strip()
+    )
+
+
+    if (
+        not reference
+        or not installation_id
+    ):
+
+        return {
+            "ok": False,
+            "error": (
+                "Booking reference and installation ID "
+                "are required."
+            ),
+        }, 400
+
+
+    if (
+        len(
+            installation_id
+        )
+        > 255
+    ):
+
+        return {
+            "ok": False,
+            "error": (
+                "Invalid Firebase installation ID."
+            ),
+        }, 400
+
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first()
+    )
+
+
+    if not order:
+
+        return {
+            "ok": False,
+            "error": (
+                "Booking could not be found."
+            ),
+        }, 404
+
+
+    phone_normalized = (
+        normalize_attendee_phone(
+            order.customer_phone
+        )
+    )
+
+
+    if not phone_normalized:
+
+        return {
+            "ok": False,
+            "error": (
+                "A valid attendee phone number "
+                "is required."
+            ),
+        }, 400
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    contact = (
+        AttendeeContact.query
+        .filter_by(
+            phone_normalized=
+                phone_normalized
+        )
+        .first()
+    )
+
+
+    if not contact:
+
+        contact = AttendeeContact(
+
+            name=
+                order.customer_name,
+
+            phone=
+                order.customer_phone,
+
+            phone_normalized=
+                phone_normalized,
+
+            email=
+                order.customer_email,
+
+            notification_consent=
+                True,
+
+            consented_at=
+                now,
+
+            opted_out_at=
+                None,
+        )
+
+
+        db.session.add(
+            contact
+        )
+
+        db.session.flush()
+
+
+    else:
+
+        contact.name = (
+            order.customer_name
+            or contact.name
+        )
+
+        contact.phone = (
+            order.customer_phone
+            or contact.phone
+        )
+
+        contact.email = (
+            order.customer_email
+            or contact.email
+        )
+
+        contact.notification_consent = (
+            True
+        )
+
+        contact.consented_at = (
+            now
+        )
+
+        contact.opted_out_at = (
+            None
+        )
+
+
+    subscription = (
+        PushSubscription.query
+        .filter_by(
+            firebase_installation_id=
+                installation_id
+        )
+        .first()
+    )
+
+
+    if not subscription:
+
+        subscription = PushSubscription(
+
+            contact_id=
+                contact.id,
+
+            firebase_installation_id=
+                installation_id,
+
+            active=
+                True,
+
+            registered_at=
+                now,
+
+            last_seen_at=
+                now,
+
+            disabled_at=
+                None,
+        )
+
+
+        db.session.add(
+            subscription
+        )
+
+
+    else:
+
+        subscription.contact_id = (
+            contact.id
+        )
+
+        subscription.active = (
+            True
+        )
+
+        subscription.last_seen_at = (
+            now
+        )
+
+        subscription.disabled_at = (
+            None
+        )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Push Subscribe] Failed "
+                "reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+
+        return {
+            "ok": False,
+            "error": (
+                "Notification subscription could "
+                "not be saved."
+            ),
+        }, 500
+
+
+    return {
+        "ok": True,
+        "message": (
+            "Future-event notifications are enabled."
+        ),
+    }
+
+
+# ============================================================
+# ATTENDEE - DISABLE PUSH NOTIFICATIONS
+# ============================================================
+
+@app.route(
+    "/notifications/unsubscribe",
+    methods=[
+        "POST",
+    ],
+)
+def notification_unsubscribe():
+
+    payload = (
+        request.get_json(
+            silent=True
+        )
+        or {}
+    )
+
+
+    reference = (
+        str(
+            payload.get(
+                "reference",
+                ""
+            )
+        )
+        .strip()
+        .upper()
+    )
+
+
+    installation_id = (
+        str(
+            payload.get(
+                "installation_id",
+                ""
+            )
+        )
+        .strip()
+    )
+
+
+    if (
+        not reference
+        or not installation_id
+    ):
+
+        return {
+            "ok": False,
+            "error": (
+                "Booking reference and installation ID "
+                "are required."
+            ),
+        }, 400
+
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first()
+    )
+
+
+    if not order:
+
+        return {
+            "ok": False,
+            "error": (
+                "Booking could not be found."
+            ),
+        }, 404
+
+
+    phone_normalized = (
+        normalize_attendee_phone(
+            order.customer_phone
+        )
+    )
+
+
+    subscription = (
+        PushSubscription.query
+        .filter_by(
+            firebase_installation_id=
+                installation_id
+        )
+        .first()
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if subscription:
+
+        subscription.active = (
+            False
+        )
+
+        subscription.disabled_at = (
+            now
+        )
+
+
+    contact = None
+
+
+    if phone_normalized:
+
+        contact = (
+            AttendeeContact.query
+            .filter_by(
+                phone_normalized=
+                    phone_normalized
+            )
+            .first()
+        )
+
+
+    if contact:
+
+        contact.notification_consent = (
+            False
+        )
+
+        contact.opted_out_at = (
+            now
+        )
+
+
+        for device in (
+            contact.push_subscriptions
+        ):
+
+            device.active = (
+                False
+            )
+
+            device.disabled_at = (
+                now
+            )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Push Unsubscribe] Failed "
+                "reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+
+        return {
+            "ok": False,
+            "error": (
+                "Notification preference could "
+                "not be updated."
+            ),
+        }, 500
+
+
+    return {
+        "ok": True,
+        "message": (
+            "Future-event notifications are turned off."
+        ),
+    }
 
 
 # ============================================================
@@ -6449,7 +7283,7 @@ def health():
 
 # ============================================================
 # LOCAL RUN
-# ======
+# ============================================================
 
 if __name__ == "__main__":
 
