@@ -1476,7 +1476,7 @@ class PushSubscription(db.Model):
             "attendee_contacts.id",
             ondelete="CASCADE",
         ),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
