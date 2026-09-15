@@ -553,6 +553,174 @@
 
 
         /* =====================================================
+           EVENT POSTER VIEWER
+        ===================================================== */
+
+        .event-poster-button {
+
+            width: 100%;
+
+            display: block;
+
+            padding: 0;
+
+            background: transparent;
+
+            border: 0;
+
+            cursor: zoom-in;
+        }
+
+
+        .event-poster-hint {
+
+            position: absolute;
+
+            right: 12px;
+
+            bottom: 12px;
+
+            padding: 7px 10px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    0.82
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            pointer-events: none;
+        }
+
+
+        .event-detail-image-wrap {
+
+            position: relative;
+        }
+
+
+        .poster-modal {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 1000;
+
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 18px;
+
+            background:
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.92
+                );
+        }
+
+
+        .poster-modal.open {
+
+            display: flex;
+        }
+
+
+        .poster-modal-image {
+
+            max-width: 96vw;
+
+            max-height: 92vh;
+
+            width: auto;
+
+            height: auto;
+
+            display: block;
+
+            object-fit: contain;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 20px 60px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.45
+                );
+        }
+
+
+        .poster-modal-close {
+
+            position: fixed;
+
+            top: 18px;
+
+            right: 18px;
+
+            width: 44px;
+
+            height: 44px;
+
+            display: grid;
+
+            place-items: center;
+
+            background: #ffffff;
+
+            color: #111827;
+
+            border: 0;
+
+            border-radius: 999px;
+
+            font-size: 24px;
+
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+
+        .sales-note {
+
+            margin-top: 12px;
+
+            padding: 11px 12px;
+
+            background: #fff7ed;
+
+            color: #9a3412;
+
+            border:
+                1px solid #fed7aa;
+
+            border-radius: 10px;
+
+            font-size: 12px;
+
+            font-weight: 750;
+        }
+
+
+        /* =====================================================
            TICKET BOX
         ===================================================== */
 
@@ -1202,11 +1370,24 @@
 
                 <div class="event-detail-image-wrap">
 
-                    <img
-                        src="{{ event.image_url }}"
-                        alt="{{ event.title }}"
-                        class="event-detail-image"
+                    <button
+                        type="button"
+                        class="event-poster-button"
+                        id="open-poster"
+                        aria-label="View full event poster"
                     >
+
+                        <img
+                            src="{{ event.image_url }}"
+                            alt="{{ event.title }} event poster"
+                            class="event-detail-image"
+                        >
+
+                        <span class="event-poster-hint">
+                            🔍 View Poster
+                        </span>
+
+                    </button>
 
                 </div>
 
@@ -1455,6 +1636,21 @@
                         </button>
 
 
+                    {% elif not event.sales_open %}
+
+                        <button
+                            class="button disabled"
+                            disabled
+                        >
+                            Ticket Sales Paused
+                        </button>
+
+                        <div class="sales-note">
+                            This event is published, but ticket sales
+                            are not open yet.
+                        </div>
+
+
                     {% else %}
 
                         <a
@@ -1691,6 +1887,145 @@
 
 
 </div>
+
+
+{% if event and event.image_url %}
+
+    <div
+        class="poster-modal"
+        id="poster-modal"
+        aria-hidden="true"
+    >
+
+        <button
+            type="button"
+            class="poster-modal-close"
+            id="close-poster"
+            aria-label="Close event poster"
+        >
+            ×
+        </button>
+
+        <img
+            src="{{ event.image_url }}"
+            alt="{{ event.title }} event poster"
+            class="poster-modal-image"
+        >
+
+    </div>
+
+
+    <script>
+
+        const openPoster =
+            document.getElementById(
+                "open-poster"
+            );
+
+        const closePoster =
+            document.getElementById(
+                "close-poster"
+            );
+
+        const posterModal =
+            document.getElementById(
+                "poster-modal"
+            );
+
+
+        function showPoster() {
+
+            if (!posterModal) {
+                return;
+            }
+
+            posterModal.classList.add(
+                "open"
+            );
+
+            posterModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.style.overflow =
+                "hidden";
+        }
+
+
+        function hidePoster() {
+
+            if (!posterModal) {
+                return;
+            }
+
+            posterModal.classList.remove(
+                "open"
+            );
+
+            posterModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.style.overflow =
+                "";
+        }
+
+
+        if (openPoster) {
+
+            openPoster.addEventListener(
+                "click",
+                showPoster
+            );
+        }
+
+
+        if (closePoster) {
+
+            closePoster.addEventListener(
+                "click",
+                hidePoster
+            );
+        }
+
+
+        if (posterModal) {
+
+            posterModal.addEventListener(
+                "click",
+                function (event) {
+
+                    if (
+                        event.target
+                        === posterModal
+                    ) {
+
+                        hidePoster();
+                    }
+                }
+            );
+        }
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key
+                    === "Escape"
+                ) {
+
+                    hidePoster();
+                }
+            }
+        );
+
+    </script>
+
+{% endif %}
 
 
 </body>
