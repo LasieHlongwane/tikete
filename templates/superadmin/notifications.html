@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Push Notifications | Kalxa Super Admin
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background: #f6f7f9;
+
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            line-height: 1.55;
+        }
+
+
+        .shell {
+
+            width:
+                min(
+                    1180px,
+                    calc(100% - 28px)
+                );
+
+            margin: 0 auto;
+
+            padding: 22px 0 60px;
+        }
+
+
+        .nav {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 14px;
+
+            margin-bottom: 22px;
+
+            padding: 14px 16px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 16px;
+        }
+
+
+        .brand {
+
+            font-size: 14px;
+
+            font-weight: 900;
+        }
+
+
+        .nav-links {
+
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .nav-links a {
+
+            padding: 8px 11px;
+
+            color: #334155;
+
+            border-radius: 9px;
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 750;
+        }
+
+
+        .nav-links a:hover {
+
+            background: #f1f5f9;
+        }
+
+
+        .hero {
+
+            margin-bottom: 20px;
+
+            padding: 28px;
+
+            color: #ffffff;
+
+            background: #111111;
+
+            border-radius: 20px;
+        }
+
+
+        .eyebrow {
+
+            margin: 0 0 6px;
+
+            color: #cbd5e1;
+
+            font-size: 10px;
+
+            font-weight: 850;
+
+            letter-spacing: 0.13em;
+
+            text-transform: uppercase;
+        }
+
+
+        h1 {
+
+            margin: 0 0 8px;
+
+            font-size:
+                clamp(
+                    30px,
+                    5vw,
+                    44px
+                );
+
+            letter-spacing: -0.04em;
+        }
+
+
+        .hero p {
+
+            margin: 0;
+
+            color: #cbd5e1;
+
+            font-size: 13px;
+        }
+
+
+        .metrics {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 12px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .metric,
+        .section {
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 16px;
+        }
+
+
+        .metric {
+
+            padding: 18px;
+        }
+
+
+        .metric span {
+
+            color: #64748b;
+
+            font-size: 11px;
+
+            font-weight: 800;
+        }
+
+
+        .metric strong {
+
+            display: block;
+
+            margin-top: 6px;
+
+            font-size: 30px;
+
+            letter-spacing: -0.04em;
+        }
+
+
+        .main-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.25fr)
+                minmax(320px, 0.75fr);
+
+            gap: 18px;
+
+            align-items: start;
+        }
+
+
+        .section {
+
+            margin-bottom: 18px;
+
+            padding: 22px;
+        }
+
+
+        .section-head {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            justify-content: space-between;
+
+            gap: 14px;
+
+            margin-bottom: 18px;
+        }
+
+
+        h2 {
+
+            margin: 0 0 5px;
+
+            font-size: 21px;
+        }
+
+
+        .muted {
+
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 12px;
+        }
+
+
+        .form-stack {
+
+            display: grid;
+
+            gap: 16px;
+        }
+
+
+        .field {
+
+            display: grid;
+
+            gap: 7px;
+        }
+
+
+        label {
+
+            color: #334155;
+
+            font-size: 12px;
+
+            font-weight: 800;
+        }
+
+
+        select,
+        input,
+        textarea {
+
+            width: 100%;
+
+            padding: 11px 12px;
+
+            background: #ffffff;
+
+            color: #111827;
+
+            border:
+                1px solid #cbd5e1;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            font: inherit;
+        }
+
+
+        textarea {
+
+            min-height: 116px;
+
+            resize: vertical;
+        }
+
+
+        .button {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            min-height: 42px;
+
+            padding: 10px 14px;
+
+            background: #111111;
+
+            color: #ffffff;
+
+            border:
+                1px solid #111111;
+
+            border-radius: 10px;
+
+            text-decoration: none;
+
+            font: inherit;
+
+            font-size: 12px;
+
+            font-weight: 850;
+
+            cursor: pointer;
+        }
+
+
+        .button-full {
+
+            width: 100%;
+        }
+
+
+        .notice {
+
+            margin-bottom: 18px;
+
+            padding: 13px 15px;
+
+            border-radius: 12px;
+
+            font-size: 12px;
+
+            font-weight: 650;
+        }
+
+
+        .notice.ready {
+
+            background: #f0fdf4;
+
+            color: #166534;
+
+            border:
+                1px solid #bbf7d0;
+        }
+
+
+        .notice.error {
+
+            background: #fef2f2;
+
+            color: #991b1b;
+
+            border:
+                1px solid #fecaca;
+        }
+
+
+        .flash-wrapper {
+
+            display: grid;
+
+            gap: 10px;
+
+            margin-bottom: 18px;
+        }
+
+
+        .alert {
+
+            padding: 13px 15px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #dbe3ec;
+
+            border-radius: 12px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        .alert[data-category="success"] {
+
+            background: #f0fdf4;
+
+            color: #166534;
+
+            border-color: #bbf7d0;
+        }
+
+
+        .alert[data-category="error"] {
+
+            background: #fef2f2;
+
+            color: #991b1b;
+
+            border-color: #fecaca;
+        }
+
+
+        .history {
+
+            display: grid;
+
+            gap: 10px;
+        }
+
+
+        .history-row {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1fr)
+                auto;
+
+            gap: 14px;
+
+            padding: 13px;
+
+            background: #fafafa;
+
+            border:
+                1px solid #e8edf2;
+
+            border-radius: 12px;
+        }
+
+
+        .history-row strong {
+
+            display: block;
+
+            font-size: 13px;
+        }
+
+
+        .history-row small {
+
+            display: block;
+
+            margin-top: 4px;
+
+            color: #64748b;
+        }
+
+
+        .history-side {
+
+            text-align: right;
+        }
+
+
+        .status {
+
+            display: inline-flex;
+
+            padding: 5px 8px;
+
+            border-radius: 999px;
+
+            background: #f1f5f9;
+
+            color: #475569;
+
+            font-size: 9px;
+
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+
+        .status.completed {
+
+            background: #dcfce7;
+
+            color: #166534;
+        }
+
+
+        .status.partial {
+
+            background: #fff7ed;
+
+            color: #9a3412;
+        }
+
+
+        .status.failed {
+
+            background: #fef2f2;
+
+            color: #991b1b;
+        }
+
+
+        .preview {
+
+            padding: 18px;
+
+            background: #0f172a;
+
+            color: #ffffff;
+
+            border-radius: 16px;
+        }
+
+
+        .preview small {
+
+            color: #94a3b8;
+        }
+
+
+        .preview-title {
+
+            margin-top: 8px;
+
+            font-size: 15px;
+
+            font-weight: 900;
+        }
+
+
+        .preview-body {
+
+            margin-top: 5px;
+
+            color: #cbd5e1;
+
+            font-size: 12px;
+        }
+
+
+        @media (
+            max-width: 850px
+        ) {
+
+            .main-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .metrics {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+
+        @media (
+            max-width: 560px
+        ) {
+
+            .nav {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+
+            .history-row {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .history-side {
+
+                text-align: left;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="shell">
+
+
+    <nav class="nav">
+
+        <div class="brand">
+            KALXA TICKETING · SUPER ADMIN
+        </div>
+
+
+        <div class="nav-links">
+
+            <a
+                href="{{ url_for(
+                    'superadmin_dashboard'
+                ) }}"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'superadmin_organizers'
+                ) }}"
+            >
+                Organizers
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'superadmin_notifications'
+                ) }}"
+            >
+                🔔 Notifications
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'superadmin_logout'
+                ) }}"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <header class="hero">
+
+        <p class="eyebrow">
+            AUDIENCE & CAMPAIGNS
+        </p>
+
+        <h1>
+            Push Notifications
+        </h1>
+
+        <p>
+            Notify opted-in Kalxa attendees when a
+            published event is ready for them.
+        </p>
+
+    </header>
+
+
+    <div class="metrics">
+
+        <div class="metric">
+
+            <span>
+                Opted-In Contacts
+            </span>
+
+            <strong>
+                {{ opted_in_contacts }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span>
+                Active Browsers
+            </span>
+
+            <strong>
+                {{ audience_count }}
+            </strong>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span>
+                Campaigns Sent
+            </span>
+
+            <strong>
+                {{ campaigns|length }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    {% if firebase_admin_ready %}
+
+        <div class="notice ready">
+            ✓ Firebase server-side sending is configured.
+        </div>
+
+    {% else %}
+
+        <div class="notice error">
+
+            Firebase server-side sending is not configured.
+            Add FIREBASE_SERVICE_ACCOUNT_JSON to Render
+            before sending campaigns.
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="main-grid">
+
+
+        <main>
+
+
+            <section class="section">
+
+
+                <div class="section-head">
+
+                    <div>
+
+                        <h2>
+                            Send New Event Notification
+                        </h2>
+
+                        <p class="muted">
+                            Review the event and message before
+                            notifying the active audience.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'superadmin_send_notification'
+                    ) }}"
+                    class="form-stack"
+                    id="notification-form"
+                >
+
+
+                    <div class="field">
+
+                        <label for="event_id">
+                            Published Event
+                        </label>
+
+                        <select
+                            id="event_id"
+                            name="event_id"
+                            required
+                        >
+
+                            <option value="">
+                                Choose an event
+                            </option>
+
+                            {% for event in published_events %}
+
+                                <option
+                                    value="{{ event.id }}"
+                                    data-title="{{ event.title }}"
+                                    {% if selected_event
+                                        and selected_event.id == event.id %}
+                                        selected
+                                    {% endif %}
+                                >
+
+                                    {{ event.title }}
+
+                                    {% if event.event_date %}
+                                        ·
+                                        {{ event.event_date.strftime(
+                                            '%d %b %Y'
+                                        ) }}
+                                    {% endif %}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="title">
+                            Notification Title
+                        </label>
+
+                        <input
+                            id="title"
+                            name="title"
+                            type="text"
+                            maxlength="120"
+                            value="{% if selected_event %}🎟 {{ selected_event.title }} is live{% endif %}"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="body">
+                            Message
+                        </label>
+
+                        <textarea
+                            id="body"
+                            name="body"
+                            maxlength="500"
+                            required
+                        >{% if selected_event %}Tickets are now available on Kalxa. Tap to view the event and book yours.{% endif %}</textarea>
+
+                    </div>
+
+
+                    <div class="preview">
+
+                        <small>
+                            NOTIFICATION PREVIEW
+                        </small>
+
+                        <div
+                            class="preview-title"
+                            id="preview-title"
+                        >
+                            {% if selected_event %}
+                                🎟 {{ selected_event.title }} is live
+                            {% else %}
+                                Your notification title
+                            {% endif %}
+                        </div>
+
+                        <div
+                            class="preview-body"
+                            id="preview-body"
+                        >
+                            {% if selected_event %}
+                                Tickets are now available on Kalxa.
+                                Tap to view the event and book yours.
+                            {% else %}
+                                Your notification message will appear here.
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="button button-full"
+                        {% if not firebase_admin_ready
+                            or audience_count == 0 %}
+                            disabled
+                        {% endif %}
+                        onclick="return confirm('Send this push notification to {{ audience_count }} active browser subscription(s)?');"
+                    >
+                        🔔 Send to {{ audience_count }}
+                        Active Browser{% if audience_count != 1 %}s{% endif %}
+                    </button>
+
+
+                </form>
+
+
+            </section>
+
+
+        </main>
+
+
+        <aside>
+
+
+            <section class="section">
+
+
+                <div class="section-head">
+
+                    <div>
+
+                        <h2>
+                            Recent Campaigns
+                        </h2>
+
+                        <p class="muted">
+                            Latest Super Admin push sends.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {% if campaigns %}
+
+                    <div class="history">
+
+                        {% for campaign in campaigns %}
+
+                            <div class="history-row">
+
+                                <div>
+
+                                    <strong>
+                                        {{ campaign.title }}
+                                    </strong>
+
+                                    <small>
+                                        {{ campaign.created_at.strftime(
+                                            '%d %b %Y · %H:%M'
+                                        ) }}
+                                    </small>
+
+                                    <small>
+                                        {{ campaign.success_count }} sent
+                                        ·
+                                        {{ campaign.failure_count }} failed
+                                    </small>
+
+                                </div>
+
+
+                                <div class="history-side">
+
+                                    <span
+                                        class="status
+                                        {{ campaign.status }}"
+                                    >
+                                        {{ campaign.status }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="muted">
+                        No push campaigns have been sent yet.
+                    </p>
+
+                {% endif %}
+
+
+            </section>
+
+
+        </aside>
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+    const eventSelect =
+        document.getElementById(
+            "event_id"
+        );
+
+
+    const titleInput =
+        document.getElementById(
+            "title"
+        );
+
+
+    const bodyInput =
+        document.getElementById(
+            "body"
+        );
+
+
+    const previewTitle =
+        document.getElementById(
+            "preview-title"
+        );
+
+
+    const previewBody =
+        document.getElementById(
+            "preview-body"
+        );
+
+
+    function updatePreview() {
+
+        previewTitle.textContent =
+            (
+                titleInput.value.trim()
+                || "Your notification title"
+            );
+
+
+        previewBody.textContent =
+            (
+                bodyInput.value.trim()
+                || "Your notification message will appear here."
+            );
+    }
+
+
+    eventSelect.addEventListener(
+        "change",
+        function () {
+
+            const option =
+                eventSelect.options[
+                    eventSelect.selectedIndex
+                ];
+
+
+            const eventTitle =
+                (
+                    option.dataset.title
+                    || ""
+                )
+                .trim();
+
+
+            if (eventTitle) {
+
+                titleInput.value =
+                    `🎟 ${eventTitle} is live`;
+
+
+                if (
+                    !bodyInput.value.trim()
+                ) {
+
+                    bodyInput.value =
+                        (
+                            "Tickets are now available on Kalxa. "
+                            + "Tap to view the event and book yours."
+                        );
+                }
+            }
+
+
+            updatePreview();
+        }
+    );
+
+
+    titleInput.addEventListener(
+        "input",
+        updatePreview
+    );
+
+
+    bodyInput.addEventListener(
+        "input",
+        updatePreview
+    );
+
+
+    updatePreview();
+
+</script>
+
+
+</body>
+
+</html>
