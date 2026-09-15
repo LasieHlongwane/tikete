@@ -1,3 +1,4 @@
+
 # ============================================================
 # KALXA TICKETING - APP
 # ============================================================
@@ -12,6 +13,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 import qrcode
+
+import firebase_admin
+from firebase_admin import (
+    credentials,
+    messaging,
+)
 
 from dotenv import load_dotenv
 from flask import (
@@ -41,6 +48,8 @@ from models import (
     EntryPass,
     KalxaBridgeTokenUse,
     Organizer,
+    PushCampaign,
+    PushDelivery,
     PushSubscription,
     SubscriptionPayment,
     TicketEvent,
@@ -313,6 +322,484 @@ def firebase_web_push_configured():
         required_values
     )
 
+
+
+
+
+# ============================================================
+# FIREBASE ADMIN / SERVER-SIDE PUSH
+# ============================================================
+#
+# Render environment variable:
+#
+# FIREBASE_SERVICE_ACCOUNT_JSON
+#
+# Value:
+# Complete JSON contents of a Firebase service-account key.
+#
+# The Admin SDK is initialized lazily so normal ticketing pages
+# continue to work even if server-side push is not configured.
+# ============================================================
+
+FIREBASE_SERVICE_ACCOUNT_JSON = (
+    os.environ.get(
+        "FIREBASE_SERVICE_ACCOUNT_JSON",
+        "",
+    )
+    .strip()
+)
+
+
+def firebase_admin_configured():
+
+    return bool(
+        FIREBASE_SERVICE_ACCOUNT_JSON
+        and FIREBASE_WEB_CONFIG.get(
+            "projectId"
+        )
+    )
+
+
+def get_firebase_admin_app():
+
+    if not firebase_admin_configured():
+
+        raise RuntimeError(
+            (
+                "FIREBASE_SERVICE_ACCOUNT_JSON "
+                "is not configured."
+            )
+        )
+
+
+    try:
+
+        return firebase_admin.get_app()
+
+
+    except ValueError:
+
+        pass
+
+
+    try:
+
+        service_account_info = (
+            json.loads(
+                FIREBASE_SERVICE_ACCOUNT_JSON
+            )
+        )
+
+
+    except json.JSONDecodeError as error:
+
+        raise RuntimeError(
+            (
+                "FIREBASE_SERVICE_ACCOUNT_JSON "
+                "contains invalid JSON."
+            )
+        ) from error
+
+
+    project_id = (
+        FIREBASE_WEB_CONFIG.get(
+            "projectId"
+        )
+        or service_account_info.get(
+            "project_id"
+        )
+    )
+
+
+    credential = (
+        credentials.Certificate(
+            service_account_info
+        )
+    )
+
+
+    return firebase_admin.initialize_app(
+        credential,
+        {
+            "projectId":
+                project_id,
+        },
+    )
+
+
+def is_dead_firebase_registration(
+    error,
+):
+
+    if not error:
+
+        return False
+
+
+    error_name = (
+        error.__class__.__name__
+        .strip()
+        .lower()
+    )
+
+
+    error_code = (
+        str(
+            getattr(
+                error,
+                "code",
+                "",
+            )
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    error_text = (
+        str(
+            error
+        )
+        .strip()
+        .lower()
+    )
+
+
+    dead_markers = (
+        "unregistered",
+        "registration-token-not-registered",
+        "not-found",
+        "requested entity was not found",
+        "404",
+    )
+
+
+    combined = (
+        f"{error_name} "
+        f"{error_code} "
+        f"{error_text}"
+    )
+
+
+    return any(
+        marker in combined
+        for marker in dead_markers
+    )
+
+
+def get_active_push_subscriptions():
+
+    return (
+        PushSubscription.query
+
+        .join(
+            AttendeeContact,
+            PushSubscription.contact_id
+            == AttendeeContact.id,
+        )
+
+        .filter(
+            PushSubscription.active
+            .is_(True)
+        )
+
+        .filter(
+            PushSubscription.disabled_at
+            .is_(None)
+        )
+
+        .filter(
+            AttendeeContact.notification_consent
+            .is_(True)
+        )
+
+        .filter(
+            AttendeeContact.opted_out_at
+            .is_(None)
+        )
+
+        .order_by(
+            PushSubscription.id.asc()
+        )
+
+        .all()
+    )
+
+
+def send_push_campaign(
+    campaign,
+    subscriptions,
+):
+
+    firebase_app = (
+        get_firebase_admin_app()
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    campaign.status = (
+        "processing"
+    )
+
+    campaign.recipient_count = (
+        len(
+            subscriptions
+        )
+    )
+
+    campaign.success_count = 0
+    campaign.failure_count = 0
+
+
+    db.session.flush()
+
+
+    # ========================================================
+    # FCM MULTICAST LIMIT
+    # ========================================================
+    #
+    # Firebase accepts up to 500 FIDs in one multicast call.
+    # ========================================================
+
+    batch_size = 500
+
+
+    for start in range(
+        0,
+        len(subscriptions),
+        batch_size,
+    ):
+
+        batch = (
+            subscriptions[
+                start:
+                start + batch_size
+            ]
+        )
+
+
+        fids = [
+            subscription.firebase_installation_id
+            for subscription in batch
+        ]
+
+
+        message = messaging.MulticastMessage(
+
+            notification=
+                messaging.Notification(
+                    title=
+                        campaign.title,
+
+                    body=
+                        campaign.body,
+                ),
+
+            data={
+                "url":
+                    campaign.target_url
+                    or "/",
+
+                "campaign_id":
+                    str(
+                        campaign.id
+                    ),
+            },
+
+            fids=
+                fids,
+        )
+
+
+        try:
+
+            response = (
+                messaging.send_each_for_multicast(
+                    message,
+                    app=
+                        firebase_app,
+                )
+            )
+
+
+        except Exception as error:
+
+            current_app.logger.exception(
+                (
+                    "[Push Campaign] Firebase "
+                    "multicast request failed "
+                    "campaign_id=%s error=%s"
+                ),
+                campaign.id,
+                error,
+            )
+
+
+            for subscription in batch:
+
+                delivery = PushDelivery(
+
+                    campaign_id=
+                        campaign.id,
+
+                    push_subscription_id=
+                        subscription.id,
+
+                    firebase_installation_id=
+                        subscription.firebase_installation_id,
+
+                    status=
+                        "failed",
+
+                    error_message=
+                        str(error)[:2000],
+                )
+
+
+                db.session.add(
+                    delivery
+                )
+
+
+                campaign.failure_count += 1
+
+
+            continue
+
+
+        for (
+            subscription,
+            send_response,
+        ) in zip(
+            batch,
+            response.responses,
+        ):
+
+            if send_response.success:
+
+                delivery = PushDelivery(
+
+                    campaign_id=
+                        campaign.id,
+
+                    push_subscription_id=
+                        subscription.id,
+
+                    firebase_installation_id=
+                        subscription.firebase_installation_id,
+
+                    status=
+                        "sent",
+
+                    firebase_message_id=
+                        send_response.message_id,
+
+                    sent_at=
+                        now,
+                )
+
+
+                campaign.success_count += 1
+
+
+            else:
+
+                error = (
+                    send_response.exception
+                )
+
+
+                delivery = PushDelivery(
+
+                    campaign_id=
+                        campaign.id,
+
+                    push_subscription_id=
+                        subscription.id,
+
+                    firebase_installation_id=
+                        subscription.firebase_installation_id,
+
+                    status=
+                        "failed",
+
+                    error_message=(
+                        str(error)[:2000]
+                        if error
+                        else
+                        "Unknown Firebase send error."
+                    ),
+                )
+
+
+                campaign.failure_count += 1
+
+
+                if (
+                    is_dead_firebase_registration(
+                        error
+                    )
+                ):
+
+                    subscription.active = (
+                        False
+                    )
+
+                    subscription.disabled_at = (
+                        now
+                    )
+
+
+            db.session.add(
+                delivery
+            )
+
+
+    campaign.sent_at = (
+        now
+    )
+
+
+    if (
+        campaign.success_count
+        > 0
+        and campaign.failure_count
+        == 0
+    ):
+
+        campaign.status = (
+            "completed"
+        )
+
+
+    elif (
+        campaign.success_count
+        > 0
+        and campaign.failure_count
+        > 0
+    ):
+
+        campaign.status = (
+            "partial"
+        )
+
+
+    else:
+
+        campaign.status = (
+            "failed"
+        )
+
+
+    db.session.commit()
+
+
+    return campaign
 
 
 # ============================================================
@@ -1200,6 +1687,526 @@ def superadmin_dashboard():
 
         subscription_price=
             KALXA_SUBSCRIPTION_PRICE,
+    )
+
+
+
+
+# ============================================================
+# SUPER ADMIN - PUSH NOTIFICATION CENTRE
+# ============================================================
+
+@app.route(
+    "/superadmin/notifications"
+)
+def superadmin_notifications():
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    active_subscriptions = (
+        get_active_push_subscriptions()
+    )
+
+
+    audience_count = (
+        len(
+            active_subscriptions
+        )
+    )
+
+
+    opted_in_contacts = (
+        AttendeeContact.query
+        .filter(
+            AttendeeContact.notification_consent
+            .is_(True)
+        )
+        .filter(
+            AttendeeContact.opted_out_at
+            .is_(None)
+        )
+        .count()
+    )
+
+
+    published_events = (
+        TicketEvent.query
+        .filter_by(
+            status=
+                "published",
+
+            active=
+                True,
+        )
+        .order_by(
+            TicketEvent.published_at.desc(),
+            TicketEvent.created_at.desc(),
+        )
+        .limit(50)
+        .all()
+    )
+
+
+    campaigns = (
+        PushCampaign.query
+        .order_by(
+            PushCampaign.created_at.desc()
+        )
+        .limit(30)
+        .all()
+    )
+
+
+    selected_event = None
+
+
+    selected_event_id = request.args.get(
+        "event_id",
+        type=int,
+    )
+
+
+    if selected_event_id:
+
+        selected_event = (
+            TicketEvent.query
+            .filter_by(
+                id=
+                    selected_event_id,
+
+                status=
+                    "published",
+
+                active=
+                    True,
+            )
+            .first()
+        )
+
+
+    return render_template(
+        "superadmin/notifications.html",
+
+        audience_count=
+            audience_count,
+
+        opted_in_contacts=
+            opted_in_contacts,
+
+        published_events=
+            published_events,
+
+        campaigns=
+            campaigns,
+
+        selected_event=
+            selected_event,
+
+        firebase_admin_ready=
+            firebase_admin_configured(),
+    )
+
+
+# ============================================================
+# SUPER ADMIN - SEND PUSH NOTIFICATION
+# ============================================================
+
+@app.route(
+    "/superadmin/notifications/send",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_send_notification():
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    if not firebase_admin_configured():
+
+        flash(
+            (
+                "Server-side Firebase sending is not "
+                "configured. Add "
+                "FIREBASE_SERVICE_ACCOUNT_JSON "
+                "to Render first."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications"
+            )
+        )
+
+
+    event_id = request.form.get(
+        "event_id",
+        type=int,
+    )
+
+
+    title = (
+        request.form.get(
+            "title",
+            "",
+        )
+        .strip()
+    )
+
+
+    body = (
+        request.form.get(
+            "body",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not event_id:
+
+        flash(
+            "Choose a published event.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications"
+            )
+        )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            status=
+                "published",
+
+            active=
+                True,
+        )
+        .first()
+    )
+
+
+    if not event:
+
+        flash(
+            (
+                "The selected event is not "
+                "currently published."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications"
+            )
+        )
+
+
+    if not title:
+
+        flash(
+            "Notification title is required.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if not body:
+
+        flash(
+            "Notification message is required.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if len(title) > 120:
+
+        flash(
+            (
+                "Notification title must be "
+                "120 characters or fewer."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if len(body) > 500:
+
+        flash(
+            (
+                "Notification message must be "
+                "500 characters or fewer."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    subscriptions = (
+        get_active_push_subscriptions()
+    )
+
+
+    if not subscriptions:
+
+        flash(
+            (
+                "There are currently no active "
+                "push-notification subscribers."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    target_url = (
+        url_for(
+            "event_page",
+            event_id=
+                event.id,
+
+            _external=
+                True,
+        )
+    )
+
+
+    campaign = PushCampaign(
+
+        event_id=
+            event.id,
+
+        title=
+            title,
+
+        body=
+            body,
+
+        target_url=
+            target_url,
+
+        status=
+            "draft",
+
+        recipient_count=
+            len(
+                subscriptions
+            ),
+
+        created_by=
+            "superadmin",
+    )
+
+
+    try:
+
+        db.session.add(
+            campaign
+        )
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Push Campaign] Failed to "
+                "create campaign event_id=%s "
+                "error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Notification campaign could not "
+                "be created."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    try:
+
+        send_push_campaign(
+            campaign,
+            subscriptions,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Push Campaign] Send failed "
+                "campaign_id=%s error=%s"
+            ),
+            campaign.id,
+            error,
+        )
+
+
+        campaign = (
+            db.session.get(
+                PushCampaign,
+                campaign.id,
+            )
+        )
+
+
+        if campaign:
+
+            campaign.status = (
+                "failed"
+            )
+
+
+            try:
+
+                db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
+
+
+        flash(
+            (
+                "Firebase could not send the "
+                "notification campaign. Check "
+                "the Render logs for the error."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if campaign.failure_count:
+
+        flash(
+            (
+                "Notification campaign finished. "
+                f"{campaign.success_count} sent, "
+                f"{campaign.failure_count} failed."
+            ),
+            "success",
+        )
+
+
+    else:
+
+        flash(
+            (
+                "Notification sent successfully "
+                f"to {campaign.success_count} "
+                "browser subscription(s)."
+            ),
+            "success",
+        )
+
+
+    return redirect(
+        url_for(
+            "superadmin_notifications",
+            event_id=
+                event.id,
+        )
     )
 
 
