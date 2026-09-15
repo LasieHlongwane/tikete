@@ -198,7 +198,106 @@
             <strong>{{ pending_subscription_count }}</strong>
         </div>
 
+        <div class="metric">
+            <span>Events Ready to Notify</span>
+            <strong>{{ notification_ready_count }}</strong>
+        </div>
+
     </div>
+
+
+    <section class="section">
+
+        <div class="section-head">
+
+            <div>
+                <h2>🔔 New Events Ready to Promote</h2>
+
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 12px;">
+                    Published events that have not yet had a successful push campaign.
+                    Active audience: {{ active_push_audience_count }} browser{% if active_push_audience_count != 1 %}s{% endif %}.
+                </p>
+            </div>
+
+            <a
+                href="{{ url_for('superadmin_notifications') }}"
+                class="button"
+            >
+                Open Notification Centre
+            </a>
+
+        </div>
+
+
+        {% if notification_ready_events %}
+
+            <div class="list">
+
+                {% for event in notification_ready_events %}
+
+                    <div class="row">
+
+                        <div>
+
+                            <strong>
+                                {{ event.title }}
+                            </strong>
+
+                            <small>
+
+                                {% if event.event_date %}
+                                    {{ event.event_date.strftime('%d %b %Y') }}
+                                {% else %}
+                                    Date not set
+                                {% endif %}
+
+                                {% if event.organizer %}
+                                    · {{ event.organizer.display_name }}
+                                {% elif event.organizer_name %}
+                                    · {{ event.organizer_name }}
+                                {% endif %}
+
+                            </small>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="status active">
+                                READY TO NOTIFY
+                            </span>
+
+                            <a
+                                href="{{ url_for(
+                                    'superadmin_notifications',
+                                    event_id=event.id
+                                ) }}"
+                                class="button"
+                                style="margin-left: 8px;"
+                            >
+                                Review &amp; Send
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+        {% else %}
+
+            <p>
+                No newly published events are waiting for promotion.
+            </p>
+
+        {% endif %}
+
+    </section>
+
 
     <section class="section">
 
