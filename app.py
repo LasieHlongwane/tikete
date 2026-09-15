@@ -492,7 +492,7 @@ def get_active_push_subscriptions():
     return (
         PushSubscription.query
 
-        .join(
+        .outerjoin(
             AttendeeContact,
             PushSubscription.contact_id
             == AttendeeContact.id,
@@ -509,13 +509,22 @@ def get_active_push_subscriptions():
         )
 
         .filter(
-            AttendeeContact.notification_consent
-            .is_(True)
-        )
+            db.or_(
+                # Device-only subscriber from the public
+                # Kalxa home page.
+                PushSubscription.contact_id
+                .is_(None),
 
-        .filter(
-            AttendeeContact.opted_out_at
-            .is_(None)
+                # Identified ticket buyer who explicitly
+                # consented to notifications.
+                db.and_(
+                    AttendeeContact.notification_consent
+                    .is_(True),
+
+                    AttendeeContact.opted_out_at
+                    .is_(None),
+                ),
+            )
         )
 
         .order_by(
@@ -3516,7 +3525,9 @@ def notification_subscribe_public():
 
         return {
             "ok": False,
-            "error": "Firebase Web Push is not configured.",
+            "error": (
+                "Firebase Web Push is not configured."
+            ),
         }, 503
 
 
@@ -3527,16 +3538,6 @@ def notification_subscribe_public():
         or {}
     )
 
-
-    phone = (
-        str(
-            payload.get(
-                "phone",
-                ""
-            )
-        )
-        .strip()
-    )
 
     installation_id = (
         str(
@@ -3549,89 +3550,23 @@ def notification_subscribe_public():
     )
 
 
-    phone_normalized = (
-        normalize_attendee_phone(
-            phone
-        )
-    )
-
-
-    if not phone_normalized:
-
-        return {
-            "ok": False,
-            "error": "Please enter a valid phone number.",
-        }, 400
-
-
     if (
         not installation_id
         or len(
             installation_id
-        ) > 255
+        )
+        > 255
     ):
 
         return {
             "ok": False,
-            "error": "Invalid Firebase installation ID.",
+            "error": (
+                "Invalid Firebase installation ID."
+            ),
         }, 400
 
 
     now = datetime.utcnow()
-
-
-    contact = (
-        AttendeeContact.query
-        .filter_by(
-            phone_normalized=
-                phone_normalized
-        )
-        .first()
-    )
-
-
-    if not contact:
-
-        contact = AttendeeContact(
-            name=
-                None,
-
-            phone=
-                phone,
-
-            phone_normalized=
-                phone_normalized,
-
-            email=
-                None,
-
-            notification_consent=
-                True,
-
-            consented_at=
-                now,
-
-            opted_out_at=
-                None,
-        )
-
-        db.session.add(
-            contact
-        )
-
-        db.session.flush()
-
-
-    else:
-
-        contact.phone = (
-            phone
-            or contact.phone
-        )
-
-        contact.notification_consent = True
-        contact.consented_at = now
-        contact.opted_out_at = None
 
 
     subscription = (
@@ -3646,9 +3581,14 @@ def notification_subscribe_public():
 
     if not subscription:
 
+        # Anonymous / device-only notification subscriber.
+        #
+        # If this person later buys a ticket and enables
+        # notifications from their booking page, the existing
+        # FID can be attached to their AttendeeContact.
         subscription = PushSubscription(
             contact_id=
-                contact.id,
+                None,
 
             firebase_installation_id=
                 installation_id,
@@ -3666,6 +3606,7 @@ def notification_subscribe_public():
                 None,
         )
 
+
         db.session.add(
             subscription
         )
@@ -3673,40 +3614,55 @@ def notification_subscribe_public():
 
     else:
 
-        subscription.contact_id = contact.id
-        subscription.active = True
-        subscription.last_seen_at = now
-        subscription.disabled_at = None
+        # Preserve contact_id when this browser is already
+        # attached to a known ticket buyer.
+        subscription.active = (
+            True
+        )
+
+        subscription.last_seen_at = (
+            now
+        )
+
+        subscription.disabled_at = (
+            None
+        )
 
 
     try:
 
         db.session.commit()
 
+
     except Exception as error:
 
         db.session.rollback()
 
+
         current_app.logger.exception(
             (
                 "[Public Push Subscribe] "
-                "Failed phone=%s error=%s"
+                "Failed installation_id=%s error=%s"
             ),
-            phone_normalized,
+            installation_id,
             error,
         )
+
 
         return {
             "ok": False,
             "error": (
-                "Notification subscription could not be saved."
+                "Notification subscription could "
+                "not be saved."
             ),
         }, 500
 
 
     return {
         "ok": True,
-        "message": "Kalxa notifications are enabled.",
+        "message": (
+            "Kalxa notifications are enabled."
+        ),
     }
 
 
@@ -8915,4 +8871,3 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-
