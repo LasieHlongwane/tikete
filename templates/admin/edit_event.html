@@ -350,10 +350,10 @@
                 11px 12px;
 
             background:
-                #ffffff !important;
+                #ffffff;
 
             color:
-                #111827 !important;
+                #111827;
 
             border:
                 1px solid #cbd5e1;
@@ -366,47 +366,6 @@
 
             font:
                 inherit;
-
-            opacity:
-                1 !important;
-
-            pointer-events:
-                auto !important;
-
-            user-select:
-                text !important;
-
-            -webkit-user-select:
-                text !important;
-
-            cursor:
-                text;
-        }
-
-
-        input[type="date"],
-        input[type="time"],
-        input[type="number"],
-        input[type="file"] {
-
-            pointer-events:
-                auto !important;
-
-            cursor:
-                pointer;
-        }
-
-
-        input:disabled,
-        textarea:disabled,
-        input[readonly],
-        textarea[readonly] {
-
-            opacity:
-                1;
-
-            pointer-events:
-                auto;
         }
 
 
@@ -777,7 +736,6 @@
                         id="title"
                         name="title"
                         type="text"
-                        autocomplete="off"
                         value="{{ event.title }}"
                         required
                     >
@@ -810,7 +768,6 @@
                         id="venue"
                         name="venue"
                         type="text"
-                        autocomplete="off"
                         value="{{ event.venue or '' }}"
                     >
 
@@ -953,110 +910,43 @@
         <section class="card">
 
             <h2>
-                Attendee Payment Details
+                Payment Setup
             </h2>
 
             <p class="card-copy">
-                These are the organizer bank details attendees
-                use for the current manual ticket payment flow.
+                Bank details are no longer stored or edited on
+                individual events. Settlement is handled through
+                your organizer Paystack connection.
             </p>
 
 
-            <div class="grid">
+            {% if event.organizer and event.organizer.is_payment_connected %}
 
-                <div class="group">
-
-                    <label for="bank_name">
-                        Bank Name
-                    </label>
-
-                    <input
-                        id="bank_name"
-                        name="bank_name"
-                        type="text"
-                        autocomplete="off"
-                        value="{{ event.bank_name or '' }}"
-                    >
-
+                <div class="payment-note">
+                    ✓ Paystack Connected<br>
+                    Settlement account ••••
+                    {{ event.organizer.payment_account_last4 }}
                 </div>
 
+            {% else %}
 
-                <div class="group">
-
-                    <label for="account_holder">
-                        Account Holder
-                    </label>
-
-                    <input
-                        id="account_holder"
-                        name="account_holder"
-                        type="text"
-                        autocomplete="off"
-                        value="{{ event.account_holder or '' }}"
-                    >
-
+                <div class="payment-note">
+                    ⚠ Paystack is not connected.
+                    Ticket sales cannot open until payment
+                    setup is complete.
                 </div>
 
-            </div>
+                <a
+                    href="{{ url_for(
+                        'admin_payments'
+                    ) }}"
+                    class="button button-secondary"
+                    style="margin-top: 12px;"
+                >
+                    Connect Paystack
+                </a>
 
-
-            <div
-                class="grid"
-                style="margin-top: 14px;"
-            >
-
-                <div class="group">
-
-                    <label for="account_number">
-                        Account Number
-                    </label>
-
-                    <input
-                        id="account_number"
-                        name="account_number"
-                        type="text"
-                        autocomplete="off"
-                        value="{{ event.account_number or '' }}"
-                    >
-
-                </div>
-
-
-                <div class="group">
-
-                    <label for="branch_code">
-                        Branch Code
-                    </label>
-
-                    <input
-                        id="branch_code"
-                        name="branch_code"
-                        type="text"
-                        autocomplete="off"
-                        value="{{ event.branch_code or '' }}"
-                    >
-
-                </div>
-
-            </div>
-
-
-            <div
-                class="group"
-                style="margin-top: 14px;"
-            >
-
-                <label for="payment_instructions">
-                    Payment Instructions
-                </label>
-
-                <textarea
-                    id="payment_instructions"
-                    name="payment_instructions"
-                    rows="4"
-                >{{ event.payment_instructions or '' }}</textarea>
-
-            </div>
+            {% endif %}
 
         </section>
 
@@ -1088,61 +978,6 @@
 </div>
 
 
-
-<script>
-
-    // =========================================================
-    // EDIT FORM SAFETY
-    // =========================================================
-    //
-    // The edit page must never render its form controls as
-    // disabled/read-only. This also protects against accidental
-    // attributes introduced by browser extensions or future CSS.
-    // =========================================================
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            const editableControls = document.querySelectorAll(
-                "form input, form textarea"
-            );
-
-            editableControls.forEach(
-                function (control) {
-
-                    control.removeAttribute(
-                        "readonly"
-                    );
-
-                    control.removeAttribute(
-                        "disabled"
-                    );
-
-                    control.style.pointerEvents =
-                        "auto";
-
-                    control.style.opacity =
-                        "1";
-                }
-            );
-
-
-            const titleInput = document.getElementById(
-                "title"
-            );
-
-            if (titleInput) {
-
-                titleInput.focus();
-            }
-
-        }
-    );
-
-</script>
-
 </body>
 
 </html>
-
