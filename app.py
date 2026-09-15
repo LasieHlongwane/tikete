@@ -78,6 +78,24 @@ PAYSTACK_SECRET_KEY = (
 
 PAYSTACK_BASE_URL = "https://api.paystack.co"
 
+# Step 2 rollout safety:
+# Keep new online ticket sales paused until Step 3 adds the
+# Paystack transaction initialization + verification flow.
+PAYSTACK_CHECKOUT_ENABLED = (
+    os.environ.get(
+        "PAYSTACK_CHECKOUT_ENABLED",
+        "false",
+    )
+    .strip()
+    .lower()
+    in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+)
+
 
 def paystack_is_configured():
 
@@ -4543,6 +4561,8 @@ def event_page(
         "event.html",
         event=event,
         events=None,
+        paystack_checkout_enabled=
+            PAYSTACK_CHECKOUT_ENABLED,
     )
 
 
@@ -4579,6 +4599,48 @@ def reserve_ticket(
             (
                 "Ticket sales are currently paused "
                 "for this event."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if (
+        not event.organizer
+        or not event.organizer.is_payment_connected
+    ):
+
+        flash(
+            (
+                "Secure online payments are not connected "
+                "for this event yet."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if not PAYSTACK_CHECKOUT_ENABLED:
+
+        flash(
+            (
+                "Secure Paystack checkout is being enabled "
+                "for Kalxa Ticketing. Ticket purchases are "
+                "temporarily paused."
             ),
             "error",
         )
@@ -7329,57 +7391,13 @@ def admin_new_event():
 
 
     # ========================================================
-    # MANUAL PAYMENT / BANK DETAILS
+    # PAYMENT SETUP
     # ========================================================
-
-    bank_name = (
-        request.form.get(
-            "bank_name",
-            "",
-        )
-        .strip()
-        or None
-    )
-
-
-    account_holder = (
-        request.form.get(
-            "account_holder",
-            "",
-        )
-        .strip()
-        or None
-    )
-
-
-    account_number = (
-        request.form.get(
-            "account_number",
-            "",
-        )
-        .strip()
-        or None
-    )
-
-
-    branch_code = (
-        request.form.get(
-            "branch_code",
-            "",
-        )
-        .strip()
-        or None
-    )
-
-
-    payment_instructions = (
-        request.form.get(
-            "payment_instructions",
-            "",
-        )
-        .strip()
-        or None
-    )
+    #
+    # Bank details no longer belong to individual events.
+    # Settlement is configured once on the Organizer through
+    # the Paystack connection in /admin/payments.
+    # ========================================================
 
 
     # ========================================================
@@ -7455,21 +7473,6 @@ def admin_new_event():
 
         ticket_capacity=
             ticket_capacity,
-
-        bank_name=
-            bank_name,
-
-        account_holder=
-            account_holder,
-
-        account_number=
-            account_number,
-
-        branch_code=
-            branch_code,
-
-        payment_instructions=
-            payment_instructions,
 
         active=
             False,
@@ -7808,6 +7811,8 @@ def admin_event_control(
         checked_in=event.checked_in_ticket_count,
         revenue=event.paid_revenue,
         remaining_tickets=event.remaining_tickets,
+        paystack_checkout_enabled=
+            PAYSTACK_CHECKOUT_ENABLED,
     )
 
 
@@ -8222,76 +8227,9 @@ def admin_edit_event(
             ticket_capacity
         )
 
-        event.bank_name = (
-            request.form.get(
-                "bank_name",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        event.account_holder = (
-            request.form.get(
-                "account_holder",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        event.account_number = (
-            request.form.get(
-                "account_number",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        event.branch_code = (
-            request.form.get(
-                "branch_code",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        event.payment_instructions = (
-            request.form.get(
-                "payment_instructions",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        event.organizer_name = (
-            organizer.display_name
-        )
-
-        event.organizer_phone = (
-            organizer.phone
-        )
-
-
-        if new_poster_image_data:
-
-            event.poster_image_data = (
-                new_poster_image_data
-            )
-
-            event.poster_image_mimetype = (
-                new_poster_image_mimetype
-            )
-
-            event.poster_image_filename = (
-                new_poster_image_filename
-            )
-
-            # Old local Render URL is no longer needed.
-            event.image_url = None
+        # Payment settlement is organizer-level through
+        # Paystack. Event-level bank details are intentionally
+        # no longer edited or collected.
 
 
         try:
@@ -8541,6 +8479,41 @@ def admin_open_event_sales(
 
         flash(
             "Ticket sales cannot open because the event is sold out.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_control",
+                event_id=event.id,
+            )
+        )
+
+
+    if not organizer.is_payment_connected:
+
+        flash(
+            (
+                "Connect Paystack before opening ticket sales."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_payments"
+            )
+        )
+
+
+    if not PAYSTACK_CHECKOUT_ENABLED:
+
+        flash(
+            (
+                "Your Paystack settlement account is connected. "
+                "Secure attendee checkout is the next setup step, "
+                "so ticket sales remain protected for now."
+            ),
             "error",
         )
 
