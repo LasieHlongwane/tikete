@@ -3,6 +3,8 @@
 # ============================================================
 
 import io
+import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -13,7 +15,7 @@ import urllib.parse
 import urllib.request
 import requests
 from datetime import datetime, timedelta, date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_UP
 
 import qrcode
 
@@ -78,23 +80,92 @@ PAYSTACK_SECRET_KEY = (
 
 PAYSTACK_BASE_URL = "https://api.paystack.co"
 
-# Step 2 rollout safety:
-# Keep new online ticket sales paused until Step 3 adds the
-# Paystack transaction initialization + verification flow.
-PAYSTACK_CHECKOUT_ENABLED = (
+# Pay-by-Bank checkout is now enabled.
+#
+# South African Paystack EFT / Capitec Pay pricing is currently
+# 2% excluding VAT. 15% VAT on the processing charge gives an
+# effective default fee rate of 2.3%.
+#
+# Keep this configurable so a pricing change does not require
+# an application code change.
+PAYSTACK_EFT_EFFECTIVE_FEE_RATE = Decimal(
     os.environ.get(
-        "PAYSTACK_CHECKOUT_ENABLED",
-        "false",
+        "PAYSTACK_EFT_EFFECTIVE_FEE_RATE",
+        "0.023",
     )
-    .strip()
-    .lower()
-    in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
 )
+
+
+def calculate_paystack_checkout_amount(
+    ticket_face_value,
+):
+
+    face_value = Decimal(
+        str(
+            ticket_face_value
+            or 0
+        )
+    ).quantize(
+        Decimal("0.01")
+    )
+
+
+    if face_value <= 0:
+
+        return (
+            Decimal("0.00"),
+            Decimal("0.00"),
+        )
+
+
+    rate = (
+        PAYSTACK_EFT_EFFECTIVE_FEE_RATE
+    )
+
+
+    if (
+        rate < 0
+        or rate >= 1
+    ):
+
+        raise RuntimeError(
+            "Invalid Paystack processing fee rate."
+        )
+
+
+    # Paystack's guidance for passing a percentage fee is to
+    # gross up the price so the intended settlement remains
+    # after the processing charge. ROUND_UP ensures the
+    # organizer is never short by a cent due to rounding.
+    checkout_amount = (
+        (
+            face_value
+            /
+            (
+                Decimal("1.00")
+                - rate
+            )
+        )
+        + Decimal("0.01")
+    ).quantize(
+        Decimal("0.01"),
+        rounding=
+            ROUND_UP,
+    )
+
+
+    processing_fee = (
+        checkout_amount
+        - face_value
+    ).quantize(
+        Decimal("0.01")
+    )
+
+
+    return (
+        checkout_amount,
+        processing_fee,
+    )
 
 
 def paystack_is_configured():
@@ -247,6 +318,182 @@ def paystack_api_request(
 
 
     return result
+
+
+def finalize_paystack_ticket_order(
+    order,
+    transaction_data,
+):
+
+    if (
+        order.payment_status
+        == "paid"
+    ):
+
+        return order
+
+
+    if (
+        not isinstance(
+            transaction_data,
+            dict,
+        )
+        or transaction_data.get(
+            "status"
+        )
+        != "success"
+    ):
+
+        raise RuntimeError(
+            "Paystack transaction is not successful."
+        )
+
+
+    reference = (
+        str(
+            transaction_data.get(
+                "reference",
+                "",
+            )
+        )
+        .strip()
+    )
+
+
+    if (
+        reference
+        != order.payment_reference
+    ):
+
+        raise RuntimeError(
+            "Paystack reference does not match this order."
+        )
+
+
+    expected_amount = int(
+        (
+            Decimal(
+                str(
+                    order.checkout_amount
+                    or order.total_amount
+                )
+            )
+            * 100
+        )
+        .quantize(
+            Decimal("1"),
+            rounding=
+                ROUND_UP,
+        )
+    )
+
+
+    actual_amount = int(
+        transaction_data.get(
+            "amount"
+        )
+        or 0
+    )
+
+
+    if (
+        actual_amount
+        != expected_amount
+    ):
+
+        raise RuntimeError(
+            "Paystack amount does not match this order."
+        )
+
+
+    currency = (
+        str(
+            transaction_data.get(
+                "currency",
+                "",
+            )
+        )
+        .strip()
+        .upper()
+    )
+
+
+    if (
+        currency
+        and currency != "ZAR"
+    ):
+
+        raise RuntimeError(
+            "Unexpected Paystack payment currency."
+        )
+
+
+    order.payment_status = (
+        "paid"
+    )
+
+    order.paid_at = (
+        datetime.utcnow()
+    )
+
+    order.payment_verified_at = (
+        datetime.utcnow()
+    )
+
+    order.paystack_transaction_id = (
+        str(
+            transaction_data.get(
+                "id",
+                "",
+            )
+        )
+        or None
+    )
+
+    order.payment_channel = (
+        transaction_data.get(
+            "channel"
+        )
+        or None
+    )
+
+
+    existing_pass_count = len(
+        order.entry_passes
+    )
+
+
+    passes_to_create = max(
+        0,
+        (
+            order.quantity
+            - existing_pass_count
+        ),
+    )
+
+
+    for _ in range(
+        passes_to_create
+    ):
+
+        db.session.add(
+            EntryPass(
+                order_id=
+                    order.id,
+
+                entry_code=
+                    generate_entry_code(),
+
+                status=
+                    "valid",
+            )
+        )
+
+
+    db.session.commit()
+
+
+    return order
 
 
 def get_paystack_za_banks():
@@ -4561,8 +4808,6 @@ def event_page(
         "event.html",
         event=event,
         events=None,
-        paystack_checkout_enabled=
-            PAYSTACK_CHECKOUT_ENABLED,
     )
 
 
@@ -4584,10 +4829,17 @@ def reserve_ticket(
     event = (
         TicketEvent.query
         .filter_by(
-            id=event_id,
-            active=True,
-            status="published",
-            organizer_deleted=False,
+            id=
+                event_id,
+
+            active=
+                True,
+
+            status=
+                "published",
+
+            organizer_deleted=
+                False,
         )
         .first_or_404()
     )
@@ -4596,10 +4848,7 @@ def reserve_ticket(
     if not event.sales_open:
 
         flash(
-            (
-                "Ticket sales are currently paused "
-                "for this event."
-            ),
+            "Ticket sales are currently paused for this event.",
             "error",
         )
 
@@ -4612,35 +4861,20 @@ def reserve_ticket(
         )
 
 
+    organizer = (
+        event.organizer
+    )
+
+
     if (
-        not event.organizer
-        or not event.organizer.is_payment_connected
+        not organizer
+        or not organizer.is_payment_connected
     ):
 
         flash(
             (
-                "Secure online payments are not connected "
-                "for this event yet."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "event_page",
-                event_id=
-                    event.id,
-            )
-        )
-
-
-    if not PAYSTACK_CHECKOUT_ENABLED:
-
-        flash(
-            (
-                "Secure Paystack checkout is being enabled "
-                "for Kalxa Ticketing. Ticket purchases are "
-                "temporarily paused."
+                "Secure Paystack payments are not "
+                "connected for this event yet."
             ),
             "error",
         )
@@ -4696,7 +4930,7 @@ def reserve_ticket(
                 "",
             )
             .strip()
-            or None
+            .lower()
         )
 
 
@@ -4709,19 +4943,44 @@ def reserve_ticket(
         if (
             not customer_name
             or not customer_phone
+            or not customer_email
         ):
 
             flash(
                 (
-                    "Name and phone number "
-                    "are required."
+                    "Name, phone number and email "
+                    "are required for secure checkout."
                 ),
                 "error",
             )
 
             return render_template(
                 "reserve_ticket.html",
-                event=event,
+                event=
+                    event,
+
+                processing_rate=
+                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+            )
+
+
+        if (
+            "@"
+            not in customer_email
+        ):
+
+            flash(
+                "Enter a valid email address.",
+                "error",
+            )
+
+            return render_template(
+                "reserve_ticket.html",
+                event=
+                    event,
+
+                processing_rate=
+                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
 
 
@@ -4732,16 +4991,17 @@ def reserve_ticket(
         ):
 
             flash(
-                (
-                    "Please choose between "
-                    "1 and 10 tickets."
-                ),
+                "Please choose between 1 and 10 tickets.",
                 "error",
             )
 
             return render_template(
                 "reserve_ticket.html",
-                event=event,
+                event=
+                    event,
+
+                processing_rate=
+                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
 
 
@@ -4755,31 +5015,49 @@ def reserve_ticket(
             )
 
 
-            if quantity > remaining:
+            if (
+                quantity
+                > remaining
+            ):
 
                 flash(
-                    (
-                        "There are not enough "
-                        "tickets remaining."
-                    ),
+                    "There are not enough tickets remaining.",
                     "error",
                 )
 
                 return render_template(
                     "reserve_ticket.html",
-                    event=event,
+                    event=
+                        event,
+
+                    processing_rate=
+                        PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
                 )
 
 
-        ticket_price = (
-            event.ticket_price
+        ticket_price = Decimal(
+            str(
+                event.ticket_price
+                or 0
+            )
         )
 
 
         total_amount = (
             ticket_price
-            *
-            quantity
+            * quantity
+        ).quantize(
+            Decimal("0.01")
+        )
+
+
+        (
+            checkout_amount,
+            processing_fee,
+        ) = (
+            calculate_paystack_checkout_amount(
+                total_amount
+            )
         )
 
 
@@ -4789,7 +5067,6 @@ def reserve_ticket(
 
 
         order = TicketOrder(
-
             event_id=
                 event.id,
 
@@ -4811,6 +5088,15 @@ def reserve_ticket(
             total_amount=
                 total_amount,
 
+            processing_fee=
+                processing_fee,
+
+            checkout_amount=
+                checkout_amount,
+
+            payment_provider=
+                "paystack",
+
             payment_reference=
                 reference,
 
@@ -4828,6 +5114,146 @@ def reserve_ticket(
             db.session.commit()
 
 
+            callback_url = url_for(
+                "paystack_ticket_callback",
+                _external=
+                    True,
+                _scheme=
+                    "https",
+            )
+
+
+            cancel_url = url_for(
+                "booking_status",
+                reference=
+                    reference,
+                _external=
+                    True,
+                _scheme=
+                    "https",
+            )
+
+
+            payload = {
+                "email":
+                    customer_email,
+
+                "amount":
+                    str(
+                        int(
+                            (
+                                checkout_amount
+                                * 100
+                            )
+                            .quantize(
+                                Decimal("1"),
+                                rounding=
+                                    ROUND_UP,
+                            )
+                        )
+                    ),
+
+                "currency":
+                    "ZAR",
+
+                "reference":
+                    reference,
+
+                "callback_url":
+                    callback_url,
+
+                # Keep the low-cost channels predictable so
+                # customer-paid processing fees can be shown
+                # accurately before checkout.
+                "channels": [
+                    "eft",
+                    "capitec_pay",
+                ],
+
+                "subaccount":
+                    organizer.paystack_subaccount_code,
+
+                # Organizer's subaccount bears the Paystack
+                # processing deduction, but the attendee-paid
+                # gross-up preserves the ticket face value.
+                "bearer":
+                    "subaccount",
+
+                "metadata":
+                    json.dumps(
+                        {
+                            "kalxa_order_id":
+                                order.id,
+
+                            "event_id":
+                                event.id,
+
+                            "ticket_face_value":
+                                str(
+                                    total_amount
+                                ),
+
+                            "processing_fee":
+                                str(
+                                    processing_fee
+                                ),
+
+                            "cancel_action":
+                                cancel_url,
+                        }
+                    ),
+            }
+
+
+            paystack_result = (
+                paystack_api_request(
+                    "POST",
+                    "/transaction/initialize",
+                    payload,
+                )
+            )
+
+
+            data = (
+                paystack_result.get(
+                    "data"
+                )
+                or {}
+            )
+
+
+            authorization_url = (
+                data.get(
+                    "authorization_url"
+                )
+            )
+
+
+            if not authorization_url:
+
+                raise RuntimeError(
+                    (
+                        "Paystack did not return "
+                        "a checkout URL."
+                    )
+                )
+
+
+            order.paystack_access_code = (
+                data.get(
+                    "access_code"
+                )
+                or None
+            )
+
+            order.paystack_authorization_url = (
+                authorization_url
+            )
+
+
+            db.session.commit()
+
+
         except Exception as error:
 
             db.session.rollback()
@@ -4835,40 +5261,336 @@ def reserve_ticket(
 
             current_app.logger.exception(
                 (
-                    "[Ticket Order] "
-                    "Unable to create order "
-                    "event_id=%s error=%s"
+                    "[Paystack Ticket Checkout] "
+                    "Unable to initialize payment "
+                    "event_id=%s reference=%s error=%s"
                 ),
                 event.id,
+                reference,
                 error,
             )
 
 
+            try:
+
+                persisted_order = (
+                    TicketOrder.query
+                    .filter_by(
+                        payment_reference=
+                            reference
+                    )
+                    .first()
+                )
+
+
+                if persisted_order:
+
+                    db.session.delete(
+                        persisted_order
+                    )
+
+                    db.session.commit()
+
+
+            except Exception:
+
+                db.session.rollback()
+
+
             flash(
                 (
-                    "Unable to reserve your tickets. "
+                    "Secure checkout could not be started. "
                     "Please try again."
                 ),
                 "error",
             )
 
+
             return render_template(
                 "reserve_ticket.html",
-                event=event,
+                event=
+                    event,
+
+                processing_rate=
+                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
 
 
         return redirect(
-            url_for(
-                "booking_status",
-                reference=reference,
-            )
+            authorization_url
         )
 
 
     return render_template(
         "reserve_ticket.html",
-        event=event,
+        event=
+            event,
+
+        processing_rate=
+            PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+    )
+
+
+# ============================================================
+# PAYSTACK TICKET CALLBACK
+# ============================================================
+
+@app.route(
+    "/payments/paystack/callback"
+)
+def paystack_ticket_callback():
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not reference:
+
+        abort(400)
+
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first_or_404()
+    )
+
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "GET",
+                (
+                    "/transaction/verify/"
+                    + urllib.parse.quote(
+                        reference,
+                        safe="",
+                    )
+                ),
+            )
+        )
+
+
+        transaction_data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        finalize_paystack_ticket_order(
+            order,
+            transaction_data,
+        )
+
+
+        flash(
+            (
+                "Payment confirmed. "
+                "Your Kalxa ticket is ready."
+            ),
+            "success",
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Paystack Callback] Verification failed "
+                "reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+
+        flash(
+            (
+                "Your payment is still being verified. "
+                "Refresh this page shortly."
+            ),
+            "error",
+        )
+
+
+    return redirect(
+        url_for(
+            "booking_status",
+            reference=
+                reference,
+        )
+    )
+
+
+# ============================================================
+# PAYSTACK TICKET WEBHOOK
+# ============================================================
+
+@app.route(
+    "/payments/paystack/webhook",
+    methods=[
+        "POST",
+    ],
+)
+def paystack_ticket_webhook():
+
+    if not PAYSTACK_SECRET_KEY:
+
+        abort(503)
+
+
+    raw_body = (
+        request.get_data()
+    )
+
+
+    received_signature = (
+        request.headers.get(
+            "x-paystack-signature",
+            "",
+        )
+        .strip()
+    )
+
+
+    expected_signature = hmac.new(
+        PAYSTACK_SECRET_KEY.encode(
+            "utf-8"
+        ),
+        raw_body,
+        hashlib.sha512,
+    ).hexdigest()
+
+
+    if (
+        not received_signature
+        or not hmac.compare_digest(
+            received_signature,
+            expected_signature,
+        )
+    ):
+
+        abort(400)
+
+
+    try:
+
+        payload = json.loads(
+            raw_body.decode(
+                "utf-8"
+            )
+        )
+
+
+    except Exception:
+
+        abort(400)
+
+
+    if (
+        payload.get(
+            "event"
+        )
+        != "charge.success"
+    ):
+
+        return (
+            "",
+            200,
+        )
+
+
+    transaction_data = (
+        payload.get(
+            "data"
+        )
+        or {}
+    )
+
+
+    reference = (
+        str(
+            transaction_data.get(
+                "reference",
+                "",
+            )
+        )
+        .strip()
+    )
+
+
+    if not reference:
+
+        return (
+            "",
+            200,
+        )
+
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first()
+    )
+
+
+    if not order:
+
+        return (
+            "",
+            200,
+        )
+
+
+    try:
+
+        finalize_paystack_ticket_order(
+            order,
+            transaction_data,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Paystack Webhook] Failed "
+                "reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+
+        return (
+            "",
+            500,
+        )
+
+
+    return (
+        "",
+        200,
     )
 
 
@@ -7811,8 +8533,6 @@ def admin_event_control(
         checked_in=event.checked_in_ticket_count,
         revenue=event.paid_revenue,
         remaining_tickets=event.remaining_tickets,
-        paystack_checkout_enabled=
-            PAYSTACK_CHECKOUT_ENABLED,
     )
 
 
@@ -8506,25 +9226,6 @@ def admin_open_event_sales(
         )
 
 
-    if not PAYSTACK_CHECKOUT_ENABLED:
-
-        flash(
-            (
-                "Your Paystack settlement account is connected. "
-                "Secure attendee checkout is the next setup step, "
-                "so ticket sales remain protected for now."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin_event_control",
-                event_id=event.id,
-            )
-        )
-
-
     event.sales_open = True
 
 
@@ -8893,6 +9594,30 @@ def admin_mark_paid(
     event = (
         order.event
     )
+
+
+    if (
+        order.payment_provider
+        == "paystack"
+        and order.paystack_authorization_url
+    ):
+
+        flash(
+            (
+                "Paystack orders are confirmed automatically "
+                "after verified payment."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_orders",
+                event_id=
+                    event.id,
+            )
+        )
 
 
     if (
