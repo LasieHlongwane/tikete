@@ -15,6 +15,43 @@
         content="#ffffff"
     >
 
+    
+    <!-- =========================================
+         PWA / INSTALLABLE APP
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="{{ url_for(
+            'pwa_manifest'
+        ) }}"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="192x192"
+        href="{{ url_for(
+            'static',
+            filename='icons/kalxa-192.png'
+        ) }}"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="Kalxa"
+    >
+
+
     <title>
         Kalxa Tickets
     </title>
@@ -1254,6 +1291,149 @@
 
         }
 
+    
+        /* =====================================================
+           PWA INSTALL
+        ===================================================== */
+
+        .pwa-install-card {
+
+            position: fixed;
+
+            right: 16px;
+
+            bottom: 16px;
+
+            z-index: 900;
+
+            width:
+                min(
+                    360px,
+                    calc(100% - 32px)
+                );
+
+            padding: 16px;
+
+            background: #111111;
+
+            color: #ffffff;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.12
+                );
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 18px 50px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.28
+                );
+
+            display: none;
+        }
+
+
+        .pwa-install-card.show {
+            display: block;
+        }
+
+
+        .pwa-install-title {
+
+            margin: 0 0 5px;
+
+            font-size: 14px;
+
+            font-weight: 900;
+        }
+
+
+        .pwa-install-copy {
+
+            margin: 0 0 12px;
+
+            color: #cbd5e1;
+
+            font-size: 12px;
+        }
+
+
+        .pwa-install-actions {
+
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .pwa-install-button {
+
+            min-height: 38px;
+
+            padding: 8px 12px;
+
+            background: #fff4df;
+
+            color: #0b0c0e;
+
+            border: 0;
+
+            border-radius: 9px;
+
+            font-size: 12px;
+
+            font-weight: 850;
+
+            cursor: pointer;
+        }
+
+
+        .pwa-install-dismiss {
+
+            min-height: 38px;
+
+            padding: 8px 12px;
+
+            background: transparent;
+
+            color: #cbd5e1;
+
+            border:
+                1px solid #475569;
+
+            border-radius: 9px;
+
+            font-size: 12px;
+
+            font-weight: 750;
+
+            cursor: pointer;
+        }
+
+
+        .pwa-ios-steps {
+
+            margin: 10px 0 0;
+
+            padding-left: 18px;
+
+            color: #e2e8f0;
+
+            font-size: 12px;
+        }
+
+
     </style>
 
 </head>
@@ -2026,6 +2206,260 @@
     </script>
 
 {% endif %}
+
+
+
+<div
+    class="pwa-install-card"
+    id="pwa-install-card"
+    aria-live="polite"
+>
+
+    <div
+        class="pwa-install-title"
+        id="pwa-install-title"
+    >
+        Install Kalxa
+    </div>
+
+    <p
+        class="pwa-install-copy"
+        id="pwa-install-copy"
+    >
+        Add Kalxa to your phone for faster access
+        and event notifications.
+    </p>
+
+    <div
+        class="pwa-install-actions"
+        id="pwa-install-actions"
+    >
+
+        <button
+            type="button"
+            class="pwa-install-button"
+            id="pwa-install-button"
+        >
+            Install Kalxa
+        </button>
+
+        <button
+            type="button"
+            class="pwa-install-dismiss"
+            id="pwa-install-dismiss"
+        >
+            Not now
+        </button>
+
+    </div>
+
+    <ol
+        class="pwa-ios-steps"
+        id="pwa-ios-steps"
+        hidden
+    >
+        <li>
+            Tap the Share button in Safari.
+        </li>
+
+        <li>
+            Choose “Add to Home Screen”.
+        </li>
+
+        <li>
+            Open Kalxa from your new Home Screen icon.
+        </li>
+
+        <li>
+            Then enable Kalxa notifications.
+        </li>
+    </ol>
+
+</div>
+
+
+<script>
+
+    (() => {
+
+        const card =
+            document.getElementById(
+                "pwa-install-card"
+            );
+
+        const installButton =
+            document.getElementById(
+                "pwa-install-button"
+            );
+
+        const dismissButton =
+            document.getElementById(
+                "pwa-install-dismiss"
+            );
+
+        const title =
+            document.getElementById(
+                "pwa-install-title"
+            );
+
+        const copy =
+            document.getElementById(
+                "pwa-install-copy"
+            );
+
+        const iosSteps =
+            document.getElementById(
+                "pwa-ios-steps"
+            );
+
+
+        if (!card) {
+            return;
+        }
+
+
+        const isStandalone =
+            window.matchMedia(
+                "(display-mode: standalone)"
+            ).matches
+            ||
+            window.navigator.standalone
+            === true;
+
+
+        if (isStandalone) {
+            return;
+        }
+
+
+        const dismissed =
+            localStorage.getItem(
+                "kalxa_pwa_install_dismissed"
+            );
+
+
+        const userAgent =
+            window.navigator.userAgent
+            || "";
+
+
+        const isIos =
+            /iphone|ipad|ipod/i.test(
+                userAgent
+            );
+
+
+        let deferredPrompt =
+            null;
+
+
+        function showCard() {
+
+            if (dismissed === "true") {
+                return;
+            }
+
+            card.classList.add(
+                "show"
+            );
+        }
+
+
+        function showIosInstructions() {
+
+            title.textContent =
+                "Add Kalxa to your iPhone";
+
+            copy.textContent =
+                (
+                    "Install Kalxa from Safari before "
+                    + "enabling push notifications."
+                );
+
+            installButton.hidden =
+                true;
+
+            iosSteps.hidden =
+                false;
+
+            showCard();
+        }
+
+
+        if (isIos) {
+
+            window.setTimeout(
+                showIosInstructions,
+                900
+            );
+        }
+
+
+        window.addEventListener(
+            "beforeinstallprompt",
+            (event) => {
+
+                event.preventDefault();
+
+                deferredPrompt =
+                    event;
+
+                showCard();
+            }
+        );
+
+
+        installButton.addEventListener(
+            "click",
+            async () => {
+
+                if (!deferredPrompt) {
+                    return;
+                }
+
+                deferredPrompt.prompt();
+
+                try {
+                    await deferredPrompt.userChoice;
+                } finally {
+                    deferredPrompt = null;
+                    card.classList.remove(
+                        "show"
+                    );
+                }
+            }
+        );
+
+
+        dismissButton.addEventListener(
+            "click",
+            () => {
+
+                localStorage.setItem(
+                    "kalxa_pwa_install_dismissed",
+                    "true"
+                );
+
+                card.classList.remove(
+                    "show"
+                );
+            }
+        );
+
+
+        window.addEventListener(
+            "appinstalled",
+            () => {
+
+                card.classList.remove(
+                    "show"
+                );
+            }
+        );
+
+    })();
+
+</script>
 
 
 </body>
