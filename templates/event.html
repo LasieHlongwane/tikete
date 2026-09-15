@@ -58,7 +58,7 @@
 
 
     <title>
-        Kalxa Tickets
+        Kalxa 
     </title>
 
     <link
@@ -1439,7 +1439,104 @@
         }
 
 
-    </style>
+    
+        /* =====================================================
+           MAIN PAGE PUSH NOTIFICATIONS
+        ===================================================== */
+
+        .home-notification-card {
+            margin: 0 0 28px;
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            align-items: center;
+            background: linear-gradient(135deg, #111827, #0f172a);
+            color: #ffffff;
+            border-radius: 16px;
+        }
+
+        .home-notification-copy h2 {
+            margin: 0 0 5px;
+            font-size: 17px;
+        }
+
+        .home-notification-copy p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .home-notification-controls {
+            min-width: 260px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .home-notification-phone {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            background: #ffffff;
+            color: #111827;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font: inherit;
+        }
+
+        .home-notification-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .home-notification-button {
+            min-height: 40px;
+            padding: 9px 13px;
+            background: #fff4df;
+            color: #111827;
+            border: 0;
+            border-radius: 10px;
+            font-weight: 850;
+            cursor: pointer;
+        }
+
+        .home-notification-off {
+            min-height: 40px;
+            padding: 9px 13px;
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid #64748b;
+            border-radius: 10px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        .home-notification-status {
+            min-height: 18px;
+            color: #cbd5e1;
+            font-size: 11px;
+        }
+
+        .home-notification-status.success {
+            color: #bbf7d0;
+        }
+
+        .home-notification-status.error {
+            color: #fecaca;
+        }
+
+        @media (max-width: 700px) {
+            .home-notification-card {
+                grid-template-columns: 1fr;
+            }
+
+            .home-notification-controls {
+                min-width: 0;
+            }
+        }
+
+</style>
 
 </head>
 
@@ -1463,7 +1560,7 @@
             ) }}"
             class="brand"
         >
-            KALXA TICKETING
+            KALXA 
         </a>
 
 
@@ -1551,7 +1648,7 @@
                  EVENT IMAGE
             ================================== -->
 
-            {% if event.image_url %}
+            {% if event.poster_image_mimetype or event.image_url %}
 
                 <div class="event-detail-image-wrap">
 
@@ -1563,7 +1660,14 @@
                     >
 
                         <img
-                            src="{{ event.image_url }}"
+                            src="{{
+        url_for(
+            'event_poster',
+            event_id=event.id
+        )
+        if event.poster_image_mimetype
+        else event.image_url
+    }}"
                             alt="{{ event.title }} event poster"
                             class="event-detail-image"
                         >
@@ -1893,7 +1997,68 @@
 
 
 
-        {% if events %}
+        
+        {% if firebase_push_configured %}
+
+            <section class="home-notification-card">
+
+                <div class="home-notification-copy">
+                    <h2>
+                        🔔 Never miss a Kalxa event
+                    </h2>
+
+                    <p>
+                        Enable notifications on this device and
+                        receive new-event alerts from Kalxa.
+                    </p>
+                </div>
+
+                <div class="home-notification-controls">
+
+                    <input
+                        type="tel"
+                        id="home-notification-phone"
+                        class="home-notification-phone"
+                        placeholder="Your phone number"
+                        autocomplete="tel"
+                    >
+
+                    <div class="home-notification-actions">
+
+                        <button
+                            type="button"
+                            id="home-enable-notifications"
+                            class="home-notification-button"
+                        >
+                            🔔 Enable Notifications
+                        </button>
+
+                        <button
+                            type="button"
+                            id="home-disable-notifications"
+                            class="home-notification-off"
+                            hidden
+                        >
+                            Turn Off
+                        </button>
+
+                    </div>
+
+                    <div
+                        id="home-notification-status"
+                        class="home-notification-status"
+                        aria-live="polite"
+                    >
+                        Notifications are currently off.
+                    </div>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+{% if events %}
 
 
             <div class="event-grid">
@@ -1911,10 +2076,17 @@
                     >
 
 
-                        {% if item.image_url %}
+                        {% if item.poster_image_mimetype or item.image_url %}
 
                             <img
-                                src="{{ item.image_url }}"
+                                src="{{
+        url_for(
+            'event_poster',
+            event_id=item.id
+        )
+        if item.poster_image_mimetype
+        else item.image_url
+    }}"
                                 alt="{{ item.title }}"
                                 class="event-image"
                                 loading="lazy"
@@ -2074,7 +2246,486 @@
 </div>
 
 
-{% if event and event.image_url %}
+
+{% if not event and firebase_push_configured %}
+
+    <script
+        id="home-firebase-web-config"
+        type="application/json"
+    >
+        {{ firebase_config|tojson }}
+    </script>
+
+    <script
+        id="home-firebase-vapid-key"
+        type="application/json"
+    >
+        {{ firebase_vapid_key|tojson }}
+    </script>
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+        import {
+            getMessaging,
+            isSupported,
+            onRegistered,
+            onUnregistered,
+            register as registerMessaging,
+            unregister as unregisterMessaging
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js";
+
+
+        const enableButton =
+            document.getElementById(
+                "home-enable-notifications"
+            );
+
+        const disableButton =
+            document.getElementById(
+                "home-disable-notifications"
+            );
+
+        const phoneInput =
+            document.getElementById(
+                "home-notification-phone"
+            );
+
+        const statusElement =
+            document.getElementById(
+                "home-notification-status"
+            );
+
+        const firebaseConfig =
+            JSON.parse(
+                document.getElementById(
+                    "home-firebase-web-config"
+                ).textContent
+            );
+
+        const vapidKey =
+            JSON.parse(
+                document.getElementById(
+                    "home-firebase-vapid-key"
+                ).textContent
+            );
+
+        let currentInstallationId =
+            localStorage.getItem(
+                "kalxa_firebase_installation_id"
+            );
+
+        let messaging =
+            null;
+
+
+        function setStatus(
+            message,
+            type = ""
+        ) {
+            statusElement.textContent =
+                message;
+
+            statusElement.className =
+                "home-notification-status";
+
+            if (type) {
+                statusElement.classList.add(
+                    type
+                );
+            }
+        }
+
+
+        function setEnabledUi() {
+            enableButton.hidden = true;
+            disableButton.hidden = false;
+            phoneInput.hidden = true;
+
+            setStatus(
+                "Notifications are enabled on this device.",
+                "success"
+            );
+        }
+
+
+        function setDisabledUi() {
+            enableButton.hidden = false;
+            disableButton.hidden = true;
+            phoneInput.hidden = false;
+
+            setStatus(
+                "Notifications are currently off."
+            );
+        }
+
+
+        async function saveSubscription(
+            installationId
+        ) {
+            const phone =
+                phoneInput.value.trim();
+
+            if (!phone) {
+                throw new Error(
+                    "Enter your phone number first."
+                );
+            }
+
+            const response =
+                await fetch(
+                    "/notifications/subscribe-public",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                        },
+                        body:
+                            JSON.stringify(
+                                {
+                                    phone:
+                                        phone,
+                                    installation_id:
+                                        installationId,
+                                }
+                            ),
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            if (
+                !response.ok
+                || !result.ok
+            ) {
+                throw new Error(
+                    result.error
+                    || "Unable to save notification preference."
+                );
+            }
+
+            currentInstallationId =
+                installationId;
+
+            localStorage.setItem(
+                "kalxa_firebase_installation_id",
+                installationId
+            );
+
+            localStorage.setItem(
+                "kalxa_notifications_enabled",
+                "true"
+            );
+
+            localStorage.setItem(
+                "kalxa_notification_phone",
+                phone
+            );
+
+            setEnabledUi();
+        }
+
+
+        async function initializeMessaging() {
+            const supported =
+                await isSupported();
+
+            if (!supported) {
+                enableButton.disabled = true;
+
+                setStatus(
+                    "Push notifications are not supported by this browser.",
+                    "error"
+                );
+
+                return false;
+            }
+
+            const firebaseApp =
+                initializeApp(
+                    firebaseConfig
+                );
+
+            messaging =
+                getMessaging(
+                    firebaseApp
+                );
+
+            onRegistered(
+                messaging,
+                async (
+                    installationId
+                ) => {
+                    try {
+                        await saveSubscription(
+                            installationId
+                        );
+                    } catch (error) {
+                        console.error(
+                            error
+                        );
+
+                        setStatus(
+                            error.message,
+                            "error"
+                        );
+                    }
+                }
+            );
+
+            onUnregistered(
+                messaging,
+                async (
+                    installationId
+                ) => {
+                    try {
+                        await fetch(
+                            "/notifications/unsubscribe-public",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            installation_id:
+                                                installationId,
+                                        }
+                                    ),
+                            }
+                        );
+                    } catch (error) {
+                        console.error(
+                            error
+                        );
+                    }
+
+                    localStorage.removeItem(
+                        "kalxa_firebase_installation_id"
+                    );
+
+                    localStorage.removeItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+                    currentInstallationId =
+                        null;
+
+                    setDisabledUi();
+                }
+            );
+
+            return true;
+        }
+
+
+        enableButton.addEventListener(
+            "click",
+            async () => {
+                const phone =
+                    phoneInput.value.trim();
+
+                if (!phone) {
+                    setStatus(
+                        "Enter your phone number first.",
+                        "error"
+                    );
+
+                    phoneInput.focus();
+                    return;
+                }
+
+                enableButton.disabled =
+                    true;
+
+                setStatus(
+                    "Requesting notification permission..."
+                );
+
+                try {
+                    const initialized =
+                        (
+                            messaging
+                            || await initializeMessaging()
+                        );
+
+                    if (!initialized) {
+                        return;
+                    }
+
+                    const permission =
+                        await Notification.requestPermission();
+
+                    if (
+                        permission
+                        !== "granted"
+                    ) {
+                        throw new Error(
+                            "Notification permission was not granted."
+                        );
+                    }
+
+                    const serviceWorkerRegistration =
+                        await navigator.serviceWorker.register(
+                            "/firebase-messaging-sw.js",
+                            {
+                                scope:
+                                    "/",
+                            }
+                        );
+
+                    await registerMessaging(
+                        messaging,
+                        {
+                            vapidKey:
+                                vapidKey,
+
+                            serviceWorkerRegistration:
+                                serviceWorkerRegistration,
+                        }
+                    );
+
+                    setStatus(
+                        "Finishing notification setup..."
+                    );
+
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+
+                    setStatus(
+                        error.message
+                        || "Unable to enable notifications.",
+                        "error"
+                    );
+
+                } finally {
+                    enableButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        disableButton.addEventListener(
+            "click",
+            async () => {
+                disableButton.disabled =
+                    true;
+
+                try {
+                    if (!messaging) {
+                        await initializeMessaging();
+                    }
+
+                    if (messaging) {
+                        await unregisterMessaging(
+                            messaging
+                        );
+                    }
+
+                    if (currentInstallationId) {
+                        await fetch(
+                            "/notifications/unsubscribe-public",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            installation_id:
+                                                currentInstallationId,
+                                        }
+                                    ),
+                            }
+                        );
+                    }
+
+                    localStorage.removeItem(
+                        "kalxa_firebase_installation_id"
+                    );
+
+                    localStorage.removeItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+                    currentInstallationId =
+                        null;
+
+                    setDisabledUi();
+
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+
+                    setStatus(
+                        error.message
+                        || "Unable to turn notifications off.",
+                        "error"
+                    );
+
+                } finally {
+                    disableButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async () => {
+                const savedPhone =
+                    localStorage.getItem(
+                        "kalxa_notification_phone"
+                    );
+
+                if (savedPhone) {
+                    phoneInput.value =
+                        savedPhone;
+                }
+
+                const enabled =
+                    localStorage.getItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+                if (
+                    enabled === "true"
+                    && currentInstallationId
+                ) {
+                    setEnabledUi();
+                } else {
+                    setDisabledUi();
+                }
+
+                try {
+                    await initializeMessaging();
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+                }
+            }
+        );
+
+    </script>
+
+{% endif %}
+
+{% if event and (event.poster_image_mimetype or event.image_url) %}
 
     <div
         class="poster-modal"
@@ -2092,7 +2743,14 @@
         </button>
 
         <img
-            src="{{ event.image_url }}"
+            src="{{
+        url_for(
+            'event_poster',
+            event_id=event.id
+        )
+        if event.poster_image_mimetype
+        else event.image_url
+    }}"
             alt="{{ event.title }} event poster"
             class="poster-modal-image"
         >
