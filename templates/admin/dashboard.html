@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -2772,15 +2772,28 @@
 
                             <a
                                 href="{{ url_for(
-                                    'event_page',
+                                    'admin_event_control',
                                     event_id=event.id
                                 ) }}"
-                                class="button button-secondary"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                class="button"
                             >
-                                View Event
+                                Control Centre
                             </a>
+
+
+                            {% if not event.is_closed %}
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_edit_event',
+                                        event_id=event.id
+                                    ) }}"
+                                    class="button button-secondary"
+                                >
+                                    Edit Event
+                                </a>
+
+                            {% endif %}
 
 
                             <a
@@ -2788,9 +2801,22 @@
                                     'admin_orders',
                                     event_id=event.id
                                 ) }}"
-                                class="button"
+                                class="button button-secondary"
                             >
-                                Orders
+                                Manage Tickets
+                            </a>
+
+
+                            <a
+                                href="{{ url_for(
+                                    'event_page',
+                                    event_id=event.id
+                                ) }}"
+                                class="button button-secondary"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                View Public Page
                             </a>
 
 
