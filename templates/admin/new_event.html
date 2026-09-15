@@ -919,108 +919,43 @@
             <section class="card">
 
                 <h2>
-                    Payment Details
+                    Payment Setup
                 </h2>
 
                 <p class="card-copy">
-                    Current manual payment configuration.
+                    Ticket settlement is connected once at your
+                    organizer account level through Paystack.
                 </p>
 
 
-                <div class="payment-note">
-                    ℹ️ For now, organizers confirm payments
-                    manually. Direct payment-provider connection
-                    will be added later.
-                </div>
+                {% if organizer.is_payment_connected %}
 
-
-                <div class="grid">
-
-                    <div class="group">
-
-                        <label for="bank_name">
-                            Bank Name
-                        </label>
-
-                        <input
-                            id="bank_name"
-                            name="bank_name"
-                            type="text"
-                        >
-
+                    <div class="payment-note">
+                        ✓ Paystack Connected<br>
+                        Settlement account ••••
+                        {{ organizer.payment_account_last4 }}
                     </div>
 
+                {% else %}
 
-                    <div class="group">
-
-                        <label for="account_holder">
-                            Account Holder
-                        </label>
-
-                        <input
-                            id="account_holder"
-                            name="account_holder"
-                            type="text"
-                        >
-
+                    <div class="payment-note">
+                        ⚠ Paystack is not connected yet.
+                        You can save this event as a draft,
+                        but ticket sales cannot open until
+                        payments are connected.
                     </div>
 
-                </div>
+                    <a
+                        href="{{ url_for(
+                            'admin_payments'
+                        ) }}"
+                        class="button button-secondary"
+                        style="margin-top: 12px;"
+                    >
+                        Connect Paystack
+                    </a>
 
-
-                <div
-                    class="grid"
-                    style="margin-top: 14px;"
-                >
-
-                    <div class="group">
-
-                        <label for="account_number">
-                            Account Number
-                        </label>
-
-                        <input
-                            id="account_number"
-                            name="account_number"
-                            type="text"
-                        >
-
-                    </div>
-
-
-                    <div class="group">
-
-                        <label for="branch_code">
-                            Branch Code
-                        </label>
-
-                        <input
-                            id="branch_code"
-                            name="branch_code"
-                            type="text"
-                        >
-
-                    </div>
-
-                </div>
-
-
-                <div
-                    class="group"
-                    style="margin-top: 14px;"
-                >
-
-                    <label for="payment_instructions">
-                        Payment Instructions
-                    </label>
-
-                    <textarea
-                        id="payment_instructions"
-                        name="payment_instructions"
-                        rows="4"
-                    ></textarea>
-
-                </div>
+                {% endif %}
 
             </section>
 
