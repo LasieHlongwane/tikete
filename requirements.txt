@@ -6,3 +6,4 @@ qrcode==8.2
 Pillow==11.3.0
 gunicorn==23.0.0
 psycopg[binary]==3.2.10
+firebase-admin>=7.0,<8.0
