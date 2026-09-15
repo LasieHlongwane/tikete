@@ -5,6 +5,7 @@
 from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import deferred
 from werkzeug.security import (
     check_password_hash,
     generate_password_hash,
@@ -574,6 +575,27 @@ class TicketEvent(db.Model):
 
     image_url = db.Column(
         db.String(500),
+        nullable=True,
+    )
+
+
+    # Durable event poster stored in PostgreSQL.
+    # Deferred so listing queries do not automatically load
+    # the potentially large image bytes.
+    poster_image_data = deferred(
+        db.Column(
+            db.LargeBinary,
+            nullable=True,
+        )
+    )
+
+    poster_image_mimetype = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    poster_image_filename = db.Column(
+        db.String(255),
         nullable=True,
     )
 
