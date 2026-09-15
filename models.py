@@ -124,6 +124,72 @@ class Organizer(db.Model):
 
 
     # ========================================================
+    # PAYSTACK / SETTLEMENT CONNECTION
+    # ========================================================
+
+    payment_provider = db.Column(
+        db.String(30),
+        nullable=False,
+        default="paystack",
+        index=True,
+    )
+
+    payment_setup_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="not_connected",
+        index=True,
+    )
+
+    paystack_subaccount_code = db.Column(
+        db.String(100),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    paystack_subaccount_id = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    payment_bank_name = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    payment_bank_code = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    payment_account_name = db.Column(
+        db.String(200),
+        nullable=True,
+    )
+
+    payment_account_last4 = db.Column(
+        db.String(4),
+        nullable=True,
+    )
+
+    payment_connected_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    @property
+    def is_payment_connected(self):
+
+        return bool(
+            self.payment_setup_status == "connected"
+            and self.paystack_subaccount_code
+        )
+
+
+    # ========================================================
     # OPTIONAL KALXA DISCOVERY LINK
     # ========================================================
 
