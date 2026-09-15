@@ -1931,34 +1931,20 @@
 
                     {% else %}
 
-                        {% if paystack_checkout_enabled %}
+                        <a
+                            href="{{ url_for(
+                                'reserve_ticket',
+                                event_id=event.id
+                            ) }}"
+                            class="button"
+                        >
+                            Buy Ticket
+                        </a>
 
-                            <a
-                                href="{{ url_for(
-                                    'reserve_ticket',
-                                    event_id=event.id
-                                ) }}"
-                                class="button"
-                            >
-                                Buy Ticket
-                            </a>
-
-                        {% else %}
-
-                            <button
-                                class="button disabled"
-                                disabled
-                            >
-                                Secure Checkout Coming Online
-                            </button>
-
-                            <div class="sales-note">
-                                This organizer is connected to
-                                Paystack. Secure online checkout
-                                is being enabled next.
-                            </div>
-
-                        {% endif %}
+                        <div class="sales-note">
+                            Secure payment by Paystack.
+                            Kalxa adds no ticket commission.
+                        </div>
 
                     {% endif %}
 
