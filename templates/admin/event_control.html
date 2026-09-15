@@ -45,12 +45,10 @@
 <section class="section"><span class="kicker">EVENT CONTROLS</span><h2>Manage Event</h2><p class="muted" style="margin-bottom:16px">Actions available for the current event state.</p><div class="control-stack">
 {% if event.status != 'closed' %}<a href="{{ url_for('admin_edit_event', event_id=event.id) }}" class="button button-secondary">Edit Event</a>{% endif %}
 {% if event.status == 'draft' %}<form method="POST" action="{{ url_for('admin_publish_event', event_id=event.id) }}" class="control-form"><button type="submit" class="button button-success">Publish Event</button></form>{% elif event.status == 'published' %}{% if event.sales_open %}<form method="POST" action="{{ url_for('admin_pause_event_sales', event_id=event.id) }}" class="control-form"><button type="submit" class="button button-warning">Pause Ticket Sales</button></form>{% else %}
-{% if organizer.is_payment_connected and paystack_checkout_enabled %}
+{% if organizer.is_payment_connected %}
 <form method="POST" action="{{ url_for('admin_open_event_sales', event_id=event.id) }}" class="control-form"><button type="submit" class="button button-success">Open Ticket Sales</button></form>
-{% elif not organizer.is_payment_connected %}
-<a href="{{ url_for('admin_payments') }}" class="button button-warning">Connect Paystack to Open Sales</a>
 {% else %}
-<button type="button" class="button button-warning" disabled>Secure Checkout Setup In Progress</button>
+<a href="{{ url_for('admin_payments') }}" class="button button-warning">Connect Paystack to Open Sales</a>
 {% endif %}
 {% endif %}<form method="POST" action="{{ url_for('admin_close_event', event_id=event.id) }}" class="control-form" onsubmit="return confirm('Close this event? Ticket sales will stop and the public event page will be removed. Orders and check-in history will remain.');"><button type="submit" class="button button-danger">Close Event</button></form>{% endif %}
 <a href="{{ url_for('admin_orders', event_id=event.id) }}" class="button button-secondary">View All Orders</a></div>
