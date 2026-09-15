@@ -1,4 +1,3 @@
-
 # ============================================================
 # KALXA TICKETING - APP
 # ============================================================
@@ -1655,6 +1654,80 @@ def superadmin_dashboard():
     )
 
 
+    # ========================================================
+    # NEWLY PUBLISHED EVENTS READY FOR PUSH PROMOTION
+    # ========================================================
+    #
+    # An event remains in this queue until it has at least one
+    # completed/partial push campaign.
+    #
+    # failed campaigns do NOT remove the event from the queue,
+    # so Super Admin can retry.
+    # ========================================================
+
+    promoted_event_ids = (
+        db.session.query(
+            PushCampaign.event_id
+        )
+        .filter(
+            PushCampaign.event_id.isnot(
+                None
+            )
+        )
+        .filter(
+            PushCampaign.status.in_(
+                [
+                    "completed",
+                    "partial",
+                ]
+            )
+        )
+        .distinct()
+        .subquery()
+    )
+
+
+    notification_ready_events = (
+        TicketEvent.query
+        .filter(
+            TicketEvent.status
+            == "published"
+        )
+        .filter(
+            TicketEvent.active.is_(
+                True
+            )
+        )
+        .filter(
+            ~TicketEvent.id.in_(
+                db.select(
+                    promoted_event_ids.c.event_id
+                )
+            )
+        )
+        .order_by(
+            TicketEvent.published_at.desc(),
+            TicketEvent.created_at.desc(),
+        )
+        .limit(20)
+        .all()
+    )
+
+
+    notification_ready_count = (
+        len(
+            notification_ready_events
+        )
+    )
+
+
+    active_push_audience_count = (
+        len(
+            get_active_push_subscriptions()
+        )
+    )
+
+
     return render_template(
         "superadmin/dashboard.html",
 
@@ -1681,6 +1754,15 @@ def superadmin_dashboard():
 
         pending_subscription_count=
             pending_subscription_count,
+
+        notification_ready_events=
+            notification_ready_events,
+
+        notification_ready_count=
+            notification_ready_count,
+
+        active_push_audience_count=
+            active_push_audience_count,
 
         subscription_plan_name=
             KALXA_SUBSCRIPTION_PLAN_NAME,
