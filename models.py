@@ -1110,6 +1110,62 @@ class TicketOrder(db.Model):
     )
 
 
+    # ========================================================
+    # PAYSTACK PAYMENT AUDIT
+    # ========================================================
+
+    payment_provider = db.Column(
+        db.String(30),
+        nullable=False,
+        default="paystack",
+        index=True,
+    )
+
+    processing_fee = db.Column(
+        db.Numeric(
+            10,
+            2,
+        ),
+        nullable=False,
+        default=0,
+    )
+
+    checkout_amount = db.Column(
+        db.Numeric(
+            10,
+            2,
+        ),
+        nullable=True,
+    )
+
+    paystack_access_code = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    paystack_authorization_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    paystack_transaction_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    payment_channel = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    payment_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
     created_at = db.Column(
         db.DateTime,
         nullable=False,
