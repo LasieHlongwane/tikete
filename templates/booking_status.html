@@ -1001,7 +1001,7 @@
                 <div class="status-box">
 
                     <span class="status-label">
-                        Amount Due
+                        Ticket Total
                     </span>
 
                     <div class="status-value amount">
@@ -1097,131 +1097,74 @@
 
 
                 <!-- =============================
-                     PAYMENT DETAILS
+                     PAYSTACK PAYMENT STATUS
                 ============================== -->
 
                 <section class="section">
 
 
                     <h2>
-                        Pay the Event Organizer
+                        Secure Payment Pending
                     </h2>
 
 
                     <p>
 
-                        Send the amount due directly to the
-                        organizer using the banking details below.
+                        This booking is waiting for a verified
+                        Paystack payment.
 
                     </p>
 
 
-
-                    {% if order.event.bank_name
-                        or order.event.account_holder
-                        or order.event.account_number
-                        or order.event.branch_code %}
-
+                    {% if order.checkout_amount %}
 
                         <div class="bank-details">
 
+                            <div class="bank-row">
 
-                            {% if order.event.bank_name %}
+                                <span class="bank-label">
+                                    Ticket total
+                                </span>
 
-                                <div class="bank-row">
+                                <span class="bank-value">
+                                    R{{ "%.2f"|format(order.total_amount) }}
+                                </span>
 
-                                    <span class="bank-label">
-                                        Bank
-                                    </span>
+                            </div>
 
-                                    <span class="bank-value">
-                                        {{ order.event.bank_name }}
-                                    </span>
+                            <div class="bank-row">
 
-                                </div>
+                                <span class="bank-label">
+                                    Processing
+                                </span>
 
-                            {% endif %}
+                                <span class="bank-value">
+                                    R{{ "%.2f"|format(order.processing_fee or 0) }}
+                                </span>
 
+                            </div>
 
+                            <div class="bank-row">
 
-                            {% if order.event.account_holder %}
+                                <span class="bank-label">
+                                    Paystack total
+                                </span>
 
-                                <div class="bank-row">
+                                <span class="bank-value">
+                                    R{{ "%.2f"|format(order.checkout_amount) }}
+                                </span>
 
-                                    <span class="bank-label">
-                                        Account Holder
-                                    </span>
-
-                                    <span class="bank-value">
-                                        {{ order.event.account_holder }}
-                                    </span>
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if order.event.account_number %}
-
-                                <div class="bank-row">
-
-                                    <span class="bank-label">
-                                        Account Number
-                                    </span>
-
-                                    <span class="bank-value">
-                                        {{ order.event.account_number }}
-                                    </span>
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if order.event.branch_code %}
-
-                                <div class="bank-row">
-
-                                    <span class="bank-label">
-                                        Branch Code
-                                    </span>
-
-                                    <span class="bank-value">
-                                        {{ order.event.branch_code }}
-                                    </span>
-
-                                </div>
-
-                            {% endif %}
-
+                            </div>
 
                         </div>
-
-
-                    {% else %}
-
-
-                        <div class="notice">
-
-                            The organizer has not added banking
-                            details for this event yet.
-
-                            Please contact the organizer before
-                            sending payment.
-
-                        </div>
-
 
                     {% endif %}
-
 
 
                     <div class="reference-box">
 
                         <span class="status-label">
-                            Use this payment reference
+                            Booking reference
                         </span>
 
                         <strong>
@@ -1231,39 +1174,38 @@
                     </div>
 
 
+                    {% if order.paystack_authorization_url %}
 
-                    {% if order.event.payment_instructions %}
-
-                        <div class="notice">
-
-                            <strong>
-                                Organizer instructions:
-                            </strong>
-
-                            <br>
-
-                            {{ order.event.payment_instructions }}
-
-                        </div>
+                        <a
+                            href="{{ order.paystack_authorization_url }}"
+                            class="button"
+                        >
+                            Continue Secure Payment
+                        </a>
 
                     {% endif %}
 
 
-
                     <div class="notice">
 
-                        Your ticket becomes valid only after the
-                        organizer confirms your payment.
-
-                        Keep your booking reference safe until the
-                        event is complete.
+                        Payment is confirmed automatically by
+                        Paystack. Your QR ticket appears here
+                        as soon as Kalxa receives successful
+                        verification.
 
                     </div>
 
 
-                    <!-- =============================
-                         TRACK MY TICKET
-                    ============================== -->
+                    <a
+                        href="{{ url_for(
+                            'booking_status',
+                            reference=order.payment_reference
+                        ) }}"
+                        class="button button-secondary"
+                    >
+                        Refresh Payment Status
+                    </a>
+
 
                     <a
                         href="{{ url_for(
@@ -1275,79 +1217,8 @@
                     </a>
 
 
-                    <div class="track-copy">
-
-                        Already paid?
-                        Use Track My Ticket later to check
-                        whether the organizer has confirmed
-                        your payment and released your QR ticket.
-
-                    </div>
-
-
                 </section>
 
-
-            {% endif %}
-
-
-
-            <!-- =================================
-                 FUTURE EVENT NOTIFICATIONS
-            ================================== -->
-
-            {% if firebase_push_configured %}
-
-                <section class="notification-card">
-
-                    <h2>
-                        🔔 Get notified about future events
-                    </h2>
-
-                    <p>
-
-                        Allow Kalxa Ticketing to send this browser
-                        notifications when new events and ticket
-                        releases become available.
-
-                        This is optional and you can turn it off
-                        whenever you want.
-
-                    </p>
-
-
-                    <div class="notification-actions">
-
-                        <button
-                            type="button"
-                            id="enable-notifications"
-                            class="button notification-button"
-                        >
-                            🔔 Notify Me
-                        </button>
-
-
-                        <button
-                            type="button"
-                            id="disable-notifications"
-                            class="button button-secondary"
-                            hidden
-                        >
-                            Turn Off
-                        </button>
-
-                    </div>
-
-
-                    <div
-                        id="notification-status"
-                        class="notification-status"
-                        aria-live="polite"
-                    >
-                        Notifications are currently off.
-                    </div>
-
-                </section>
 
             {% endif %}
 
