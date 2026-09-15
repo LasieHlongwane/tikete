@@ -6260,7 +6260,10 @@ def admin_dashboard():
         TicketEvent.query
         .filter_by(
             organizer_id=
-                organizer.id
+                organizer.id,
+
+            organizer_deleted=
+                False,
         )
         .order_by(
             TicketEvent.created_at.desc()
@@ -7281,7 +7284,6 @@ def admin_event_control(
         .filter_by(
             id=event_id,
             organizer_id=organizer.id,
-            organizer_deleted=False,
         )
         .first_or_404()
     )
@@ -9059,4 +9061,3 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-
