@@ -4663,6 +4663,9 @@ def pwa_manifest():
                 "your Kalxa tickets."
             ),
 
+        "id":
+            "/",
+
         "start_url":
             "/",
 
@@ -4680,6 +4683,9 @@ def pwa_manifest():
 
         "orientation":
             "portrait-primary",
+
+        "prefer_related_applications":
+            False,
 
         "icons": [
             {
@@ -4810,7 +4816,7 @@ const messaging =
 // ==========================================================
 
 const KALXA_CACHE =
-    "kalxa-ticketing-pwa-v1";
+    "kalxa-ticketing-pwa-v2";
 
 const KALXA_APP_SHELL = [
     "/offline",
@@ -8541,3 +8547,4 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
+
