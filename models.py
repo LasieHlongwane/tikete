@@ -665,6 +665,29 @@ class TicketEvent(db.Model):
     )
 
 
+    # ========================================================
+    # ORGANIZER SAFE DELETE
+    # ========================================================
+    #
+    # "Delete Event" removes the event from the organizer's
+    # active dashboard and public ticketing pages without
+    # destroying ticket orders, passes, payments or check-ins.
+    # ========================================================
+
+    organizer_deleted = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+    )
+
+    deleted_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
     bank_name = db.Column(
         db.String(100),
         nullable=True,
