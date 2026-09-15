@@ -11,6 +11,7 @@ import uuid
 import urllib.error
 import urllib.parse
 import urllib.request
+import requests
 from datetime import datetime, timedelta, date
 from decimal import Decimal, InvalidOperation
 
@@ -83,74 +84,149 @@ def paystack_is_configured():
     return bool(PAYSTACK_SECRET_KEY)
 
 
-def paystack_api_request(method, path, payload=None):
+def paystack_api_request(
+    method,
+    path,
+    payload=None,
+):
 
     if not paystack_is_configured():
+
         raise RuntimeError(
             "PAYSTACK_SECRET_KEY is not configured."
         )
 
-    body = None
 
-    if payload is not None:
-        body = json.dumps(payload).encode("utf-8")
-
-    req = urllib.request.Request(
-        f"{PAYSTACK_BASE_URL}{path}",
-        data=body,
-        method=method.upper(),
-        headers={
-            "Authorization":
-                f"Bearer {PAYSTACK_SECRET_KEY}",
-            "Content-Type":
-                "application/json",
-            "Accept":
-                "application/json",
-        },
+    url = (
+        f"{PAYSTACK_BASE_URL}{path}"
     )
+
+
+    headers = {
+        "Authorization":
+            f"Bearer {PAYSTACK_SECRET_KEY}",
+
+        "Accept":
+            "application/json",
+
+        "Content-Type":
+            "application/json",
+
+        # Avoid Python urllib's default HTTP signature,
+        # which Cloudflare can classify as a banned
+        # browser/bot signature on api.paystack.co.
+        "User-Agent":
+            "Kalxa-Ticketing/1.0",
+    }
+
 
     try:
 
-        with urllib.request.urlopen(
-            req,
-            timeout=20,
-        ) as response:
+        response = requests.request(
+            method=
+                method.upper(),
 
-            result = json.loads(
-                response.read().decode("utf-8")
-            )
+            url=
+                url,
 
-    except urllib.error.HTTPError as error:
+            json=(
+                payload
+                if payload is not None
+                else None
+            ),
 
-        raw = error.read().decode(
-            "utf-8",
-            errors="replace",
+            headers=
+                headers,
+
+            timeout=
+                20,
         )
 
-        try:
-            parsed = json.loads(raw)
-            message = (
-                parsed.get("message")
-                or raw
+
+    except requests.RequestException as error:
+
+        raise RuntimeError(
+            (
+                "Could not connect to Paystack. "
+                "Please try again."
             )
-        except Exception:
-            message = raw or str(error)
+        ) from error
+
+
+    try:
+
+        result = (
+            response.json()
+        )
+
+
+    except ValueError:
+
+        result = {
+            "status":
+                False,
+
+            "message":
+                (
+                    response.text
+                    or (
+                        "Paystack returned an "
+                        "invalid response."
+                    )
+                ),
+        }
+
+
+    if not response.ok:
+
+        message = (
+            result.get(
+                "message"
+            )
+            if isinstance(
+                result,
+                dict,
+            )
+            else None
+        )
+
+
+        if not message:
+
+            message = (
+                response.text
+                or (
+                    f"HTTP {response.status_code}"
+                )
+            )
+
 
         raise RuntimeError(
             f"Paystack: {message}"
-        ) from error
+        )
 
-    except urllib.error.URLError as error:
+
+    if not isinstance(
+        result,
+        dict,
+    ):
 
         raise RuntimeError(
-            "Could not connect to Paystack."
-        ) from error
+            "Paystack returned an invalid response."
+        )
 
-    if not result.get("status"):
+
+    if not result.get(
+        "status"
+    ):
+
         raise RuntimeError(
-            result.get("message")
+            result.get(
+                "message"
+            )
             or "Paystack request failed."
         )
+
 
     return result
 
