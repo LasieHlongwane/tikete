@@ -4641,6 +4641,114 @@ def booking_status(
 
 
 # ============================================================
+# PWA MANIFEST
+# ============================================================
+
+@app.route(
+    "/manifest.webmanifest"
+)
+def pwa_manifest():
+
+    manifest = {
+        "name":
+            "Kalxa Ticketing",
+
+        "short_name":
+            "Kalxa",
+
+        "description":
+            (
+                "Discover events, buy tickets, "
+                "receive event updates and manage "
+                "your Kalxa tickets."
+            ),
+
+        "start_url":
+            "/",
+
+        "scope":
+            "/",
+
+        "display":
+            "standalone",
+
+        "background_color":
+            "#0b0c0e",
+
+        "theme_color":
+            "#0b0c0e",
+
+        "orientation":
+            "portrait-primary",
+
+        "icons": [
+            {
+                "src":
+                    "/static/icons/kalxa-192.png",
+
+                "sizes":
+                    "192x192",
+
+                "type":
+                    "image/png",
+
+                "purpose":
+                    "any",
+            },
+            {
+                "src":
+                    "/static/icons/kalxa-512.png",
+
+                "sizes":
+                    "512x512",
+
+                "type":
+                    "image/png",
+
+                "purpose":
+                    "any",
+            },
+            {
+                "src":
+                    "/static/icons/kalxa-maskable-512.png",
+
+                "sizes":
+                    "512x512",
+
+                "type":
+                    "image/png",
+
+                "purpose":
+                    "maskable",
+            },
+        ],
+    }
+
+
+    return Response(
+        json.dumps(
+            manifest
+        ),
+        mimetype=
+            "application/manifest+json",
+    )
+
+
+# ============================================================
+# PWA OFFLINE FALLBACK
+# ============================================================
+
+@app.route(
+    "/offline"
+)
+def pwa_offline():
+
+    return render_template(
+        "offline.html"
+    )
+
+
+# ============================================================
 # FIREBASE MESSAGING SERVICE WORKER
 # ============================================================
 #
@@ -4695,6 +4803,152 @@ const messaging =
 // background.
 //
 // Click navigation is handled by webpush.fcm_options.link.
+
+
+// ==========================================================
+// KALXA PWA APP SHELL
+// ==========================================================
+
+const KALXA_CACHE =
+    "kalxa-ticketing-pwa-v1";
+
+const KALXA_APP_SHELL = [
+    "/offline",
+    "/manifest.webmanifest",
+    "/static/icons/kalxa-192.png",
+    "/static/icons/kalxa-512.png",
+    "/static/icons/kalxa-maskable-512.png"
+];
+
+
+self.addEventListener(
+    "install",
+    (event) => {{
+
+        event.waitUntil(
+            caches
+                .open(
+                    KALXA_CACHE
+                )
+                .then(
+                    (cache) =>
+                        cache.addAll(
+                            KALXA_APP_SHELL
+                        )
+                )
+        );
+
+        self.skipWaiting();
+    }}
+);
+
+
+self.addEventListener(
+    "activate",
+    (event) => {{
+
+        event.waitUntil(
+            caches
+                .keys()
+                .then(
+                    (keys) =>
+                        Promise.all(
+                            keys
+                                .filter(
+                                    (key) =>
+                                        key.startsWith(
+                                            "kalxa-ticketing-pwa-"
+                                        )
+                                        &&
+                                        key !== KALXA_CACHE
+                                )
+                                .map(
+                                    (key) =>
+                                        caches.delete(
+                                            key
+                                        )
+                                )
+                        )
+                )
+        );
+
+        self.clients.claim();
+    }}
+);
+
+
+self.addEventListener(
+    "fetch",
+    (event) => {{
+
+        if (
+            event.request.method
+            !== "GET"
+        ) {{
+            return;
+        }}
+
+
+        const requestUrl =
+            new URL(
+                event.request.url
+            );
+
+
+        if (
+            requestUrl.origin
+            !== self.location.origin
+        ) {{
+            return;
+        }}
+
+
+        if (
+            event.request.mode
+            === "navigate"
+        ) {{
+
+            event.respondWith(
+                fetch(
+                    event.request
+                )
+                .catch(
+                    () =>
+                        caches.match(
+                            "/offline"
+                        )
+                )
+            );
+
+            return;
+        }}
+
+
+        if (
+            requestUrl.pathname.startsWith(
+                "/static/icons/"
+            )
+            ||
+            requestUrl.pathname
+            === "/manifest.webmanifest"
+        ) {{
+
+            event.respondWith(
+                caches.match(
+                    event.request
+                )
+                .then(
+                    (cached) =>
+                        cached
+                        ||
+                        fetch(
+                            event.request
+                        )
+                )
+            );
+        }}
+    }}
+);
 """
 
 
