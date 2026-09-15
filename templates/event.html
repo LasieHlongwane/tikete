@@ -58,7 +58,7 @@
 
 
     <title>
-        Kalxa 
+        Kalxa Tickets
     </title>
 
     <link
@@ -1549,7 +1549,7 @@
             ) }}"
             class="brand"
         >
-            KALXA 
+            KALXA TICKETING
         </a>
 
 
@@ -1931,15 +1931,34 @@
 
                     {% else %}
 
-                        <a
-                            href="{{ url_for(
-                                'reserve_ticket',
-                                event_id=event.id
-                            ) }}"
-                            class="button"
-                        >
-                            Buy Ticket
-                        </a>
+                        {% if paystack_checkout_enabled %}
+
+                            <a
+                                href="{{ url_for(
+                                    'reserve_ticket',
+                                    event_id=event.id
+                                ) }}"
+                                class="button"
+                            >
+                                Buy Ticket
+                            </a>
+
+                        {% else %}
+
+                            <button
+                                class="button disabled"
+                                disabled
+                            >
+                                Secure Checkout Coming Online
+                            </button>
+
+                            <div class="sales-note">
+                                This organizer is connected to
+                                Paystack. Secure online checkout
+                                is being enabled next.
+                            </div>
+
+                        {% endif %}
 
                     {% endif %}
 
