@@ -4816,7 +4816,7 @@ const messaging =
 // ==========================================================
 
 const KALXA_CACHE =
-    "kalxa-ticketing-pwa-v2";
+    "kalxa-ticketing-pwa-v3";
 
 const KALXA_APP_SHELL = [
     "/offline",
@@ -4837,10 +4837,20 @@ self.addEventListener(
                     KALXA_CACHE
                 )
                 .then(
-                    (cache) =>
-                        cache.addAll(
-                            KALXA_APP_SHELL
-                        )
+                    async (cache) => {{
+
+                        // Cache each asset independently.
+                        //
+                        // One missing optional asset should NOT
+                        // prevent the whole service worker from
+                        // installing.
+                        await Promise.allSettled(
+                            KALXA_APP_SHELL.map(
+                                (url) =>
+                                    cache.add(url)
+                            )
+                        );
+                    }}
                 )
         );
 
@@ -8547,4 +8557,3 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-
