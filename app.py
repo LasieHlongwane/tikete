@@ -8,6 +8,9 @@ import os
 import secrets
 import string
 import uuid
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta, date
 from decimal import Decimal, InvalidOperation
 
@@ -62,6 +65,108 @@ from models import (
 # ============================================================
 
 load_dotenv()
+
+
+# ============================================================
+# PAYSTACK
+# ============================================================
+
+PAYSTACK_SECRET_KEY = (
+    os.environ.get("PAYSTACK_SECRET_KEY", "").strip()
+)
+
+PAYSTACK_BASE_URL = "https://api.paystack.co"
+
+
+def paystack_is_configured():
+
+    return bool(PAYSTACK_SECRET_KEY)
+
+
+def paystack_api_request(method, path, payload=None):
+
+    if not paystack_is_configured():
+        raise RuntimeError(
+            "PAYSTACK_SECRET_KEY is not configured."
+        )
+
+    body = None
+
+    if payload is not None:
+        body = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        f"{PAYSTACK_BASE_URL}{path}",
+        data=body,
+        method=method.upper(),
+        headers={
+            "Authorization":
+                f"Bearer {PAYSTACK_SECRET_KEY}",
+            "Content-Type":
+                "application/json",
+            "Accept":
+                "application/json",
+        },
+    )
+
+    try:
+
+        with urllib.request.urlopen(
+            req,
+            timeout=20,
+        ) as response:
+
+            result = json.loads(
+                response.read().decode("utf-8")
+            )
+
+    except urllib.error.HTTPError as error:
+
+        raw = error.read().decode(
+            "utf-8",
+            errors="replace",
+        )
+
+        try:
+            parsed = json.loads(raw)
+            message = (
+                parsed.get("message")
+                or raw
+            )
+        except Exception:
+            message = raw or str(error)
+
+        raise RuntimeError(
+            f"Paystack: {message}"
+        ) from error
+
+    except urllib.error.URLError as error:
+
+        raise RuntimeError(
+            "Could not connect to Paystack."
+        ) from error
+
+    if not result.get("status"):
+        raise RuntimeError(
+            result.get("message")
+            or "Paystack request failed."
+        )
+
+    return result
+
+
+def get_paystack_za_banks():
+
+    query = urllib.parse.urlencode(
+        {"country": "south africa"}
+    )
+
+    result = paystack_api_request(
+        "GET",
+        f"/bank?{query}",
+    )
+
+    return result.get("data") or []
 
 
 # ============================================================
@@ -6190,6 +6295,243 @@ def admin_request_subscription_payment():
         url_for(
             "admin_subscription"
         )
+    )
+
+
+# ============================================================
+# ORGANIZER PAYSTACK SETUP
+# ============================================================
+
+@app.route(
+    "/admin/payments",
+    methods=["GET", "POST"],
+)
+def admin_payments():
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    banks = []
+
+    if paystack_is_configured():
+
+        try:
+            banks = get_paystack_za_banks()
+
+        except Exception as error:
+
+            current_app.logger.exception(
+                "[Paystack] Bank list failed: %s",
+                error,
+            )
+
+            flash(
+                "Could not load Paystack banks right now.",
+                "error",
+            )
+
+    if request.method == "POST":
+
+        if not organizer.is_subscription_active:
+
+            flash(
+                "Activate your Kalxa Ticketing subscription first.",
+                "error",
+            )
+
+            return redirect(
+                url_for("admin_payments")
+            )
+
+        if not paystack_is_configured():
+
+            flash(
+                "Paystack is not configured yet.",
+                "error",
+            )
+
+            return redirect(
+                url_for("admin_payments")
+            )
+
+        bank_code = (
+            request.form.get("bank_code", "")
+            .strip()
+        )
+
+        bank_name = (
+            request.form.get("bank_name", "")
+            .strip()
+        )
+
+        account_number = (
+            request.form.get("account_number", "")
+            .strip()
+            .replace(" ", "")
+        )
+
+        account_name = (
+            request.form.get("account_name", "")
+            .strip()
+        )
+
+        if (
+            not bank_code
+            or not account_number
+            or not account_name
+        ):
+
+            flash(
+                "Bank, account holder and account number are required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/payments.html",
+                organizer=organizer,
+                banks=banks,
+                paystack_configured=
+                    paystack_is_configured(),
+            )
+
+        if not account_number.isdigit():
+
+            flash(
+                "Account number must contain digits only.",
+                "error",
+            )
+
+            return render_template(
+                "admin/payments.html",
+                organizer=organizer,
+                banks=banks,
+                paystack_configured=
+                    paystack_is_configured(),
+            )
+
+        payload = {
+            "business_name":
+                organizer.display_name,
+
+            "settlement_bank":
+                bank_code,
+
+            "account_number":
+                account_number,
+
+            # Kalxa commission is 0%.
+            "percentage_charge":
+                0,
+
+            "description":
+                f"Kalxa Ticketing organizer #{organizer.id}",
+
+            "primary_contact_email":
+                organizer.email,
+
+            "primary_contact_name":
+                organizer.name,
+
+            "primary_contact_phone":
+                organizer.phone,
+        }
+
+        payload = {
+            key: value
+            for key, value in payload.items()
+            if value not in (None, "")
+        }
+
+        try:
+
+            result = paystack_api_request(
+                "POST",
+                "/subaccount",
+                payload,
+            )
+
+            data = result.get("data") or {}
+
+            subaccount_code = str(
+                data.get("subaccount_code", "")
+            ).strip()
+
+            if not subaccount_code:
+                raise RuntimeError(
+                    "Paystack did not return a subaccount code."
+                )
+
+            organizer.payment_provider = "paystack"
+            organizer.payment_setup_status = "connected"
+            organizer.paystack_subaccount_code = (
+                subaccount_code
+            )
+            organizer.paystack_subaccount_id = (
+                str(data.get("id", "")) or None
+            )
+            organizer.payment_bank_name = (
+                data.get("settlement_bank")
+                or bank_name
+                or None
+            )
+            organizer.payment_bank_code = (
+                bank_code
+            )
+            organizer.payment_account_name = (
+                data.get("account_name")
+                or account_name
+            )
+            organizer.payment_account_last4 = (
+                account_number[-4:]
+            )
+            organizer.payment_connected_at = (
+                datetime.utcnow()
+            )
+
+            db.session.commit()
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Paystack] Connection failed "
+                    "organizer_id=%s error=%s"
+                ),
+                organizer.id,
+                error,
+            )
+
+            flash(str(error), "error")
+
+            return render_template(
+                "admin/payments.html",
+                organizer=organizer,
+                banks=banks,
+                paystack_configured=
+                    paystack_is_configured(),
+            )
+
+        flash(
+            "Paystack payments connected successfully.",
+            "success",
+        )
+
+        return redirect(
+            url_for("admin_payments")
+        )
+
+    return render_template(
+        "admin/payments.html",
+        organizer=organizer,
+        banks=banks,
+        paystack_configured=
+            paystack_is_configured(),
     )
 
 
