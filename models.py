@@ -1539,6 +1539,228 @@ class PushSubscription(db.Model):
         )
 
 
+
+
+# ============================================================
+# PUSH NOTIFICATION CAMPAIGN
+# ============================================================
+#
+# One row represents one Super Admin push campaign.
+#
+# status:
+# draft / processing / completed / partial / failed
+# ============================================================
+
+class PushCampaign(db.Model):
+
+    __tablename__ = "push_campaigns"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+
+    title = db.Column(
+        db.String(120),
+        nullable=False,
+    )
+
+    body = db.Column(
+        db.String(500),
+        nullable=False,
+    )
+
+    target_url = db.Column(
+        db.String(1000),
+        nullable=True,
+    )
+
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="draft",
+        index=True,
+    )
+
+
+    recipient_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    success_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    failure_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+
+    created_by = db.Column(
+        db.String(100),
+        nullable=False,
+        default="superadmin",
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    sent_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    event = db.relationship(
+        "TicketEvent",
+        lazy=True,
+    )
+
+    deliveries = db.relationship(
+        "PushDelivery",
+        back_populates="campaign",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<PushCampaign "
+            f"id={self.id} "
+            f"status={self.status} "
+            f"recipients={self.recipient_count}>"
+        )
+
+
+# ============================================================
+# PUSH NOTIFICATION DELIVERY
+# ============================================================
+#
+# Stores one delivery result for one browser/app instance.
+# ============================================================
+
+class PushDelivery(db.Model):
+
+    __tablename__ = "push_deliveries"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    campaign_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "push_campaigns.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    push_subscription_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "push_subscriptions.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+
+    firebase_installation_id = db.Column(
+        db.String(255),
+        nullable=False,
+        index=True,
+    )
+
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+
+    firebase_message_id = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    error_message = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    sent_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    campaign = db.relationship(
+        "PushCampaign",
+        back_populates="deliveries",
+    )
+
+    push_subscription = db.relationship(
+        "PushSubscription",
+        lazy=True,
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<PushDelivery "
+            f"id={self.id} "
+            f"campaign_id={self.campaign_id} "
+            f"status={self.status}>"
+        )
+
+
 # ============================================================
 # KALXA AUTH BRIDGE TOKEN
 # ============================================================
