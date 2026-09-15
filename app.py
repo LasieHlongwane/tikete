@@ -158,7 +158,13 @@ def paystack_api_request(method, path, payload=None):
 def get_paystack_za_banks():
 
     query = urllib.parse.urlencode(
-        {"country": "south africa"}
+        {
+            "currency":
+                "ZAR",
+
+            "perPage":
+                100,
+        }
     )
 
     result = paystack_api_request(
@@ -166,7 +172,54 @@ def get_paystack_za_banks():
         f"/bank?{query}",
     )
 
-    return result.get("data") or []
+    banks = (
+        result.get("data")
+        or []
+    )
+
+    filtered_banks = []
+
+    for bank in banks:
+
+        if (
+            bank.get("active")
+            is False
+        ):
+            continue
+
+        currency = (
+            str(
+                bank.get(
+                    "currency",
+                    "",
+                )
+            )
+            .strip()
+            .upper()
+        )
+
+        if (
+            currency
+            and currency != "ZAR"
+        ):
+            continue
+
+        filtered_banks.append(
+            bank
+        )
+
+    filtered_banks.sort(
+        key=lambda bank:
+            str(
+                bank.get(
+                    "name",
+                    "",
+                )
+            )
+            .lower()
+    )
+
+    return filtered_banks
 
 
 # ============================================================
@@ -6330,7 +6383,10 @@ def admin_payments():
             )
 
             flash(
-                "Could not load Paystack banks right now.",
+                (
+                    "Could not load Paystack banks: "
+                    f"{error}"
+                ),
                 "error",
             )
 
