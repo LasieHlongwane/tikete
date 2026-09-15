@@ -581,6 +581,110 @@
         }
 
 
+
+        /* =====================================================
+           FUTURE EVENT NOTIFICATIONS
+        ===================================================== */
+
+        .notification-card {
+
+            margin-top: 22px;
+
+            padding: 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #111827,
+                    #0f172a
+                );
+
+            color: #ffffff;
+
+            border-radius: 15px;
+        }
+
+
+        .notification-card h2 {
+
+            margin: 0 0 7px;
+
+            color: #ffffff;
+
+            font-size: 18px;
+
+            line-height: 1.2;
+        }
+
+
+        .notification-card p {
+
+            margin: 0;
+
+            color: #cbd5e1;
+
+            font-size: 12px;
+        }
+
+
+        .notification-actions {
+
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+
+            margin-top: 14px;
+        }
+
+
+        .notification-actions .button {
+
+            width: auto;
+
+            margin-top: 0;
+        }
+
+
+        .notification-button {
+
+            background: #fff4df;
+
+            color: #111827;
+
+            border-color: #fff4df;
+        }
+
+
+        .notification-button:hover {
+
+            background: #ffffff;
+        }
+
+
+        .notification-status {
+
+            margin-top: 11px;
+
+            color: #cbd5e1;
+
+            font-size: 11px;
+        }
+
+
+        .notification-status.success {
+
+            color: #bbf7d0;
+        }
+
+
+        .notification-status.error {
+
+            color: #fecaca;
+        }
+
+
         @media (
             max-width: 560px
         ) {
@@ -1002,6 +1106,67 @@
             {% endif %}
 
 
+
+            <!-- =================================
+                 FUTURE EVENT NOTIFICATIONS
+            ================================== -->
+
+            {% if firebase_push_configured %}
+
+                <section class="notification-card">
+
+                    <h2>
+                        🔔 Get notified about future events
+                    </h2>
+
+                    <p>
+
+                        Allow Kalxa Ticketing to send this browser
+                        notifications when new events and ticket
+                        releases become available.
+
+                        This is optional and you can turn it off
+                        whenever you want.
+
+                    </p>
+
+
+                    <div class="notification-actions">
+
+                        <button
+                            type="button"
+                            id="enable-notifications"
+                            class="button notification-button"
+                        >
+                            🔔 Notify Me
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="disable-notifications"
+                            class="button button-secondary"
+                            hidden
+                        >
+                            Turn Off
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="notification-status"
+                        class="notification-status"
+                        aria-live="polite"
+                    >
+                        Notifications are currently off.
+                    </div>
+
+                </section>
+
+            {% endif %}
+
+
         </div>
 
 
@@ -1009,6 +1174,554 @@
 
 
 </div>
+
+
+
+{% if firebase_push_configured %}
+
+    <script
+        id="firebase-web-config"
+        type="application/json"
+    >
+        {{ firebase_config|tojson }}
+    </script>
+
+
+    <script
+        id="firebase-vapid-key"
+        type="application/json"
+    >
+        {{ firebase_vapid_key|tojson }}
+    </script>
+
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+
+        import {
+            getMessaging,
+            isSupported,
+            onRegistered,
+            onUnregistered,
+            register as registerMessaging,
+            unregister as unregisterMessaging
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js";
+
+
+        const enableButton =
+            document.getElementById(
+                "enable-notifications"
+            );
+
+
+        const disableButton =
+            document.getElementById(
+                "disable-notifications"
+            );
+
+
+        const statusElement =
+            document.getElementById(
+                "notification-status"
+            );
+
+
+        const bookingReference =
+            {{ order.payment_reference|tojson }};
+
+
+        const firebaseConfig =
+            JSON.parse(
+                document.getElementById(
+                    "firebase-web-config"
+                ).textContent
+            );
+
+
+        const vapidKey =
+            JSON.parse(
+                document.getElementById(
+                    "firebase-vapid-key"
+                ).textContent
+            );
+
+
+        let currentInstallationId =
+            localStorage.getItem(
+                "kalxa_firebase_installation_id"
+            );
+
+
+        let messaging = null;
+
+
+        function setStatus(
+            message,
+            type = ""
+        ) {
+
+            statusElement.textContent =
+                message;
+
+
+            statusElement.className =
+                "notification-status";
+
+
+            if (type) {
+
+                statusElement.classList.add(
+                    type
+                );
+            }
+        }
+
+
+        function setEnabledUi() {
+
+            enableButton.hidden =
+                true;
+
+            disableButton.hidden =
+                false;
+
+            setStatus(
+                "Notifications are enabled on this browser.",
+                "success"
+            );
+        }
+
+
+        function setDisabledUi() {
+
+            enableButton.hidden =
+                false;
+
+            disableButton.hidden =
+                true;
+
+            setStatus(
+                "Notifications are currently off."
+            );
+        }
+
+
+        async function saveSubscription(
+            installationId
+        ) {
+
+            const response =
+                await fetch(
+                    "/notifications/subscribe",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                        },
+
+                        body:
+                            JSON.stringify(
+                                {
+                                    reference:
+                                        bookingReference,
+
+                                    installation_id:
+                                        installationId,
+                                }
+                            ),
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                !response.ok
+                || !result.ok
+            ) {
+
+                throw new Error(
+                    result.error
+                    || "Unable to save notification preference."
+                );
+            }
+
+
+            currentInstallationId =
+                installationId;
+
+
+            localStorage.setItem(
+                "kalxa_firebase_installation_id",
+                installationId
+            );
+
+
+            localStorage.setItem(
+                "kalxa_notifications_enabled",
+                "true"
+            );
+
+
+            setEnabledUi();
+        }
+
+
+        async function initializeMessaging() {
+
+            const supported =
+                await isSupported();
+
+
+            if (!supported) {
+
+                enableButton.disabled =
+                    true;
+
+                setStatus(
+                    "Push notifications are not supported by this browser.",
+                    "error"
+                );
+
+                return false;
+            }
+
+
+            const firebaseApp =
+                initializeApp(
+                    firebaseConfig
+                );
+
+
+            messaging =
+                getMessaging(
+                    firebaseApp
+                );
+
+
+            onRegistered(
+                messaging,
+                async (
+                    installationId
+                ) => {
+
+                    try {
+
+                        await saveSubscription(
+                            installationId
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            error
+                        );
+
+                        setStatus(
+                            error.message,
+                            "error"
+                        );
+                    }
+                }
+            );
+
+
+            onUnregistered(
+                messaging,
+                async (
+                    installationId
+                ) => {
+
+                    try {
+
+                        await fetch(
+                            "/notifications/unsubscribe",
+                            {
+                                method:
+                                    "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            reference:
+                                                bookingReference,
+
+                                            installation_id:
+                                                installationId,
+                                        }
+                                    ),
+                            }
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            error
+                        );
+                    }
+
+
+                    localStorage.removeItem(
+                        "kalxa_firebase_installation_id"
+                    );
+
+
+                    localStorage.removeItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+
+                    currentInstallationId =
+                        null;
+
+
+                    setDisabledUi();
+                }
+            );
+
+
+            return true;
+        }
+
+
+        enableButton.addEventListener(
+            "click",
+            async () => {
+
+                enableButton.disabled =
+                    true;
+
+
+                setStatus(
+                    "Requesting notification permission..."
+                );
+
+
+                try {
+
+                    const initialized =
+                        (
+                            messaging
+                            || await initializeMessaging()
+                        );
+
+
+                    if (!initialized) {
+
+                        return;
+                    }
+
+
+                    const permission =
+                        await Notification.requestPermission();
+
+
+                    if (
+                        permission
+                        !== "granted"
+                    ) {
+
+                        throw new Error(
+                            "Notification permission was not granted."
+                        );
+                    }
+
+
+                    const serviceWorkerRegistration =
+                        await navigator.serviceWorker.register(
+                            "/firebase-messaging-sw.js",
+                            {
+                                scope:
+                                    "/",
+                            }
+                        );
+
+
+                    await registerMessaging(
+                        messaging,
+                        {
+                            vapidKey:
+                                vapidKey,
+
+                            serviceWorkerRegistration:
+                                serviceWorkerRegistration,
+                        }
+                    );
+
+
+                    setStatus(
+                        "Finishing notification setup..."
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+
+                    setStatus(
+                        error.message
+                        || "Unable to enable notifications.",
+                        "error"
+                    );
+
+                } finally {
+
+                    enableButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        disableButton.addEventListener(
+            "click",
+            async () => {
+
+                disableButton.disabled =
+                    true;
+
+
+                try {
+
+                    if (!messaging) {
+
+                        await initializeMessaging();
+                    }
+
+
+                    if (
+                        messaging
+                    ) {
+
+                        await unregisterMessaging(
+                            messaging
+                        );
+                    }
+
+
+                    if (
+                        currentInstallationId
+                    ) {
+
+                        await fetch(
+                            "/notifications/unsubscribe",
+                            {
+                                method:
+                                    "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            reference:
+                                                bookingReference,
+
+                                            installation_id:
+                                                currentInstallationId,
+                                        }
+                                    ),
+                            }
+                        );
+                    }
+
+
+                    localStorage.removeItem(
+                        "kalxa_firebase_installation_id"
+                    );
+
+
+                    localStorage.removeItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+
+                    currentInstallationId =
+                        null;
+
+
+                    setDisabledUi();
+
+                } catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+
+                    setStatus(
+                        error.message
+                        || "Unable to turn notifications off.",
+                        "error"
+                    );
+
+                } finally {
+
+                    disableButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async () => {
+
+                const enabled =
+                    localStorage.getItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+
+                if (
+                    enabled === "true"
+                    && currentInstallationId
+                ) {
+
+                    setEnabledUi();
+
+                } else {
+
+                    setDisabledUi();
+                }
+
+
+                try {
+
+                    await initializeMessaging();
+
+                } catch (error) {
+
+                    console.error(
+                        error
+                    );
+                }
+            }
+        );
+
+    </script>
+
+{% endif %}
 
 
 </body>
