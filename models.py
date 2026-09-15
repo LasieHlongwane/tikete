@@ -1306,6 +1306,240 @@ class CheckIn(db.Model):
 
 
 # ============================================================
+# ATTENDEE CONTACT
+# ============================================================
+#
+# A contact is created only when the attendee explicitly opts
+# in to future-event notifications.
+#
+# TicketOrder.customer_phone remains the booking record.
+# This table is the reusable consented audience identity.
+# ============================================================
+
+class AttendeeContact(db.Model):
+
+    __tablename__ = "attendee_contacts"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    name = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    phone = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    phone_normalized = db.Column(
+        db.String(50),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    email = db.Column(
+        db.String(150),
+        nullable=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # MARKETING / PUSH CONSENT
+    # ========================================================
+
+    notification_consent = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+    )
+
+    consented_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    opted_out_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    push_subscriptions = db.relationship(
+        "PushSubscription",
+        back_populates="contact",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+    @property
+    def is_opted_in(self):
+
+        return (
+            self.notification_consent
+            and self.opted_out_at
+            is None
+        )
+
+
+    def __repr__(self):
+
+        return (
+            "<AttendeeContact "
+            f"id={self.id} "
+            f"phone={self.phone_normalized} "
+            f"consent={self.notification_consent}>"
+        )
+
+
+# ============================================================
+# PUSH SUBSCRIPTION
+# ============================================================
+#
+# Stores the Firebase Installation ID (FID) for a browser /
+# device that has explicitly opted in.
+#
+# One attendee contact may have multiple devices.
+# One FID belongs to only one contact at a time.
+# ============================================================
+
+class PushSubscription(db.Model):
+
+    __tablename__ = "push_subscriptions"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    contact_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "attendee_contacts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    firebase_installation_id = db.Column(
+        db.String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    registered_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    last_seen_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    disabled_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    contact = db.relationship(
+        "AttendeeContact",
+        back_populates="push_subscriptions",
+    )
+
+
+    @property
+    def is_active(self):
+
+        return (
+            self.active
+            and self.disabled_at
+            is None
+            and self.contact
+            and self.contact.is_opted_in
+        )
+
+
+    def __repr__(self):
+
+        return (
+            "<PushSubscription "
+            f"id={self.id} "
+            f"contact_id={self.contact_id} "
+            f"active={self.active}>"
+        )
+
+
+# ============================================================
 # KALXA AUTH BRIDGE TOKEN
 # ============================================================
 
