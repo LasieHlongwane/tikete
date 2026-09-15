@@ -7281,6 +7281,7 @@ def admin_event_control(
         .filter_by(
             id=event_id,
             organizer_id=organizer.id,
+            organizer_deleted=False,
         )
         .first_or_404()
     )
