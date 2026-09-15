@@ -8,7 +8,7 @@ import os
 import secrets
 import string
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from decimal import Decimal, InvalidOperation
 
 import qrcode
@@ -2382,7 +2382,10 @@ def superadmin_organizer_detail(
         TicketEvent.query
         .filter_by(
             organizer_id=
-                organizer.id
+                organizer.id,
+
+            organizer_deleted=
+                False,
         )
         .order_by(
             TicketEvent.created_at.desc()
@@ -3433,16 +3436,30 @@ def superadmin_reactivate_organizer(
 @app.route("/")
 def home():
 
+    today = (
+        date.today()
+    )
+
+
     events = (
         TicketEvent.query
+
         .filter_by(
             active=True,
             status="published",
+            organizer_deleted=False,
         )
+
+        .filter(
+            TicketEvent.event_date
+            >= today
+        )
+
         .order_by(
             TicketEvent.event_date.asc(),
             TicketEvent.created_at.desc(),
         )
+
         .all()
     )
 
@@ -4282,6 +4299,7 @@ def event_page(
             id=event_id,
             active=True,
             status="published",
+            organizer_deleted=False,
         )
         .first_or_404()
     )
@@ -4315,6 +4333,7 @@ def reserve_ticket(
             id=event_id,
             active=True,
             status="published",
+            organizer_deleted=False,
         )
         .first_or_404()
     )
@@ -6229,6 +6248,9 @@ def admin_dashboard():
 
                 kalxa_content_item_id=
                     active_content_item_id,
+
+                organizer_deleted=
+                    False,
             )
             .first()
         )
@@ -7063,6 +7085,171 @@ def admin_new_event():
         url_for(
             "admin_event_control",
             event_id=event.id,
+        )
+    )
+
+
+# ============================================================
+# ORGANIZER - DELETE EVENT
+# ============================================================
+#
+# SAFE DELETE:
+#
+# We intentionally do NOT call db.session.delete(event).
+#
+# TicketEvent.orders uses cascading relationships, so a hard
+# delete could also destroy order/ticket history.
+#
+# Instead:
+# - remove event from organizer dashboard
+# - remove event from public ticketing
+# - stop sales
+# - preserve orders, payments, passes and check-ins
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/delete",
+    methods=[
+        "POST",
+    ],
+)
+def admin_delete_event(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+
+            organizer_deleted=
+                False,
+        )
+        .first_or_404()
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    event.organizer_deleted = (
+        True
+    )
+
+    event.deleted_at = (
+        now
+    )
+
+    event.active = (
+        False
+    )
+
+    event.sales_open = (
+        False
+    )
+
+
+    if (
+        event.status
+        != "closed"
+    ):
+
+        event.status = (
+            "closed"
+        )
+
+
+    if (
+        event.closed_at
+        is None
+    ):
+
+        event.closed_at = (
+            now
+        )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Organizer Delete Event] "
+                "Failed organizer_id=%s "
+                "event_id=%s error=%s"
+            ),
+            organizer.id,
+            event.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Event could not be deleted. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    current_app.logger.info(
+        (
+            "[Organizer Delete Event] "
+            "Safe-deleted organizer_id=%s event_id=%s"
+        ),
+        organizer.id,
+        event.id,
+    )
+
+
+    flash(
+        (
+            "Event deleted from your dashboard. "
+            "Ticket and order history was kept safely."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_dashboard"
         )
     )
 
@@ -8871,3 +9058,4 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
+
