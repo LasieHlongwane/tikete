@@ -2462,6 +2462,65 @@
 </script>
 
 
+
+<script>
+
+    // ========================================================
+    // KALXA PWA SERVICE WORKER REGISTRATION
+    // ========================================================
+    //
+    // Register on every public attendee page, not only after
+    // the attendee enables notifications.
+    //
+    // This allows Chrome / Edge to detect the page as an
+    // installable PWA before notification permission is used.
+    // ========================================================
+
+    if (
+        "serviceWorker"
+        in navigator
+    ) {
+
+        window.addEventListener(
+            "load",
+            async () => {
+
+                try {
+
+                    const registration =
+                        await navigator.serviceWorker.register(
+                            "/firebase-messaging-sw.js",
+                            {
+                                scope:
+                                    "/",
+                            }
+                        );
+
+
+                    // Explicitly ask the browser to check for
+                    // the newly deployed worker.
+                    await registration.update();
+
+
+                    console.log(
+                        "[Kalxa PWA] Service worker registered.",
+                        registration.scope
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "[Kalxa PWA] Service worker registration failed.",
+                        error
+                    );
+                }
+            }
+        );
+    }
+
+</script>
+
+
 </body>
 
 </html>
