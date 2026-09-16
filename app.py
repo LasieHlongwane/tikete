@@ -6,8 +6,11 @@ import io
 import hashlib
 import hmac
 import json
+import math
 import os
 import secrets
+import threading
+import time
 import string
 import uuid
 import urllib.error
@@ -51,6 +54,7 @@ from models import (
     AttendeeContact,
     CheckIn,
     EntryPass,
+    GeocodedArea,
     KalxaBridgeTokenUse,
     Organizer,
     PushCampaign,
@@ -70,6 +74,38 @@ from models import (
 # ============================================================
 
 load_dotenv()
+
+
+# ============================================================
+# LOCAL EVENT NOTIFICATION TARGETING
+# ============================================================
+
+LOCAL_NOTIFICATION_RADIUS_KM = float(
+    os.environ.get(
+        "LOCAL_NOTIFICATION_RADIUS_KM",
+        "60",
+    )
+)
+
+NOMINATIM_BASE_URL = (
+    os.environ.get(
+        "NOMINATIM_BASE_URL",
+        "https://nominatim.openstreetmap.org",
+    )
+    .strip()
+    .rstrip("/")
+)
+
+NOMINATIM_USER_AGENT = (
+    os.environ.get(
+        "NOMINATIM_USER_AGENT",
+        "Kalxa-Ticketing/1.0",
+    )
+    .strip()
+)
+
+_nominatim_lock = threading.Lock()
+_nominatim_last_request_at = 0.0
 
 
 # ============================================================
@@ -1935,6 +1971,225 @@ def sync_event_legacy_ticket_summary(
 
 
 # ============================================================
+# AREA GEOCODING + DISTANCE
+# ============================================================
+
+def normalize_area_key(value):
+
+    return " ".join(
+        str(value or "")
+        .strip()
+        .casefold()
+        .split()
+    )
+
+
+def geocode_area(area_text):
+
+    global _nominatim_last_request_at
+
+    area = str(area_text or "").strip()
+
+    if not area or len(area) > 200:
+        raise ValueError("Enter a valid area or town.")
+
+    query_key = normalize_area_key(area)
+
+    cached = (
+        GeocodedArea.query
+        .filter_by(query_key=query_key)
+        .first()
+    )
+
+    if cached:
+        return cached
+
+    search_text = area
+
+    if "south africa" not in area.casefold():
+        search_text = f"{area}, South Africa"
+
+    with _nominatim_lock:
+
+        elapsed = (
+            time.monotonic()
+            - _nominatim_last_request_at
+        )
+
+        if elapsed < 1.05:
+            time.sleep(1.05 - elapsed)
+
+        try:
+
+            response = requests.get(
+                NOMINATIM_BASE_URL + "/search",
+                params={
+                    "q": search_text,
+                    "format": "jsonv2",
+                    "limit": 1,
+                    "countrycodes": "za",
+                    "addressdetails": 1,
+                },
+                headers={
+                    "User-Agent":
+                        NOMINATIM_USER_AGENT,
+                    "Accept":
+                        "application/json",
+                },
+                timeout=15,
+            )
+
+            _nominatim_last_request_at = (
+                time.monotonic()
+            )
+
+            response.raise_for_status()
+
+            results = response.json() or []
+
+        except (
+            requests.RequestException,
+            ValueError,
+        ) as error:
+
+            raise RuntimeError(
+                "Location lookup is temporarily unavailable. "
+                "Please try again."
+            ) from error
+
+    if not results:
+
+        raise ValueError(
+            "We could not find that South African area or town. "
+            "Try a nearby town name."
+        )
+
+    result = results[0]
+
+    try:
+
+        latitude = float(result["lat"])
+        longitude = float(result["lon"])
+
+    except (
+        KeyError,
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise RuntimeError(
+            "The location service returned an invalid result."
+        ) from error
+
+    cached = GeocodedArea(
+        query_key=query_key,
+        query_text=area,
+        display_name=str(
+            result.get("display_name", area)
+        )[:500],
+        latitude=latitude,
+        longitude=longitude,
+        provider="nominatim",
+    )
+
+    try:
+
+        db.session.add(cached)
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        cached = (
+            GeocodedArea.query
+            .filter_by(query_key=query_key)
+            .first()
+        )
+
+        if not cached:
+            raise
+
+    return cached
+
+
+def haversine_distance_km(
+    latitude_1,
+    longitude_1,
+    latitude_2,
+    longitude_2,
+):
+
+    earth_radius_km = 6371.0088
+
+    lat1 = math.radians(float(latitude_1))
+    lon1 = math.radians(float(longitude_1))
+    lat2 = math.radians(float(latitude_2))
+    lon2 = math.radians(float(longitude_2))
+
+    delta_lat = lat2 - lat1
+    delta_lon = lon2 - lon1
+
+    value = (
+        math.sin(delta_lat / 2) ** 2
+        +
+        math.cos(lat1)
+        * math.cos(lat2)
+        * math.sin(delta_lon / 2) ** 2
+    )
+
+    central_angle = (
+        2
+        * math.atan2(
+            math.sqrt(value),
+            math.sqrt(1 - value),
+        )
+    )
+
+    return earth_radius_km * central_angle
+
+
+def get_local_push_subscriptions(
+    event,
+    radius_km=None,
+):
+
+    radius = float(
+        radius_km
+        if radius_km is not None
+        else LOCAL_NOTIFICATION_RADIUS_KM
+    )
+
+    if (
+        event.notification_latitude is None
+        or event.notification_longitude is None
+    ):
+        return []
+
+    local_subscriptions = []
+
+    for subscription in get_active_push_subscriptions():
+
+        if (
+            subscription.home_latitude is None
+            or subscription.home_longitude is None
+        ):
+            continue
+
+        distance = haversine_distance_km(
+            event.notification_latitude,
+            event.notification_longitude,
+            subscription.home_latitude,
+            subscription.home_longitude,
+        )
+
+        if distance <= radius:
+            local_subscriptions.append(subscription)
+
+    return local_subscriptions
+
+
+# ============================================================
 # NORMALIZE EMAIL
 # ============================================================
 
@@ -2876,6 +3131,27 @@ def superadmin_notifications():
         )
 
 
+    local_audience_counts = {
+        event.id:
+            len(
+                get_local_push_subscriptions(
+                    event,
+                    LOCAL_NOTIFICATION_RADIUS_KM,
+                )
+            )
+        for event in published_events
+    }
+
+    selected_local_audience_count = (
+        local_audience_counts.get(
+            selected_event.id,
+            0,
+        )
+        if selected_event
+        else 0
+    )
+
+
     return render_template(
         "superadmin/notifications.html",
 
@@ -2896,6 +3172,15 @@ def superadmin_notifications():
 
         firebase_admin_ready=
             firebase_admin_configured(),
+
+        local_audience_counts=
+            local_audience_counts,
+
+        selected_local_audience_count=
+            selected_local_audience_count,
+
+        local_notification_radius_km=
+            LOCAL_NOTIFICATION_RADIUS_KM,
     )
 
 
@@ -3088,17 +3373,38 @@ def superadmin_send_notification():
         )
 
 
-    subscriptions = (
-        get_active_push_subscriptions()
-    )
+    if (
+        event.notification_latitude is None
+        or event.notification_longitude is None
+    ):
 
+        flash(
+            "This event does not have a resolved "
+            "notification area yet. Edit the event first.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+                event_id=event.id,
+            )
+        )
+
+    subscriptions = (
+        get_local_push_subscriptions(
+            event,
+            LOCAL_NOTIFICATION_RADIUS_KM,
+        )
+    )
 
     if not subscriptions:
 
         flash(
             (
-                "There are currently no active "
-                "push-notification subscribers."
+                "No active notification subscribers are "
+                f"within {LOCAL_NOTIFICATION_RADIUS_KM:g} km "
+                "of this event."
             ),
             "error",
         )
@@ -3138,6 +3444,25 @@ def superadmin_send_notification():
 
         target_url=
             target_url,
+
+        target_mode=
+            "radius",
+
+        target_area=
+            event.notification_area,
+
+        target_latitude=
+            event.notification_latitude,
+
+        target_longitude=
+            event.notification_longitude,
+
+        radius_km=
+            Decimal(
+                str(
+                    LOCAL_NOTIFICATION_RADIUS_KM
+                )
+            ),
 
         status=
             "draft",
@@ -4549,49 +4874,47 @@ def notification_subscribe_public():
 
         return {
             "ok": False,
-            "error": (
-                "Firebase Web Push is not configured."
-            ),
+            "error":
+                "Firebase Web Push is not configured.",
         }, 503
 
+    payload = request.get_json(silent=True) or {}
 
-    payload = (
-        request.get_json(
-            silent=True
-        )
-        or {}
-    )
+    installation_id = str(
+        payload.get("installation_id", "")
+    ).strip()
 
-
-    installation_id = (
-        str(
-            payload.get(
-                "installation_id",
-                ""
-            )
-        )
-        .strip()
-    )
-
+    home_area = str(
+        payload.get("home_area", "")
+    ).strip()
 
     if (
         not installation_id
-        or len(
-            installation_id
-        )
-        > 255
+        or len(installation_id) > 255
     ):
-
         return {
             "ok": False,
-            "error": (
-                "Invalid Firebase installation ID."
-            ),
+            "error":
+                "Invalid Firebase installation ID.",
         }, 400
 
+    if not home_area:
+        return {
+            "ok": False,
+            "error":
+                "Enter the area or town where you live.",
+        }, 400
+
+    try:
+        location = geocode_area(home_area)
+
+    except (ValueError, RuntimeError) as error:
+        return {
+            "ok": False,
+            "error": str(error),
+        }, 400
 
     now = datetime.utcnow()
-
 
     subscription = (
         PushSubscription.query
@@ -4602,91 +4925,68 @@ def notification_subscribe_public():
         .first()
     )
 
-
     if not subscription:
 
-        # Anonymous / device-only notification subscriber.
-        #
-        # If this person later buys a ticket and enables
-        # notifications from their booking page, the existing
-        # FID can be attached to their AttendeeContact.
         subscription = PushSubscription(
-            contact_id=
-                None,
-
+            contact_id=None,
             firebase_installation_id=
                 installation_id,
-
-            active=
-                True,
-
-            registered_at=
-                now,
-
-            last_seen_at=
-                now,
-
-            disabled_at=
-                None,
+            active=True,
+            registered_at=now,
+            last_seen_at=now,
+            disabled_at=None,
         )
 
-
-        db.session.add(
-            subscription
-        )
-
+        db.session.add(subscription)
 
     else:
 
-        # Preserve contact_id when this browser is already
-        # attached to a known ticket buyer.
-        subscription.active = (
-            True
-        )
+        subscription.active = True
+        subscription.last_seen_at = now
+        subscription.disabled_at = None
 
-        subscription.last_seen_at = (
-            now
-        )
-
-        subscription.disabled_at = (
-            None
-        )
-
+    subscription.home_area = home_area
+    subscription.home_location_display = (
+        location.display_name
+    )
+    subscription.home_latitude = (
+        location.latitude
+    )
+    subscription.home_longitude = (
+        location.longitude
+    )
 
     try:
 
         db.session.commit()
 
-
     except Exception as error:
 
         db.session.rollback()
 
-
         current_app.logger.exception(
-            (
-                "[Public Push Subscribe] "
-                "Failed installation_id=%s error=%s"
-            ),
+            "[Public Push Subscribe] "
+            "Failed installation_id=%s error=%s",
             installation_id,
             error,
         )
 
-
         return {
             "ok": False,
-            "error": (
-                "Notification subscription could "
-                "not be saved."
-            ),
+            "error":
+                "Notification subscription could not be saved.",
         }, 500
-
 
     return {
         "ok": True,
         "message": (
-            "Kalxa notifications are enabled."
+            "Kalxa notifications are enabled for "
+            f"{home_area} and events within "
+            f"{LOCAL_NOTIFICATION_RADIUS_KM:g} km."
         ),
+        "home_area": home_area,
+        "radius_km":
+            LOCAL_NOTIFICATION_RADIUS_KM,
     }
 
 
@@ -7046,9 +7346,7 @@ self.addEventListener(
 
 @app.route(
     "/notifications/subscribe",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
 def notification_subscribe():
 
@@ -7056,114 +7354,81 @@ def notification_subscribe():
 
         return {
             "ok": False,
-            "error": (
-                "Firebase Web Push is not configured."
-            ),
+            "error":
+                "Firebase Web Push is not configured.",
         }, 503
 
+    payload = request.get_json(silent=True) or {}
 
-    payload = (
-        request.get_json(
-            silent=True
-        )
-        or {}
-    )
+    reference = str(
+        payload.get("reference", "")
+    ).strip().upper()
 
+    installation_id = str(
+        payload.get("installation_id", "")
+    ).strip()
 
-    reference = (
-        str(
-            payload.get(
-                "reference",
-                ""
-            )
-        )
-        .strip()
-        .upper()
-    )
+    home_area = str(
+        payload.get("home_area", "")
+    ).strip()
 
-
-    installation_id = (
-        str(
-            payload.get(
-                "installation_id",
-                ""
-            )
-        )
-        .strip()
-    )
-
-
-    if (
-        not reference
-        or not installation_id
-    ):
-
+    if not reference or not installation_id:
         return {
             "ok": False,
-            "error": (
-                "Booking reference and installation ID "
-                "are required."
-            ),
+            "error":
+                "Booking reference and installation ID are required.",
         }, 400
 
-
-    if (
-        len(
-            installation_id
-        )
-        > 255
-    ):
-
+    if not home_area:
         return {
             "ok": False,
-            "error": (
-                "Invalid Firebase installation ID."
-            ),
+            "error":
+                "Enter the area or town where you live.",
         }, 400
 
+    if len(installation_id) > 255:
+        return {
+            "ok": False,
+            "error":
+                "Invalid Firebase installation ID.",
+        }, 400
 
     order = (
         TicketOrder.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference
         )
         .first()
     )
 
-
     if not order:
-
         return {
             "ok": False,
-            "error": (
-                "Booking could not be found."
-            ),
+            "error":
+                "Booking could not be found.",
         }, 404
 
+    try:
+        location = geocode_area(home_area)
 
-    phone_normalized = (
-        normalize_attendee_phone(
-            order.customer_phone
-        )
-    )
-
-
-    if not phone_normalized:
-
+    except (ValueError, RuntimeError) as error:
         return {
             "ok": False,
-            "error": (
-                "A valid attendee phone number "
-                "is required."
-            ),
+            "error": str(error),
         }, 400
 
-
-    now = (
-        datetime.utcnow()
+    phone_normalized = normalize_attendee_phone(
+        order.customer_phone
     )
 
+    if not phone_normalized:
+        return {
+            "ok": False,
+            "error":
+                "A valid attendee phone number is required.",
+        }, 400
+
+    now = datetime.utcnow()
 
     contact = (
         AttendeeContact.query
@@ -7174,40 +7439,21 @@ def notification_subscribe():
         .first()
     )
 
-
     if not contact:
 
         contact = AttendeeContact(
-
-            name=
-                order.customer_name,
-
-            phone=
-                order.customer_phone,
-
+            name=order.customer_name,
+            phone=order.customer_phone,
             phone_normalized=
                 phone_normalized,
-
-            email=
-                order.customer_email,
-
-            notification_consent=
-                True,
-
-            consented_at=
-                now,
-
-            opted_out_at=
-                None,
+            email=order.customer_email,
+            notification_consent=True,
+            consented_at=now,
+            opted_out_at=None,
         )
 
-
-        db.session.add(
-            contact
-        )
-
+        db.session.add(contact)
         db.session.flush()
-
 
     else:
 
@@ -7215,29 +7461,17 @@ def notification_subscribe():
             order.customer_name
             or contact.name
         )
-
         contact.phone = (
             order.customer_phone
             or contact.phone
         )
-
         contact.email = (
             order.customer_email
             or contact.email
         )
-
-        contact.notification_consent = (
-            True
-        )
-
-        contact.consented_at = (
-            now
-        )
-
-        contact.opted_out_at = (
-            None
-        )
-
+        contact.notification_consent = True
+        contact.consented_at = now
+        contact.opted_out_at = None
 
     subscription = (
         PushSubscription.query
@@ -7248,89 +7482,69 @@ def notification_subscribe():
         .first()
     )
 
-
     if not subscription:
 
         subscription = PushSubscription(
-
-            contact_id=
-                contact.id,
-
+            contact_id=contact.id,
             firebase_installation_id=
                 installation_id,
-
-            active=
-                True,
-
-            registered_at=
-                now,
-
-            last_seen_at=
-                now,
-
-            disabled_at=
-                None,
+            active=True,
+            registered_at=now,
+            last_seen_at=now,
+            disabled_at=None,
         )
 
-
-        db.session.add(
-            subscription
-        )
-
+        db.session.add(subscription)
 
     else:
 
-        subscription.contact_id = (
-            contact.id
-        )
+        subscription.contact_id = contact.id
+        subscription.active = True
+        subscription.last_seen_at = now
+        subscription.disabled_at = None
 
-        subscription.active = (
-            True
-        )
-
-        subscription.last_seen_at = (
-            now
-        )
-
-        subscription.disabled_at = (
-            None
-        )
-
+    subscription.home_area = home_area
+    subscription.home_location_display = (
+        location.display_name
+    )
+    subscription.home_latitude = (
+        location.latitude
+    )
+    subscription.home_longitude = (
+        location.longitude
+    )
 
     try:
 
         db.session.commit()
 
-
     except Exception as error:
 
         db.session.rollback()
 
-
         current_app.logger.exception(
-            (
-                "[Push Subscribe] Failed "
-                "reference=%s error=%s"
-            ),
+            "[Push Subscribe] Failed "
+            "reference=%s error=%s",
             reference,
             error,
         )
 
-
         return {
             "ok": False,
-            "error": (
-                "Notification subscription could "
-                "not be saved."
-            ),
+            "error":
+                "Notification subscription could not be saved.",
         }, 500
-
 
     return {
         "ok": True,
         "message": (
-            "Future-event notifications are enabled."
+            "Future-event notifications are enabled "
+            f"for {home_area} and events within "
+            f"{LOCAL_NOTIFICATION_RADIUS_KM:g} km."
         ),
+        "home_area": home_area,
+        "radius_km":
+            LOCAL_NOTIFICATION_RADIUS_KM,
     }
 
 
@@ -8819,6 +9033,44 @@ def admin_new_event():
 
 
     # ========================================================
+    # EVENT NOTIFICATION AREA
+    # ========================================================
+
+    event_area = (
+        request.form.get(
+            "notification_area",
+            "",
+        )
+        .strip()
+    )
+
+    if not event_area:
+
+        flash(
+            "Event area or town is required so Kalxa "
+            "can target nearby notification subscribers.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_new_event")
+        )
+
+    try:
+        event_location = geocode_area(
+            event_area
+        )
+
+    except (ValueError, RuntimeError) as error:
+
+        flash(str(error), "error")
+
+        return redirect(
+            url_for("admin_new_event")
+        )
+
+
+    # ========================================================
     # TICKET TYPES
     # ========================================================
 
@@ -9034,6 +9286,18 @@ def admin_new_event():
             .strip()
             or None
         ),
+
+        notification_area=
+            event_area,
+
+        notification_location_display=
+            event_location.display_name,
+
+        notification_latitude=
+            event_location.latitude,
+
+        notification_longitude=
+            event_location.longitude,
 
         event_date=
             event_date,
@@ -9604,6 +9868,42 @@ def admin_edit_event(
                 )
 
 
+        event_area = (
+            request.form.get(
+                "notification_area",
+                "",
+            )
+            .strip()
+        )
+
+        if not event_area:
+
+            flash(
+                "Event area or town is required for "
+                "local notification targeting.",
+                "error",
+            )
+
+            return render_template(
+                "admin/edit_event.html",
+                event=event,
+            )
+
+        try:
+            event_location = geocode_area(
+                event_area
+            )
+
+        except (ValueError, RuntimeError) as error:
+
+            flash(str(error), "error")
+
+            return render_template(
+                "admin/edit_event.html",
+                event=event,
+            )
+
+
         try:
 
             ticket_rows = (
@@ -9825,6 +10125,22 @@ def admin_edit_event(
             )
             .strip()
             or None
+        )
+
+        event.notification_area = (
+            event_area
+        )
+
+        event.notification_location_display = (
+            event_location.display_name
+        )
+
+        event.notification_latitude = (
+            event_location.latitude
+        )
+
+        event.notification_longitude = (
+            event_location.longitude
         )
 
         event.event_date = (
