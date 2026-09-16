@@ -2176,10 +2176,10 @@ class PushSubscription(db.Model):
 #   - one launch campaign
 #
 # pro:
-#   - R99
 #   - launch
 #   - 3 days to go
 #   - tomorrow
+#   - tonight / today
 #   - happening now
 # ============================================================
 
