@@ -2074,6 +2074,20 @@
 
             <a
                 href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="admin-nav-link"
+            >
+                {% if subscription_active %}
+                    ✓ Subscription
+                {% else %}
+                    Activate Subscription
+                {% endif %}
+            </a>
+
+
+            <a
+                href="{{ url_for(
                     'admin_payments'
                 ) }}"
                 class="admin-nav-link"
@@ -2318,12 +2332,25 @@
 
                 </div>
 
-                <span
-                    class="subscription-badge
-                    {{ subscription_status }}"
-                >
-                    {{ subscription_status|upper }}
-                </span>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">
+
+                    <span
+                        class="subscription-badge
+                        {{ subscription_status }}"
+                    >
+                        {{ subscription_status|upper }}
+                    </span>
+
+                    <a
+                        href="{{ url_for(
+                            'admin_subscription'
+                        ) }}"
+                        class="button button-light"
+                    >
+                        Activate Subscription
+                    </a>
+
+                </div>
 
             </div>
 
@@ -2956,3 +2983,4 @@
 </body>
 
 </html>
+
