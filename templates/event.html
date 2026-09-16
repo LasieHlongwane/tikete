@@ -1853,6 +1853,7 @@
 
                                     <div>
                                         <strong>{{ ticket_type.name }}</strong>
+                                        {% if ticket_type.current_sale_phase %}<small style="display:block;color:#facc15;">{{ ticket_type.current_sale_phase.name }}</small>{% endif %}
 
                                         {% if ticket_type.capacity is not none %}
                                             <div class="ticket-availability" style="margin-top:3px;">
