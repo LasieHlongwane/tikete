@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gate Staff Login | Kalxa</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0c0e;color:#fff4df;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.card{width:min(430px,calc(100% - 28px));padding:28px;background:#15171b;border:1px solid #2b2f35;border-radius:22px}.eyebrow{color:#9ca3af;font-size:.72rem;font-weight:900;letter-spacing:.1em}.field{margin-top:14px}.field label{display:block;font-weight:850;margin-bottom:6px}.field input{width:100%;min-height:48px;padding:11px 12px;border:1px solid #3a3f47;border-radius:11px;background:#0f1114;color:#fff;font:inherit}.button{width:100%;min-height:48px;margin-top:18px;border:0;border-radius:11px;background:#fff4df;color:#111827;font:inherit;font-weight:950;cursor:pointer}.flash{padding:11px 12px;margin-bottom:12px;border-radius:10px;background:#3b2920;color:#fed7aa}.muted{color:#a7abb2;line-height:1.5}
+</style></head>
+<body><main class="card">
+<span class="eyebrow">KALXA EVENT ENTRY</span><h1>Gate Staff Login</h1>
+<p class="muted">Use the username and password provided by the event organizer.</p>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash">{{ message }}</div>{% endfor %}{% endwith %}
+<form method="POST">
+<div class="field"><label>Username</label><input name="username" required autocomplete="username"></div>
+<div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
+<button class="button" type="submit">Enter Check-In</button>
+</form>
+</main></body></html>
