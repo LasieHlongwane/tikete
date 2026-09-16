@@ -10,1968 +10,601 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
-
     <title>
-        {{ event.title }} Orders | Kalxa Ticketing
+        Orders | {{ event.title }} | Kalxa Ticketing
     </title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/style.css'
-        ) }}"
-    >
-
-
     <style>
-
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-
-        body.admin-body {
-
+        body {
             margin: 0;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
+            background: #f5f6f8;
+            color: #111827;
             font-family:
                 Inter,
+                system-ui,
                 -apple-system,
                 BlinkMacSystemFont,
                 "Segoe UI",
-                Roboto,
-                Helvetica,
-                Arial,
                 sans-serif;
-
-            font-size:
-                16px;
-
-            line-height:
-                1.6;
-
-            -webkit-font-smoothing:
-                antialiased;
         }
 
-
-        .muted {
-
-            color:
-                #64748b;
+        .page {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 26px 0 64px;
         }
 
-
-        .section-kicker {
-
-            display:
-                inline-block;
-
-            margin-bottom:
-                8px;
-
-            color:
-                #64748b;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.14em;
-
-            text-transform:
-                uppercase;
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
-
-        h1,
-        h2,
-        h3,
-        p {
-
-            margin-top:
-                0;
+        .topbar a {
+            text-decoration: none;
         }
 
+        .back {
+            color: #111827;
+            font-weight: 850;
+        }
+
+        .brand {
+            font-weight: 950;
+        }
+
+        .hero {
+            background: #111827;
+            color: #fff;
+            border-radius: 22px;
+            padding: 24px;
+            margin-bottom: 18px;
+        }
+
+        .kicker {
+            display: block;
+            margin-bottom: 8px;
+            color: #9ca3af;
+            font-size: .76rem;
+            font-weight: 900;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+        }
 
         h1 {
-
-            margin-bottom:
-                10px;
-
-            color:
-                #111827;
-
-            font-size:
-                clamp(
-                    30px,
-                    5vw,
-                    46px
-                );
-
-            line-height:
-                1.05;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.045em;
+            margin: 0 0 8px;
+            font-size: clamp(30px, 5vw, 46px);
+            line-height: 1.05;
         }
 
-
-        h2 {
-
-            margin-bottom:
-                8px;
-
-            color:
-                #111827;
-
-            font-size:
-                23px;
-
-            line-height:
-                1.2;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                -0.03em;
+        .hero-copy {
+            color: #d1d5db;
+            margin: 0;
         }
 
-
-        h3 {
-
-            margin-bottom:
-                8px;
-
-            color:
-                #111827;
-
-            font-size:
-                18px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                -0.02em;
+        .metrics {
+            display: grid;
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin: 18px 0;
         }
 
-
-        /* =====================================================
-           SHELL
-        ===================================================== */
-
-        .admin-shell {
-
-            width:
-                100%;
-
-            max-width:
-                1180px;
-
-            margin:
-                0 auto;
-
-            padding:
-                0 18px 70px;
+        .metric {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 16px;
         }
 
-
-        /* =====================================================
-           NAVIGATION
-        ===================================================== */
-
-        .admin-nav {
-
-            position:
-                sticky;
-
-            top:
-                0;
-
-            z-index:
-                100;
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                20px;
-
-            min-height:
-                74px;
-
-            margin:
-                0 -18px;
-
-            padding:
-                14px 18px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.96
-                );
-
-            backdrop-filter:
-                blur(16px);
-
-            border-bottom:
-                1px solid #e5e7eb;
+        .metric span {
+            display: block;
+            color: #6b7280;
+            font-size: .78rem;
+            font-weight: 800;
+            margin-bottom: 7px;
         }
 
-
-        .admin-nav strong {
-
-            display:
-                block;
-
-            color:
-                #111111;
-
-            font-size:
-                16px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.025em;
+        .metric strong {
+            font-size: 1.35rem;
         }
 
-
-        .admin-nav .muted {
-
-            margin-top:
-                1px;
-
-            font-size:
-                12px;
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            overflow: hidden;
         }
 
-
-        .admin-nav-actions {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                8px;
+        .section-head {
+            padding: 18px;
+            border-bottom: 1px solid #e5e7eb;
         }
 
-
-        .admin-nav-link {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                42px;
-
-            padding:
-                9px 13px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                12px;
-
-            text-decoration:
-                none;
-
-            font-size:
-                13px;
-
-            font-weight:
-                750;
-
-            transition:
-                background 0.16s ease,
-                border-color 0.16s ease,
-                transform 0.16s ease;
+        .section-head h2 {
+            margin: 0 0 5px;
         }
 
-
-        .admin-nav-link:hover {
-
-            background:
-                #f1f5f9;
-
-            border-color:
-                #cbd5e1;
-
-            transform:
-                translateY(-1px);
+        .section-head p {
+            margin: 0;
+            color: #6b7280;
         }
 
-
-        /* =====================================================
-           FLASH
-        ===================================================== */
-
-        .flash-wrapper {
-
-            margin-top:
-                22px;
+        .orders {
+            display: grid;
         }
 
-
-        .alert {
-
-            padding:
-                14px 16px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                14px;
-
-            font-size:
-                14px;
-
-            font-weight:
-                650;
+        .order {
+            padding: 18px;
+            border-bottom: 1px solid #edf0f3;
         }
 
-
-        .alert[data-category="success"] {
-
-            background:
-                #f0fdf4;
-
-            color:
-                #166534;
-
-            border-color:
-                #bbf7d0;
+        .order:last-child {
+            border-bottom: 0;
         }
 
-
-        .alert[data-category="error"] {
-
-            background:
-                #fef2f2;
-
-            color:
-                #b91c1c;
-
-            border-color:
-                #fecaca;
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 14px;
         }
 
-
-        .alert[data-category="warning"] {
-
-            background:
-                #fffbeb;
-
-            color:
-                #92400e;
-
-            border-color:
-                #fde68a;
+        .order-name {
+            margin: 0 0 3px;
+            font-size: 1.08rem;
+            font-weight: 900;
         }
 
-
-        /* =====================================================
-           HEADER
-        ===================================================== */
-
-        .admin-header {
-
-            display:
-                flex;
-
-            align-items:
-                flex-end;
-
-            justify-content:
-                space-between;
-
-            gap:
-                24px;
-
-            padding:
-                52px 0 30px;
+        .reference {
+            color: #6b7280;
+            font-size: .82rem;
+            overflow-wrap: anywhere;
         }
 
-
-        .admin-header p {
-
-            margin-bottom:
-                0;
+        .badge {
+            display: inline-flex;
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: .75rem;
+            font-weight: 900;
+            text-transform: uppercase;
         }
 
+        .badge-paid {
+            background: #ecfdf5;
+            color: #047857;
+        }
 
-        /* =====================================================
-           BUTTONS
-        ===================================================== */
+        .badge-pending {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .badge-cancelled {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .audit-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .audit-item {
+            background: #f8fafc;
+            border-radius: 11px;
+            padding: 11px;
+            min-width: 0;
+        }
+
+        .audit-label {
+            display: block;
+            color: #6b7280;
+            font-size: .72rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .audit-value {
+            display: block;
+            font-weight: 850;
+            overflow-wrap: anywhere;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
 
         .button {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            gap:
-                8px;
-
-            min-height:
-                46px;
-
-            padding:
-                11px 17px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-
-            border-radius:
-                12px;
-
-            text-decoration:
-                none;
-
-            font-family:
-                inherit;
-
-            font-size:
-                14px;
-
-            font-weight:
-                800;
-
-            cursor:
-                pointer;
-
-            transition:
-                background 0.16s ease,
-                transform 0.16s ease,
-                box-shadow 0.16s ease;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 42px;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 10px;
+            text-decoration: none;
+            background: #111827;
+            color: #fff;
+            font: inherit;
+            font-weight: 850;
+            cursor: pointer;
         }
-
-
-        .button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 7px 18px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.09
-                );
-        }
-
 
         .button-secondary {
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border-color:
-                #dbe1e8;
+            background: #eef2f7;
+            color: #111827;
         }
 
-
-        .button-secondary:hover {
-
-            background:
-                #f8fafc;
-
-            border-color:
-                #cbd5e1;
+        .button-success {
+            background: #047857;
         }
 
-
-        .small-button {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                38px;
-
-            padding:
-                8px 12px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-
-            border-radius:
-                10px;
-
-            font-family:
-                inherit;
-
-            font-size:
-                12px;
-
-            font-weight:
-                800;
-
-            cursor:
-                pointer;
-
-            transition:
-                background 0.16s ease,
-                transform 0.16s ease;
+        .empty {
+            padding: 36px 18px;
+            text-align: center;
+            color: #6b7280;
         }
 
-
-        .small-button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
+        .flash {
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            border-radius: 11px;
+            background: #eef2ff;
+            color: #3730a3;
         }
 
-
-        /* =====================================================
-           SECTIONS
-        ===================================================== */
-
-        .admin-section {
-
-            margin-bottom:
-                24px;
-
-            padding:
-                26px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                20px;
-
-            box-shadow:
-                0 8px 30px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.045
-                );
-        }
-
-
-        .admin-section-header {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            justify-content:
-                space-between;
-
-            gap:
-                18px;
-
-            margin-bottom:
-                22px;
-        }
-
-
-        .admin-section-header p {
-
-            margin-bottom:
-                0;
-        }
-
-
-        /* =====================================================
-           SUMMARY
-        ===================================================== */
-
-        .summary-row {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                20px;
-
-            padding:
-                13px 0;
-
-            border-bottom:
-                1px solid #f1f5f9;
-        }
-
-
-        .summary-row:last-child {
-
-            border-bottom:
-                none;
-        }
-
-
-        .summary-row strong {
-
-            color:
-                #111827;
-
-            font-size:
-                14px;
-
-            font-weight:
-                850;
-        }
-
-
-        /* =====================================================
-           COUNT BADGE
-        ===================================================== */
-
-        .admin-count-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-width:
-                38px;
-
-            height:
-                38px;
-
-            padding:
-                0 12px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border-radius:
-                999px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                850;
-        }
-
-
-        /* =====================================================
-           STATUS BADGES
-        ===================================================== */
-
-        .status-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                30px;
-
-            padding:
-                5px 10px;
-
-            border-radius:
-                999px;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.04em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .status-paid {
-
-            background:
-                #f0fdf4;
-
-            color:
-                #166534;
-
-            border:
-                1px solid #bbf7d0;
-        }
-
-
-        .status-pending {
-
-            background:
-                #fffbeb;
-
-            color:
-                #92400e;
-
-            border:
-                1px solid #fde68a;
-        }
-
-
-        .status-neutral {
-
-            background:
-                #f1f5f9;
-
-            color:
-                #475569;
-
-            border:
-                1px solid #e2e8f0;
-        }
-
-
-        /* =====================================================
-           TABLE
-        ===================================================== */
-
-        .table-wrap {
-
-            width:
-                100%;
-
-            overflow-x:
-                auto;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                16px;
-        }
-
-
-        table {
-
-            width:
-                100%;
-
-            min-width:
-                900px;
-
-            border-collapse:
-                collapse;
-        }
-
-
-        thead {
-
-            background:
-                #f8fafc;
-        }
-
-
-        th {
-
-            padding:
-                14px 16px;
-
-            color:
-                #64748b;
-
-            text-align:
-                left;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.07em;
-
-            text-transform:
-                uppercase;
-
-            border-bottom:
-                1px solid #e5e7eb;
-        }
-
-
-        td {
-
-            padding:
-                16px;
-
-            color:
-                #111827;
-
-            font-size:
-                13px;
-
-            vertical-align:
-                top;
-
-            border-bottom:
-                1px solid #f1f5f9;
-        }
-
-
-        tbody tr:last-child td {
-
-            border-bottom:
-                none;
-        }
-
-
-        tbody tr:hover {
-
-            background:
-                #fcfcfd;
-        }
-
-
-        td strong {
-
-            font-weight:
-                800;
-        }
-
-
-        td small {
-
-            font-size:
-                11px;
-        }
-
-
-        /* =====================================================
-           TICKET LINKS
-        ===================================================== */
-
-        .ticket-link {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                34px;
-
-            padding:
-                7px 10px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #dbe1e8;
-
-            border-radius:
-                9px;
-
-            text-decoration:
-                none;
-
-            font-size:
-                12px;
-
-            font-weight:
-                750;
-
-            transition:
-                background 0.16s ease,
-                border-color 0.16s ease;
-        }
-
-
-        .ticket-link:hover {
-
-            background:
-                #f8fafc;
-
-            border-color:
-                #cbd5e1;
-        }
-
-
-        .ticket-pass-row {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                7px;
-
-            margin-bottom:
-                8px;
-        }
-
-
-        .ticket-pass-row:last-child {
-
-            margin-bottom:
-                0;
-        }
-
-
-        /* =====================================================
-           EMPTY STATE
-        ===================================================== */
-
-        .admin-empty-state {
-
-            display:
-                flex;
-
-            flex-direction:
-                column;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                230px;
-
-            padding:
-                34px 22px;
-
-            background:
-                #f8fafc;
-
-            border:
-                1px dashed #cbd5e1;
-
-            border-radius:
-                16px;
-
-            text-align:
-                center;
-        }
-
-
-        .admin-empty-state p {
-
-            max-width:
-                560px;
-
-            margin-bottom:
-                0;
-        }
-
-
-        .admin-empty-icon {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                54px;
-
-            height:
-                54px;
-
-            margin-bottom:
-                14px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                16px;
-
-            font-size:
-                24px;
-
-            box-shadow:
-                0 5px 16px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.05
-                );
-        }
-
-
-        /* =====================================================
-           CHECK-IN CTA
-        ===================================================== */
-
-        .admin-checkin-card {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                26px;
-
-            background:
-                #f8fafc;
-        }
-
-
-        .admin-checkin-card p {
-
-            margin-bottom:
-                0;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
-
-        @media (
-            max-width: 800px
-        ) {
-
-            .admin-header {
-
-                align-items:
-                    flex-start;
-
-                flex-direction:
-                    column;
-
-                padding-top:
-                    34px;
+        @media (max-width: 840px) {
+
+            .metrics {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
             }
 
-
-            .admin-header .button {
-
-                width:
-                    100%;
+            .audit-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
             }
-
-
-            .admin-checkin-card {
-
-                align-items:
-                    stretch;
-
-                flex-direction:
-                    column;
-            }
-
-
-            .admin-checkin-card .button {
-
-                width:
-                    100%;
-            }
-
         }
 
+        @media (max-width: 540px) {
 
-        @media (
-            max-width: 560px
-        ) {
-
-            .admin-shell {
-
-                padding:
-                    0 14px 50px;
+            .metrics,
+            .audit-grid {
+                grid-template-columns: 1fr;
             }
 
-
-            .admin-nav {
-
-                align-items:
-                    flex-start;
-
-                margin:
-                    0 -14px;
-
-                padding:
-                    12px 14px;
+            .order-top {
+                flex-direction: column;
             }
-
-
-            .admin-nav .muted {
-
-                display:
-                    none;
-            }
-
-
-            .admin-nav-actions {
-
-                gap:
-                    6px;
-            }
-
-
-            .admin-nav-link {
-
-                min-height:
-                    38px;
-
-                padding:
-                    7px 9px;
-
-                font-size:
-                    11px;
-            }
-
-
-            .admin-section {
-
-                padding:
-                    18px;
-
-                border-radius:
-                    16px;
-            }
-
-
-            .admin-section-header {
-
-                align-items:
-                    flex-start;
-            }
-
-
-            .admin-count-badge {
-
-                min-width:
-                    34px;
-
-                height:
-                    34px;
-            }
-
-
-            .table-wrap {
-
-                border-radius:
-                    14px;
-            }
-
         }
 
     </style>
 
 </head>
 
+<body>
 
-<body class="admin-body">
-
-
-<div class="admin-shell">
+    <main class="page">
 
 
-    <!-- =========================================
-         NAVIGATION
-    ========================================== -->
+        <div class="topbar">
 
-    <nav class="admin-nav">
+            <a
+                href="{{ url_for(
+                    'admin_event_control',
+                    event_id=event.id
+                ) }}"
+                class="back"
+            >
+                ← Event Control Centre
+            </a>
 
-
-        <div>
-
-            <strong>
-                KALXA TICKETING
-            </strong>
-
-            <div class="muted">
-                Organizer Control Centre
-            </div>
+            <span class="brand">
+                Kalxa Ticketing
+            </span>
 
         </div>
 
 
-        <div class="admin-nav-actions">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% for category, message in messages %}
+
+                <div class="flash">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endwith %}
 
 
-            <a
-                href="{{ url_for(
-                    'admin_dashboard'
-                ) }}"
-                class="admin-nav-link"
-            >
-                ← Dashboard
-            </a>
+        <section class="hero">
 
-
-            <a
-                href="{{ url_for(
-                    'admin_checkin'
-                ) }}"
-                class="admin-nav-link"
-            >
-                🎟 Check In
-            </a>
-
-
-        </div>
-
-
-    </nav>
-
-
-
-    <!-- =========================================
-         FLASH MESSAGES
-    ========================================== -->
-
-    {% with messages = get_flashed_messages(
-        with_categories=true
-    ) %}
-
-        {% if messages %}
-
-            <div class="flash-wrapper">
-
-                {% for category, message in messages %}
-
-                    <div
-                        class="alert"
-                        data-category="{{ category }}"
-                    >
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            </div>
-
-        {% endif %}
-
-    {% endwith %}
-
-
-
-    <!-- =========================================
-         PAGE HEADER
-    ========================================== -->
-
-    <header class="admin-header">
-
-
-        <div>
-
-            <span class="section-kicker">
-                TICKET ORDERS
+            <span class="kicker">
+                PAYMENT & ORDER AUDIT
             </span>
 
             <h1>
                 {{ event.title }}
             </h1>
 
-
-            <p class="muted">
-
-                {% if event.venue %}
-
-                    📍 {{ event.venue }}
-
-                {% endif %}
-
-
-                {% if event.event_date %}
-
-                    {% if event.venue %}
-                        ·
-                    {% endif %}
-
-                    📅
-                    {{ event.event_date.strftime(
-                        '%d %B %Y'
-                    ) }}
-
-                {% endif %}
-
+            <p class="hero-copy">
+                Verified Paystack payments, attendee orders
+                and ticket settlement audit.
             </p>
 
+        </section>
+
+
+        <div class="metrics">
+
+            <div class="metric">
+                <span>Total Orders</span>
+                <strong>{{ total_orders }}</strong>
+            </div>
+
+            <div class="metric">
+                <span>Paid</span>
+                <strong>{{ paid_orders }}</strong>
+            </div>
+
+            <div class="metric">
+                <span>Pending</span>
+                <strong>{{ pending_orders }}</strong>
+            </div>
+
+            <div class="metric">
+                <span>Ticket Revenue</span>
+                <strong>R{{ "%.2f"|format(ticket_revenue) }}</strong>
+            </div>
+
+            <div class="metric">
+                <span>Processing Paid by Attendees</span>
+                <strong>R{{ "%.2f"|format(processing_total) }}</strong>
+            </div>
+
+            <div class="metric">
+                <span>Total Collected at Checkout</span>
+                <strong>R{{ "%.2f"|format(checkout_total) }}</strong>
+            </div>
+
         </div>
 
 
-        <a
-            href="{{ url_for(
-                'event_page',
-                event_id=event.id
-            ) }}"
-            class="button button-secondary"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            View Public Event
-        </a>
+        <section class="section">
 
-
-    </header>
-
-
-
-    <!-- =========================================
-         EVENT SUMMARY
-    ========================================== -->
-
-    <section class="admin-section">
-
-
-        <div class="admin-section-header">
-
-            <div>
-
-                <span class="section-kicker">
-                    EVENT
-                </span>
+            <div class="section-head">
 
                 <h2>
-                    Order Management
+                    Orders
                 </h2>
 
-                <p class="muted">
-                    Confirm customer payments and access
-                    tickets belonging to this event.
+                <p>
+                    Paystack orders are never marked paid manually.
+                    Kalxa requires verified provider confirmation.
                 </p>
 
             </div>
 
 
-            <span class="admin-count-badge">
-                {{ orders|length }}
-            </span>
+            {% if orders %}
 
-        </div>
+                <div class="orders">
 
+                    {% for order in orders %}
 
+                        <article class="order">
 
-        <div class="summary-row">
+                            <div class="order-top">
 
-            <span class="muted">
-                Ticket Event
-            </span>
+                                <div>
 
-            <strong>
-                #{{ event.id }}
-            </strong>
-
-        </div>
-
-
-        {% if event.kalxa_content_item_id %}
-
-            <div class="summary-row">
-
-                <span class="muted">
-                    Kalxa Listing
-                </span>
-
-                <strong>
-                    #{{ event.kalxa_content_item_id }}
-                </strong>
-
-            </div>
-
-        {% endif %}
-
-
-        {% if event.ticket_capacity %}
-
-            <div class="summary-row">
-
-                <span class="muted">
-                    Capacity
-                </span>
-
-                <strong>
-                    {{ event.ticket_capacity }}
-                </strong>
-
-            </div>
-
-        {% endif %}
-
-
-        <div class="summary-row">
-
-            <span class="muted">
-                Paid Tickets
-            </span>
-
-            <strong>
-                {{ event.paid_ticket_count }}
-            </strong>
-
-        </div>
-
-
-        {% if event.ticket_capacity %}
-
-            <div class="summary-row">
-
-                <span class="muted">
-                    Remaining Tickets
-                </span>
-
-                <strong>
-                    {{ event.remaining_tickets }}
-                </strong>
-
-            </div>
-
-        {% endif %}
-
-
-    </section>
-
-
-
-    <!-- =========================================
-         ORDERS
-    ========================================== -->
-
-    <section class="admin-section">
-
-
-        <div class="admin-section-header">
-
-            <div>
-
-                <span class="section-kicker">
-                    CUSTOMERS
-                </span>
-
-                <h2>
-                    Ticket Orders
-                </h2>
-
-                <p class="muted">
-                    Only orders belonging to this event
-                    are shown here.
-                </p>
-
-            </div>
-
-        </div>
-
-
-
-        {% if orders %}
-
-
-            <div class="table-wrap">
-
-                <table>
-
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Reference
-                            </th>
-
-                            <th>
-                                Customer
-                            </th>
-
-                            <th>
-                                Tickets
-                            </th>
-
-                            <th>
-                                Amount
-                            </th>
-
-                            <th>
-                                Payment
-                            </th>
-
-                            <th>
-                                Tickets / Action
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-
-                    <tbody>
-
-
-                        {% for order in orders %}
-
-                            <tr>
-
-
-                                <!-- =====================
-                                     REFERENCE
-                                ====================== -->
-
-                                <td>
-
-                                    <strong>
-                                        {{ order.payment_reference }}
-                                    </strong>
-
-                                </td>
-
-
-
-                                <!-- =====================
-                                     CUSTOMER
-                                ====================== -->
-
-                                <td>
-
-                                    <strong>
+                                    <h3 class="order-name">
                                         {{ order.customer_name }}
-                                    </strong>
+                                    </h3>
+
+                                    <div class="reference">
+                                        {{ order.payment_reference }}
+                                    </div>
+
+                                </div>
 
 
-                                    {% if order.customer_phone %}
-
-                                        <br>
-
-                                        <small class="muted">
-                                            {{ order.customer_phone }}
-                                        </small>
-
-                                    {% endif %}
-
-
-                                    {% if order.customer_email %}
-
-                                        <br>
-
-                                        <small class="muted">
-                                            {{ order.customer_email }}
-                                        </small>
-
-                                    {% endif %}
-
-                                </td>
-
-
-
-                                <!-- =====================
-                                     QUANTITY
-                                ====================== -->
-
-                                <td>
-                                    {{ order.quantity }}
-                                </td>
-
-
-
-                                <!-- =====================
-                                     AMOUNT
-                                ====================== -->
-
-                                <td>
-
-                                    <strong>
-                                        R{{ "%.2f"|format(
-                                            order.total_amount
-                                        ) }}
-                                    </strong>
-
-                                </td>
-
-
-
-                                <!-- =====================
-                                     PAYMENT STATUS
-                                ====================== -->
-
-                                <td>
-
-
-                                    {% if order.payment_status == "paid" %}
-
-                                        <span
-                                            class="
-                                                status-badge
-                                                status-paid
-                                            "
-                                        >
-                                            Paid
-                                        </span>
-
-
-                                    {% elif order.payment_status == "pending" %}
-
-                                        <span
-                                            class="
-                                                status-badge
-                                                status-pending
-                                            "
-                                        >
-                                            Pending
-                                        </span>
-
-
+                                <span
+                                    class="badge
+                                    {% if order.payment_status == 'paid' %}
+                                        badge-paid
+                                    {% elif order.payment_status == 'cancelled' %}
+                                        badge-cancelled
                                     {% else %}
+                                        badge-pending
+                                    {% endif %}"
+                                >
+                                    {{ order.payment_status }}
+                                </span>
 
-                                        <span
-                                            class="
-                                                status-badge
-                                                status-neutral
-                                            "
-                                        >
-                                            {{ order.payment_status }}
-                                        </span>
-
-                                    {% endif %}
+                            </div>
 
 
-                                </td>
+                            <div class="audit-grid">
 
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Contact
+                                    </span>
+                                    <span class="audit-value">
+                                        {{ order.customer_email or '—' }}<br>
+                                        {{ order.customer_phone }}
+                                    </span>
+                                </div>
 
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Tickets
+                                    </span>
+                                    <span class="audit-value">
+                                        {{ order.quantity }}
+                                        × R{{ "%.2f"|format(order.ticket_price) }}
+                                    </span>
+                                </div>
 
-                                <!-- =====================
-                                     ACTIONS
-                                ====================== -->
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Ticket Total
+                                    </span>
+                                    <span class="audit-value">
+                                        R{{ "%.2f"|format(order.total_amount) }}
+                                    </span>
+                                </div>
 
-                                <td>
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Processing
+                                    </span>
+                                    <span class="audit-value">
+                                        R{{ "%.2f"|format(order.processing_fee or 0) }}
+                                    </span>
+                                </div>
 
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Amount at Checkout
+                                    </span>
+                                    <span class="audit-value">
+                                        R{{ "%.2f"|format(order.checkout_amount or order.total_amount) }}
+                                    </span>
+                                </div>
 
-                                    {% if order.payment_status == "pending" %}
-
-
-                                        <!--
-                                            SECURITY:
-
-                                            Only order.id is submitted.
-
-                                            The backend validates:
-
-                                            order
-                                                ↓
-                                            TicketEvent
-                                                ↓
-                                            kalxa_organizer_id
-                                                ↓
-                                            current organizer session
-
-                                            No organizer_id is sent by
-                                            this form.
-                                        -->
-
-
-                                        <form
-                                            action="{{ url_for(
-                                                'admin_mark_paid',
-                                                order_id=order.id
-                                            ) }}"
-                                            method="POST"
-                                        >
-
-                                            <button
-                                                type="submit"
-                                                class="small-button"
-                                            >
-                                                Confirm Payment
-                                            </button>
-
-                                        </form>
-
-
-                                    {% elif order.payment_status == "paid" %}
-
-
-                                        {% if order.entry_passes %}
-
-
-                                            {% for pass in order.entry_passes %}
-
-                                                <div class="ticket-pass-row">
-
-                                                    <a
-                                                        href="{{ url_for(
-                                                            'ticket_page',
-                                                            entry_code=pass.entry_code
-                                                        ) }}"
-                                                        class="ticket-link"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        Ticket
-                                                        {{ loop.index }}
-                                                    </a>
-
-
-                                                    <small class="muted">
-
-                                                        {{ pass.status|upper }}
-
-                                                    </small>
-
-                                                </div>
-
-                                            {% endfor %}
-
-
-                                        {% else %}
-
-                                            <span class="muted">
-                                                Passes not generated
-                                            </span>
-
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Provider / Channel
+                                    </span>
+                                    <span class="audit-value">
+                                        {{ (order.payment_provider or 'paystack')|title }}
+                                        {% if order.payment_channel %}
+                                            / {{ order.payment_channel|replace('_', ' ')|title }}
                                         {% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Paystack Transaction ID
+                                    </span>
+                                    <span class="audit-value">
+                                        {{ order.paystack_transaction_id or 'Pending' }}
+                                    </span>
+                                </div>
+
+                                <div class="audit-item">
+                                    <span class="audit-label">
+                                        Verified At
+                                    </span>
+                                    <span class="audit-value">
+                                        {% if order.payment_verified_at %}
+                                            {{ order.payment_verified_at.strftime(
+                                                '%d %b %Y %H:%M'
+                                            ) }}
+                                        {% else %}
+                                            Not verified
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                            </div>
 
 
-                                    {% else %}
+                            <div class="actions">
 
-                                        <span class="muted">
-                                            No action available
-                                        </span>
-
-                                    {% endif %}
-
-
-                                </td>
-
-
-                            </tr>
-
-                        {% endfor %}
+                                <a
+                                    href="{{ url_for(
+                                        'booking_status',
+                                        reference=order.payment_reference
+                                    ) }}"
+                                    class="button button-secondary"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Booking Status
+                                </a>
 
 
-                    </tbody>
+                                {% if
+                                    order.payment_provider == 'paystack'
+                                    and order.payment_status != 'paid'
+                                %}
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'admin_verify_paystack_order',
+                                            order_id=order.id
+                                        ) }}"
+                                    >
+                                        <button
+                                            type="submit"
+                                            class="button button-success"
+                                        >
+                                            Verify Paystack
+                                        </button>
+                                    </form>
+
+                                {% endif %}
 
 
-                </table>
+                                {% if
+                                    order.payment_status != 'paid'
+                                    and order.paystack_authorization_url
+                                %}
 
-            </div>
+                                    <a
+                                        href="{{ order.paystack_authorization_url }}"
+                                        class="button button-secondary"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Checkout Link
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
 
 
+                        </article>
 
-        {% else %}
+                    {% endfor %}
 
-
-            <!-- =====================================
-                 EMPTY STATE
-            ====================================== -->
-
-            <div class="admin-empty-state">
-
-                <div class="admin-empty-icon">
-                    🎟
                 </div>
 
-                <h3>
-                    No ticket orders yet
-                </h3>
+            {% else %}
 
-                <p class="muted">
-                    Orders will appear here when customers
-                    begin booking tickets for this event.
-                </p>
+                <div class="empty">
+                    No ticket orders yet.
+                </div>
 
+            {% endif %}
 
-                <a
-                    href="{{ url_for(
-                        'event_page',
-                        event_id=event.id
-                    ) }}"
-                    class="button"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style="margin-top: 18px;"
-                >
-                    View Ticket Page
-                </a>
-
-            </div>
+        </section>
 
 
-        {% endif %}
-
-
-    </section>
-
-
-
-    <!-- =========================================
-         CHECK-IN CTA
-    ========================================== -->
-
-    <section class="admin-section admin-checkin-card">
-
-
-        <div>
-
-            <span class="section-kicker">
-                EVENT ENTRY
-            </span>
-
-            <h2>
-                Event Check-In
-            </h2>
-
-            <p class="muted">
-                Validate paid attendee tickets using
-                QR scanning or manual entry codes.
-            </p>
-
-        </div>
-
-
-        <a
-            href="{{ url_for(
-                'admin_checkin'
-            ) }}"
-            class="button"
-        >
-            🎟 Open Check-In
-        </a>
-
-
-    </section>
-
-
-</div>
-
+    </main>
 
 </body>
 
