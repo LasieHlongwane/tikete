@@ -595,6 +595,66 @@ class SubscriptionPayment(db.Model):
 
 
 # ============================================================
+# GEOCODED AREA CACHE
+# ============================================================
+
+class GeocodedArea(db.Model):
+
+    __tablename__ = "geocoded_areas"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    query_key = db.Column(
+        db.String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    query_text = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    display_name = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    latitude = db.Column(
+        db.Float,
+        nullable=False,
+    )
+
+    longitude = db.Column(
+        db.Float,
+        nullable=False,
+    )
+
+    provider = db.Column(
+        db.String(50),
+        nullable=False,
+        default="nominatim",
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+# ============================================================
 # TICKET EVENT
 # ============================================================
 
@@ -646,6 +706,29 @@ class TicketEvent(db.Model):
     venue = db.Column(
         db.String(200),
         nullable=True,
+    )
+
+    notification_area = db.Column(
+        db.String(200),
+        nullable=True,
+        index=True,
+    )
+
+    notification_location_display = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    notification_latitude = db.Column(
+        db.Float,
+        nullable=True,
+        index=True,
+    )
+
+    notification_longitude = db.Column(
+        db.Float,
+        nullable=True,
+        index=True,
     )
 
     event_date = db.Column(
@@ -1975,6 +2058,29 @@ class PushSubscription(db.Model):
         index=True,
     )
 
+    home_area = db.Column(
+        db.String(200),
+        nullable=True,
+        index=True,
+    )
+
+    home_location_display = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    home_latitude = db.Column(
+        db.Float,
+        nullable=True,
+        index=True,
+    )
+
+    home_longitude = db.Column(
+        db.Float,
+        nullable=True,
+        index=True,
+    )
+
 
     active = db.Column(
         db.Boolean,
@@ -2094,6 +2200,33 @@ class PushCampaign(db.Model):
 
     target_url = db.Column(
         db.String(1000),
+        nullable=True,
+    )
+
+    target_mode = db.Column(
+        db.String(30),
+        nullable=False,
+        default="radius",
+        index=True,
+    )
+
+    target_area = db.Column(
+        db.String(200),
+        nullable=True,
+    )
+
+    target_latitude = db.Column(
+        db.Float,
+        nullable=True,
+    )
+
+    target_longitude = db.Column(
+        db.Float,
+        nullable=True,
+    )
+
+    radius_km = db.Column(
+        db.Numeric(6, 2),
         nullable=True,
     )
 
