@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Attendees | Kalxa</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(1280px,calc(100% - 28px));margin:0 auto;padding:24px 0 60px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}.back{color:#111827;text-decoration:none;font-weight:850}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;margin-bottom:14px}.filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.field label{display:block;margin-bottom:5px;color:#64748b;font-size:.72rem;font-weight:850;text-transform:uppercase}.field input,.field select{width:100%;min-height:42px;padding:8px 10px;border:1px solid #d1d5db;border-radius:9px;background:#fff;font:inherit}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.button{display:inline-flex;min-height:42px;align-items:center;justify-content:center;padding:9px 13px;border:0;border-radius:9px;background:#111827;color:#fff;text-decoration:none;font:inherit;font-weight:850;cursor:pointer}.button-secondary{background:#eef2f7;color:#111827}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.metric{padding:14px;background:#f8fafc;border-radius:12px}.metric span{display:block;color:#64748b;font-size:.72rem;font-weight:850;text-transform:uppercase}.metric strong{display:block;margin-top:4px;font-size:1.45rem}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:1100px}.table th,.table td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left;vertical-align:top;font-size:.83rem}.table th{color:#64748b;font-size:.7rem;text-transform:uppercase}.badge{display:inline-flex;padding:4px 7px;border-radius:999px;background:#f1f5f9;font-size:.68rem;font-weight:900;text-transform:uppercase}.paid,.checked_in{background:#ecfdf5;color:#047857}.pending,.partial{background:#fff7ed;color:#c2410c}.cancelled{background:#fef2f2;color:#b91c1c}.meta{color:#64748b;font-size:.78rem}@media(max-width:900px){.filters{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}}@media(max-width:560px){.filters,.metrics{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style></head>
+<body><main class="page">
+<div class="top"><a class="back" href="{{ url_for('admin_dashboard') }}">← Dashboard</a><strong>Attendee CRM-lite</strong></div>
+<section class="card"><h1>Attendees & Ticket Buyers</h1><p class="meta">Subscriber feature. Filter your attendee records and export the same filtered view to CSV or Excel.</p></section>
+
+<section class="card">
+<form method="GET">
+<div class="filters">
+<div class="field"><label>Event</label><select name="event_id"><option value="">All events</option>{% for event in events %}<option value="{{ event.id }}" {% if filters.event_id == event.id|string %}selected{% endif %}>{{ event.title }}</option>{% endfor %}</select></div>
+<div class="field"><label>Ticket Type</label><select name="ticket_type"><option value="">All ticket types</option>{% for ticket_type in ticket_types %}<option value="{{ ticket_type }}" {% if filters.ticket_type == ticket_type %}selected{% endif %}>{{ ticket_type }}</option>{% endfor %}</select></div>
+<div class="field"><label>Payment Status</label><select name="payment_status"><option value="all" {% if filters.payment_status=='all' %}selected{% endif %}>All</option><option value="paid" {% if filters.payment_status=='paid' %}selected{% endif %}>Paid</option><option value="pending" {% if filters.payment_status=='pending' %}selected{% endif %}>Pending</option><option value="cancelled" {% if filters.payment_status=='cancelled' %}selected{% endif %}>Cancelled</option></select></div>
+<div class="field"><label>Check-In</label><select name="checkin_status"><option value="all">All</option><option value="checked_in" {% if filters.checkin_status=='checked_in' %}selected{% endif %}>Fully checked in</option><option value="not_checked_in" {% if filters.checkin_status=='not_checked_in' %}selected{% endif %}>Not checked in</option><option value="partial" {% if filters.checkin_status=='partial' %}selected{% endif %}>Partially checked in</option></select></div>
+<div class="field"><label>Purchased From</label><input type="date" name="date_from" value="{{ filters.date_from }}"></div>
+<div class="field"><label>Purchased To</label><input type="date" name="date_to" value="{{ filters.date_to }}"></div>
+<div class="field" style="grid-column:span 2;"><label>Search</label><input name="q" value="{{ filters.q }}" placeholder="Name, email, phone or booking reference"></div>
+</div>
+<div class="actions"><button class="button" type="submit">Apply Filters</button><a class="button button-secondary" href="{{ url_for('admin_attendees') }}">Reset</a></div>
+</form>
+</section>
+
+<section class="card">
+<div class="metrics">
+<div class="metric"><span>Rows</span><strong>{{ summary.rows }}</strong></div>
+<div class="metric"><span>Tickets</span><strong>{{ summary.tickets }}</strong></div>
+<div class="metric"><span>Checked In</span><strong>{{ summary.checked_in }}</strong></div>
+<div class="metric"><span>Paid Revenue</span><strong>R{{ "%.2f"|format(summary.revenue) }}</strong></div>
+</div>
+<div class="actions">
+<a class="button button-secondary" href="{{ url_for('admin_attendees_export_csv', **filters) }}">⬇ CSV</a>
+<a class="button button-secondary" href="{{ url_for('admin_attendees_export_xlsx', **filters) }}">⬇ Excel</a>
+</div>
+</section>
+
+<section class="card table-wrap">
+<table class="table">
+<thead><tr><th>Event</th><th>Attendee / Buyer</th><th>Contact</th><th>Booking</th><th>Ticket Type</th><th>Qty</th><th>Check-In</th><th>Payment</th><th>Total</th><th>Purchased</th></tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>
+<td><strong>{{ row.event }}</strong></td>
+<td>{{ row.customer_name }}</td>
+<td>{{ row.customer_email }}<br><span class="meta">{{ row.customer_phone }}</span></td>
+<td>{{ row.booking_reference }}</td>
+<td>{{ row.ticket_type }}</td>
+<td>{{ row.quantity }}</td>
+<td><span class="badge {{ row.checkin_status }}">{{ row.checked_in_count }}/{{ row.quantity }} · {{ row.checkin_status|replace('_',' ') }}</span></td>
+<td><span class="badge {{ row.payment_status }}">{{ row.payment_status }}</span></td>
+<td>R{{ "%.2f"|format(row.line_total or 0) }}</td>
+<td>{{ row.purchase_date.strftime('%d %b %Y %H:%M') if row.purchase_date else '' }}</td>
+</tr>
+{% else %}
+<tr><td colspan="10">No attendee records match these filters.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</section>
+</main></body></html>
