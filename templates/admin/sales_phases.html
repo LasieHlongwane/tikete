@@ -1,1 +1,514 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sales Phases | {{ event.title }} | Kalxa</title><style>*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(1050px,calc(100% - 28px));margin:0 auto;padding:26px 0 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.back{color:#111827;text-decoration:none;font-weight:850}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:20px;margin-bottom:15px}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{display:inline-flex;padding:9px 12px;border-radius:999px;background:#eef2f7;color:#111827;text-decoration:none;font-weight:850}.tab.active{background:#111827;color:#fff}.phase{display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr .8fr auto;gap:9px;align-items:end;padding:14px;background:#f8fafc;border-radius:14px;margin-bottom:10px}.field label{display:block;margin-bottom:5px;color:#64748b;font-size:.7rem;font-weight:850;text-transform:uppercase}.field input{width:100%;min-height:42px;padding:8px 10px;border:1px solid #d1d5db;border-radius:9px;font:inherit}.button{display:inline-flex;min-height:42px;align-items:center;justify-content:center;padding:9px 13px;border:0;border-radius:9px;background:#111827;color:#fff;text-decoration:none;font:inherit;font-weight:900;cursor:pointer}.secondary{background:#eef2f7;color:#111827}.danger{background:#991b1b}.muted{color:#64748b;font-size:.86rem;line-height:1.5}.flash{padding:12px 14px;margin-bottom:10px;border-radius:10px;background:#eef2ff;color:#3730a3}.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.metric{padding:13px;background:#f8fafc;border-radius:11px}.metric span{display:block;color:#64748b;font-size:.7rem;font-weight:850;text-transform:uppercase}.metric strong{display:block;margin-top:4px}@media(max-width:900px){.phase{grid-template-columns:1fr 1fr}.phase .remove-wrap{grid-column:span 2}.summary{grid-template-columns:1fr}}@media(max-width:560px){.phase{grid-template-columns:1fr}.phase .remove-wrap{grid-column:auto}.top{flex-direction:column;align-items:flex-start}}</style></head><body><main class="page"><div class="top"><a class="back" href="{{ url_for('admin_event_control', event_id=event.id) }}">← Event Control Centre</a><strong>Kalxa Sales Phases</strong></div>{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash">{{ message }}</div>{% endfor %}{% endwith %}<section class="card"><h1>Sales Phases / Early Bird Pricing</h1><p class="muted">Kalxa automatically uses the first eligible phase in order. A phase stops when its end time is reached or its quantity limit is sold. Times below are South African time.</p></section><section class="card"><strong>Ticket type</strong><div class="tabs" style="margin-top:10px;">{% for ticket_type in ticket_types %}<a class="tab {% if selected_ticket_type and selected_ticket_type.id==ticket_type.id %}active{% endif %}" href="{{ url_for('admin_sales_phases', event_id=event.id, ticket_type_id=ticket_type.id) }}">{{ ticket_type.name }}</a>{% endfor %}</div></section>{% if selected_ticket_type %}<section class="card"><h2>{{ selected_ticket_type.name }}</h2><div class="summary"><div class="metric"><span>Normal Price</span><strong>R{{ '%.2f'|format(selected_ticket_type.price) }}</strong></div><div class="metric"><span>Current Phase</span><strong>{{ selected_ticket_type.current_sale_phase.name if selected_ticket_type.current_sale_phase else ('Normal price' if not selected_ticket_type.active_sale_phases else 'Not currently on sale') }}</strong></div><div class="metric"><span>Current Price</span><strong>{% if selected_ticket_type.current_price is not none %}R{{ '%.2f'|format(selected_ticket_type.current_price) }}{% else %}—{% endif %}</strong></div></div></section><section class="card"><form method="POST" id="phase-form"><input type="hidden" name="ticket_type_id" value="{{ selected_ticket_type.id }}"><div id="phase-list">{% for phase in phase_rows %}<div class="phase phase-row"><input type="hidden" name="phase_id" value="{{ phase.id or '' }}"><div class="field"><label>Phase Name</label><input name="phase_name" required value="{{ phase.name }}" placeholder="Early Bird"></div><div class="field"><label>Price (R)</label><input name="phase_price" type="number" min="0" step="0.01" required value="{{ phase.price }}"></div><div class="field"><label>Starts</label><input name="phase_start_at" type="datetime-local" value="{{ phase.start_at }}"></div><div class="field"><label>Ends</label><input name="phase_end_at" type="datetime-local" value="{{ phase.end_at }}"></div><div class="field"><label>Quantity Limit</label><input name="phase_quantity_limit" type="number" min="1" value="{{ phase.quantity_limit or '' }}" placeholder="Optional"><div class="muted">Sold: {{ phase.sold_quantity }}</div></div><div class="remove-wrap"><button class="button secondary remove-phase" type="button">Remove</button></div></div>{% endfor %}</div><div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;"><button class="button secondary" type="button" id="add-phase">+ Add Phase</button><button class="button" type="submit">Save Sales Phases</button></div></form>{% if selected_ticket_type.active_sale_phases %}<form method="POST" action="{{ url_for('admin_clear_sales_phases', event_id=event.id, ticket_type_id=selected_ticket_type.id) }}" style="margin-top:14px;" onsubmit="return confirm('Disable all sales phases and return to the normal ticket price?');"><button class="button danger" type="submit">Disable Sales Phases</button></form>{% endif %}</section>{% endif %}</main><script>const list=document.getElementById('phase-list');const add=document.getElementById('add-phase');function bindRemove(btn){btn.addEventListener('click',()=>{const rows=list.querySelectorAll('.phase-row');if(rows.length<=1){alert('Keep at least one phase row.');return;}btn.closest('.phase-row').remove();});}if(add){add.addEventListener('click',()=>{if(list.querySelectorAll('.phase-row').length>=10){alert('Maximum 10 phases per ticket type.');return;}const row=document.createElement('div');row.className='phase phase-row';row.innerHTML=`<input type="hidden" name="phase_id" value=""><div class="field"><label>Phase Name</label><input name="phase_name" required placeholder="General"></div><div class="field"><label>Price (R)</label><input name="phase_price" type="number" min="0" step="0.01" required></div><div class="field"><label>Starts</label><input name="phase_start_at" type="datetime-local"></div><div class="field"><label>Ends</label><input name="phase_end_at" type="datetime-local"></div><div class="field"><label>Quantity Limit</label><input name="phase_quantity_limit" type="number" min="1" placeholder="Optional"></div><div class="remove-wrap"><button class="button secondary remove-phase" type="button">Remove</button></div>`;list.appendChild(row);bindRemove(row.querySelector('.remove-phase'));});}document.querySelectorAll('.remove-phase').forEach(bindRemove);{% if selected_ticket_type and not phase_rows %}if(add){add.click();}{% endif %}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sales Phases | {{ event.title }} | Kalxa</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .page {
+            width: min(1050px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 26px 0 60px;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .back {
+            color: #111827;
+            text-decoration: none;
+            font-weight: 850;
+        }
+
+        .card {
+            margin-bottom: 15px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            display: inline-flex;
+            padding: 9px 12px;
+            border-radius: 999px;
+            background: #eef2f7;
+            color: #111827;
+            text-decoration: none;
+            font-weight: 850;
+        }
+
+        .tab.active {
+            background: #111827;
+            color: #fff;
+        }
+
+        .phase {
+            display: grid;
+            grid-template-columns: 1.3fr 0.8fr 1fr 1fr 0.8fr auto;
+            gap: 9px;
+            align-items: end;
+            margin-bottom: 10px;
+            padding: 14px;
+            background: #f8fafc;
+            border-radius: 14px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 5px;
+            color: #64748b;
+            font-size: 0.7rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .field input {
+            width: 100%;
+            min-height: 42px;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+            font: inherit;
+        }
+
+        .button {
+            display: inline-flex;
+            min-height: 42px;
+            align-items: center;
+            justify-content: center;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 9px;
+            background: #111827;
+            color: #fff;
+            text-decoration: none;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .secondary {
+            background: #eef2f7;
+            color: #111827;
+        }
+
+        .danger {
+            background: #991b1b;
+        }
+
+        .muted {
+            color: #64748b;
+            font-size: 0.86rem;
+            line-height: 1.5;
+        }
+
+        .flash {
+            margin-bottom: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .metric {
+            padding: 13px;
+            background: #f8fafc;
+            border-radius: 11px;
+        }
+
+        .metric span {
+            display: block;
+            color: #64748b;
+            font-size: 0.7rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 900px) {
+            .phase {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .phase .remove-wrap {
+                grid-column: span 2;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .phase {
+                grid-template-columns: 1fr;
+            }
+
+            .phase .remove-wrap {
+                grid-column: auto;
+            }
+
+            .top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <div class="top">
+            <a
+                class="back"
+                href="{{ url_for('admin_event_control', event_id=event.id) }}"
+            >
+                ← Event Control Centre
+            </a>
+
+            <strong>Kalxa Sales Phases</strong>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="card">
+            <h1>Sales Phases / Early Bird Pricing</h1>
+
+            <p class="muted">
+                Kalxa automatically uses the first eligible phase in order.
+                A phase stops when its end time is reached or its quantity
+                limit is sold. Times below are South African time.
+            </p>
+        </section>
+
+        <section class="card">
+            <strong>Ticket type</strong>
+
+            <div class="tabs" style="margin-top: 10px;">
+                {% for ticket_type in ticket_types %}
+                    <a
+                        class="tab {% if selected_ticket_type and selected_ticket_type.id == ticket_type.id %}active{% endif %}"
+                        href="{{ url_for('admin_sales_phases', event_id=event.id, ticket_type_id=ticket_type.id) }}"
+                    >
+                        {{ ticket_type.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if selected_ticket_type %}
+            <section class="card">
+                <h2>{{ selected_ticket_type.name }}</h2>
+
+                <div class="summary">
+                    <div class="metric">
+                        <span>Normal Price</span>
+                        <strong>
+                            R{{ "%.2f"|format(selected_ticket_type.price) }}
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Current Phase</span>
+                        <strong>
+                            {{
+                                selected_ticket_type.current_sale_phase.name
+                                if selected_ticket_type.current_sale_phase
+                                else (
+                                    "Normal price"
+                                    if not selected_ticket_type.active_sale_phases
+                                    else "Not currently on sale"
+                                )
+                            }}
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Current Price</span>
+                        <strong>
+                            {% if selected_ticket_type.current_price is not none %}
+                                R{{ "%.2f"|format(selected_ticket_type.current_price) }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <form method="POST" id="phase-form">
+                    <input
+                        type="hidden"
+                        name="ticket_type_id"
+                        value="{{ selected_ticket_type.id }}"
+                    >
+
+                    <div id="phase-list">
+                        {% for phase in phase_rows %}
+                            <div class="phase phase-row">
+                                <input
+                                    type="hidden"
+                                    name="phase_id"
+                                    value="{{ phase.id or '' }}"
+                                >
+
+                                <div class="field">
+                                    <label>Phase Name</label>
+                                    <input
+                                        name="phase_name"
+                                        required
+                                        value="{{ phase.name }}"
+                                        placeholder="Early Bird"
+                                    >
+                                </div>
+
+                                <div class="field">
+                                    <label>Price (R)</label>
+                                    <input
+                                        name="phase_price"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        value="{{ phase.price }}"
+                                    >
+                                </div>
+
+                                <div class="field">
+                                    <label>Starts</label>
+                                    <input
+                                        name="phase_start_at"
+                                        type="datetime-local"
+                                        value="{{ phase.start_at }}"
+                                    >
+                                </div>
+
+                                <div class="field">
+                                    <label>Ends</label>
+                                    <input
+                                        name="phase_end_at"
+                                        type="datetime-local"
+                                        value="{{ phase.end_at }}"
+                                    >
+                                </div>
+
+                                <div class="field">
+                                    <label>Quantity Limit</label>
+                                    <input
+                                        name="phase_quantity_limit"
+                                        type="number"
+                                        min="1"
+                                        value="{{ phase.quantity_limit or '' }}"
+                                        placeholder="Optional"
+                                    >
+
+                                    <div class="muted">
+                                        Sold: {{ phase.sold_quantity }}
+                                    </div>
+                                </div>
+
+                                <div class="remove-wrap">
+                                    <button
+                                        class="button secondary remove-phase"
+                                        type="button"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div
+                        style="
+                            display: flex;
+                            gap: 9px;
+                            flex-wrap: wrap;
+                            margin-top: 14px;
+                        "
+                    >
+                        <button
+                            class="button secondary"
+                            type="button"
+                            id="add-phase"
+                        >
+                            + Add Phase
+                        </button>
+
+                        <button class="button" type="submit">
+                            Save Sales Phases
+                        </button>
+                    </div>
+                </form>
+
+                {% if selected_ticket_type.active_sale_phases %}
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_clear_sales_phases',
+                            event_id=event.id,
+                            ticket_type_id=selected_ticket_type.id
+                        ) }}"
+                        style="margin-top: 14px;"
+                        onsubmit="
+                            return confirm(
+                                'Disable all sales phases and return to the normal ticket price?'
+                            );
+                        "
+                    >
+                        <button class="button danger" type="submit">
+                            Disable Sales Phases
+                        </button>
+                    </form>
+                {% endif %}
+            </section>
+        {% endif %}
+    </main>
+
+    <script>
+        const list = document.getElementById("phase-list");
+        const add = document.getElementById("add-phase");
+
+        function bindRemove(button) {
+            button.addEventListener("click", () => {
+                const rows = list.querySelectorAll(".phase-row");
+
+                if (rows.length <= 1) {
+                    alert("Keep at least one phase row.");
+                    return;
+                }
+
+                button.closest(".phase-row").remove();
+            });
+        }
+
+        if (add) {
+            add.addEventListener("click", () => {
+                if (list.querySelectorAll(".phase-row").length >= 10) {
+                    alert("Maximum 10 phases per ticket type.");
+                    return;
+                }
+
+                const row = document.createElement("div");
+
+                row.className = "phase phase-row";
+
+                row.innerHTML = `
+                    <input
+                        type="hidden"
+                        name="phase_id"
+                        value=""
+                    >
+
+                    <div class="field">
+                        <label>Phase Name</label>
+                        <input
+                            name="phase_name"
+                            required
+                            placeholder="General"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>Price (R)</label>
+                        <input
+                            name="phase_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>Starts</label>
+                        <input
+                            name="phase_start_at"
+                            type="datetime-local"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>Ends</label>
+                        <input
+                            name="phase_end_at"
+                            type="datetime-local"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>Quantity Limit</label>
+                        <input
+                            name="phase_quantity_limit"
+                            type="number"
+                            min="1"
+                            placeholder="Optional"
+                        >
+                    </div>
+
+                    <div class="remove-wrap">
+                        <button
+                            class="button secondary remove-phase"
+                            type="button"
+                        >
+                            Remove
+                        </button>
+                    </div>
+                `;
+
+                list.appendChild(row);
+                bindRemove(row.querySelector(".remove-phase"));
+            });
+        }
+
+        document
+            .querySelectorAll(".remove-phase")
+            .forEach(bindRemove);
+
+        {% if selected_ticket_type and not phase_rows %}
+            if (add) {
+                add.click();
+            }
+        {% endif %}
+    </script>
+</body>
+</html>
