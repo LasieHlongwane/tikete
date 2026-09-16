@@ -1055,10 +1055,102 @@
 
                     <p>
 
-                        Your payment has been confirmed.
+                        Your payment has been verified by Paystack.
                         Your valid Kalxa entry ticket is now available.
 
                     </p>
+
+
+                    <div class="bank-details">
+
+                        <div class="bank-row">
+
+                            <span class="bank-label">
+                                Ticket total
+                            </span>
+
+                            <span class="bank-value">
+                                R{{ "%.2f"|format(order.total_amount) }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="bank-row">
+
+                            <span class="bank-label">
+                                Processing
+                            </span>
+
+                            <span class="bank-value">
+                                R{{ "%.2f"|format(order.processing_fee or 0) }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="bank-row">
+
+                            <span class="bank-label">
+                                Amount paid
+                            </span>
+
+                            <span class="bank-value">
+                                R{{ "%.2f"|format(order.checkout_amount or order.total_amount) }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="bank-row">
+
+                            <span class="bank-label">
+                                Payment provider
+                            </span>
+
+                            <span class="bank-value">
+                                {{ (order.payment_provider or 'paystack')|upper }}
+                            </span>
+
+                        </div>
+
+
+                        {% if order.payment_channel %}
+
+                            <div class="bank-row">
+
+                                <span class="bank-label">
+                                    Payment channel
+                                </span>
+
+                                <span class="bank-value">
+                                    {{ order.payment_channel|replace('_', ' ')|title }}
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if order.payment_verified_at %}
+
+                            <div class="bank-row">
+
+                                <span class="bank-label">
+                                    Verified
+                                </span>
+
+                                <span class="bank-value">
+                                    {{ order.payment_verified_at.strftime(
+                                        '%d %b %Y %H:%M'
+                                    ) }}
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
 
 
                     {% if order.entry_passes %}
