@@ -774,6 +774,29 @@
                 </div>
 
 
+                <div class="group">
+
+                    <label for="notification_area">
+                        Event Area / Town
+                    </label>
+
+                    <input
+                        id="notification_area"
+                        name="notification_area"
+                        type="text"
+                        value="{{ event.notification_area or event.venue or '' }}"
+                        placeholder="e.g. KwaMhlanga"
+                        required
+                    >
+
+                    <small>
+                        Kalxa uses this area to match notification
+                        subscribers within about 60 km.
+                    </small>
+
+                </div>
+
+
                 <div class="grid">
 
                     <div class="group">
