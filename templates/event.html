@@ -2029,12 +2029,38 @@
                     </h2>
 
                     <p>
-                        Enable notifications on this device.
-                        No phone number or account is required.
+                        Enter your area, then enable notifications.
+                        Kalxa will notify you about events happening
+                        within about 60 km. No exact address or live
+                        GPS is required.
                     </p>
                 </div>
 
                 <div class="home-notification-controls">
+
+                    <div style="margin-bottom:12px;">
+
+                        <label
+                            for="home-notification-area"
+                            style="display:block;font-weight:850;margin-bottom:6px;"
+                        >
+                            Where do you live?
+                        </label>
+
+                        <input
+                            id="home-notification-area"
+                            type="text"
+                            placeholder="e.g. KwaMhlanga"
+                            autocomplete="address-level2"
+                            style="width:100%;min-height:46px;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font:inherit;"
+                        >
+
+                        <small style="display:block;margin-top:6px;color:#64748b;">
+                            Area or town only — not your street address.
+                        </small>
+
+                    </div>
+
 
                     <div class="home-notification-actions">
 
@@ -2297,6 +2323,12 @@
                 "home-enable-notifications"
             );
 
+
+        const homeAreaInput =
+            document.getElementById(
+                "home-notification-area"
+            );
+
         const disableButton =
             document.getElementById(
                 "home-disable-notifications"
@@ -2328,6 +2360,22 @@
 
         let messaging =
             null;
+
+
+        const savedHomeArea =
+            localStorage.getItem(
+                "kalxa_notification_home_area"
+            );
+
+
+        if (
+            savedHomeArea
+            && homeAreaInput
+        ) {
+
+            homeAreaInput.value =
+                savedHomeArea;
+        }
 
 
         function setStatus(
@@ -2388,6 +2436,9 @@
                                 {
                                     installation_id:
                                         installationId,
+
+                                    home_area:
+                                        homeAreaInput.value.trim(),
                                 }
                             ),
                     }
@@ -2418,6 +2469,12 @@
                 "kalxa_firebase_installation_id",
                 installationId
             );
+
+
+                    localStorage.setItem(
+                        "kalxa_notification_home_area",
+                        homeAreaInput.value.trim()
+                    );
 
 
             localStorage.setItem(
@@ -2536,6 +2593,19 @@
                 );
 
                 try {
+
+                    const homeArea =
+                        homeAreaInput.value.trim();
+
+
+                    if (!homeArea) {
+
+                        throw new Error(
+                            "Enter your area or town before enabling notifications."
+                        );
+                    }
+
+
                     const initialized =
                         (
                             messaging
