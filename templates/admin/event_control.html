@@ -25,7 +25,18 @@
 <header class="hero">
 <div><span class="kicker">EVENT CONTROL CENTRE</span><h1>{{ event.title }}</h1><div class="hero-meta">{% if event.event_date %}<span>📅 {{ event.event_date.strftime('%d %B %Y') }}</span>{% endif %}{% if event.event_time %}<span>🕒 {{ event.event_time.strftime('%H:%M') }}</span>{% endif %}{% if event.venue %}<span>📍 {{ event.venue }}</span>{% endif %}</div>
 <div class="status-row">{% if event.status == 'draft' %}<span class="badge badge-draft">Draft</span>{% elif event.status == 'closed' %}<span class="badge badge-closed">Closed</span>{% else %}<span class="badge badge-published">Published</span>{% if event.sales_open %}<span class="badge badge-published">Sales Open</span>{% else %}<span class="badge badge-paused">Sales Paused</span>{% endif %}{% endif %}</div></div>
-<div class="hero-actions">{% if event.status == 'published' %}<a href="{{ url_for('event_page', event_id=event.id) }}" class="button button-light" target="_blank" rel="noopener noreferrer">View Public Event</a>{% endif %}</div>
+<div class="hero-actions">
+{% if event.status == 'published' %}
+<a href="{{ url_for('event_page', event_id=event.id) }}" class="button button-light" target="_blank" rel="noopener noreferrer">View Public Event</a>
+{% endif %}
+<a href="{{ url_for('admin_event_boost', event_id=event.id) }}" class="button button-light">
+{% if event_boost and event_boost.status == 'active' %}
+🚀 Boost Active
+{% else %}
+🚀 Boost Event
+{% endif %}
+</a>
+</div>
 </header>
 <section class="metrics">
 <div class="metric"><span>Tickets Sold</span><strong>{{ paid_tickets }}</strong></div>
@@ -34,6 +45,50 @@
 <div class="metric"><span>Checked In</span><strong>{{ checked_in }}</strong></div>
 <div class="metric"><span>Remaining</span><strong>{% if remaining_tickets is none %}∞{% else %}{{ remaining_tickets }}{% endif %}</strong></div>
 </section>
+<section class="section">
+<div class="section-header">
+<div>
+<span class="kicker">KALXA PREMIUM REACH</span>
+<h2>Event Boost</h2>
+<p class="muted">Reach opted-in users within {{ '%.0f'|format(80) }} km of this event.</p>
+</div>
+<a href="{{ url_for('admin_event_boost', event_id=event.id) }}" class="button button-secondary">
+{% if event_boost and event_boost.status == 'active' %}
+View Boost
+{% else %}
+Boost Event
+{% endif %}
+</a>
+</div>
+
+<div class="metrics">
+<div class="metric">
+<span>Local Audience</span>
+<strong>{{ boost_audience_count }}</strong>
+</div>
+<div class="metric">
+<span>Boost Status</span>
+<strong style="font-size:18px;">
+{% if event_boost %}
+{{ event_boost.status|upper }}
+{% else %}
+NOT ACTIVE
+{% endif %}
+</strong>
+</div>
+</div>
+
+{% if event_boost and event_boost.status == 'active' %}
+<div class="control-note">
+{{ event_boost.plan_name }} is active for this event.
+</div>
+{% else %}
+<div class="control-note">
+Basic: R49 for one local campaign. Pro: R99 for launch + automated countdown reminders.
+</div>
+{% endif %}
+</section>
+
 <div class="main-grid">
 <main>
 <section class="section"><div class="section-header"><div><span class="kicker">RECENT ORDERS</span><h2>Ticket Activity</h2><p class="muted">Latest attendee reservations for this event.</p></div><a href="{{ url_for('admin_orders', event_id=event.id) }}" class="button button-secondary">View All Orders</a></div>
