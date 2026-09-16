@@ -1,728 +1,196 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
-
-    <title>
-        Reserve Ticket | Kalxa Ticketing
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/style.css'
-        ) }}"
-    >
-
-
-    <style>
-
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-
-        body {
-
-            margin: 0;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            font-family:
-                Inter,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Roboto,
-                Helvetica,
-                Arial,
-                sans-serif;
-
-            font-size:
-                16px;
-
-            line-height:
-                1.6;
-
-            -webkit-font-smoothing:
-                antialiased;
-        }
-
-
-        .muted {
-            color:
-                #64748b;
-        }
-
-
-        /* =====================================================
-           PAGE
-        ===================================================== */
-
-        .page-shell {
-
-            width:
-                100%;
-
-            max-width:
-                660px;
-
-            margin:
-                0 auto;
-
-            padding:
-                30px 18px 70px;
-        }
-
-
-        /* =====================================================
-           BRAND
-        ===================================================== */
-
-        .brand {
-
-            margin-bottom:
-                28px;
-
-            color:
-                #111111;
-
-            font-size:
-                15px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.02em;
-        }
-
-
-        /* =====================================================
-           CARD
-        ===================================================== */
-
-        .form-card {
-
-            padding:
-                28px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                22px;
-
-            box-shadow:
-                0 10px 34px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.06
-                );
-        }
-
-
-        /* =====================================================
-           TYPOGRAPHY
-        ===================================================== */
-
-        .eyebrow {
-
-            margin:
-                0 0 8px;
-
-            color:
-                #64748b;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.14em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        h1 {
-
-            margin:
-                0 0 12px;
-
-            color:
-                #111827;
-
-            font-size:
-                clamp(
-                    31px,
-                    7vw,
-                    44px
-                );
-
-            line-height:
-                1.05;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.045em;
-        }
-
-
-        .ticket-price {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            gap:
-                6px;
-
-            margin:
-                0 0 24px;
-
-            padding:
-                9px 12px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                999px;
-
-            font-size:
-                14px;
-
-            font-weight:
-                800;
-        }
-
-
-        /* =====================================================
-           ALERT
-        ===================================================== */
-
-        .alert {
-
-            margin-bottom:
-                18px;
-
-            padding:
-                14px 16px;
-
-            background:
-                #fffbeb;
-
-            color:
-                #92400e;
-
-            border:
-                1px solid #fde68a;
-
-            border-radius:
-                13px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                650;
-        }
-
-
-        /* =====================================================
-           FORM
-        ===================================================== */
-
-        .form-stack {
-
-            display:
-                flex;
-
-            flex-direction:
-                column;
-
-            gap:
-                18px;
-        }
-
-
-        .form-stack label {
-
-            display:
-                flex;
-
-            flex-direction:
-                column;
-
-            gap:
-                7px;
-
-            color:
-                #111827;
-
-            font-size:
-                13px;
-
-            font-weight:
-                750;
-        }
-
-
-        .form-stack label small {
-
-            color:
-                #94a3b8;
-
-            font-size:
-                11px;
-
-            font-weight:
-                600;
-        }
-
-
-        .form-stack input,
-        .form-stack select {
-
-            width:
-                100%;
-
-            min-height:
-                50px;
-
-            padding:
-                12px 14px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #dbe1e8;
-
-            border-radius:
-                12px;
-
-            outline:
-                none;
-
-            font:
-                inherit;
-
-            font-size:
-                14px;
-
-            transition:
-                border-color 0.16s ease,
-                box-shadow 0.16s ease;
-        }
-
-
-        .form-stack input:focus,
-        .form-stack select:focus {
-
-            border-color:
-                #111111;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(
-                    17,
-                    17,
-                    17,
-                    0.07
-                );
-        }
-
-
-        .form-stack input::placeholder {
-
-            color:
-                #94a3b8;
-        }
-
-
-        /* =====================================================
-           BUTTON
-        ===================================================== */
-
-        .button {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                100%;
-
-            min-height:
-                52px;
-
-            margin-top:
-                4px;
-
-            padding:
-                12px 18px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-
-            border-radius:
-                12px;
-
-            font-family:
-                inherit;
-
-            font-size:
-                15px;
-
-            font-weight:
-                850;
-
-            cursor:
-                pointer;
-
-            transition:
-                background 0.16s ease,
-                transform 0.16s ease,
-                box-shadow 0.16s ease;
-        }
-
-
-        .button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 8px 20px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.1
-                );
-        }
-
-
-        /* =====================================================
-           NOTE
-        ===================================================== */
-
-        .reservation-note {
-
-            margin-top:
-                20px;
-
-            padding-top:
-                18px;
-
-            color:
-                #94a3b8;
-
-            border-top:
-                1px solid #eef2f7;
-
-            font-size:
-                11px;
-
-            line-height:
-                1.6;
-
-            text-align:
-                center;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
-
-        @media (
-            max-width: 560px
-        ) {
-
-            .page-shell {
-
-                padding:
-                    22px 14px 50px;
-            }
-
-
-            .form-card {
-
-                padding:
-                    20px;
-
-                border-radius:
-                    18px;
-            }
-
-
-            .ticket-price {
-
-                font-size:
-                    13px;
-            }
-
-        }
-
-    </style>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buy Tickets | Kalxa</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.page{width:min(720px,calc(100% - 28px));margin:0 auto;padding:28px 0 60px}
+.back{text-decoration:none;color:#111827;font-weight:850}
+.card{margin-top:20px;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:24px;box-shadow:0 12px 34px rgba(15,23,42,.06)}
+.kicker{font-size:.76rem;font-weight:900;letter-spacing:.09em;color:#6b7280;text-transform:uppercase}
+h1{margin:7px 0 8px;font-size:clamp(28px,7vw,42px);line-height:1.05}
+.copy{color:#6b7280;line-height:1.55}
+.ticket-type{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:15px 0;border-bottom:1px solid #eef0f3}
+.ticket-type:last-child{border-bottom:0}
+.ticket-name{font-weight:900;font-size:1.02rem}
+.ticket-meta{font-size:.84rem;color:#6b7280;margin-top:4px}
+.qty{width:90px;min-height:46px;padding:8px;border:1px solid #d1d5db;border-radius:10px;font:inherit}
+.summary{display:grid;gap:10px;margin:22px 0}
+.row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-bottom:1px solid #eef0f3}
+.row:last-child{border-bottom:0}
+.value{font-weight:900;text-align:right}
+.total{font-size:1.16rem}
+label{display:block;margin:16px 0 7px;font-weight:850}
+input{width:100%;min-height:49px;padding:11px 12px;border:1px solid #d1d5db;border-radius:11px;background:#fff;font:inherit}
+.button{width:100%;min-height:52px;margin-top:22px;border:0;border-radius:12px;background:#111827;color:#fff;font:inherit;font-weight:900;cursor:pointer}
+.note{margin-top:16px;padding:13px 14px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;color:#64748b;font-size:.86rem;line-height:1.55}
+.flash{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fff7ed;color:#9a3412}
+</style>
 </head>
-
-
 <body>
 
+<main class="page">
 
-<div class="page-shell">
+<a class="back" href="{{ url_for('event_page', event_id=event.id) }}">← Back to event</a>
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for category, message in messages %}
+<div class="flash">{{ message }}</div>
+{% endfor %}
+{% endwith %}
 
-    <!-- =========================================
-         BRAND
-    ========================================== -->
+<section class="card">
 
-    <div class="brand">
-        KALXA TICKETING
-    </div>
+<span class="kicker">SECURE CHECKOUT</span>
+<h1>{{ event.title }}</h1>
 
+<p class="copy">
+Choose the ticket types and quantities you want.
+You can buy different ticket types in one Paystack payment.
+</p>
 
+<form method="POST">
 
-    <!-- =========================================
-         RESERVATION CARD
-    ========================================== -->
+{% if ticket_types %}
 
-    <div class="form-card">
+    <div id="ticket-selector">
 
+        {% for ticket_type in ticket_types %}
 
-        <p class="eyebrow">
-            RESERVE TICKET
-        </p>
+            <div
+                class="ticket-type"
+                data-price="{{ ticket_type.price|float }}"
+                data-name="{{ ticket_type.name }}"
+            >
 
-
-        <h1>
-            {{ event.title }}
-        </h1>
-
-
-        <p class="ticket-price">
-
-            {% if event.ticket_price == 0 %}
-
-                FREE ENTRY
-
-            {% else %}
-
-                R{{ "%.2f"|format(
-                    event.ticket_price
-                ) }}
-                per ticket
-
-            {% endif %}
-
-        </p>
-
-
-
-        <!-- =====================================
-             FLASH MESSAGES
-        ====================================== -->
-
-        {% with messages = get_flashed_messages() %}
-
-            {% if messages %}
-
-                {% for message in messages %}
-
-                    <div class="alert">
-                        {{ message }}
+                <div>
+                    <div class="ticket-name">
+                        {{ ticket_type.name }}
                     </div>
 
-                {% endfor %}
-
-            {% endif %}
-
-        {% endwith %}
-
-
-
-        <!-- =====================================
-             RESERVATION FORM
-        ====================================== -->
-
-        <form
-            method="POST"
-            class="form-stack"
-        >
-
-
-            <label>
-
-                Your Name
+                    <div class="ticket-meta">
+                        R{{ "%.2f"|format(ticket_type.price) }}
+                        {% if ticket_type.capacity is not none %}
+                            · {{ ticket_type.remaining_quantity }} remaining
+                        {% endif %}
+                    </div>
+                </div>
 
                 <input
-                    type="text"
-                    name="customer_name"
-                    placeholder="Full name"
-                    autocomplete="name"
-                    required
+                    class="qty"
+                    name="qty_{{ ticket_type.id }}"
+                    type="number"
+                    min="0"
+                    max="{% if ticket_type.remaining_quantity is not none %}{{ [ticket_type.remaining_quantity, 10]|min }}{% else %}10{% endif %}"
+                    value="0"
+                    {% if ticket_type.is_sold_out %}disabled{% endif %}
+                    aria-label="{{ ticket_type.name }} quantity"
                 >
 
-            </label>
+            </div>
 
-
-
-            <label>
-
-                Phone Number
-
-                <input
-                    type="tel"
-                    name="customer_phone"
-                    placeholder="Example: 071 234 5678"
-                    autocomplete="tel"
-                    required
-                >
-
-            </label>
-
-
-
-            <label>
-
-                Email
-
-                <small>
-                    Optional
-                </small>
-
-                <input
-                    type="email"
-                    name="customer_email"
-                    placeholder="you@example.com"
-                    autocomplete="email"
-                >
-
-            </label>
-
-
-
-            <label>
-
-                Number of Tickets
-
-                <select
-                    name="quantity"
-                    required
-                >
-
-                    {% for quantity in range(1, 11) %}
-
-                        <option value="{{ quantity }}">
-                            {{ quantity }}
-                        </option>
-
-                    {% endfor %}
-
-                </select>
-
-            </label>
-
-
-
-            <button
-                type="submit"
-                class="button"
-            >
-                Reserve Ticket
-            </button>
-
-
-        </form>
-
-
-
-        <!-- =====================================
-             NOTE
-        ====================================== -->
-
-        <div class="reservation-note">
-
-            Your booking will receive a unique reference.
-            Your ticket becomes valid after payment is
-            confirmed by the event organizer.
-
-        </div>
-
+        {% endfor %}
 
     </div>
 
+{% else %}
 
+    <div
+        class="ticket-type"
+        data-price="{{ event.ticket_price|float }}"
+        data-name="General"
+    >
+        <div>
+            <div class="ticket-name">General</div>
+            <div class="ticket-meta">
+                R{{ "%.2f"|format(event.ticket_price) }}
+            </div>
+        </div>
+
+        <input
+            class="qty"
+            name="quantity"
+            type="number"
+            min="0"
+            max="{% if event.remaining_tickets is not none %}{{ [event.remaining_tickets, 10]|min }}{% else %}10{% endif %}"
+            value="1"
+            aria-label="General ticket quantity"
+        >
+    </div>
+
+{% endif %}
+
+<div class="summary">
+<div class="row"><span>Total tickets</span><span class="value" id="summary-quantity">0</span></div>
+<div class="row"><span>Ticket total</span><span class="value" id="ticket-total">R0.00</span></div>
+<div class="row"><span>Payment processing</span><span class="value" id="processing-fee">R0.00</span></div>
+<div class="row total"><span>You pay</span><span class="value" id="checkout-total">R0.00</span></div>
 </div>
 
+<label for="customer_name">Full Name</label>
+<input id="customer_name" name="customer_name" type="text" autocomplete="name" required>
+
+<label for="customer_phone">Phone Number</label>
+<input id="customer_phone" name="customer_phone" type="tel" autocomplete="tel" required>
+
+<label for="customer_email">Email Address</label>
+<input id="customer_email" name="customer_email" type="email" autocomplete="email" required>
+
+<button class="button" type="submit">Continue to Secure Payment</button>
+
+</form>
+
+<div class="note">
+Maximum 10 tickets per checkout. Kalxa takes 0% commission from
+the organizer's ticket price. Paystack processing is shown separately.
+</div>
+
+</section>
+</main>
+
+<script>
+const rate = Number({{ processing_rate|float }});
+const qtyInputs = [...document.querySelectorAll(".qty")];
+
+function money(value) {
+    return "R" + value.toFixed(2);
+}
+
+function updateSummary() {
+    let face = 0;
+    let quantity = 0;
+
+    qtyInputs.forEach((input) => {
+        const row = input.closest(".ticket-type");
+        const price = Number(row.dataset.price || 0);
+        const qty = Math.max(0, Number(input.value || 0));
+        face += price * qty;
+        quantity += qty;
+    });
+
+    let checkout = 0;
+
+    if (face > 0) {
+        checkout = Math.ceil(((face / (1 - rate)) + 0.01) * 100) / 100;
+    }
+
+    const fee = Math.max(0, checkout - face);
+
+    document.getElementById("summary-quantity").textContent = quantity;
+    document.getElementById("ticket-total").textContent = money(face);
+    document.getElementById("processing-fee").textContent = money(fee);
+    document.getElementById("checkout-total").textContent = money(checkout);
+}
+
+qtyInputs.forEach((input) => {
+    input.addEventListener("input", updateSummary);
+});
+
+updateSummary();
+</script>
 
 </body>
-
 </html>
