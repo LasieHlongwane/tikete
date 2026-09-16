@@ -131,11 +131,12 @@ EVENT_BOOST_PLANS = {
         "price":
             EVENT_BOOST_PRO_PRICE,
         "campaign_limit":
-            4,
+            5,
         "reminders": [
             "launch",
             "three_days",
             "tomorrow",
+            "tonight",
             "happening_now",
         ],
     },
@@ -1829,6 +1830,61 @@ def build_event_boost_schedule(
             )
 
 
+        event_local = (
+            event_local_datetime(
+                event
+            )
+        )
+
+
+        # Same-day reminder:
+        # - evening events: 17:00 SAST ("Tonight")
+        # - daytime events: 09:00 SAST ("Today")
+        # - very early events: one hour before start
+        if event_local.hour >= 17:
+
+            same_day_local = (
+                event_local.replace(
+                    hour=17,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                )
+            )
+
+        else:
+
+            same_day_local = (
+                event_local.replace(
+                    hour=9,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                )
+            )
+
+
+        if same_day_local >= event_local:
+
+            same_day_local = (
+                event_local
+                - timedelta(
+                    hours=1
+                )
+            )
+
+
+        same_day_utc = (
+            same_day_local
+            .astimezone(
+                timezone.utc
+            )
+            .replace(
+                tzinfo=None
+            )
+        )
+
+
         reminder_times.update(
             {
                 "three_days":
@@ -1842,6 +1898,9 @@ def build_event_boost_schedule(
                     - timedelta(
                         days=1
                     ),
+
+                "tonight":
+                    same_day_utc,
 
                 "happening_now":
                     event_utc,
@@ -1916,6 +1975,256 @@ def build_event_boost_schedule(
         )
 
 
+def format_boost_schedule_sast(
+    scheduled_for,
+):
+
+    if not scheduled_for:
+
+        return "—"
+
+
+    aware_utc = (
+        scheduled_for.replace(
+            tzinfo=
+                timezone.utc
+        )
+    )
+
+
+    local_time = (
+        aware_utc.astimezone(
+            ZoneInfo(
+                "Africa/Johannesburg"
+            )
+        )
+    )
+
+
+    return (
+        local_time.strftime(
+            "%d %b %Y %H:%M"
+        )
+        + " SAST"
+    )
+
+
+def build_local_audience_analytics(
+    event,
+    radius_km,
+):
+
+    if (
+        event.notification_latitude is None
+        or event.notification_longitude is None
+    ):
+
+        return {
+            "total":
+                0,
+            "average_distance_km":
+                None,
+            "nearest_distance_km":
+                None,
+            "farthest_distance_km":
+                None,
+            "areas":
+                [],
+        }
+
+
+    area_buckets = {}
+    distances = []
+
+
+    for subscription in (
+        get_active_push_subscriptions()
+    ):
+
+        if (
+            subscription.home_latitude is None
+            or subscription.home_longitude is None
+        ):
+
+            continue
+
+
+        distance = (
+            haversine_distance_km(
+                event.notification_latitude,
+                event.notification_longitude,
+                subscription.home_latitude,
+                subscription.home_longitude,
+            )
+        )
+
+
+        if distance > float(
+            radius_km
+        ):
+
+            continue
+
+
+        distances.append(
+            distance
+        )
+
+
+        area_name = (
+            subscription.home_area
+            or subscription.home_location_display
+            or "Unknown area"
+        )
+
+
+        bucket_key = (
+            normalize_area_key(
+                area_name
+            )
+            or "unknown-area"
+        )
+
+
+        bucket = (
+            area_buckets.setdefault(
+                bucket_key,
+                {
+                    "name":
+                        area_name,
+                    "count":
+                        0,
+                    "distances":
+                        [],
+                },
+            )
+        )
+
+
+        bucket[
+            "count"
+        ] += 1
+
+        bucket[
+            "distances"
+        ].append(
+            distance
+        )
+
+
+    areas = []
+
+
+    for bucket in (
+        area_buckets.values()
+    ):
+
+        bucket_distances = (
+            bucket[
+                "distances"
+            ]
+        )
+
+
+        areas.append(
+            {
+                "name":
+                    bucket[
+                        "name"
+                    ],
+
+                "count":
+                    bucket[
+                        "count"
+                    ],
+
+                "average_distance_km":
+                    round(
+                        (
+                            sum(
+                                bucket_distances
+                            )
+                            /
+                            len(
+                                bucket_distances
+                            )
+                        ),
+                        1,
+                    ),
+            }
+        )
+
+
+    areas.sort(
+        key=lambda row: (
+            -row[
+                "count"
+            ],
+            row[
+                "average_distance_km"
+            ],
+            row[
+                "name"
+            ].casefold(),
+        )
+    )
+
+
+    if not distances:
+
+        return {
+            "total":
+                0,
+            "average_distance_km":
+                None,
+            "nearest_distance_km":
+                None,
+            "farthest_distance_km":
+                None,
+            "areas":
+                [],
+        }
+
+
+    return {
+        "total":
+            len(
+                distances
+            ),
+
+        "average_distance_km":
+            round(
+                sum(
+                    distances
+                )
+                /
+                len(
+                    distances
+                ),
+                1,
+            ),
+
+        "nearest_distance_km":
+            round(
+                min(
+                    distances
+                ),
+                1,
+            ),
+
+        "farthest_distance_km":
+            round(
+                max(
+                    distances
+                ),
+                1,
+            ),
+
+        "areas":
+            areas,
+    }
+
+
 def event_boost_notification_copy(
     event,
     reminder_type,
@@ -1961,6 +2270,38 @@ def event_boost_notification_copy(
         )
 
 
+    if reminder_type == "tonight":
+
+        event_local = (
+            event_local_datetime(
+                event
+            )
+        )
+
+
+        if (
+            event_local
+            and event_local.hour >= 17
+        ):
+
+            return (
+                f"🌙 TONIGHT: {event.title}",
+                (
+                    f"{event.title} is happening tonight in {area}. "
+                    "Tap for tickets and event details."
+                ),
+            )
+
+
+        return (
+            f"📍 TODAY: {event.title}",
+            (
+                f"{event.title} is happening today in {area}. "
+                "Tap for tickets and event details."
+            ),
+        )
+
+
     if reminder_type == "happening_now":
 
         return (
@@ -1981,15 +2322,55 @@ def execute_event_boost_reminder(
     reminder,
 ):
 
-    if (
-        reminder.status
-        not in {
-            "pending",
-            "failed",
-        }
-    ):
+    reminder_id = (
+        reminder.id
+    )
 
-        return reminder
+
+    # Atomically claim one pending reminder.
+    # If two workers/cron calls overlap, only one is allowed
+    # to change pending -> processing.
+    claimed = (
+        EventBoostReminder.query
+        .filter(
+            EventBoostReminder.id
+            == reminder_id,
+            EventBoostReminder.status
+            == "pending",
+        )
+        .update(
+            {
+                EventBoostReminder.status:
+                    "processing",
+
+                EventBoostReminder.error_message:
+                    None,
+            },
+            synchronize_session=
+                False,
+        )
+    )
+
+
+    db.session.commit()
+
+
+    if not claimed:
+
+        return (
+            db.session.get(
+                EventBoostReminder,
+                reminder_id,
+            )
+        )
+
+
+    reminder = (
+        db.session.get(
+            EventBoostReminder,
+            reminder_id,
+        )
+    )
 
 
     boost = (
@@ -2127,15 +2508,6 @@ def execute_event_boost_reminder(
             + ":"
             + reminder.reminder_type
         ),
-    )
-
-
-    reminder.status = (
-        "processing"
-    )
-
-    reminder.error_message = (
-        None
     )
 
 
@@ -10697,6 +11069,21 @@ def admin_event_boost(
         )
 
 
+    if (
+        boost
+        and boost.status
+        == "active"
+        and boost.plan_code
+        == "pro"
+    ):
+
+        build_event_boost_schedule(
+            boost
+        )
+
+        db.session.commit()
+
+
     reminders = (
         boost.reminders
         if boost
@@ -10744,6 +11131,106 @@ def admin_event_boost(
     }
 
 
+    performance[
+        "delivery_rate"
+    ] = (
+        round(
+            (
+                performance[
+                    "success"
+                ]
+                /
+                performance[
+                    "recipients"
+                ]
+                * 100
+            ),
+            1,
+        )
+        if performance[
+            "recipients"
+        ]
+        else 0
+    )
+
+
+    audience_analytics = (
+        build_local_audience_analytics(
+            event,
+            EVENT_BOOST_RADIUS_KM,
+        )
+    )
+
+
+    reminder_rows = []
+
+
+    for reminder in reminders:
+
+        campaign = (
+            reminder.campaign
+        )
+
+
+        recipient_count = (
+            campaign.recipient_count
+            if campaign
+            else 0
+        ) or 0
+
+        success_count = (
+            campaign.success_count
+            if campaign
+            else 0
+        ) or 0
+
+        failure_count = (
+            campaign.failure_count
+            if campaign
+            else 0
+        ) or 0
+
+
+        reminder_rows.append(
+            {
+                "reminder":
+                    reminder,
+
+                "scheduled_display":
+                    format_boost_schedule_sast(
+                        reminder.scheduled_for
+                    ),
+
+                "campaign":
+                    campaign,
+
+                "recipient_count":
+                    recipient_count,
+
+                "success_count":
+                    success_count,
+
+                "failure_count":
+                    failure_count,
+
+                "delivery_rate":
+                    (
+                        round(
+                            (
+                                success_count
+                                /
+                                recipient_count
+                                * 100
+                            ),
+                            1,
+                        )
+                        if recipient_count
+                        else 0
+                    ),
+            }
+        )
+
+
     return render_template(
         "admin/event_boost.html",
 
@@ -10759,8 +11246,14 @@ def admin_event_boost(
         reminders=
             reminders,
 
+        reminder_rows=
+            reminder_rows,
+
         audience_count=
             audience_count,
+
+        audience_analytics=
+            audience_analytics,
 
         performance=
             performance,
@@ -11367,6 +11860,108 @@ def paystack_event_boost_callback():
                 boost.event_id,
         )
     )
+
+
+# ============================================================
+# EVENT BOOST TRAFFIC-BASED FALLBACK
+# ============================================================
+#
+# The secured cron endpoint remains the reliable scheduler.
+# This fallback checks at most once every 10 minutes per
+# Gunicorn process whenever Kalxa receives traffic. Atomic
+# reminder claiming prevents duplicate sends across workers.
+# ============================================================
+
+_boost_fallback_lock = (
+    threading.Lock()
+)
+
+_boost_fallback_last_run = 0.0
+
+
+@app.before_request
+def process_due_boosts_on_traffic():
+
+    global _boost_fallback_last_run
+
+
+    if (
+        request.endpoint
+        == "process_event_boost_cron"
+    ):
+
+        return None
+
+
+    now_monotonic = (
+        time.monotonic()
+    )
+
+
+    if (
+        now_monotonic
+        - _boost_fallback_last_run
+        < 600
+    ):
+
+        return None
+
+
+    if not _boost_fallback_lock.acquire(
+        blocking=False
+    ):
+
+        return None
+
+
+    try:
+
+        now_monotonic = (
+            time.monotonic()
+        )
+
+
+        if (
+            now_monotonic
+            - _boost_fallback_last_run
+            < 600
+        ):
+
+            return None
+
+
+        _boost_fallback_last_run = (
+            now_monotonic
+        )
+
+
+        try:
+
+            process_due_event_boost_reminders(
+                limit=
+                    10
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Event Boost Fallback] "
+                    "Due reminder processing failed error=%s"
+                ),
+                error,
+            )
+
+
+    finally:
+
+        _boost_fallback_lock.release()
+
+
+    return None
 
 
 # ============================================================
