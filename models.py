@@ -906,6 +906,15 @@ class TicketEvent(db.Model):
     )
 
 
+    boosts = db.relationship(
+        "EventBoost",
+        back_populates="event",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="EventBoost.created_at.desc()",
+    )
+
+
     @property
     def has_owner(self):
 
@@ -2154,6 +2163,296 @@ class PushSubscription(db.Model):
         )
 
 
+
+
+# ============================================================
+# EVENT BOOST
+# ============================================================
+#
+# One paid premium local-reach package per event.
+#
+# basic:
+#   - R49
+#   - one launch campaign
+#
+# pro:
+#   - R99
+#   - launch
+#   - 3 days to go
+#   - tomorrow
+#   - happening now
+# ============================================================
+
+class EventBoost(db.Model):
+
+    __tablename__ = "event_boosts"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+
+    plan_code = db.Column(
+        db.String(30),
+        nullable=False,
+        index=True,
+    )
+
+    plan_name = db.Column(
+        db.String(100),
+        nullable=False,
+    )
+
+    price = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    radius_km = db.Column(
+        db.Numeric(6, 2),
+        nullable=False,
+        default=80,
+    )
+
+    campaign_limit = db.Column(
+        db.Integer,
+        nullable=False,
+        default=1,
+    )
+
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+
+    payment_reference = db.Column(
+        db.String(100),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    payment_provider = db.Column(
+        db.String(30),
+        nullable=False,
+        default="paystack",
+    )
+
+    paystack_access_code = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    paystack_authorization_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    paystack_transaction_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    payment_channel = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    payment_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    paid_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    activated_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    audience_count_at_purchase = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    event = db.relationship(
+        "TicketEvent",
+        back_populates="boosts",
+    )
+
+    reminders = db.relationship(
+        "EventBoostReminder",
+        back_populates="boost",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="EventBoostReminder.scheduled_for.asc()",
+    )
+
+
+    @property
+    def is_active(self):
+
+        return (
+            self.status
+            == "active"
+        )
+
+
+    @property
+    def is_paid(self):
+
+        return (
+            self.status
+            == "active"
+            and self.paid_at
+            is not None
+        )
+
+
+# ============================================================
+# EVENT BOOST REMINDER
+# ============================================================
+
+class EventBoostReminder(db.Model):
+
+    __tablename__ = "event_boost_reminders"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    boost_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "event_boosts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    reminder_type = db.Column(
+        db.String(30),
+        nullable=False,
+        index=True,
+    )
+
+    scheduled_for = db.Column(
+        db.DateTime,
+        nullable=False,
+        index=True,
+    )
+
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    campaign_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "push_campaigns.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    sent_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    error_message = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    boost = db.relationship(
+        "EventBoost",
+        back_populates="reminders",
+    )
+
+    campaign = db.relationship(
+        "PushCampaign",
+        lazy=True,
+    )
+
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "boost_id",
+            "reminder_type",
+            name=
+                "uq_event_boost_reminder_type",
+        ),
+    )
 
 
 # ============================================================
