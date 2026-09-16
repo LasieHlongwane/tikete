@@ -534,6 +534,238 @@ def finalize_paystack_ticket_order(
     return order
 
 
+def finalize_paystack_subscription_payment(
+    payment,
+    transaction_data,
+):
+
+    if (
+        payment.payment_status
+        == "paid"
+    ):
+
+        return payment
+
+
+    if (
+        not isinstance(
+            transaction_data,
+            dict,
+        )
+        or transaction_data.get(
+            "status"
+        )
+        != "success"
+    ):
+
+        raise RuntimeError(
+            "Paystack subscription transaction is not successful."
+        )
+
+
+    reference = (
+        str(
+            transaction_data.get(
+                "reference",
+                "",
+            )
+        )
+        .strip()
+    )
+
+
+    if (
+        reference
+        != payment.payment_reference
+    ):
+
+        raise RuntimeError(
+            "Paystack subscription reference does not match."
+        )
+
+
+    expected_amount = int(
+        (
+            Decimal(
+                str(
+                    payment.amount
+                    or 0
+                )
+            )
+            * 100
+        )
+        .quantize(
+            Decimal("1"),
+            rounding=
+                ROUND_UP,
+        )
+    )
+
+
+    actual_amount = int(
+        transaction_data.get(
+            "amount"
+        )
+        or 0
+    )
+
+
+    if (
+        actual_amount
+        != expected_amount
+    ):
+
+        raise RuntimeError(
+            "Paystack subscription amount does not match."
+        )
+
+
+    currency = (
+        str(
+            transaction_data.get(
+                "currency",
+                "",
+            )
+        )
+        .strip()
+        .upper()
+    )
+
+
+    if (
+        currency
+        and currency != "ZAR"
+    ):
+
+        raise RuntimeError(
+            "Unexpected subscription payment currency."
+        )
+
+
+    organizer = (
+        payment.organizer
+    )
+
+
+    if not organizer:
+
+        raise RuntimeError(
+            "Subscription organizer record is missing."
+        )
+
+
+    if organizer.is_suspended:
+
+        raise RuntimeError(
+            "Suspended organizers cannot activate subscriptions."
+        )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        organizer.subscription_expires_at
+        and organizer.subscription_expires_at
+        > now
+    ):
+
+        subscription_start = (
+            organizer.subscription_expires_at
+        )
+
+    else:
+
+        subscription_start = now
+
+
+    subscription_end = (
+        subscription_start
+        + timedelta(
+            days=(
+                payment.period_days
+                or KALXA_SUBSCRIPTION_PERIOD_DAYS
+            )
+        )
+    )
+
+
+    payment.payment_method = (
+        "paystack"
+    )
+
+    payment.payment_status = (
+        "paid"
+    )
+
+    payment.paid_at = now
+
+    payment.confirmed_at = now
+
+    payment.confirmed_by = (
+        "paystack"
+    )
+
+    payment.subscription_start = (
+        subscription_start
+    )
+
+    payment.subscription_end = (
+        subscription_end
+    )
+
+    payment.payment_verified_at = (
+        now
+    )
+
+    payment.paystack_transaction_id = (
+        str(
+            transaction_data.get(
+                "id",
+                "",
+            )
+        )
+        or None
+    )
+
+    payment.payment_channel = (
+        transaction_data.get(
+            "channel"
+        )
+        or None
+    )
+
+
+    organizer.active = True
+
+    organizer.subscription_status = (
+        "active"
+    )
+
+
+    if (
+        organizer.subscription_started_at
+        is None
+    ):
+
+        organizer.subscription_started_at = (
+            now
+        )
+
+
+    organizer.subscription_expires_at = (
+        subscription_end
+    )
+
+
+    db.session.commit()
+
+
+    return payment
+
+
 def get_paystack_za_banks():
 
     query = urllib.parse.urlencode(
@@ -3274,6 +3506,28 @@ def superadmin_confirm_subscription_payment(
 
 
     if (
+        payment.payment_method
+        == "paystack"
+    ):
+
+        flash(
+            (
+                "Paystack subscription payments are verified "
+                "automatically and cannot be manually confirmed."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    if (
         payment.payment_status
         == "paid"
     ):
@@ -5933,6 +6187,51 @@ def paystack_ticket_webhook():
 
     if not order:
 
+        subscription_payment = (
+            SubscriptionPayment.query
+            .filter_by(
+                payment_reference=
+                    reference
+            )
+            .first()
+        )
+
+
+        if not subscription_payment:
+
+            return (
+                "",
+                200,
+            )
+
+
+        try:
+
+            finalize_paystack_subscription_payment(
+                subscription_payment,
+                transaction_data,
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Paystack Subscription Webhook] "
+                    "Failed reference=%s error=%s"
+                ),
+                reference,
+                error,
+            )
+
+            return (
+                "",
+                500,
+            )
+
+
         return (
             "",
             200,
@@ -7433,7 +7732,7 @@ def admin_subscription():
 
 
 # ============================================================
-# ORGANIZER - REQUEST SUBSCRIPTION PAYMENT
+# ORGANIZER - PAY SUBSCRIPTION WITH PAYSTACK
 # ============================================================
 
 @app.route(
@@ -7464,12 +7763,10 @@ def admin_request_subscription_payment():
         flash(
             (
                 "Your organizer account is suspended. "
-                "Subscription renewal cannot be requested "
-                "until the account is reactivated."
+                "Contact Kalxa before renewing."
             ),
             "error",
         )
-
 
         return redirect(
             url_for(
@@ -7478,7 +7775,21 @@ def admin_request_subscription_payment():
         )
 
 
-    existing_pending = (
+    if not paystack_is_configured():
+
+        flash(
+            "Paystack is not configured on Kalxa yet.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_subscription"
+            )
+        )
+
+
+    payment = (
         SubscriptionPayment.query
         .filter_by(
             organizer_id=
@@ -7487,59 +7798,202 @@ def admin_request_subscription_payment():
             payment_status=
                 "pending",
         )
+        .order_by(
+            SubscriptionPayment.created_at.desc()
+        )
         .first()
     )
 
 
-    if existing_pending:
-
-        flash(
-            (
-                "You already have a pending subscription "
-                "payment request. Use the existing payment "
-                "reference."
-            ),
-            "error",
-        )
-
+    if (
+        payment
+        and payment.paystack_authorization_url
+    ):
 
         return redirect(
-            url_for(
-                "admin_subscription"
-            )
+            payment.paystack_authorization_url
         )
 
 
-    payment = SubscriptionPayment(
+    if not payment:
 
-        organizer_id=
-            organizer.id,
+        payment = SubscriptionPayment(
 
-        plan_name=
-            KALXA_SUBSCRIPTION_PLAN_NAME,
+            organizer_id=
+                organizer.id,
 
-        amount=
-            KALXA_SUBSCRIPTION_PRICE,
+            plan_name=
+                KALXA_SUBSCRIPTION_PLAN_NAME,
 
-        period_days=
-            KALXA_SUBSCRIPTION_PERIOD_DAYS,
+            amount=
+                KALXA_SUBSCRIPTION_PRICE,
 
-        payment_reference=
-            generate_subscription_payment_reference(),
+            period_days=
+                KALXA_SUBSCRIPTION_PERIOD_DAYS,
 
-        payment_method=
-            "manual_bank",
+            payment_reference=
+                generate_subscription_payment_reference(),
 
-        payment_status=
-            "pending",
+            payment_method=
+                "paystack",
+
+            payment_status=
+                "pending",
+        )
+
+
+        try:
+
+            db.session.add(
+                payment
+            )
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Subscription Paystack] "
+                    "Failed to create payment record "
+                    "organizer_id=%s error=%s"
+                ),
+                organizer.id,
+                error,
+            )
+
+            flash(
+                (
+                    "Unable to start subscription payment. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_subscription"
+                )
+            )
+
+
+    callback_url = url_for(
+        "paystack_subscription_callback",
+        _external=
+            True,
+        _scheme=
+            "https",
     )
+
+
+    payload = {
+        "email":
+            organizer.email,
+
+        "amount":
+            str(
+                int(
+                    (
+                        Decimal(
+                            str(
+                                payment.amount
+                            )
+                        )
+                        * 100
+                    )
+                    .quantize(
+                        Decimal("1"),
+                        rounding=
+                            ROUND_UP,
+                    )
+                )
+            ),
+
+        "currency":
+            "ZAR",
+
+        "reference":
+            payment.payment_reference,
+
+        "callback_url":
+            callback_url,
+
+        # Use Kalxa's main Paystack merchant account.
+        # No organizer subaccount is supplied here.
+        "channels": [
+            "eft",
+            "capitec_pay",
+        ],
+
+        "metadata":
+            json.dumps(
+                {
+                    "payment_type":
+                        "kalxa_subscription",
+
+                    "subscription_payment_id":
+                        payment.id,
+
+                    "organizer_id":
+                        organizer.id,
+
+                    "plan_name":
+                        payment.plan_name,
+
+                    "period_days":
+                        payment.period_days,
+                }
+            ),
+    }
 
 
     try:
 
-        db.session.add(
-            payment
+        result = (
+            paystack_api_request(
+                "POST",
+                "/transaction/initialize",
+                payload,
+            )
         )
+
+
+        data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        authorization_url = (
+            data.get(
+                "authorization_url"
+            )
+        )
+
+
+        if not authorization_url:
+
+            raise RuntimeError(
+                "Paystack did not return a subscription checkout URL."
+            )
+
+
+        payment.paystack_access_code = (
+            data.get(
+                "access_code"
+            )
+            or None
+        )
+
+        payment.paystack_authorization_url = (
+            authorization_url
+        )
+
 
         db.session.commit()
 
@@ -7548,25 +8002,24 @@ def admin_request_subscription_payment():
 
         db.session.rollback()
 
-
         current_app.logger.exception(
             (
-                "[Subscription] Failed to create "
-                "payment request organizer_id=%s error=%s"
+                "[Subscription Paystack] "
+                "Checkout initialization failed "
+                "organizer_id=%s payment_id=%s error=%s"
             ),
             organizer.id,
+            payment.id,
             error,
         )
 
-
         flash(
             (
-                "Unable to create your subscription "
-                "payment request. Please try again."
+                "Secure Paystack checkout could not be started. "
+                "Please try again."
             ),
             "error",
         )
-
 
         return redirect(
             url_for(
@@ -7575,13 +8028,103 @@ def admin_request_subscription_payment():
         )
 
 
-    flash(
-        (
-            "Subscription payment request created. "
-            "Pay using the reference shown below."
-        ),
-        "success",
+    return redirect(
+        authorization_url
     )
+
+
+# ============================================================
+# PAYSTACK SUBSCRIPTION CALLBACK
+# ============================================================
+
+@app.route(
+    "/payments/paystack/subscription/callback"
+)
+def paystack_subscription_callback():
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not reference:
+
+        abort(400)
+
+
+    payment = (
+        SubscriptionPayment.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first_or_404()
+    )
+
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "GET",
+                (
+                    "/transaction/verify/"
+                    + urllib.parse.quote(
+                        reference,
+                        safe="",
+                    )
+                ),
+            )
+        )
+
+
+        transaction_data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        finalize_paystack_subscription_payment(
+            payment,
+            transaction_data,
+        )
+
+
+        flash(
+            (
+                "Subscription payment confirmed. "
+                "Your Kalxa organizer access is now active."
+            ),
+            "success",
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Subscription Paystack Callback] "
+                "Verification failed reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+        flash(
+            (
+                "Your subscription payment is still being "
+                "verified. Please refresh shortly."
+            ),
+            "error",
+        )
 
 
     return redirect(
