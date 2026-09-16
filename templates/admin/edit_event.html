@@ -815,80 +815,182 @@
         </section>
 
 
-        <section class="card">
+                <section class="card">
 
-            <h2>
-                Ticket Setup
-            </h2>
+            <h2>Ticket Types</h2>
 
             <p class="card-copy">
-                Capacity cannot be reduced below tickets
-                that have already been sold.
+                Add or edit ticket categories. A ticket type that
+                already has paid sales is preserved for audit history.
             </p>
 
+            <div class="group">
 
-            <div class="grid">
+                <label for="ticket_type_count">
+                    Number of Ticket Types
+                </label>
 
-                <div class="group">
-
-                    <label for="ticket_price">
-                        Ticket Price
-                    </label>
-
-                    <input
-                        id="ticket_price"
-                        name="ticket_price"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value="{{ '%.2f'|format(event.ticket_price) }}"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="group">
-
-                    <label for="ticket_capacity">
-                        Ticket Capacity
-                    </label>
-
-                    <input
-                        id="ticket_capacity"
-                        name="ticket_capacity"
-                        type="number"
-                        min="{{ event.paid_ticket_count if event.paid_ticket_count > 0 else 1 }}"
-                        value="{{ event.ticket_capacity or '' }}"
-                    >
-
-                    <small>
-                        Tickets already sold:
-                        {{ event.paid_ticket_count }}
-                    </small>
-
-                </div>
+                <select id="ticket_type_count">
+                    {% set current_count = event.active_ticket_types|length if event.active_ticket_types else 1 %}
+                    {% for count in range(1, 11) %}
+                        <option
+                            value="{{ count }}"
+                            {% if count == current_count %}selected{% endif %}
+                        >
+                            {{ count }}
+                        </option>
+                    {% endfor %}
+                </select>
 
             </div>
 
+            <div id="ticket-type-list" style="margin-top:16px;">
 
-            <div
-                class="group"
-                style="margin-top: 16px;"
-            >
+                {% if event.active_ticket_types %}
+
+                    {% for ticket_type in event.active_ticket_types %}
+
+                        <div class="ticket-type-row" style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;">
+
+                            <input
+                                type="hidden"
+                                name="ticket_type_id"
+                                value="{{ ticket_type.id }}"
+                            >
+
+                            <div class="grid">
+
+                                <div class="group">
+                                    <label>Ticket Name</label>
+                                    <input
+                                        name="ticket_type_name"
+                                        type="text"
+                                        value="{{ ticket_type.name }}"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="group">
+                                    <label>Price (R)</label>
+                                    <input
+                                        name="ticket_type_price"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value="{{ '%.2f'|format(ticket_type.price) }}"
+                                        required
+                                    >
+                                </div>
+
+                            </div>
+
+                            <div class="group" style="margin-top:12px;">
+                                <label>Capacity</label>
+                                <input
+                                    name="ticket_type_capacity"
+                                    type="number"
+                                    min="{{ ticket_type.sold_quantity if ticket_type.sold_quantity > 0 else 1 }}"
+                                    value="{{ ticket_type.capacity or '' }}"
+                                    placeholder="Leave empty for unlimited"
+                                >
+                                <small>Sold: {{ ticket_type.sold_quantity }}</small>
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="ticket-type-row" style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;">
+
+                        <input type="hidden" name="ticket_type_id" value="">
+
+                        <div class="grid">
+
+                            <div class="group">
+                                <label>Ticket Name</label>
+                                <input
+                                    name="ticket_type_name"
+                                    type="text"
+                                    value="General"
+                                    required
+                                >
+                            </div>
+
+                            <div class="group">
+                                <label>Price (R)</label>
+                                <input
+                                    name="ticket_type_price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ '%.2f'|format(event.ticket_price) }}"
+                                    required
+                                >
+                            </div>
+
+                        </div>
+
+                        <div class="group" style="margin-top:12px;">
+                            <label>Capacity</label>
+                            <input
+                                name="ticket_type_capacity"
+                                type="number"
+                                min="{{ event.paid_ticket_count if event.paid_ticket_count > 0 else 1 }}"
+                                value="{{ event.ticket_capacity or '' }}"
+                                placeholder="Leave empty for unlimited"
+                            >
+                            <small>Legacy tickets already sold: {{ event.paid_ticket_count }}</small>
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+            <template id="ticket-type-template">
+
+                <div class="ticket-type-row" style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;">
+
+                    <input type="hidden" name="ticket_type_id" value="">
+
+                    <div class="grid">
+
+                        <div class="group">
+                            <label>Ticket Name</label>
+                            <input name="ticket_type_name" type="text" required>
+                        </div>
+
+                        <div class="group">
+                            <label>Price (R)</label>
+                            <input name="ticket_type_price" type="number" min="0" step="0.01" required>
+                        </div>
+
+                    </div>
+
+                    <div class="group" style="margin-top:12px;">
+                        <label>Capacity</label>
+                        <input name="ticket_type_capacity" type="number" min="1" placeholder="Leave empty for unlimited">
+                    </div>
+
+                </div>
+
+            </template>
+
+            <div class="group" style="margin-top: 16px;">
 
                 <label for="poster_image">
                     Replace Event Poster
                 </label>
 
-                {% if event.image_url %}
-
+                {% if event.poster_image_mimetype or event.image_url %}
                     <img
-                        src="{{ event.image_url }}"
+                        src="{{ url_for('event_poster', event_id=event.id) if event.poster_image_mimetype else event.image_url }}"
                         alt="{{ event.title }}"
                         class="poster-preview"
                     >
-
                 {% endif %}
 
                 <input
@@ -898,16 +1000,35 @@
                     accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                 >
 
-                <small>
-                    Leave empty to keep the current poster.
-                </small>
+                <small>Leave empty to keep the current poster.</small>
 
             </div>
 
         </section>
 
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const count = document.getElementById("ticket_type_count");
+            const list = document.getElementById("ticket-type-list");
+            const template = document.getElementById("ticket-type-template");
 
-        <section class="card">
+            function renderRows() {
+                const wanted = Number(count.value || 1);
+                while (list.children.length < wanted) {
+                    list.appendChild(template.content.cloneNode(true));
+                }
+                while (list.children.length > wanted) {
+                    list.removeChild(list.lastElementChild);
+                }
+            }
+
+            count.addEventListener("change", renderRows);
+            renderRows();
+        });
+        </script>
+
+
+<section class="card">
 
             <h2>
                 Payment Setup
