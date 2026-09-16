@@ -461,6 +461,38 @@ class SubscriptionPayment(db.Model):
 
 
     # ========================================================
+    # PAYSTACK SUBSCRIPTION AUDIT
+    # ========================================================
+
+    paystack_access_code = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    paystack_authorization_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    paystack_transaction_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    payment_channel = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    payment_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    # ========================================================
     # CONFIRMATION / SUBSCRIPTION PERIOD
     # ========================================================
 
