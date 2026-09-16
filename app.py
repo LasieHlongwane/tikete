@@ -2,6 +2,7 @@
 # KALXA TICKETING - APP
 # ============================================================
 
+import csv
 import io
 import hashlib
 import hmac
@@ -22,6 +23,8 @@ from decimal import Decimal, InvalidOperation, ROUND_UP
 from zoneinfo import ZoneInfo
 
 import qrcode
+from openpyxl import Workbook
+from sqlalchemy import or_
 
 import firebase_admin
 from firebase_admin import (
@@ -38,6 +41,7 @@ from flask import (
     flash,
     redirect,
     render_template,
+    send_file,
     request,
     session,
     url_for,
@@ -63,6 +67,8 @@ from models import (
     PushCampaign,
     PushDelivery,
     PushSubscription,
+    StaffAccount,
+    StaffEventAccess,
     SubscriptionPayment,
     TicketEvent,
     TicketOrder,
@@ -1381,7 +1387,7 @@ def get_active_push_subscriptions():
         )
 
         .filter(
-            db.or_(
+            or_(
                 # Device-only subscriber from the public
                 # Kalxa home page.
                 PushSubscription.contact_id
@@ -3630,6 +3636,136 @@ def require_active_subscription(
             "admin_dashboard"
         )
     )
+
+
+# ============================================================
+# STAFF CHECK-IN SESSION
+# ============================================================
+
+STAFF_SESSION_KEY = (
+    "kalxa_staff_account_id"
+)
+
+
+def normalize_staff_username(
+    value,
+):
+
+    return (
+        str(
+            value
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+def get_current_staff():
+
+    staff_id = (
+        session.get(
+            STAFF_SESSION_KEY
+        )
+    )
+
+
+    if not staff_id:
+
+        return None
+
+
+    try:
+
+        staff_id = int(
+            staff_id
+        )
+
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        session.pop(
+            STAFF_SESSION_KEY,
+            None,
+        )
+
+        return None
+
+
+    staff = (
+        db.session.get(
+            StaffAccount,
+            staff_id,
+        )
+    )
+
+
+    if (
+        not staff
+        or not staff.active
+        or not staff.organizer
+        or not staff.organizer.is_subscription_active
+    ):
+
+        session.pop(
+            STAFF_SESSION_KEY,
+            None,
+        )
+
+        return None
+
+
+    return staff
+
+
+def require_staff_account():
+
+    staff = (
+        get_current_staff()
+    )
+
+
+    if staff:
+
+        return None
+
+
+    flash(
+        (
+            "Please sign in with your "
+            "Kalxa gate staff account."
+        ),
+        "error",
+    )
+
+
+    return redirect(
+        url_for(
+            "staff_login"
+        )
+    )
+
+
+def get_staff_event_ids(
+    staff,
+):
+
+    if not staff:
+
+        return []
+
+
+    return [
+        access.event_id
+        for access in staff.event_access
+        if (
+            access.event
+            and not access.event.organizer_deleted
+        )
+    ]
 
 
 # ============================================================
@@ -13470,6 +13606,224 @@ def admin_verify_paystack_order(
 
 
 # ============================================================
+# ATOMIC TICKET CHECK-IN
+# ============================================================
+
+def perform_ticket_checkin(
+    pass_id,
+    organizer_id,
+    checked_in_by,
+    staff_account_id=None,
+    allowed_event_ids=None,
+):
+
+    query = (
+        EntryPass.query
+
+        .join(
+            TicketOrder,
+            EntryPass.order_id
+            == TicketOrder.id,
+        )
+
+        .join(
+            TicketEvent,
+            TicketOrder.event_id
+            == TicketEvent.id,
+        )
+
+        .filter(
+            EntryPass.id
+            == pass_id
+        )
+
+        .filter(
+            TicketEvent.organizer_id
+            == organizer_id
+        )
+    )
+
+
+    if allowed_event_ids is not None:
+
+        if not allowed_event_ids:
+
+            return (
+                False,
+                "You are not assigned to this event.",
+                None,
+            )
+
+        query = query.filter(
+            TicketEvent.id.in_(
+                allowed_event_ids
+            )
+        )
+
+
+    entry_pass = (
+        query.first()
+    )
+
+
+    if not entry_pass:
+
+        return (
+            False,
+            "Ticket not found for your assigned events.",
+            None,
+        )
+
+
+    if (
+        not entry_pass.order
+        or not entry_pass.order.event
+    ):
+
+        return (
+            False,
+            "This ticket record is incomplete.",
+            entry_pass,
+        )
+
+
+    if (
+        entry_pass.order.payment_status
+        != "paid"
+    ):
+
+        return (
+            False,
+            (
+                "This ticket cannot be checked in "
+                "because payment has not been confirmed."
+            ),
+            entry_pass,
+        )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # Atomic state transition prevents two gate devices from
+    # accepting the same QR at the same time.
+    updated = (
+        EntryPass.query
+
+        .filter(
+            EntryPass.id
+            == entry_pass.id
+        )
+
+        .filter(
+            EntryPass.status
+            == "valid"
+        )
+
+        .filter(
+            EntryPass.checked_in_at
+            .is_(None)
+        )
+
+        .update(
+            {
+                EntryPass.status:
+                    "used",
+
+                EntryPass.checked_in_at:
+                    now,
+            },
+            synchronize_session=
+                False,
+        )
+    )
+
+
+    if updated != 1:
+
+        db.session.rollback()
+
+        return (
+            False,
+            (
+                "This ticket has already been checked in "
+                "or is no longer valid."
+            ),
+            entry_pass,
+        )
+
+
+    existing_checkin = (
+        CheckIn.query
+        .filter_by(
+            entry_pass_id=
+                entry_pass.id
+        )
+        .first()
+    )
+
+
+    if existing_checkin:
+
+        db.session.rollback()
+
+        return (
+            False,
+            "This ticket has already been checked in.",
+            entry_pass,
+        )
+
+
+    checkin = CheckIn(
+
+        entry_pass_id=
+            entry_pass.id,
+
+        checked_in_at=
+            now,
+
+        checked_in_by=
+            checked_in_by,
+
+        staff_account_id=
+            staff_account_id,
+    )
+
+
+    db.session.add(
+        checkin
+    )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+        raise
+
+
+    entry_pass = (
+        db.session.get(
+            EntryPass,
+            entry_pass.id,
+        )
+    )
+
+
+    return (
+        True,
+        "Ticket checked in successfully.",
+        entry_pass,
+    )
+
+
+# ============================================================
 # CHECK-IN PAGE
 # ============================================================
 
@@ -13679,158 +14033,373 @@ def admin_confirm_checkin(
     )
 
 
-    entry_pass = (
-        EntryPass.query
+    try:
 
-        .join(
-            TicketOrder,
-            EntryPass.order_id
-            == TicketOrder.id,
+        (
+            success,
+            message,
+            entry_pass,
+        ) = perform_ticket_checkin(
+
+            pass_id=
+                pass_id,
+
+            organizer_id=
+                organizer.id,
+
+            checked_in_by=(
+                f"organizer:{organizer.id}"
+            ),
         )
 
-        .join(
-            TicketEvent,
-            TicketOrder.event_id
-            == TicketEvent.id,
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticketing Check-In] Organizer "
+                "check-in failed organizer_id=%s "
+                "pass_id=%s error=%s"
+            ),
+            organizer.id,
+            pass_id,
+            error,
         )
 
-        .filter(
-            EntryPass.id
-            == pass_id
+        flash(
+            (
+                "Ticket check-in failed. "
+                "Please try again."
+            ),
+            "error",
         )
 
-        .filter(
-            TicketEvent.organizer_id
-            == organizer.id
+        return redirect(
+            url_for(
+                "admin_checkin"
+            )
         )
 
-        .first_or_404()
+
+    flash(
+        message,
+        (
+            "success"
+            if success
+            else "error"
+        ),
     )
 
 
-    if (
-        not entry_pass.order
-        or not entry_pass.order.event
-    ):
-
-        flash(
-            (
-                "This ticket record is incomplete "
-                "and cannot be checked in."
-            ),
-            "error",
+    return redirect(
+        url_for(
+            "admin_checkin"
         )
+    )
 
 
-        return redirect(
-            url_for(
-                "admin_checkin"
-            )
+# ============================================================
+# STAFF ACCOUNT MANAGEMENT
+# ============================================================
+
+@app.route(
+    "/admin/staff"
+)
+def admin_staff():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
         )
+    )
 
 
-    if (
-        entry_pass.order.payment_status
-        != "paid"
-    ):
+    if subscription_auth:
 
-        flash(
-            (
-                "This ticket cannot be checked in "
-                "because payment has not been confirmed."
-            ),
-            "error",
-        )
+        return subscription_auth
 
 
-        return redirect(
-            url_for(
-                "admin_checkin"
-            )
-        )
-
-
-    if (
-        entry_pass.status
-        != "valid"
-    ):
-
-        flash(
-            (
-                "Ticket cannot be checked in. "
-                "It may already have been used."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_checkin"
-            )
-        )
-
-
-    existing_checkin = (
-        CheckIn.query
+    staff_accounts = (
+        StaffAccount.query
         .filter_by(
-            entry_pass_id=
-                entry_pass.id
+            organizer_id=
+                organizer.id
+        )
+        .order_by(
+            StaffAccount.active.desc(),
+            StaffAccount.name.asc(),
+        )
+        .all()
+    )
+
+
+    events = (
+        TicketEvent.query
+        .filter_by(
+            organizer_id=
+                organizer.id,
+            organizer_deleted=
+                False,
+        )
+        .order_by(
+            TicketEvent.event_date.desc(),
+            TicketEvent.created_at.desc(),
+        )
+        .all()
+    )
+
+
+    return render_template(
+        "admin/staff.html",
+
+        organizer=
+            organizer,
+
+        staff_accounts=
+            staff_accounts,
+
+        events=
+            events,
+    )
+
+
+@app.route(
+    "/admin/staff/new",
+    methods=[
+        "POST",
+    ],
+)
+def admin_staff_new():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    name = (
+        request.form.get(
+            "name",
+            "",
+        )
+        .strip()
+    )
+
+    username = (
+        normalize_staff_username(
+            request.form.get(
+                "username",
+                "",
+            )
+        )
+    )
+
+    password = (
+        request.form.get(
+            "password",
+            ""
+        )
+    )
+
+    event_ids_raw = (
+        request.form.getlist(
+            "event_ids"
+        )
+    )
+
+
+    if not name:
+
+        flash(
+            "Staff name is required.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_staff"
+            )
+        )
+
+
+    if (
+        len(username) < 3
+        or len(username) > 120
+        or any(
+            character.isspace()
+            for character in username
+        )
+    ):
+
+        flash(
+            (
+                "Username must be 3–120 characters "
+                "with no spaces."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_staff"
+            )
+        )
+
+
+    if len(password) < 8:
+
+        flash(
+            (
+                "Staff password must contain "
+                "at least 8 characters."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_staff"
+            )
+        )
+
+
+    existing = (
+        StaffAccount.query
+        .filter_by(
+            username=
+                username
         )
         .first()
     )
 
 
-    if existing_checkin:
+    if existing:
 
         flash(
-            (
-                "This ticket has already "
-                "been checked in."
-            ),
+            "That staff username is already in use.",
             "error",
         )
 
-
         return redirect(
             url_for(
-                "admin_checkin"
+                "admin_staff"
             )
         )
 
 
-    now = (
-        datetime.utcnow()
+    valid_events = (
+        TicketEvent.query
+        .filter(
+            TicketEvent.organizer_id
+            == organizer.id
+        )
+        .filter(
+            TicketEvent.id.in_(
+                [
+                    int(value)
+                    for value in event_ids_raw
+                    if str(value).isdigit()
+                ]
+                or [-1]
+            )
+        )
+        .all()
     )
 
 
-    entry_pass.status = (
-        "used"
+    if not valid_events:
+
+        flash(
+            (
+                "Assign this staff member to "
+                "at least one of your events."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_staff"
+            )
+        )
+
+
+    staff = StaffAccount(
+
+        organizer_id=
+            organizer.id,
+
+        name=
+            name,
+
+        username=
+            username,
+
+        active=
+            True,
     )
 
 
-    entry_pass.checked_in_at = (
-        now
-    )
-
-
-    checkin = CheckIn(
-
-        entry_pass_id=
-            entry_pass.id,
-
-        checked_in_at=
-            now,
-
-        checked_in_by=(
-            f"organizer:{organizer.id}"
-        ),
+    staff.set_password(
+        password
     )
 
 
     db.session.add(
-        checkin
+        staff
     )
+
+    db.session.flush()
+
+
+    for event in valid_events:
+
+        db.session.add(
+            StaffEventAccess(
+                staff_id=
+                    staff.id,
+                event_id=
+                    event.id,
+            )
+        )
 
 
     try:
@@ -13842,47 +14411,1829 @@ def admin_confirm_checkin(
 
         db.session.rollback()
 
-
         current_app.logger.exception(
             (
-                "[Ticketing Check-In] "
-                "Ticket check-in failed "
-                "organizer_id=%s "
-                "entry_pass_id=%s "
-                "error=%s"
+                "[Staff] Creation failed "
+                "organizer_id=%s error=%s"
             ),
             organizer.id,
-            entry_pass.id,
             error,
         )
 
-
         flash(
-            (
-                "Ticket check-in failed. "
-                "Please try again."
-            ),
+            "Unable to create staff account.",
             "error",
         )
 
-
         return redirect(
             url_for(
-                "admin_checkin"
+                "admin_staff"
             )
         )
 
 
     flash(
-        "Ticket checked in successfully.",
+        (
+            f"Staff account created for {name}. "
+            "They can now sign in at /staff/login."
+        ),
         "success",
     )
 
 
     return redirect(
         url_for(
-            "admin_checkin"
+            "admin_staff"
         )
+    )
+
+
+@app.route(
+    "/admin/staff/<int:staff_id>/edit",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_staff_edit(
+    staff_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    staff = (
+        StaffAccount.query
+        .filter_by(
+            id=
+                staff_id,
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    events = (
+        TicketEvent.query
+        .filter_by(
+            organizer_id=
+                organizer.id,
+            organizer_deleted=
+                False,
+        )
+        .order_by(
+            TicketEvent.event_date.desc(),
+            TicketEvent.created_at.desc(),
+        )
+        .all()
+    )
+
+
+    if request.method == "POST":
+
+        name = (
+            request.form.get(
+                "name",
+                "",
+            )
+            .strip()
+        )
+
+        password = (
+            request.form.get(
+                "password",
+                ""
+            )
+        )
+
+        event_ids = {
+            int(value)
+            for value
+            in request.form.getlist(
+                "event_ids"
+            )
+            if str(value).isdigit()
+        }
+
+
+        valid_event_ids = {
+            event.id
+            for event in events
+            if event.id in event_ids
+        }
+
+
+        if not name:
+
+            flash(
+                "Staff name is required.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_staff_edit",
+                    staff_id=
+                        staff.id,
+                )
+            )
+
+
+        if not valid_event_ids:
+
+            flash(
+                "Assign at least one event.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_staff_edit",
+                    staff_id=
+                        staff.id,
+                )
+            )
+
+
+        if password and len(
+            password
+        ) < 8:
+
+            flash(
+                (
+                    "New password must contain "
+                    "at least 8 characters."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_staff_edit",
+                    staff_id=
+                        staff.id,
+                )
+            )
+
+
+        staff.name = (
+            name
+        )
+
+
+        if password:
+
+            staff.set_password(
+                password
+            )
+
+
+        StaffEventAccess.query.filter_by(
+            staff_id=
+                staff.id
+        ).delete(
+            synchronize_session=
+                False
+        )
+
+
+        for event_id in sorted(
+            valid_event_ids
+        ):
+
+            db.session.add(
+                StaffEventAccess(
+                    staff_id=
+                        staff.id,
+                    event_id=
+                        event_id,
+                )
+            )
+
+
+        try:
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Staff] Update failed "
+                    "organizer_id=%s staff_id=%s error=%s"
+                ),
+                organizer.id,
+                staff.id,
+                error,
+            )
+
+            flash(
+                "Unable to update staff account.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_staff_edit",
+                    staff_id=
+                        staff.id,
+                )
+            )
+
+
+        flash(
+            "Staff account updated.",
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_staff"
+            )
+        )
+
+
+    return render_template(
+        "admin/staff_edit.html",
+
+        organizer=
+            organizer,
+
+        staff=
+            staff,
+
+        events=
+            events,
+
+        assigned_event_ids=
+            set(
+                staff.assigned_event_ids
+            ),
+    )
+
+
+@app.route(
+    "/admin/staff/<int:staff_id>/toggle",
+    methods=[
+        "POST",
+    ],
+)
+def admin_staff_toggle(
+    staff_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    staff = (
+        StaffAccount.query
+        .filter_by(
+            id=
+                staff_id,
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    staff.active = (
+        not staff.active
+    )
+
+
+    db.session.commit()
+
+
+    flash(
+        (
+            f"{staff.name} is now "
+            f"{'active' if staff.active else 'disabled'}."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_staff"
+        )
+    )
+
+
+# ============================================================
+# STAFF LOGIN / LOGOUT
+# ============================================================
+
+@app.route(
+    "/staff/login",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def staff_login():
+
+    if get_current_staff():
+
+        return redirect(
+            url_for(
+                "staff_dashboard"
+            )
+        )
+
+
+    if request.method == "POST":
+
+        username = (
+            normalize_staff_username(
+                request.form.get(
+                    "username",
+                    "",
+                )
+            )
+        )
+
+        password = (
+            request.form.get(
+                "password",
+                ""
+            )
+        )
+
+
+        staff = (
+            StaffAccount.query
+            .filter_by(
+                username=
+                    username,
+            )
+            .first()
+        )
+
+
+        if (
+            not staff
+            or not staff.active
+            or not staff.check_password(
+                password
+            )
+        ):
+
+            flash(
+                "Invalid staff login details.",
+                "error",
+            )
+
+            return render_template(
+                "staff/login.html"
+            )
+
+
+        if (
+            not staff.organizer
+            or not staff.organizer.is_subscription_active
+        ):
+
+            flash(
+                (
+                    "This organizer's Kalxa subscription "
+                    "is not currently active."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "staff/login.html"
+            )
+
+
+        session.clear()
+
+        session[
+            STAFF_SESSION_KEY
+        ] = (
+            staff.id
+        )
+
+
+        staff.last_login_at = (
+            datetime.utcnow()
+        )
+
+        db.session.commit()
+
+
+        return redirect(
+            url_for(
+                "staff_dashboard"
+            )
+        )
+
+
+    return render_template(
+        "staff/login.html"
+    )
+
+
+@app.route(
+    "/staff/logout"
+)
+def staff_logout():
+
+    session.clear()
+
+    return redirect(
+        url_for(
+            "staff_login"
+        )
+    )
+
+
+@app.route(
+    "/staff"
+)
+def staff_dashboard():
+
+    auth = (
+        require_staff_account()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    staff = (
+        get_current_staff()
+    )
+
+
+    event_ids = (
+        get_staff_event_ids(
+            staff
+        )
+    )
+
+
+    events = (
+        TicketEvent.query
+        .filter(
+            TicketEvent.id.in_(
+                event_ids
+                or [-1]
+            )
+        )
+        .order_by(
+            TicketEvent.event_date.asc(),
+            TicketEvent.event_time.asc(),
+        )
+        .all()
+    )
+
+
+    return render_template(
+        "staff/dashboard.html",
+
+        staff=
+            staff,
+
+        events=
+            events,
+    )
+
+
+# ============================================================
+# STAFF CHECK-IN
+# ============================================================
+
+@app.route(
+    "/staff/checkin",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def staff_checkin():
+
+    auth = (
+        require_staff_account()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    staff = (
+        get_current_staff()
+    )
+
+
+    event_ids = (
+        get_staff_event_ids(
+            staff
+        )
+    )
+
+
+    entry_pass = None
+    message = None
+
+
+    if request.method == "POST":
+
+        raw_value = (
+            request.form.get(
+                "entry_code",
+                "",
+            )
+            .strip()
+        )
+
+
+        if not raw_value:
+
+            message = (
+                "No ticket code was provided."
+            )
+
+
+        else:
+
+            entry_code = (
+                raw_value
+                .upper()
+            )
+
+
+            if "/TICKET/" in entry_code:
+
+                entry_code = (
+                    entry_code
+                    .split(
+                        "/TICKET/",
+                        1,
+                    )[1]
+                    .split(
+                        "?",
+                        1,
+                    )[0]
+                    .split(
+                        "#",
+                        1,
+                    )[0]
+                    .strip()
+                )
+
+
+            entry_pass = (
+                EntryPass.query
+
+                .join(
+                    TicketOrder,
+                    EntryPass.order_id
+                    == TicketOrder.id,
+                )
+
+                .join(
+                    TicketEvent,
+                    TicketOrder.event_id
+                    == TicketEvent.id,
+                )
+
+                .filter(
+                    EntryPass.entry_code
+                    == entry_code
+                )
+
+                .filter(
+                    TicketEvent.organizer_id
+                    == staff.organizer_id
+                )
+
+                .filter(
+                    TicketEvent.id.in_(
+                        event_ids
+                        or [-1]
+                    )
+                )
+
+                .first()
+            )
+
+
+            if not entry_pass:
+
+                message = (
+                    "Ticket not found for your assigned events."
+                )
+
+
+            elif (
+                entry_pass.order.payment_status
+                != "paid"
+            ):
+
+                message = (
+                    "Payment has not been confirmed."
+                )
+
+
+            elif entry_pass.is_used:
+
+                message = (
+                    "This ticket has already been used."
+                )
+
+
+            elif not entry_pass.is_valid:
+
+                message = (
+                    "This ticket is not valid."
+                )
+
+
+    return render_template(
+        "staff/checkin.html",
+
+        staff=
+            staff,
+
+        entry_pass=
+            entry_pass,
+
+        message=
+            message,
+    )
+
+
+@app.route(
+    "/staff/checkin/<int:pass_id>",
+    methods=[
+        "POST",
+    ],
+)
+def staff_confirm_checkin(
+    pass_id,
+):
+
+    auth = (
+        require_staff_account()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    staff = (
+        get_current_staff()
+    )
+
+
+    event_ids = (
+        get_staff_event_ids(
+            staff
+        )
+    )
+
+
+    try:
+
+        (
+            success,
+            message,
+            entry_pass,
+        ) = perform_ticket_checkin(
+
+            pass_id=
+                pass_id,
+
+            organizer_id=
+                staff.organizer_id,
+
+            checked_in_by=(
+                f"staff:{staff.id}:{staff.username}"
+            ),
+
+            staff_account_id=
+                staff.id,
+
+            allowed_event_ids=
+                event_ids,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Staff Check-In] Failed "
+                "staff_id=%s pass_id=%s error=%s"
+            ),
+            staff.id,
+            pass_id,
+            error,
+        )
+
+        flash(
+            "Ticket check-in failed. Please try again.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "staff_checkin"
+            )
+        )
+
+
+    flash(
+        message,
+        (
+            "success"
+            if success
+            else "error"
+        ),
+    )
+
+
+    return redirect(
+        url_for(
+            "staff_checkin"
+        )
+    )
+
+
+# ============================================================
+# ATTENDEE CRM-LITE HELPERS
+# ============================================================
+
+def parse_crm_date(
+    value,
+):
+
+    value = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not value:
+
+        return None
+
+
+    try:
+
+        return datetime.strptime(
+            value,
+            "%Y-%m-%d",
+        )
+
+
+    except ValueError:
+
+        return None
+
+
+def build_attendee_crm(
+    organizer,
+    args,
+):
+
+    event_id_raw = (
+        str(
+            args.get(
+                "event_id",
+                ""
+            )
+        )
+        .strip()
+    )
+
+    ticket_type_filter = (
+        str(
+            args.get(
+                "ticket_type",
+                ""
+            )
+        )
+        .strip()
+    )
+
+    payment_status = (
+        str(
+            args.get(
+                "payment_status",
+                "paid",
+            )
+        )
+        .strip()
+        .lower()
+    )
+
+    checkin_status = (
+        str(
+            args.get(
+                "checkin_status",
+                "all",
+            )
+        )
+        .strip()
+        .lower()
+    )
+
+    search_value = (
+        str(
+            args.get(
+                "q",
+                ""
+            )
+        )
+        .strip()
+    )
+
+    date_from_raw = (
+        str(
+            args.get(
+                "date_from",
+                ""
+            )
+        )
+        .strip()
+    )
+
+    date_to_raw = (
+        str(
+            args.get(
+                "date_to",
+                ""
+            )
+        )
+        .strip()
+    )
+
+
+    events = (
+        TicketEvent.query
+        .filter_by(
+            organizer_id=
+                organizer.id,
+        )
+        .order_by(
+            TicketEvent.event_date.desc(),
+            TicketEvent.created_at.desc(),
+        )
+        .all()
+    )
+
+
+    event_ids = [
+        event.id
+        for event in events
+    ]
+
+
+    query = (
+        TicketOrder.query
+        .filter(
+            TicketOrder.event_id.in_(
+                event_ids
+                or [-1]
+            )
+        )
+    )
+
+
+    selected_event_id = None
+
+
+    if event_id_raw.isdigit():
+
+        candidate = int(
+            event_id_raw
+        )
+
+        if candidate in set(
+            event_ids
+        ):
+
+            selected_event_id = (
+                candidate
+            )
+
+            query = query.filter(
+                TicketOrder.event_id
+                == candidate
+            )
+
+
+    if payment_status in {
+        "paid",
+        "pending",
+        "cancelled",
+    }:
+
+        query = query.filter(
+            TicketOrder.payment_status
+            == payment_status
+        )
+
+    else:
+
+        payment_status = (
+            "all"
+        )
+
+
+    date_from = (
+        parse_crm_date(
+            date_from_raw
+        )
+    )
+
+    date_to = (
+        parse_crm_date(
+            date_to_raw
+        )
+    )
+
+
+    if date_from:
+
+        query = query.filter(
+            TicketOrder.created_at
+            >= date_from
+        )
+
+
+    if date_to:
+
+        query = query.filter(
+            TicketOrder.created_at
+            < (
+                date_to
+                + timedelta(
+                    days=1
+                )
+            )
+        )
+
+
+    if search_value:
+
+        pattern = (
+            "%"
+            + search_value
+            + "%"
+        )
+
+        query = query.filter(
+            or_(
+                TicketOrder.customer_name.ilike(
+                    pattern
+                ),
+                TicketOrder.customer_email.ilike(
+                    pattern
+                ),
+                TicketOrder.customer_phone.ilike(
+                    pattern
+                ),
+                TicketOrder.payment_reference.ilike(
+                    pattern
+                ),
+            )
+        )
+
+
+    orders = (
+        query
+        .order_by(
+            TicketOrder.created_at.desc()
+        )
+        .all()
+    )
+
+
+    rows = []
+
+
+    for order in orders:
+
+        event = (
+            order.event
+        )
+
+
+        if not event:
+
+            continue
+
+
+        if order.order_items:
+
+            line_items = (
+                order.order_items
+            )
+
+        else:
+
+            line_items = [
+                None
+            ]
+
+
+        for item in line_items:
+
+            ticket_name = (
+                item.ticket_name
+                if item
+                else "General"
+            )
+
+            quantity = (
+                item.quantity
+                if item
+                else (
+                    order.quantity
+                    or 1
+                )
+            )
+
+            unit_price = (
+                item.unit_price
+                if item
+                else order.ticket_price
+            )
+
+            line_total = (
+                item.line_total
+                if item
+                else order.total_amount
+            )
+
+            passes = (
+                item.entry_passes
+                if item
+                else order.entry_passes
+            )
+
+
+            checked_in_count = sum(
+                1
+                for entry_pass in passes
+                if entry_pass.is_used
+            )
+
+
+            if checked_in_count <= 0:
+
+                row_checkin_status = (
+                    "not_checked_in"
+                )
+
+            elif checked_in_count >= quantity:
+
+                row_checkin_status = (
+                    "checked_in"
+                )
+
+            else:
+
+                row_checkin_status = (
+                    "partial"
+                )
+
+
+            if (
+                ticket_type_filter
+                and ticket_name.casefold()
+                != ticket_type_filter.casefold()
+            ):
+
+                continue
+
+
+            if (
+                checkin_status
+                in {
+                    "checked_in",
+                    "not_checked_in",
+                    "partial",
+                }
+                and row_checkin_status
+                != checkin_status
+            ):
+
+                continue
+
+
+            rows.append(
+                {
+                    "event":
+                        event.title,
+
+                    "event_id":
+                        event.id,
+
+                    "customer_name":
+                        order.customer_name,
+
+                    "customer_email":
+                        order.customer_email
+                        or "",
+
+                    "customer_phone":
+                        order.customer_phone
+                        or "",
+
+                    "booking_reference":
+                        order.payment_reference,
+
+                    "ticket_type":
+                        ticket_name,
+
+                    "quantity":
+                        quantity,
+
+                    "checked_in_count":
+                        checked_in_count,
+
+                    "not_checked_in_count":
+                        max(
+                            0,
+                            quantity
+                            - checked_in_count,
+                        ),
+
+                    "checkin_status":
+                        row_checkin_status,
+
+                    "payment_status":
+                        order.payment_status,
+
+                    "unit_price":
+                        unit_price,
+
+                    "line_total":
+                        line_total,
+
+                    "purchase_date":
+                        order.created_at,
+
+                    "paid_at":
+                        order.paid_at,
+                }
+            )
+
+
+    ticket_types = sorted(
+        {
+            (
+                item.ticket_name
+                if item
+                else "General"
+            )
+            for order in (
+                TicketOrder.query
+                .filter(
+                    TicketOrder.event_id.in_(
+                        event_ids
+                        or [-1]
+                    )
+                )
+                .all()
+            )
+            for item in (
+                order.order_items
+                or [None]
+            )
+        },
+        key=lambda value:
+            value.casefold(),
+    )
+
+
+    filters = {
+        "event_id":
+            (
+                str(
+                    selected_event_id
+                )
+                if selected_event_id
+                else ""
+            ),
+
+        "ticket_type":
+            ticket_type_filter,
+
+        "payment_status":
+            payment_status,
+
+        "checkin_status":
+            checkin_status,
+
+        "date_from":
+            date_from_raw,
+
+        "date_to":
+            date_to_raw,
+
+        "q":
+            search_value,
+    }
+
+
+    summary = {
+        "rows":
+            len(
+                rows
+            ),
+
+        "tickets":
+            sum(
+                int(
+                    row[
+                        "quantity"
+                    ]
+                    or 0
+                )
+                for row in rows
+            ),
+
+        "checked_in":
+            sum(
+                int(
+                    row[
+                        "checked_in_count"
+                    ]
+                    or 0
+                )
+                for row in rows
+            ),
+
+        "revenue":
+            sum(
+                (
+                    Decimal(
+                        str(
+                            row[
+                                "line_total"
+                            ]
+                            or 0
+                        )
+                    )
+                    for row in rows
+                    if row[
+                        "payment_status"
+                    ] == "paid"
+                ),
+                Decimal(
+                    "0.00"
+                ),
+            ),
+    }
+
+
+    return {
+        "rows":
+            rows,
+
+        "events":
+            events,
+
+        "ticket_types":
+            ticket_types,
+
+        "filters":
+            filters,
+
+        "summary":
+            summary,
+    }
+
+
+# ============================================================
+# ATTENDEE CRM-LITE
+# ============================================================
+
+@app.route(
+    "/admin/attendees"
+)
+def admin_attendees():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    crm = (
+        build_attendee_crm(
+            organizer,
+            request.args,
+        )
+    )
+
+
+    return render_template(
+        "admin/attendees.html",
+
+        organizer=
+            organizer,
+
+        **crm,
+    )
+
+
+@app.route(
+    "/admin/attendees/export.csv"
+)
+def admin_attendees_export_csv():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    crm = (
+        build_attendee_crm(
+            organizer,
+            request.args,
+        )
+    )
+
+
+    output = io.StringIO(
+        newline=""
+    )
+
+    writer = csv.writer(
+        output
+    )
+
+
+    writer.writerow(
+        [
+            "Event",
+            "Attendee / Buyer",
+            "Email",
+            "Phone",
+            "Booking Reference",
+            "Ticket Type",
+            "Quantity",
+            "Checked In",
+            "Not Checked In",
+            "Check-In Status",
+            "Payment Status",
+            "Unit Price",
+            "Line Total",
+            "Purchased At",
+            "Paid At",
+        ]
+    )
+
+
+    for row in crm[
+        "rows"
+    ]:
+
+        writer.writerow(
+            [
+                row[
+                    "event"
+                ],
+                row[
+                    "customer_name"
+                ],
+                row[
+                    "customer_email"
+                ],
+                row[
+                    "customer_phone"
+                ],
+                row[
+                    "booking_reference"
+                ],
+                row[
+                    "ticket_type"
+                ],
+                row[
+                    "quantity"
+                ],
+                row[
+                    "checked_in_count"
+                ],
+                row[
+                    "not_checked_in_count"
+                ],
+                row[
+                    "checkin_status"
+                ],
+                row[
+                    "payment_status"
+                ],
+                (
+                    f"{Decimal(str(row['unit_price'] or 0)):.2f}"
+                ),
+                (
+                    f"{Decimal(str(row['line_total'] or 0)):.2f}"
+                ),
+                (
+                    row[
+                        "purchase_date"
+                    ].strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    if row[
+                        "purchase_date"
+                    ]
+                    else ""
+                ),
+                (
+                    row[
+                        "paid_at"
+                    ].strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    if row[
+                        "paid_at"
+                    ]
+                    else ""
+                ),
+            ]
+        )
+
+
+    filename = (
+        "kalxa-attendees-"
+        + datetime.utcnow().strftime(
+            "%Y%m%d-%H%M"
+        )
+        + ".csv"
+    )
+
+
+    return Response(
+        "\ufeff"
+        + output.getvalue(),
+
+        mimetype=(
+            "text/csv; charset=utf-8"
+        ),
+
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{filename}"'
+        },
+    )
+
+
+@app.route(
+    "/admin/attendees/export.xlsx"
+)
+def admin_attendees_export_xlsx():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    crm = (
+        build_attendee_crm(
+            organizer,
+            request.args,
+        )
+    )
+
+
+    workbook = Workbook()
+
+    worksheet = (
+        workbook.active
+    )
+
+    worksheet.title = (
+        "Attendees"
+    )
+
+
+    headers = [
+        "Event",
+        "Attendee / Buyer",
+        "Email",
+        "Phone",
+        "Booking Reference",
+        "Ticket Type",
+        "Quantity",
+        "Checked In",
+        "Not Checked In",
+        "Check-In Status",
+        "Payment Status",
+        "Unit Price",
+        "Line Total",
+        "Purchased At",
+        "Paid At",
+    ]
+
+
+    worksheet.append(
+        headers
+    )
+
+
+    for row in crm[
+        "rows"
+    ]:
+
+        worksheet.append(
+            [
+                row[
+                    "event"
+                ],
+                row[
+                    "customer_name"
+                ],
+                row[
+                    "customer_email"
+                ],
+                row[
+                    "customer_phone"
+                ],
+                row[
+                    "booking_reference"
+                ],
+                row[
+                    "ticket_type"
+                ],
+                int(
+                    row[
+                        "quantity"
+                    ]
+                    or 0
+                ),
+                int(
+                    row[
+                        "checked_in_count"
+                    ]
+                    or 0
+                ),
+                int(
+                    row[
+                        "not_checked_in_count"
+                    ]
+                    or 0
+                ),
+                row[
+                    "checkin_status"
+                ],
+                row[
+                    "payment_status"
+                ],
+                float(
+                    Decimal(
+                        str(
+                            row[
+                                "unit_price"
+                            ]
+                            or 0
+                        )
+                    )
+                ),
+                float(
+                    Decimal(
+                        str(
+                            row[
+                                "line_total"
+                            ]
+                            or 0
+                        )
+                    )
+                ),
+                row[
+                    "purchase_date"
+                ],
+                row[
+                    "paid_at"
+                ],
+            ]
+        )
+
+
+    worksheet.freeze_panes = (
+        "A2"
+    )
+
+    worksheet.auto_filter.ref = (
+        worksheet.dimensions
+    )
+
+
+    widths = {
+        "A": 28,
+        "B": 24,
+        "C": 30,
+        "D": 18,
+        "E": 22,
+        "F": 18,
+        "G": 12,
+        "H": 12,
+        "I": 16,
+        "J": 18,
+        "K": 16,
+        "L": 14,
+        "M": 14,
+        "N": 20,
+        "O": 20,
+    }
+
+
+    for column, width in (
+        widths.items()
+    ):
+
+        worksheet.column_dimensions[
+            column
+        ].width = width
+
+
+    for cell in (
+        worksheet[
+            "L"
+        ][1:]
+        +
+        worksheet[
+            "M"
+        ][1:]
+    ):
+
+        cell.number_format = (
+            'R #,##0.00'
+        )
+
+
+    buffer = (
+        io.BytesIO()
+    )
+
+    workbook.save(
+        buffer
+    )
+
+    buffer.seek(
+        0
+    )
+
+
+    filename = (
+        "kalxa-attendees-"
+        + datetime.utcnow().strftime(
+            "%Y%m%d-%H%M"
+        )
+        + ".xlsx"
+    )
+
+
+    return send_file(
+        buffer,
+
+        as_attachment=
+            True,
+
+        download_name=
+            filename,
+
+        mimetype=(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ),
     )
 
 
