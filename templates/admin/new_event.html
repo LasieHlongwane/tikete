@@ -842,59 +842,79 @@
             </section>
 
 
-            <section class="card">
+                        <section class="card">
 
-                <h2>
-                    Ticket Setup
-                </h2>
+                <h2>Ticket Types</h2>
 
                 <p class="card-copy">
-                    Set the selling price and available capacity.
+                    Choose how many kinds of tickets this event sells.
+                    Each type can have its own name, price and capacity.
                 </p>
 
+                <div class="group">
 
-                <div class="grid">
+                    <label for="ticket_type_count">
+                        Number of Ticket Types
+                    </label>
 
-                    <div class="group">
-
-                        <label for="ticket_price">
-                            Ticket Price
-                        </label>
-
-                        <input
-                            id="ticket_price"
-                            name="ticket_price"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div class="group">
-
-                        <label for="ticket_capacity">
-                            Ticket Capacity
-                        </label>
-
-                        <input
-                            id="ticket_capacity"
-                            name="ticket_capacity"
-                            type="number"
-                            min="1"
-                        >
-
-                    </div>
+                    <select id="ticket_type_count">
+                        {% for count in range(1, 11) %}
+                            <option value="{{ count }}">
+                                {{ count }}
+                            </option>
+                        {% endfor %}
+                    </select>
 
                 </div>
 
+                <div id="ticket-type-list" style="margin-top:16px;"></div>
 
-                <div
-                    class="group"
-                    style="margin-top: 16px;"
-                >
+                <template id="ticket-type-template">
+
+                    <div class="ticket-type-row" style="padding:14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;">
+
+                        <input type="hidden" name="ticket_type_id" value="">
+
+                        <div class="grid">
+
+                            <div class="group">
+                                <label>Ticket Name</label>
+                                <input
+                                    name="ticket_type_name"
+                                    type="text"
+                                    placeholder="General, VIP, Children..."
+                                    required
+                                >
+                            </div>
+
+                            <div class="group">
+                                <label>Price (R)</label>
+                                <input
+                                    name="ticket_type_price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                >
+                            </div>
+
+                        </div>
+
+                        <div class="group" style="margin-top:12px;">
+                            <label>Capacity</label>
+                            <input
+                                name="ticket_type_capacity"
+                                type="number"
+                                min="1"
+                                placeholder="Leave empty for unlimited"
+                            >
+                        </div>
+
+                    </div>
+
+                </template>
+
+                <div class="group" style="margin-top: 16px;">
 
                     <label for="poster_image">
                         Event Poster
@@ -907,16 +927,35 @@
                         accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                     >
 
-                    <small>
-                        JPG, JPEG, PNG and WEBP supported.
-                    </small>
+                    <small>JPG, JPEG, PNG and WEBP supported.</small>
 
                 </div>
 
             </section>
 
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const count = document.getElementById("ticket_type_count");
+                const list = document.getElementById("ticket-type-list");
+                const template = document.getElementById("ticket-type-template");
 
-            <section class="card">
+                function renderRows() {
+                    const wanted = Number(count.value || 1);
+                    while (list.children.length < wanted) {
+                        list.appendChild(template.content.cloneNode(true));
+                    }
+                    while (list.children.length > wanted) {
+                        list.removeChild(list.lastElementChild);
+                    }
+                }
+
+                count.addEventListener("change", renderRows);
+                renderRows();
+            });
+            </script>
+
+
+<section class="card">
 
                 <h2>
                     Payment Setup
