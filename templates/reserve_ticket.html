@@ -62,17 +62,18 @@ You can buy different ticket types in one Paystack payment.
 
             <div
                 class="ticket-type"
-                data-price="{{ ticket_type.price|float }}"
+                data-price="{{ (ticket_type.current_price if ticket_type.current_price is not none else ticket_type.price)|float }}"
                 data-name="{{ ticket_type.name }}"
             >
 
                 <div>
                     <div class="ticket-name">
                         {{ ticket_type.name }}
+                        {% if ticket_type.current_sale_phase %}<small style="display:block;color:#7c3aed;">{{ ticket_type.current_sale_phase.name }}</small>{% elif ticket_type.active_sale_phases %}<small style="display:block;color:#9a3412;">Not currently on sale</small>{% endif %}
                     </div>
 
                     <div class="ticket-meta">
-                        R{{ "%.2f"|format(ticket_type.price) }}
+                        {% if ticket_type.current_price is not none %}R{{ "%.2f"|format(ticket_type.current_price) }}{% else %}Not on sale{% endif %}
                         {% if ticket_type.capacity is not none %}
                             · {{ ticket_type.remaining_quantity }} remaining
                         {% endif %}
