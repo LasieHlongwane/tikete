@@ -1037,6 +1037,37 @@
             </div>
 
 
+            {% if order.order_items %}
+
+                <section class="section">
+
+                    <h2>Ticket Breakdown</h2>
+
+                    <div class="bank-details">
+
+                        {% for item in order.order_items %}
+
+                            <div class="bank-row">
+                                <span class="bank-label">
+                                    {{ item.ticket_name }}
+                                </span>
+
+                                <span class="bank-value">
+                                    {{ item.quantity }} ×
+                                    R{{ "%.2f"|format(item.unit_price) }}
+                                    = R{{ "%.2f"|format(item.line_total) }}
+                                </span>
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </section>
+
+            {% endif %}
+
+
 
             {% if order.payment_status == "paid" %}
 
@@ -2360,3 +2391,4 @@
 </body>
 
 </html>
+
