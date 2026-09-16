@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit Staff | Kalxa</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(760px,calc(100% - 28px));margin:0 auto;padding:28px 0 60px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px}.back{display:inline-block;margin-bottom:18px;color:#111827;text-decoration:none;font-weight:850}.field{margin-bottom:14px}.field label{display:block;font-weight:850;margin-bottom:6px}.field input[type=text],.field input[type=password]{width:100%;min-height:46px;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font:inherit}.event{display:flex;gap:10px;padding:10px;background:#f8fafc;border-radius:10px;margin-bottom:8px}.button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font:inherit;font-weight:900;cursor:pointer}.meta{color:#64748b;font-size:.86rem}.flash{padding:12px 14px;margin-bottom:10px;border-radius:10px;background:#eef2ff;color:#3730a3}
+</style>
+</head>
+<body><main class="page">
+<a class="back" href="{{ url_for('admin_staff') }}">← Staff Accounts</a>
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash">{{ message }}</div>{% endfor %}{% endwith %}
+<section class="card">
+<h1>Edit {{ staff.name }}</h1>
+<p class="meta">Username: @{{ staff.username }}. Usernames stay fixed so staff always know which account to use.</p>
+<form method="POST">
+<div class="field"><label>Name</label><input type="text" name="name" value="{{ staff.name }}" required></div>
+<div class="field"><label>New Password <span class="meta">(leave blank to keep current password)</span></label><input type="password" name="password" minlength="8" autocomplete="new-password"></div>
+<div class="field"><label>Assigned Events</label>
+{% for event in events %}
+<label class="event"><input type="checkbox" name="event_ids" value="{{ event.id }}" {% if event.id in assigned_event_ids %}checked{% endif %}><span><strong>{{ event.title }}</strong><br><span class="meta">{{ event.event_date or 'No date' }}</span></span></label>
+{% endfor %}
+</div>
+<button class="button" type="submit">Save Staff Access</button>
+</form>
+</section>
+</main></body></html>
