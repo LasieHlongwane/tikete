@@ -1500,6 +1500,52 @@ class TicketType(db.Model):
         lazy=True,
     )
 
+    sale_phases = db.relationship(
+        "TicketSalePhase",
+        back_populates="ticket_type",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="TicketSalePhase.sort_order.asc(), TicketSalePhase.id.asc()",
+    )
+
+    @property
+    def active_sale_phases(self):
+        return [phase for phase in self.sale_phases if phase.active]
+
+    @property
+    def current_sale_phase(self):
+        now = datetime.utcnow()
+        for phase in self.active_sale_phases:
+            if phase.is_available_at(now):
+                return phase
+        return None
+
+    @property
+    def current_price(self):
+        phase = self.current_sale_phase
+        if phase:
+            return phase.price
+        if self.active_sale_phases:
+            return None
+        return self.price
+
+    @property
+    def current_phase_name(self):
+        phase = self.current_sale_phase
+        return phase.name if phase else None
+
+    @property
+    def next_sale_phase(self):
+        now = datetime.utcnow()
+        for phase in self.active_sale_phases:
+            if phase.start_at and phase.start_at > now:
+                return phase
+        return None
+
+    @property
+    def is_currently_on_sale(self):
+        return (not self.active_sale_phases) or self.current_sale_phase is not None
+
 
     @property
     def sold_quantity(self):
@@ -1555,6 +1601,55 @@ class TicketType(db.Model):
             f"event_id={self.event_id} "
             f"name={self.name}>"
         )
+
+
+# ============================================================
+# TICKET SALE PHASE
+# ============================================================
+
+class TicketSalePhase(db.Model):
+    __tablename__ = "ticket_sale_phases"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_type_id = db.Column(db.Integer, db.ForeignKey("ticket_types.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    start_at = db.Column(db.DateTime, nullable=True, index=True)
+    end_at = db.Column(db.DateTime, nullable=True, index=True)
+    quantity_limit = db.Column(db.Integer, nullable=True)
+    active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    ticket_type = db.relationship("TicketType", back_populates="sale_phases")
+    order_items = db.relationship("TicketOrderItem", back_populates="sale_phase", lazy=True)
+
+    @property
+    def sold_quantity(self):
+        return sum((item.quantity or 0) for item in self.order_items if item.order and item.order.payment_status == "paid")
+
+    @property
+    def remaining_quantity(self):
+        if self.quantity_limit is None:
+            return None
+        return max(0, self.quantity_limit - self.sold_quantity)
+
+    @property
+    def is_quantity_available(self):
+        return self.quantity_limit is None or self.sold_quantity < self.quantity_limit
+
+    def is_available_at(self, moment=None):
+        moment = moment or datetime.utcnow()
+        if not self.active:
+            return False
+        if self.start_at and moment < self.start_at:
+            return False
+        if self.end_at and moment >= self.end_at:
+            return False
+        if not self.is_quantity_available:
+            return False
+        return True
 
 
 # ============================================================
@@ -1829,6 +1924,15 @@ class TicketOrderItem(db.Model):
         index=True,
     )
 
+    sale_phase_id = db.Column(
+        db.Integer,
+        db.ForeignKey("ticket_sale_phases.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    sale_phase_name = db.Column(db.String(100), nullable=True)
+
 
     ticket_name = db.Column(
         db.String(100),
@@ -1865,6 +1969,11 @@ class TicketOrderItem(db.Model):
 
     ticket_type = db.relationship(
         "TicketType",
+        back_populates="order_items",
+    )
+
+    sale_phase = db.relationship(
+        "TicketSalePhase",
         back_populates="order_items",
     )
 
