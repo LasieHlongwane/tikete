@@ -754,32 +754,6 @@ class TicketEvent(db.Model):
     )
 
 
-    bank_name = db.Column(
-        db.String(100),
-        nullable=True,
-    )
-
-    account_holder = db.Column(
-        db.String(150),
-        nullable=True,
-    )
-
-    account_number = db.Column(
-        db.String(100),
-        nullable=True,
-    )
-
-    branch_code = db.Column(
-        db.String(50),
-        nullable=True,
-    )
-
-    payment_instructions = db.Column(
-        db.Text,
-        nullable=True,
-    )
-
-
     created_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -805,6 +779,15 @@ class TicketEvent(db.Model):
         back_populates="event",
         lazy=True,
         cascade="all, delete-orphan",
+    )
+
+
+    ticket_types = db.relationship(
+        "TicketType",
+        back_populates="event",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="TicketType.sort_order.asc(), TicketType.id.asc()",
     )
 
 
@@ -948,7 +931,42 @@ class TicketEvent(db.Model):
 
 
     @property
+    def active_ticket_types(self):
+
+        return [
+            ticket_type
+            for ticket_type in self.ticket_types
+            if ticket_type.active
+        ]
+
+
+    @property
+    def uses_ticket_types(self):
+
+        return bool(
+            self.active_ticket_types
+        )
+
+
+    @property
     def remaining_tickets(self):
+
+        ticket_types = (
+            self.active_ticket_types
+        )
+
+        if ticket_types:
+
+            if any(
+                ticket_type.capacity is None
+                for ticket_type in ticket_types
+            ):
+                return None
+
+            return sum(
+                ticket_type.remaining_quantity
+                for ticket_type in ticket_types
+            )
 
         if self.ticket_capacity is None:
             return None
@@ -963,6 +981,17 @@ class TicketEvent(db.Model):
     @property
     def is_sold_out(self):
 
+        ticket_types = (
+            self.active_ticket_types
+        )
+
+        if ticket_types:
+
+            return all(
+                ticket_type.is_sold_out
+                for ticket_type in ticket_types
+            )
+
         if self.ticket_capacity is None:
             return False
 
@@ -970,6 +999,23 @@ class TicketEvent(db.Model):
             self.remaining_tickets
             <= 0
         )
+
+
+    @property
+    def ticket_price_from(self):
+
+        ticket_types = (
+            self.active_ticket_types
+        )
+
+        if ticket_types:
+
+            return min(
+                ticket_type.price
+                for ticket_type in ticket_types
+            )
+
+        return self.ticket_price
 
 
     @property
@@ -1022,6 +1068,143 @@ class TicketEvent(db.Model):
             f"id={self.id} "
             f"organizer_id={self.organizer_id} "
             f"title={self.title}>"
+        )
+
+
+# ============================================================
+# TICKET TYPE
+# ============================================================
+
+class TicketType(db.Model):
+
+    __tablename__ = "ticket_types"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    name = db.Column(
+        db.String(100),
+        nullable=False,
+    )
+
+    price = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    capacity = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+    sort_order = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    event = db.relationship(
+        "TicketEvent",
+        back_populates="ticket_types",
+    )
+
+    order_items = db.relationship(
+        "TicketOrderItem",
+        back_populates="ticket_type",
+        lazy=True,
+    )
+
+
+    @property
+    def sold_quantity(self):
+
+        total = 0
+
+        for item in self.order_items:
+
+            if (
+                item.order
+                and item.order.payment_status
+                == "paid"
+            ):
+
+                total += (
+                    item.quantity
+                    or 0
+                )
+
+        return total
+
+
+    @property
+    def remaining_quantity(self):
+
+        if self.capacity is None:
+            return None
+
+        return max(
+            0,
+            self.capacity
+            - self.sold_quantity,
+        )
+
+
+    @property
+    def is_sold_out(self):
+
+        if self.capacity is None:
+            return False
+
+        return (
+            self.remaining_quantity
+            <= 0
+        )
+
+
+    def __repr__(self):
+
+        return (
+            "<TicketType "
+            f"id={self.id} "
+            f"event_id={self.event_id} "
+            f"name={self.name}>"
         )
 
 
@@ -1194,6 +1377,15 @@ class TicketOrder(db.Model):
     )
 
 
+    order_items = db.relationship(
+        "TicketOrderItem",
+        back_populates="order",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="TicketOrderItem.id.asc()",
+    )
+
+
     @property
     def organizer_id(self):
 
@@ -1254,6 +1446,98 @@ class TicketOrder(db.Model):
 
 
 # ============================================================
+# TICKET ORDER ITEM
+# ============================================================
+
+class TicketOrderItem(db.Model):
+
+    __tablename__ = "ticket_order_items"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    order_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_orders.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    ticket_type_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_types.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+
+    ticket_name = db.Column(
+        db.String(100),
+        nullable=False,
+    )
+
+    unit_price = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    quantity = db.Column(
+        db.Integer,
+        nullable=False,
+    )
+
+    line_total = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+
+    order = db.relationship(
+        "TicketOrder",
+        back_populates="order_items",
+    )
+
+    ticket_type = db.relationship(
+        "TicketType",
+        back_populates="order_items",
+    )
+
+    entry_passes = db.relationship(
+        "EntryPass",
+        back_populates="order_item",
+        lazy=True,
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<TicketOrderItem "
+            f"id={self.id} "
+            f"order_id={self.order_id} "
+            f"ticket_name={self.ticket_name} "
+            f"quantity={self.quantity}>"
+        )
+
+
+# ============================================================
 # ENTRY PASS
 # ============================================================
 
@@ -1275,6 +1559,17 @@ class EntryPass(db.Model):
             ondelete="CASCADE",
         ),
         nullable=False,
+        index=True,
+    )
+
+
+    order_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_order_items.id",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
         index=True,
     )
 
@@ -1310,6 +1605,12 @@ class EntryPass(db.Model):
 
     order = db.relationship(
         "TicketOrder",
+        back_populates="entry_passes",
+    )
+
+
+    order_item = db.relationship(
+        "TicketOrderItem",
         back_populates="entry_passes",
     )
 
@@ -1350,6 +1651,15 @@ class EntryPass(db.Model):
         return self.order.belongs_to_organizer(
             organizer_id
         )
+
+
+    @property
+    def ticket_type_name(self):
+
+        if self.order_item:
+            return self.order_item.ticket_name
+
+        return "General"
 
 
     @property
