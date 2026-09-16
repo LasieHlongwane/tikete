@@ -74,6 +74,7 @@ from models import (
     TicketOrder,
     TicketOrderItem,
     TicketType,
+    TicketSalePhase,
     db,
 )
 
@@ -3196,6 +3197,44 @@ def sync_event_legacy_ticket_summary(
     else:
 
         event.ticket_capacity = None
+
+
+# ============================================================
+# SALES PHASE HELPERS
+# ============================================================
+
+def parse_phase_datetime(value):
+    value = str(value or "").strip()
+    if not value:
+        return None
+    try:
+        local_value = datetime.strptime(value, "%Y-%m-%dT%H:%M").replace(tzinfo=ZoneInfo("Africa/Johannesburg"))
+    except ValueError as error:
+        raise ValueError("Enter a valid sales phase date and time.") from error
+    return local_value.astimezone(timezone.utc).replace(tzinfo=None)
+
+def phase_datetime_input_value(value):
+    if not value:
+        return ""
+    return value.replace(tzinfo=timezone.utc).astimezone(ZoneInfo("Africa/Johannesburg")).strftime("%Y-%m-%dT%H:%M")
+
+def validate_ticket_phase_sequence(ticket_type, rows):
+    previous = None
+    for row in rows:
+        if row["end_at"] and row["start_at"] and row["end_at"] <= row["start_at"]:
+            raise ValueError(f"{ticket_type.name}: phase end must be after phase start.")
+        if previous and previous["end_at"] and row["start_at"] and row["start_at"] < previous["end_at"]:
+            raise ValueError(f"{ticket_type.name}: sales phases cannot overlap.")
+        previous = row
+
+def serialize_phase_for_form(phase):
+    return {
+        "id": phase.id, "name": phase.name, "price": phase.price,
+        "start_at": phase_datetime_input_value(phase.start_at),
+        "end_at": phase_datetime_input_value(phase.end_at),
+        "quantity_limit": phase.quantity_limit, "sold_quantity": phase.sold_quantity,
+        "active": phase.active,
+    }
 
 
 # ============================================================
@@ -7191,22 +7230,25 @@ def reserve_ticket(
                     )
 
 
-                basket.append(
-                    {
-                        "ticket_type":
-                            ticket_type,
-                        "name":
-                            ticket_type.name,
-                        "price":
-                            Decimal(
-                                str(
-                                    ticket_type.price
-                                )
-                            ),
-                        "quantity":
-                            quantity,
-                    }
-                )
+                current_phase = ticket_type.current_sale_phase
+
+                if ticket_type.active_sale_phases and current_phase is None:
+                    flash(f"{ticket_type.name} is not currently on sale.", "error")
+                    return render_template("reserve_ticket.html", event=event, ticket_types=ticket_types, processing_rate=PAYSTACK_EFT_EFFECTIVE_FEE_RATE)
+
+                if current_phase and current_phase.remaining_quantity is not None and quantity > current_phase.remaining_quantity:
+                    flash(f"Only {current_phase.remaining_quantity} {ticket_type.name} ticket(s) remain in {current_phase.name}.", "error")
+                    return render_template("reserve_ticket.html", event=event, ticket_types=ticket_types, processing_rate=PAYSTACK_EFT_EFFECTIVE_FEE_RATE)
+
+                effective_price = current_phase.price if current_phase else ticket_type.price
+
+                basket.append({
+                    "ticket_type": ticket_type,
+                    "sale_phase": current_phase,
+                    "name": ticket_type.name,
+                    "price": Decimal(str(effective_price)),
+                    "quantity": quantity,
+                })
 
 
         else:
@@ -7392,6 +7434,10 @@ def reserve_ticket(
                         ticket_type_id=
                             item["ticket_type"].id,
 
+                        sale_phase_id=(item["sale_phase"].id if item.get("sale_phase") else None),
+
+                        sale_phase_name=(item["sale_phase"].name if item.get("sale_phase") else None),
+
                         ticket_name=
                             item["name"],
 
@@ -7435,10 +7481,8 @@ def reserve_ticket(
                         item["name"],
                     "quantity":
                         item["quantity"],
-                    "unit_price":
-                        str(
-                            item["price"]
-                        ),
+                    "unit_price": str(item["price"]),
+                    "sale_phase": (item["sale_phase"].name if item.get("sale_phase") else None),
                 }
                 for item in basket
             ]
@@ -12769,6 +12813,107 @@ def admin_edit_event(
         event=
             event,
     )
+
+
+# ============================================================
+# ORGANIZER - SALES PHASES / EARLY BIRD PRICING
+# ============================================================
+@app.route("/admin/events/<int:event_id>/sales-phases", methods=["GET", "POST"])
+def admin_sales_phases(event_id):
+    auth = require_ticketing_organizer()
+    if auth: return auth
+    organizer = get_current_organizer()
+    subscription_auth = require_active_subscription(organizer)
+    if subscription_auth: return subscription_auth
+    event = TicketEvent.query.filter_by(id=event_id, organizer_id=organizer.id).first_or_404()
+    ticket_types = [t for t in event.ticket_types if t.active]
+
+    if request.method == "POST":
+        raw_tt = str(request.form.get("ticket_type_id", "")).strip()
+        if not raw_tt.isdigit(): abort(400)
+        ticket_type = TicketType.query.filter_by(id=int(raw_tt), event_id=event.id).first_or_404()
+        names=request.form.getlist("phase_name"); prices=request.form.getlist("phase_price")
+        starts=request.form.getlist("phase_start_at"); ends=request.form.getlist("phase_end_at")
+        limits=request.form.getlist("phase_quantity_limit"); ids=request.form.getlist("phase_id")
+        count=max(len(names),len(prices),len(starts),len(ends),len(limits),len(ids))
+        if count < 1 or count > 10:
+            flash("Choose between 1 and 10 sales phases per ticket type.","error")
+            return redirect(url_for("admin_sales_phases",event_id=event.id,ticket_type_id=ticket_type.id))
+        rows=[]; seen=set()
+        try:
+            for index in range(count):
+                name=names[index].strip() if index<len(names) else ""
+                raw_price=prices[index].strip() if index<len(prices) else ""
+                raw_start=starts[index].strip() if index<len(starts) else ""
+                raw_end=ends[index].strip() if index<len(ends) else ""
+                raw_limit=limits[index].strip() if index<len(limits) else ""
+                raw_id=ids[index].strip() if index<len(ids) else ""
+                if not any([name,raw_price,raw_start,raw_end,raw_limit,raw_id]): continue
+                if not name: raise ValueError("Every sales phase needs a name.")
+                key=name.casefold()
+                if key in seen: raise ValueError("Sales phase names must be unique for this ticket type.")
+                seen.add(key)
+                try: price=Decimal(raw_price).quantize(Decimal("0.01"))
+                except (InvalidOperation,ValueError) as error: raise ValueError(f"Enter a valid price for {name}.") from error
+                if price<0: raise ValueError(f"{name} price cannot be negative.")
+                quantity_limit=None
+                if raw_limit:
+                    try: quantity_limit=int(raw_limit)
+                    except ValueError as error: raise ValueError(f"Enter a valid quantity limit for {name}.") from error
+                    if quantity_limit<1: raise ValueError(f"{name} quantity limit must be at least 1.")
+                phase_id=None
+                if raw_id:
+                    try: phase_id=int(raw_id)
+                    except ValueError: raise ValueError("Invalid sales phase identifier.")
+                rows.append({"id":phase_id,"name":name,"price":price,"start_at":parse_phase_datetime(raw_start),"end_at":parse_phase_datetime(raw_end),"quantity_limit":quantity_limit,"sort_order":index})
+            if not rows: raise ValueError("Add at least one sales phase.")
+            validate_ticket_phase_sequence(ticket_type,rows)
+        except ValueError as error:
+            flash(str(error),"error")
+            return redirect(url_for("admin_sales_phases",event_id=event.id,ticket_type_id=ticket_type.id))
+
+        existing={p.id:p for p in ticket_type.sale_phases}; submitted=set()
+        for row in rows:
+            if row["id"] is not None:
+                if row["id"] not in existing: abort(400)
+                phase=existing[row["id"]]; submitted.add(phase.id)
+                if row["quantity_limit"] is not None and row["quantity_limit"] < phase.sold_quantity:
+                    flash(f"{phase.name} quantity limit cannot be lower than tickets already sold in that phase.","error")
+                    return redirect(url_for("admin_sales_phases",event_id=event.id,ticket_type_id=ticket_type.id))
+                phase.name=row["name"]; phase.price=row["price"]; phase.start_at=row["start_at"]; phase.end_at=row["end_at"]; phase.quantity_limit=row["quantity_limit"]; phase.sort_order=row["sort_order"]; phase.active=True
+            else:
+                db.session.add(TicketSalePhase(ticket_type_id=ticket_type.id,name=row["name"],price=row["price"],start_at=row["start_at"],end_at=row["end_at"],quantity_limit=row["quantity_limit"],active=True,sort_order=row["sort_order"]))
+        for phase in list(ticket_type.sale_phases):
+            if phase.id and phase.id not in submitted:
+                if phase.sold_quantity>0: phase.active=False
+                else: db.session.delete(phase)
+        try: db.session.commit()
+        except Exception as error:
+            db.session.rollback(); current_app.logger.exception("[Sales Phases] Save failed event_id=%s ticket_type_id=%s error=%s",event.id,ticket_type.id,error)
+            flash("Unable to save sales phases.","error")
+            return redirect(url_for("admin_sales_phases",event_id=event.id,ticket_type_id=ticket_type.id))
+        flash(f"Sales phases saved for {ticket_type.name}.","success")
+        return redirect(url_for("admin_sales_phases",event_id=event.id,ticket_type_id=ticket_type.id))
+
+    selected_id=request.args.get("ticket_type_id",type=int)
+    selected=next((t for t in ticket_types if t.id==selected_id),None) if selected_id else None
+    if not selected and ticket_types: selected=ticket_types[0]
+    phase_rows=[serialize_phase_for_form(p) for p in selected.sale_phases if p.active] if selected else []
+    return render_template("admin/sales_phases.html",event=event,ticket_types=ticket_types,selected_ticket_type=selected,phase_rows=phase_rows)
+
+@app.route("/admin/events/<int:event_id>/sales-phases/<int:ticket_type_id>/clear",methods=["POST"])
+def admin_clear_sales_phases(event_id,ticket_type_id):
+    auth=require_ticketing_organizer()
+    if auth:return auth
+    organizer=get_current_organizer(); subscription_auth=require_active_subscription(organizer)
+    if subscription_auth:return subscription_auth
+    ticket_type=(TicketType.query.join(TicketEvent).filter(TicketType.id==ticket_type_id,TicketType.event_id==event_id,TicketEvent.organizer_id==organizer.id).first_or_404())
+    for phase in list(ticket_type.sale_phases):
+        if phase.sold_quantity>0: phase.active=False
+        else: db.session.delete(phase)
+    db.session.commit()
+    flash(f"Sales phases disabled for {ticket_type.name}. Its normal price is active again.","success")
+    return redirect(url_for("admin_sales_phases",event_id=event_id,ticket_type_id=ticket_type.id))
 
 
 # ============================================================
