@@ -459,7 +459,8 @@
                         <li>Launch notification</li>
                         <li>3-days-to-go reminder</li>
                         <li>Tomorrow reminder</li>
-                        <li>Tonight / Happening Now notification</li>
+                        <li>Tonight / Today reminder</li>
+                        <li>Happening Now notification</li>
                         <li>Local audience analytics</li>
                         <li>Campaign performance</li>
                     </ul>
@@ -577,7 +578,9 @@
 
                     <div class="schedule">
 
-                        {% for reminder in reminders %}
+                        {% for row in reminder_rows %}
+
+                            {% set reminder = row.reminder %}
 
                             <div class="schedule-row">
 
@@ -590,17 +593,24 @@
                                             3 Days To Go
                                         {% elif reminder.reminder_type == 'tomorrow' %}
                                             Tomorrow
+                                        {% elif reminder.reminder_type == 'tonight' %}
+                                            Tonight / Today
                                         {% else %}
                                             Happening Now
                                         {% endif %}
                                     </strong>
 
                                     <small>
-                                        {{ reminder.scheduled_for.strftime(
-                                            '%d %b %Y %H:%M'
-                                        ) }}
-                                        UTC
+                                        {{ row.scheduled_display }}
                                     </small>
+
+                                    {% if row.campaign %}
+                                        <small>
+                                            {{ row.success_count }} delivered
+                                            · {{ row.failure_count }} failed
+                                            · {{ "%.1f"|format(row.delivery_rate) }}% delivery
+                                        </small>
+                                    {% endif %}
 
                                 </div>
 
@@ -625,7 +635,88 @@
                     </span>
 
                     <h2>
-                        Campaign Performance
+                        Audience Around This Event
+                    </h2>
+
+
+                    <div class="audience">
+
+                        <div class="metric">
+                            <span>Current Local Audience</span>
+                            <strong>
+                                {{ audience_analytics.total }}
+                            </strong>
+                        </div>
+
+                        <div class="metric">
+                            <span>Average Distance</span>
+                            <strong>
+                                {% if audience_analytics.average_distance_km is not none %}
+                                    {{ "%.1f"|format(audience_analytics.average_distance_km) }} km
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="metric">
+                            <span>Farthest Eligible User Area</span>
+                            <strong>
+                                {% if audience_analytics.farthest_distance_km is not none %}
+                                    {{ "%.1f"|format(audience_analytics.farthest_distance_km) }} km
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    {% if audience_analytics.areas %}
+
+                        <h3 style="margin-top:22px;">
+                            Top Audience Areas
+                        </h3>
+
+                        <div class="schedule">
+
+                            {% for area in audience_analytics.areas[:10] %}
+
+                                <div class="schedule-row">
+
+                                    <div>
+                                        <strong>{{ area.name }}</strong>
+                                        <small>
+                                            Average distance:
+                                            {{ "%.1f"|format(area.average_distance_km) }} km
+                                        </small>
+                                    </div>
+
+                                    <span class="status">
+                                        {{ area.count }}
+                                        subscriber{% if area.count != 1 %}s{% endif %}
+                                    </span>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% endif %}
+
+                </section>
+
+
+                <section class="card">
+
+                    <span class="eyebrow">
+                        CAMPAIGN PERFORMANCE
+                    </span>
+
+                    <h2>
+                        Delivery Results
                     </h2>
 
 
@@ -660,13 +751,53 @@
                         </div>
 
                         <div class="metric">
-                            <span>Current Local Audience</span>
+                            <span>Delivery Rate</span>
                             <strong>
-                                {{ audience_count }}
+                                {{ "%.1f"|format(performance.delivery_rate) }}%
                             </strong>
                         </div>
 
                     </div>
+
+
+                    {% if reminder_rows %}
+
+                        <h3 style="margin-top:22px;">
+                            Campaign Breakdown
+                        </h3>
+
+                        <div class="schedule">
+
+                            {% for row in reminder_rows %}
+
+                                {% if row.campaign %}
+
+                                    <div class="schedule-row">
+
+                                        <div>
+                                            <strong>
+                                                {{ row.campaign.title }}
+                                            </strong>
+                                            <small>
+                                                {{ row.success_count }} delivered
+                                                · {{ row.failure_count }} failed
+                                                · {{ row.recipient_count }} targeted
+                                            </small>
+                                        </div>
+
+                                        <span class="status status-{% if row.delivery_rate >= 90 %}sent{% elif row.delivery_rate > 0 %}pending{% else %}failed{% endif %}">
+                                            {{ "%.1f"|format(row.delivery_rate) }}%
+                                        </span>
+
+                                    </div>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% endif %}
 
                 </section>
 
