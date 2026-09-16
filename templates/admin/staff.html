@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gate Staff | Kalxa</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(1000px,calc(100% - 28px));margin:0 auto;padding:28px 0 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.back{color:#111827;text-decoration:none;font-weight:850}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;margin-bottom:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{margin-bottom:14px}.field label{display:block;font-weight:850;margin-bottom:6px}.field input{width:100%;min-height:46px;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font:inherit}.events{display:grid;gap:8px;max-height:280px;overflow:auto}.event-check{display:flex;gap:10px;align-items:flex-start;padding:10px;background:#f8fafc;border-radius:10px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;text-decoration:none;font:inherit;font-weight:900;cursor:pointer}.button-secondary{background:#eef2f7;color:#111827}.button-danger{background:#991b1b}.staff-row{display:grid;grid-template-columns:1fr auto;gap:14px;padding:14px 0;border-top:1px solid #eef2f7}.staff-row:first-child{border-top:0}.meta{color:#64748b;font-size:.86rem}.badge{display:inline-flex;padding:5px 8px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:.72rem;font-weight:900}.badge.off{background:#fef2f2;color:#b91c1c}.actions{display:flex;gap:8px;flex-wrap:wrap}.flash{padding:12px 14px;margin-bottom:10px;border-radius:10px;background:#eef2ff;color:#3730a3}@media(max-width:720px){.grid{grid-template-columns:1fr}.staff-row{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main class="page">
+<div class="top">
+<a href="{{ url_for('admin_dashboard') }}" class="back">← Dashboard</a>
+<strong>Kalxa Gate Staff</strong>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for category,message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+{% endwith %}
+
+<section class="card">
+<h1>Staff Check-In Accounts</h1>
+<p class="meta">Create limited accounts for gate staff. Staff can only access ticket check-in for assigned events. They cannot access payments, orders, exports, event editing or organizer settings.</p>
+<p class="meta"><strong>Staff login:</strong> {{ request.host_url.rstrip('/') }}/staff/login</p>
+</section>
+
+<section class="card">
+<h2>Create Staff Account</h2>
+<form method="POST" action="{{ url_for('admin_staff_new') }}">
+<div class="grid">
+<div>
+<div class="field"><label>Name</label><input name="name" required placeholder="e.g. Thabo Gate 1"></div>
+<div class="field"><label>Username</label><input name="username" required autocomplete="off" placeholder="e.g. thabo.gate1"></div>
+<div class="field"><label>Temporary Password</label><input name="password" type="password" required minlength="8" autocomplete="new-password"></div>
+</div>
+<div>
+<label style="display:block;font-weight:850;margin-bottom:8px;">Assigned Events</label>
+<div class="events">
+{% for event in events %}
+<label class="event-check">
+<input type="checkbox" name="event_ids" value="{{ event.id }}">
+<span><strong>{{ event.title }}</strong><br><span class="meta">{{ event.event_date or 'No date' }} · {{ event.status|title }}</span></span>
+</label>
+{% else %}
+<p class="meta">Create an event before adding staff.</p>
+{% endfor %}
+</div>
+</div>
+</div>
+<button class="button" type="submit" style="margin-top:14px;">Create Staff Account</button>
+</form>
+</section>
+
+<section class="card">
+<h2>Current Staff</h2>
+{% for staff in staff_accounts %}
+<div class="staff-row">
+<div>
+<strong>{{ staff.name }}</strong>
+<span class="badge {% if not staff.active %}off{% endif %}">{{ 'ACTIVE' if staff.active else 'DISABLED' }}</span>
+<div class="meta">@{{ staff.username }}</div>
+<div class="meta">
+Assigned:
+{% for access in staff.event_access %}
+{{ access.event.title }}{% if not loop.last %}, {% endif %}
+{% else %}No events{% endfor %}
+</div>
+{% if staff.last_login_at %}<div class="meta">Last login: {{ staff.last_login_at.strftime('%d %b %Y %H:%M') }}</div>{% endif %}
+</div>
+<div class="actions">
+<a class="button button-secondary" href="{{ url_for('admin_staff_edit', staff_id=staff.id) }}">Edit</a>
+<form method="POST" action="{{ url_for('admin_staff_toggle', staff_id=staff.id) }}">
+<button class="button {% if staff.active %}button-danger{% endif %}" type="submit">{{ 'Disable' if staff.active else 'Enable' }}</button>
+</form>
+</div>
+</div>
+{% else %}
+<p class="meta">No gate staff accounts yet.</p>
+{% endfor %}
+</section>
+</main>
+</body>
+</html>
