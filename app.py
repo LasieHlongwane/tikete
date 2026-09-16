@@ -17,8 +17,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import requests
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from decimal import Decimal, InvalidOperation, ROUND_UP
+from zoneinfo import ZoneInfo
 
 import qrcode
 
@@ -54,6 +55,8 @@ from models import (
     AttendeeContact,
     CheckIn,
     EntryPass,
+    EventBoost,
+    EventBoostReminder,
     GeocodedArea,
     KalxaBridgeTokenUse,
     Organizer,
@@ -74,6 +77,69 @@ from models import (
 # ============================================================
 
 load_dotenv()
+
+
+# ============================================================
+# KALXA EVENT BOOST
+# ============================================================
+
+EVENT_BOOST_BASIC_PRICE = Decimal(
+    os.environ.get(
+        "EVENT_BOOST_BASIC_PRICE",
+        "49.00",
+    )
+)
+
+EVENT_BOOST_PRO_PRICE = Decimal(
+    os.environ.get(
+        "EVENT_BOOST_PRO_PRICE",
+        "99.00",
+    )
+)
+
+EVENT_BOOST_RADIUS_KM = Decimal(
+    os.environ.get(
+        "LOCAL_NOTIFICATION_RADIUS_KM",
+        "80",
+    )
+)
+
+BOOST_CRON_SECRET = (
+    os.environ.get(
+        "BOOST_CRON_SECRET",
+        "",
+    )
+    .strip()
+)
+
+EVENT_BOOST_PLANS = {
+    "basic": {
+        "name":
+            "KALXA EVENT BOOST",
+        "price":
+            EVENT_BOOST_BASIC_PRICE,
+        "campaign_limit":
+            1,
+        "reminders": [
+            "launch",
+        ],
+    },
+
+    "pro": {
+        "name":
+            "EVENT BOOST PRO",
+        "price":
+            EVENT_BOOST_PRO_PRICE,
+        "campaign_limit":
+            4,
+        "reminders": [
+            "launch",
+            "three_days",
+            "tomorrow",
+            "happening_now",
+        ],
+    },
+}
 
 
 # ============================================================
@@ -1621,6 +1687,790 @@ def send_push_campaign(
 
 
     return campaign
+
+
+# ============================================================
+# EVENT BOOST HELPERS
+# ============================================================
+
+def generate_event_boost_reference():
+
+    return (
+        "KXBOOST-"
+        + secrets.token_hex(
+            6
+        ).upper()
+    )
+
+
+def event_local_datetime(
+    event,
+):
+
+    if (
+        not event.event_date
+        or not event.event_time
+    ):
+
+        return None
+
+
+    return datetime.combine(
+        event.event_date,
+        event.event_time,
+    ).replace(
+        tzinfo=
+            ZoneInfo(
+                "Africa/Johannesburg"
+            )
+    )
+
+
+def event_datetime_utc_naive(
+    event,
+):
+
+    local_datetime = (
+        event_local_datetime(
+            event
+        )
+    )
+
+
+    if not local_datetime:
+
+        return None
+
+
+    return (
+        local_datetime
+        .astimezone(
+            timezone.utc
+        )
+        .replace(
+            tzinfo=None
+        )
+    )
+
+
+def event_boost_plan(
+    plan_code,
+):
+
+    plan = (
+        EVENT_BOOST_PLANS.get(
+            str(
+                plan_code
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+    )
+
+
+    if not plan:
+
+        raise ValueError(
+            "Invalid event boost plan."
+        )
+
+
+    return plan
+
+
+def build_event_boost_schedule(
+    boost,
+):
+
+    event = (
+        boost.event
+    )
+
+
+    if not event:
+
+        raise RuntimeError(
+            "Boost event is missing."
+        )
+
+
+    plan = (
+        event_boost_plan(
+            boost.plan_code
+        )
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    event_utc = (
+        event_datetime_utc_naive(
+            event
+        )
+    )
+
+
+    reminder_times = {
+        "launch":
+            now,
+    }
+
+
+    if boost.plan_code == "pro":
+
+        if not event_utc:
+
+            raise RuntimeError(
+                "Pro boost requires an event date and time."
+            )
+
+
+        reminder_times.update(
+            {
+                "three_days":
+                    event_utc
+                    - timedelta(
+                        days=3
+                    ),
+
+                "tomorrow":
+                    event_utc
+                    - timedelta(
+                        days=1
+                    ),
+
+                "happening_now":
+                    event_utc,
+            }
+        )
+
+
+    existing_types = {
+        reminder.reminder_type
+        for reminder in boost.reminders
+    }
+
+
+    for reminder_type in plan[
+        "reminders"
+    ]:
+
+        if (
+            reminder_type
+            in existing_types
+        ):
+
+            continue
+
+
+        scheduled_for = (
+            reminder_times[
+                reminder_type
+            ]
+        )
+
+
+        status = (
+            "pending"
+        )
+
+
+        # Never send a countdown that is already obsolete.
+        if (
+            reminder_type
+            != "launch"
+            and scheduled_for
+            <= now
+        ):
+
+            status = (
+                "skipped"
+            )
+
+
+        db.session.add(
+            EventBoostReminder(
+                boost_id=
+                    boost.id,
+
+                reminder_type=
+                    reminder_type,
+
+                scheduled_for=
+                    scheduled_for,
+
+                status=
+                    status,
+
+                error_message=(
+                    "Scheduled time had already passed "
+                    "when the boost was activated."
+                    if status == "skipped"
+                    else None
+                ),
+            )
+        )
+
+
+def event_boost_notification_copy(
+    event,
+    reminder_type,
+):
+
+    area = (
+        event.notification_area
+        or event.venue
+        or "your area"
+    )
+
+
+    if reminder_type == "launch":
+
+        return (
+            f"🔥 {event.title}",
+            (
+                f"{event.title} is coming to {area}. "
+                "Tap to view event details and tickets."
+            ),
+        )
+
+
+    if reminder_type == "three_days":
+
+        return (
+            f"🔥 3 DAYS TO GO: {event.title}",
+            (
+                f"Only 3 days until {event.title} in {area}. "
+                "Tap to get your ticket."
+            ),
+        )
+
+
+    if reminder_type == "tomorrow":
+
+        return (
+            f"⏰ TOMORROW: {event.title}",
+            (
+                f"{event.title} is happening tomorrow in {area}. "
+                "Tap for tickets and event details."
+            ),
+        )
+
+
+    if reminder_type == "happening_now":
+
+        return (
+            f"🔴 HAPPENING NOW: {event.title}",
+            (
+                f"{event.title} is happening now in {area}. "
+                "Tap to open the event."
+            ),
+        )
+
+
+    raise ValueError(
+        "Unknown boost reminder type."
+    )
+
+
+def execute_event_boost_reminder(
+    reminder,
+):
+
+    if (
+        reminder.status
+        not in {
+            "pending",
+            "failed",
+        }
+    ):
+
+        return reminder
+
+
+    boost = (
+        reminder.boost
+    )
+
+
+    event = (
+        boost.event
+        if boost
+        else None
+    )
+
+
+    if (
+        not boost
+        or not boost.is_active
+        or not event
+    ):
+
+        reminder.status = (
+            "skipped"
+        )
+
+        reminder.error_message = (
+            "Boost or event is not active."
+        )
+
+        db.session.commit()
+
+        return reminder
+
+
+    if (
+        event.status
+        != "published"
+        or not event.active
+    ):
+
+        reminder.status = (
+            "skipped"
+        )
+
+        reminder.error_message = (
+            "Event is not currently published."
+        )
+
+        db.session.commit()
+
+        return reminder
+
+
+    subscriptions = (
+        get_local_push_subscriptions(
+            event,
+            float(
+                boost.radius_km
+            ),
+        )
+    )
+
+
+    if not subscriptions:
+
+        reminder.status = (
+            "skipped"
+        )
+
+        reminder.error_message = (
+            "No eligible local notification audience."
+        )
+
+        db.session.commit()
+
+        return reminder
+
+
+    (
+        title,
+        body,
+    ) = (
+        event_boost_notification_copy(
+            event,
+            reminder.reminder_type,
+        )
+    )
+
+
+    campaign = PushCampaign(
+
+        event_id=
+            event.id,
+
+        title=
+            title[:120],
+
+        body=
+            body[:500],
+
+        target_url=
+            url_for(
+                "event_page",
+                event_id=
+                    event.id,
+                _external=
+                    True,
+            ),
+
+        target_mode=
+            "radius",
+
+        target_area=
+            event.notification_area,
+
+        target_latitude=
+            event.notification_latitude,
+
+        target_longitude=
+            event.notification_longitude,
+
+        radius_km=
+            boost.radius_km,
+
+        status=
+            "draft",
+
+        recipient_count=
+            len(
+                subscriptions
+            ),
+
+        created_by=(
+            "event_boost:"
+            + boost.plan_code
+            + ":"
+            + reminder.reminder_type
+        ),
+    )
+
+
+    reminder.status = (
+        "processing"
+    )
+
+    reminder.error_message = (
+        None
+    )
+
+
+    db.session.add(
+        campaign
+    )
+
+    db.session.flush()
+
+
+    reminder.campaign_id = (
+        campaign.id
+    )
+
+
+    db.session.commit()
+
+
+    try:
+
+        send_push_campaign(
+            campaign,
+            subscriptions,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        reminder = (
+            db.session.get(
+                EventBoostReminder,
+                reminder.id,
+            )
+        )
+
+
+        if reminder:
+
+            reminder.status = (
+                "failed"
+            )
+
+            reminder.error_message = (
+                str(
+                    error
+                )[:2000]
+            )
+
+            db.session.commit()
+
+
+        raise
+
+
+    reminder = (
+        db.session.get(
+            EventBoostReminder,
+            reminder.id,
+        )
+    )
+
+
+    reminder.status = (
+        "sent"
+    )
+
+    reminder.sent_at = (
+        datetime.utcnow()
+    )
+
+    reminder.error_message = (
+        None
+    )
+
+
+    db.session.commit()
+
+
+    return reminder
+
+
+def process_due_event_boost_reminders(
+    boost_id=None,
+    limit=25,
+):
+
+    query = (
+        EventBoostReminder.query
+        .join(
+            EventBoost,
+            EventBoostReminder.boost_id
+            == EventBoost.id,
+        )
+        .filter(
+            EventBoost.status
+            == "active"
+        )
+        .filter(
+            EventBoostReminder.status
+            == "pending"
+        )
+        .filter(
+            EventBoostReminder.scheduled_for
+            <= datetime.utcnow()
+        )
+    )
+
+
+    if boost_id is not None:
+
+        query = query.filter(
+            EventBoostReminder.boost_id
+            == boost_id
+        )
+
+
+    reminders = (
+        query
+        .order_by(
+            EventBoostReminder.scheduled_for.asc()
+        )
+        .limit(
+            limit
+        )
+        .all()
+    )
+
+
+    result = {
+        "processed":
+            0,
+
+        "sent":
+            0,
+
+        "skipped":
+            0,
+
+        "failed":
+            0,
+    }
+
+
+    for reminder in reminders:
+
+        result[
+            "processed"
+        ] += 1
+
+
+        try:
+
+            execute_event_boost_reminder(
+                reminder
+            )
+
+
+            db.session.refresh(
+                reminder
+            )
+
+
+            if reminder.status == "sent":
+
+                result[
+                    "sent"
+                ] += 1
+
+            elif reminder.status == "skipped":
+
+                result[
+                    "skipped"
+                ] += 1
+
+
+        except Exception as error:
+
+            result[
+                "failed"
+            ] += 1
+
+
+            current_app.logger.exception(
+                (
+                    "[Event Boost] Reminder failed "
+                    "reminder_id=%s error=%s"
+                ),
+                reminder.id,
+                error,
+            )
+
+
+    return result
+
+
+def finalize_event_boost_payment(
+    boost,
+    transaction_data,
+):
+
+    if boost.status == "active":
+
+        return boost
+
+
+    if (
+        not isinstance(
+            transaction_data,
+            dict,
+        )
+        or transaction_data.get(
+            "status"
+        )
+        != "success"
+    ):
+
+        raise RuntimeError(
+            "Paystack boost transaction is not successful."
+        )
+
+
+    reference = str(
+        transaction_data.get(
+            "reference",
+            "",
+        )
+    ).strip()
+
+
+    if reference != boost.payment_reference:
+
+        raise RuntimeError(
+            "Paystack boost reference does not match."
+        )
+
+
+    expected_amount = int(
+        (
+            Decimal(
+                str(
+                    boost.price
+                )
+            )
+            * 100
+        )
+        .quantize(
+            Decimal("1"),
+            rounding=
+                ROUND_UP,
+        )
+    )
+
+
+    actual_amount = int(
+        transaction_data.get(
+            "amount"
+        )
+        or 0
+    )
+
+
+    if actual_amount != expected_amount:
+
+        raise RuntimeError(
+            "Paystack boost amount does not match."
+        )
+
+
+    currency = str(
+        transaction_data.get(
+            "currency",
+            "",
+        )
+    ).strip().upper()
+
+
+    if (
+        currency
+        and currency != "ZAR"
+    ):
+
+        raise RuntimeError(
+            "Unexpected boost payment currency."
+        )
+
+
+    now = datetime.utcnow()
+
+
+    boost.status = (
+        "active"
+    )
+
+    boost.paid_at = (
+        now
+    )
+
+    boost.activated_at = (
+        now
+    )
+
+    boost.payment_verified_at = (
+        now
+    )
+
+    boost.paystack_transaction_id = (
+        str(
+            transaction_data.get(
+                "id",
+                "",
+            )
+        )
+        or None
+    )
+
+    boost.payment_channel = (
+        transaction_data.get(
+            "channel"
+        )
+        or None
+    )
+
+
+    build_event_boost_schedule(
+        boost
+    )
+
+
+    db.session.commit()
+
+
+    return boost
 
 
 # ============================================================
@@ -6499,6 +7349,51 @@ def paystack_ticket_webhook():
 
         if not subscription_payment:
 
+            boost = (
+                EventBoost.query
+                .filter_by(
+                    payment_reference=
+                        reference
+                )
+                .first()
+            )
+
+
+            if not boost:
+
+                return (
+                    "",
+                    200,
+                )
+
+
+            try:
+
+                finalize_event_boost_payment(
+                    boost,
+                    transaction_data,
+                )
+
+
+            except Exception as error:
+
+                db.session.rollback()
+
+                current_app.logger.exception(
+                    (
+                        "[Paystack Event Boost Webhook] "
+                        "Failed reference=%s error=%s"
+                    ),
+                    reference,
+                    error,
+                )
+
+                return (
+                    "",
+                    500,
+                )
+
+
             return (
                 "",
                 200,
@@ -9706,7 +10601,835 @@ def admin_event_control(
         checked_in=event.checked_in_ticket_count,
         revenue=event.paid_revenue,
         remaining_tickets=event.remaining_tickets,
+        event_boost=(
+            EventBoost.query
+            .filter_by(
+                event_id=event.id
+            )
+            .first()
+        ),
+        boost_audience_count=(
+            len(
+                get_local_push_subscriptions(
+                    event,
+                    float(
+                        EVENT_BOOST_RADIUS_KM
+                    ),
+                )
+            )
+            if (
+                event.notification_latitude
+                is not None
+                and event.notification_longitude
+                is not None
+            )
+            else 0
+        ),
     )
+
+
+# ============================================================
+# ORGANIZER - EVENT BOOST
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/boost"
+)
+def admin_event_boost(
+    event_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    boost = (
+        EventBoost.query
+        .filter_by(
+            event_id=
+                event.id
+        )
+        .first()
+    )
+
+
+    audience_count = 0
+
+
+    if (
+        event.notification_latitude
+        is not None
+        and event.notification_longitude
+        is not None
+    ):
+
+        audience_count = len(
+            get_local_push_subscriptions(
+                event,
+                float(
+                    EVENT_BOOST_RADIUS_KM
+                ),
+            )
+        )
+
+
+    reminders = (
+        boost.reminders
+        if boost
+        else []
+    )
+
+
+    sent_campaigns = [
+        reminder.campaign
+        for reminder in reminders
+        if reminder.campaign
+    ]
+
+
+    performance = {
+        "campaigns_sent":
+            len(
+                [
+                    campaign
+                    for campaign in sent_campaigns
+                    if campaign.sent_at
+                ]
+            ),
+
+        "recipients":
+            sum(
+                campaign.recipient_count
+                or 0
+                for campaign in sent_campaigns
+            ),
+
+        "success":
+            sum(
+                campaign.success_count
+                or 0
+                for campaign in sent_campaigns
+            ),
+
+        "failed":
+            sum(
+                campaign.failure_count
+                or 0
+                for campaign in sent_campaigns
+            ),
+    }
+
+
+    return render_template(
+        "admin/event_boost.html",
+
+        organizer=
+            organizer,
+
+        event=
+            event,
+
+        boost=
+            boost,
+
+        reminders=
+            reminders,
+
+        audience_count=
+            audience_count,
+
+        performance=
+            performance,
+
+        basic_price=
+            EVENT_BOOST_BASIC_PRICE,
+
+        pro_price=
+            EVENT_BOOST_PRO_PRICE,
+
+        radius_km=
+            EVENT_BOOST_RADIUS_KM,
+    )
+
+
+# ============================================================
+# ORGANIZER - BUY EVENT BOOST
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/boost/purchase/<plan_code>",
+    methods=[
+        "POST",
+    ],
+)
+def admin_purchase_event_boost(
+    event_id,
+    plan_code,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=
+                event_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    try:
+
+        plan = (
+            event_boost_plan(
+                plan_code
+            )
+        )
+
+
+    except ValueError:
+
+        abort(
+            400
+        )
+
+
+    if (
+        event.status
+        != "published"
+        or not event.active
+    ):
+
+        flash(
+            "Publish the event before buying an Event Boost.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if (
+        event.notification_latitude
+        is None
+        or event.notification_longitude
+        is None
+    ):
+
+        flash(
+            "Edit the event and save its Event Area / Town first.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if (
+        event.event_date
+        and event.event_date
+        < date.today()
+    ):
+
+        flash(
+            "Past events cannot be boosted.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if (
+        plan_code
+        == "pro"
+        and (
+            not event.event_date
+            or not event.event_time
+        )
+    ):
+
+        flash(
+            (
+                "Event Boost Pro needs both an event date "
+                "and event time so Kalxa can schedule the "
+                "3-day, tomorrow and Happening Now reminders."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    audience = (
+        get_local_push_subscriptions(
+            event,
+            float(
+                EVENT_BOOST_RADIUS_KM
+            ),
+        )
+    )
+
+
+    if not audience:
+
+        flash(
+            (
+                "There are currently no opted-in users "
+                f"within {EVENT_BOOST_RADIUS_KM:g} km "
+                "of this event, so Kalxa will not charge "
+                "you for a boost yet."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    boost = (
+        EventBoost.query
+        .filter_by(
+            event_id=
+                event.id
+        )
+        .first()
+    )
+
+
+    if (
+        boost
+        and boost.status
+        == "active"
+    ):
+
+        flash(
+            "This event already has an active paid boost.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if (
+        boost
+        and boost.status
+        == "pending"
+        and boost.plan_code
+        != plan_code
+    ):
+
+        db.session.delete(
+            boost
+        )
+
+        db.session.commit()
+
+        boost = None
+
+
+    if not boost:
+
+        boost = EventBoost(
+
+            event_id=
+                event.id,
+
+            plan_code=
+                plan_code,
+
+            plan_name=
+                plan[
+                    "name"
+                ],
+
+            price=
+                plan[
+                    "price"
+                ],
+
+            radius_km=
+                EVENT_BOOST_RADIUS_KM,
+
+            campaign_limit=
+                plan[
+                    "campaign_limit"
+                ],
+
+            status=
+                "pending",
+
+            payment_reference=
+                generate_event_boost_reference(),
+
+            payment_provider=
+                "paystack",
+
+            audience_count_at_purchase=
+                len(
+                    audience
+                ),
+        )
+
+
+        db.session.add(
+            boost
+        )
+
+        db.session.commit()
+
+
+    if (
+        boost.paystack_authorization_url
+        and boost.plan_code
+        == plan_code
+    ):
+
+        return redirect(
+            boost.paystack_authorization_url
+        )
+
+
+    callback_url = url_for(
+        "paystack_event_boost_callback",
+        _external=
+            True,
+        _scheme=
+            "https",
+    )
+
+
+    payload = {
+        "email":
+            organizer.email,
+
+        "amount":
+            str(
+                int(
+                    (
+                        Decimal(
+                            str(
+                                boost.price
+                            )
+                        )
+                        * 100
+                    )
+                    .quantize(
+                        Decimal("1"),
+                        rounding=
+                            ROUND_UP,
+                    )
+                )
+            ),
+
+        "currency":
+            "ZAR",
+
+        "reference":
+            boost.payment_reference,
+
+        "callback_url":
+            callback_url,
+
+        # Boost revenue belongs to Kalxa, not the event
+        # organizer settlement subaccount.
+        "channels": [
+            "eft",
+            "capitec_pay",
+        ],
+
+        "metadata":
+            json.dumps(
+                {
+                    "payment_type":
+                        "kalxa_event_boost",
+
+                    "event_boost_id":
+                        boost.id,
+
+                    "event_id":
+                        event.id,
+
+                    "organizer_id":
+                        organizer.id,
+
+                    "plan_code":
+                        boost.plan_code,
+
+                    "radius_km":
+                        str(
+                            boost.radius_km
+                        ),
+                }
+            ),
+    }
+
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "POST",
+                "/transaction/initialize",
+                payload,
+            )
+        )
+
+
+        data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        authorization_url = (
+            data.get(
+                "authorization_url"
+            )
+        )
+
+
+        if not authorization_url:
+
+            raise RuntimeError(
+                "Paystack did not return a boost checkout URL."
+            )
+
+
+        boost.paystack_access_code = (
+            data.get(
+                "access_code"
+            )
+            or None
+        )
+
+        boost.paystack_authorization_url = (
+            authorization_url
+        )
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Event Boost Paystack] "
+                "Checkout initialization failed "
+                "boost_id=%s event_id=%s error=%s"
+            ),
+            boost.id,
+            event.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Event Boost checkout could not be started. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_event_boost",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    return redirect(
+        authorization_url
+    )
+
+
+# ============================================================
+# PAYSTACK EVENT BOOST CALLBACK
+# ============================================================
+
+@app.route(
+    "/payments/paystack/boost/callback"
+)
+def paystack_event_boost_callback():
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not reference:
+
+        abort(
+            400
+        )
+
+
+    boost = (
+        EventBoost.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first_or_404()
+    )
+
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "GET",
+                (
+                    "/transaction/verify/"
+                    + urllib.parse.quote(
+                        reference,
+                        safe="",
+                    )
+                ),
+            )
+        )
+
+
+        transaction_data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        finalize_event_boost_payment(
+            boost,
+            transaction_data,
+        )
+
+
+        # Launch campaigns are due immediately.
+        # If sending fails here, the cron processor can retry
+        # pending future work without duplicating sent reminders.
+        try:
+
+            process_due_event_boost_reminders(
+                boost_id=
+                    boost.id,
+                limit=
+                    4,
+            )
+
+
+        except Exception:
+
+            current_app.logger.exception(
+                (
+                    "[Event Boost] Immediate launch processing "
+                    "failed boost_id=%s"
+                ),
+                boost.id,
+            )
+
+
+        flash(
+            (
+                f"{boost.plan_name} activated successfully. "
+                "Kalxa will use your local 80 km audience."
+            ),
+            "success",
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Event Boost Paystack Callback] "
+                "Verification failed reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+
+        flash(
+            (
+                "Your Event Boost payment is still being "
+                "verified. Please refresh shortly."
+            ),
+            "error",
+        )
+
+
+    return redirect(
+        url_for(
+            "admin_event_boost",
+            event_id=
+                boost.event_id,
+        )
+    )
+
+
+# ============================================================
+# EVENT BOOST CRON PROCESSOR
+# ============================================================
+
+@app.route(
+    "/tasks/event-boosts/process",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def process_event_boost_cron():
+
+    if not BOOST_CRON_SECRET:
+
+        abort(
+            503
+        )
+
+
+    supplied_secret = (
+        request.headers.get(
+            "X-Cron-Secret",
+            "",
+        )
+        .strip()
+        or
+        request.args.get(
+            "token",
+            "",
+        )
+        .strip()
+    )
+
+
+    if (
+        not supplied_secret
+        or not hmac.compare_digest(
+            supplied_secret,
+            BOOST_CRON_SECRET,
+        )
+    ):
+
+        abort(
+            403
+        )
+
+
+    result = (
+        process_due_event_boost_reminders(
+            limit=
+                50
+        )
+    )
+
+
+    return {
+        "ok":
+            True,
+        **result,
+    }
 
 
 # ============================================================
