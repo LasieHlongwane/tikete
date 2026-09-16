@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Event Boost | {{ event.title }} | Kalxa
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f6f8;
+            color: #111827;
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: min(
+                1050px,
+                calc(100% - 28px)
+            );
+            margin: 0 auto;
+            padding:
+                28px
+                0
+                64px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back {
+            color: #111827;
+            text-decoration: none;
+            font-weight: 850;
+        }
+
+        .brand {
+            font-weight: 950;
+        }
+
+        .hero {
+            padding: 26px;
+            border-radius: 22px;
+            background: #111827;
+            color: #fff;
+            margin-bottom: 18px;
+        }
+
+        .eyebrow {
+            display: block;
+            margin-bottom: 7px;
+            color: #9ca3af;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size:
+                clamp(
+                    30px,
+                    6vw,
+                    48px
+                );
+            line-height: 1.04;
+        }
+
+        .muted {
+            color: #6b7280;
+            line-height: 1.55;
+        }
+
+        .hero .muted {
+            color: #d1d5db;
+        }
+
+        .audience {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .metric {
+            padding: 16px;
+            border-radius: 15px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+        }
+
+        .hero .metric {
+            background: #1f2937;
+            border-color: #374151;
+        }
+
+        .metric span {
+            display: block;
+            color: #6b7280;
+            font-size: .73rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .hero .metric span {
+            color: #9ca3af;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 1.55rem;
+        }
+
+        .plans {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 16px;
+        }
+
+        .plan {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .pro {
+            border: 2px solid #111827;
+        }
+
+        .price {
+            margin: 8px 0 18px;
+            font-size: 2.5rem;
+            font-weight: 950;
+        }
+
+        .features {
+            display: grid;
+            gap: 10px;
+            padding: 0;
+            margin: 0 0 22px;
+            list-style: none;
+        }
+
+        .features li {
+            padding-left: 24px;
+            position: relative;
+            color: #374151;
+        }
+
+        .features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: 950;
+        }
+
+        .button {
+            width: 100%;
+            min-height: 50px;
+            margin-top: auto;
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 15px;
+            background: #111827;
+            color: #fff;
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .button-secondary {
+            background: #eef2f7;
+            color: #111827;
+        }
+
+        .button[disabled] {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .flash {
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            border-radius: 11px;
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .status {
+            display: inline-flex;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: #eef2f7;
+            font-size: .75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .status-active,
+        .status-sent {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .status-pending,
+        .status-processing {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .status-failed {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .schedule {
+            display: grid;
+            gap: 10px;
+        }
+
+        .schedule-row {
+            display: grid;
+            grid-template-columns:
+                1fr
+                auto;
+            gap: 14px;
+            align-items: center;
+            padding: 14px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .schedule-row strong,
+        .schedule-row small {
+            display: block;
+        }
+
+        .schedule-row small {
+            margin-top: 4px;
+            color: #6b7280;
+        }
+
+        @media (
+            max-width: 760px
+        ) {
+
+            .plans,
+            .audience {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <main class="page">
+
+
+        <div class="topbar">
+
+            <a
+                href="{{ url_for(
+                    'admin_event_control',
+                    event_id=event.id
+                ) }}"
+                class="back"
+            >
+                ← Event Control Centre
+            </a>
+
+            <span class="brand">
+                Kalxa Ticketing
+            </span>
+
+        </div>
+
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% for category, message in messages %}
+
+                <div class="flash">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+
+        <section class="hero">
+
+            <span class="eyebrow">
+                KALXA PREMIUM LOCAL REACH
+            </span>
+
+            <h1>
+                Boost {{ event.title }}
+            </h1>
+
+            <p class="muted">
+                Reach opted-in Kalxa users near this event.
+                Boost payments go to Kalxa and are separate
+                from attendee ticket settlements.
+            </p>
+
+
+            <div class="audience">
+
+                <div class="metric">
+                    <span>Local Audience Now</span>
+                    <strong>{{ audience_count }}</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Target Radius</span>
+                    <strong>{{ "%.0f"|format(radius_km) }} km</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Event Area</span>
+                    <strong style="font-size:1.05rem;">
+                        {{ event.notification_area or 'Not set' }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        {% if not boost %}
+
+            <div class="plans">
+
+
+                <section class="card plan">
+
+                    <span class="eyebrow">
+                        BASIC BOOST
+                    </span>
+
+                    <h2>
+                        KALXA EVENT BOOST
+                    </h2>
+
+                    <div class="price">
+                        R{{ "%.2f"|format(basic_price) }}
+                    </div>
+
+                    <ul class="features">
+                        <li>Push notification to nearby opted-in users</li>
+                        <li>{{ "%.0f"|format(radius_km) }} km targeting</li>
+                        <li>One launch campaign</li>
+                        <li>Audience count before payment</li>
+                    </ul>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_purchase_event_boost',
+                            event_id=event.id,
+                            plan_code='basic'
+                        ) }}"
+                    >
+
+                        <button
+                            type="submit"
+                            class="button"
+                            {% if audience_count == 0 %}disabled{% endif %}
+                        >
+                            Buy Basic Boost — R{{ "%.2f"|format(basic_price) }}
+                        </button>
+
+                    </form>
+
+                </section>
+
+
+                <section class="card plan pro">
+
+                    <span class="eyebrow">
+                        AUTOMATED CAMPAIGN
+                    </span>
+
+                    <h2>
+                        EVENT BOOST PRO
+                    </h2>
+
+                    <div class="price">
+                        R{{ "%.2f"|format(pro_price) }}
+                    </div>
+
+                    <ul class="features">
+                        <li>Launch notification</li>
+                        <li>3-days-to-go reminder</li>
+                        <li>Tomorrow reminder</li>
+                        <li>Tonight / Happening Now notification</li>
+                        <li>Local audience analytics</li>
+                        <li>Campaign performance</li>
+                    </ul>
+
+
+                    {% if not event.event_date or not event.event_time %}
+
+                        <p class="muted">
+                            Add both an event date and event time
+                            before buying Pro.
+                        </p>
+
+                    {% endif %}
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_purchase_event_boost',
+                            event_id=event.id,
+                            plan_code='pro'
+                        ) }}"
+                    >
+
+                        <button
+                            type="submit"
+                            class="button"
+                            {% if
+                                audience_count == 0
+                                or not event.event_date
+                                or not event.event_time
+                            %}
+                                disabled
+                            {% endif %}
+                        >
+                            Buy Boost Pro — R{{ "%.2f"|format(pro_price) }}
+                        </button>
+
+                    </form>
+
+                </section>
+
+
+            </div>
+
+        {% else %}
+
+            <section class="card">
+
+                <span class="eyebrow">
+                    BOOST STATUS
+                </span>
+
+                <h2>
+                    {{ boost.plan_name }}
+                </h2>
+
+
+                <div class="audience">
+
+                    <div class="metric">
+                        <span>Status</span>
+                        <strong>
+                            {{ boost.status|upper }}
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Paid</span>
+                        <strong>
+                            R{{ "%.2f"|format(boost.price) }}
+                        </strong>
+                    </div>
+
+                    <div class="metric">
+                        <span>Audience at Purchase</span>
+                        <strong>
+                            {{ boost.audience_count_at_purchase }}
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                {% if
+                    boost.status == 'pending'
+                    and boost.paystack_authorization_url
+                %}
+
+                    <a
+                        href="{{ boost.paystack_authorization_url }}"
+                        class="button"
+                        style="margin-top:18px;"
+                    >
+                        Continue Paystack Payment
+                    </a>
+
+                {% endif %}
+
+            </section>
+
+
+            {% if boost.status == 'active' %}
+
+                <section class="card">
+
+                    <span class="eyebrow">
+                        CAMPAIGN SCHEDULE
+                    </span>
+
+                    <h2>
+                        Notifications
+                    </h2>
+
+
+                    <div class="schedule">
+
+                        {% for reminder in reminders %}
+
+                            <div class="schedule-row">
+
+                                <div>
+
+                                    <strong>
+                                        {% if reminder.reminder_type == 'launch' %}
+                                            Launch Notification
+                                        {% elif reminder.reminder_type == 'three_days' %}
+                                            3 Days To Go
+                                        {% elif reminder.reminder_type == 'tomorrow' %}
+                                            Tomorrow
+                                        {% else %}
+                                            Happening Now
+                                        {% endif %}
+                                    </strong>
+
+                                    <small>
+                                        {{ reminder.scheduled_for.strftime(
+                                            '%d %b %Y %H:%M'
+                                        ) }}
+                                        UTC
+                                    </small>
+
+                                </div>
+
+
+                                <span class="status status-{{ reminder.status }}">
+                                    {{ reminder.status }}
+                                </span>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </section>
+
+
+                <section class="card">
+
+                    <span class="eyebrow">
+                        LOCAL AUDIENCE ANALYTICS
+                    </span>
+
+                    <h2>
+                        Campaign Performance
+                    </h2>
+
+
+                    <div class="audience">
+
+                        <div class="metric">
+                            <span>Campaigns Sent</span>
+                            <strong>
+                                {{ performance.campaigns_sent }}
+                            </strong>
+                        </div>
+
+                        <div class="metric">
+                            <span>Total Delivery Attempts</span>
+                            <strong>
+                                {{ performance.recipients }}
+                            </strong>
+                        </div>
+
+                        <div class="metric">
+                            <span>Successful Pushes</span>
+                            <strong>
+                                {{ performance.success }}
+                            </strong>
+                        </div>
+
+                        <div class="metric">
+                            <span>Failed Pushes</span>
+                            <strong>
+                                {{ performance.failed }}
+                            </strong>
+                        </div>
+
+                        <div class="metric">
+                            <span>Current Local Audience</span>
+                            <strong>
+                                {{ audience_count }}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </section>
+
+            {% endif %}
+
+        {% endif %}
+
+
+        {% if audience_count == 0 %}
+
+            <section class="card">
+
+                <h3>
+                    No local audience yet
+                </h3>
+
+                <p class="muted">
+                    Kalxa will not charge the organizer for a
+                    new boost while the event currently has zero
+                    opted-in users within the configured radius.
+                </p>
+
+            </section>
+
+        {% endif %}
+
+
+    </main>
+
+</body>
+
+</html>
