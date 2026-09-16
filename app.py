@@ -9528,14 +9528,315 @@ def admin_orders(
     )
 
 
+    total_orders = len(
+        orders
+    )
+
+    paid_orders = sum(
+        1
+        for order in orders
+        if order.payment_status == "paid"
+    )
+
+    pending_orders = sum(
+        1
+        for order in orders
+        if order.payment_status == "pending"
+    )
+
+    cancelled_orders = sum(
+        1
+        for order in orders
+        if order.payment_status == "cancelled"
+    )
+
+    ticket_revenue = sum(
+        (
+            Decimal(
+                str(
+                    order.total_amount
+                    or 0
+                )
+            )
+            for order in orders
+            if order.payment_status == "paid"
+        ),
+        Decimal("0.00"),
+    )
+
+    processing_total = sum(
+        (
+            Decimal(
+                str(
+                    order.processing_fee
+                    or 0
+                )
+            )
+            for order in orders
+            if order.payment_status == "paid"
+        ),
+        Decimal("0.00"),
+    )
+
+    checkout_total = sum(
+        (
+            Decimal(
+                str(
+                    order.checkout_amount
+                    or order.total_amount
+                    or 0
+                )
+            )
+            for order in orders
+            if order.payment_status == "paid"
+        ),
+        Decimal("0.00"),
+    )
+
+
     return render_template(
         "admin/orders.html",
+
+        organizer=
+            organizer,
 
         event=
             event,
 
         orders=
             orders,
+
+        total_orders=
+            total_orders,
+
+        paid_orders=
+            paid_orders,
+
+        pending_orders=
+            pending_orders,
+
+        cancelled_orders=
+            cancelled_orders,
+
+        ticket_revenue=
+            ticket_revenue,
+
+        processing_total=
+            processing_total,
+
+        checkout_total=
+            checkout_total,
+    )
+
+
+# ============================================================
+# VERIFY PAYSTACK ORDER
+# ============================================================
+
+@app.route(
+    "/admin/orders/<int:order_id>/verify-paystack",
+    methods=[
+        "POST",
+    ],
+)
+def admin_verify_paystack_order(
+    order_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    order = (
+        TicketOrder.query
+
+        .join(
+            TicketEvent,
+            TicketOrder.event_id
+            == TicketEvent.id,
+        )
+
+        .filter(
+            TicketOrder.id
+            == order_id
+        )
+
+        .filter(
+            TicketEvent.organizer_id
+            == organizer.id
+        )
+
+        .first_or_404()
+    )
+
+
+    event = (
+        order.event
+    )
+
+
+    if (
+        order.payment_provider
+        != "paystack"
+    ):
+
+        flash(
+            (
+                "This order is not a Paystack order."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_orders",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    if (
+        order.payment_status
+        == "paid"
+    ):
+
+        flash(
+            (
+                "This Paystack order is already verified "
+                "and marked paid."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_orders",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "GET",
+                (
+                    "/transaction/verify/"
+                    + urllib.parse.quote(
+                        order.payment_reference,
+                        safe="",
+                    )
+                ),
+            )
+        )
+
+
+        transaction_data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        if (
+            transaction_data.get(
+                "status"
+            )
+            != "success"
+        ):
+
+            flash(
+                (
+                    "Paystack has not confirmed this "
+                    "payment as successful yet."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_orders",
+                    event_id=
+                        event.id,
+                )
+            )
+
+
+        finalize_paystack_ticket_order(
+            order,
+            transaction_data,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Paystack Audit Verify] "
+                "Verification failed organizer_id=%s "
+                "order_id=%s reference=%s error=%s"
+            ),
+            organizer.id,
+            order.id,
+            order.payment_reference,
+            error,
+        )
+
+
+        flash(
+            (
+                "Paystack verification could not be completed. "
+                "The order was not changed."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_orders",
+                event_id=
+                    event.id,
+            )
+        )
+
+
+    flash(
+        (
+            "Paystack payment verified. "
+            "The order is confirmed and its ticket is available."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_orders",
+            event_id=
+                event.id,
+        )
     )
 
 
@@ -9599,13 +9900,12 @@ def admin_mark_paid(
     if (
         order.payment_provider
         == "paystack"
-        and order.paystack_authorization_url
     ):
 
         flash(
             (
-                "Paystack orders are confirmed automatically "
-                "after verified payment."
+                "Paystack orders cannot be marked paid manually. "
+                "Use Paystack verification instead."
             ),
             "error",
         )
