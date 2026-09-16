@@ -10,2267 +10,505 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
-
     <title>
-        Kalxa Ticket Check-In
+        Check In | Kalxa Ticketing
     </title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/style.css'
-        ) }}"
-    >
-
-
-    <!-- =========================================
-         QR SCANNER LIBRARY
-    ========================================== -->
-
-    <script
-        src="https://unpkg.com/html5-qrcode"
-        type="text/javascript"
-    ></script>
-
-
     <style>
-
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-
-        body.admin-body {
-
+        body {
             margin: 0;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
+            background: #f5f6f8;
+            color: #111827;
             font-family:
                 Inter,
+                system-ui,
                 -apple-system,
                 BlinkMacSystemFont,
                 "Segoe UI",
-                Roboto,
-                Helvetica,
-                Arial,
                 sans-serif;
-
-            font-size:
-                16px;
-
-            line-height:
-                1.6;
-
-            -webkit-font-smoothing:
-                antialiased;
         }
 
-
-        .muted {
-
-            color:
-                #64748b;
-        }
-
-
-        /* =====================================================
-           PAGE
-        ===================================================== */
-
-        .checkin-shell {
-
-            width:
-                100%;
-
-            max-width:
-                680px;
-
-            margin:
-                0 auto;
-
+        .page {
+            width: min(
+                760px,
+                calc(100% - 28px)
+            );
+            margin: 0 auto;
             padding:
-                26px 18px 70px;
+                28px
+                0
+                64px;
         }
 
-
-        /* =====================================================
-           BACK LINK
-        ===================================================== */
-
-        .back-link {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            gap:
-                6px;
-
-            margin-bottom:
-                28px;
-
-            color:
-                #475569;
-
-            text-decoration:
-                none;
-
-            font-size:
-                13px;
-
-            font-weight:
-                700;
-
-            transition:
-                color 0.16s ease;
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 22px;
         }
 
-
-        .back-link:hover {
-
-            color:
-                #111827;
+        .back {
+            color: #111827;
+            text-decoration: none;
+            font-weight: 850;
         }
 
-
-        /* =====================================================
-           HEADER
-        ===================================================== */
-
-        .checkin-header {
-
-            margin-bottom:
-                24px;
+        .brand {
+            font-weight: 950;
         }
 
-
-        .checkin-eyebrow {
-
-            display:
-                inline-block;
-
-            margin-bottom:
-                8px;
-
-            color:
-                #64748b;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.14em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .checkin-header h1 {
-
-            margin:
-                0 0 10px;
-
-            color:
-                #111827;
-
-            font-size:
-                clamp(
-                    31px,
-                    7vw,
-                    44px
-                );
-
-            line-height:
-                1.05;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.045em;
-        }
-
-
-        .checkin-header p {
-
-            max-width:
-                560px;
-
-            margin:
-                0;
-
-            font-size:
-                15px;
-        }
-
-
-        /* =====================================================
-           SECURITY NOTICE
-        ===================================================== */
-
-        .secure-session-box {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            gap:
-                9px;
-
-            margin-bottom:
-                20px;
-
-            padding:
-                14px 16px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #475569;
-
+        .card {
+            padding: 22px;
+            background: #fff;
             border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                14px;
-
-            font-size:
-                12px;
-
-            line-height:
-                1.6;
-        }
-
-
-        /* =====================================================
-           FLASH / ALERTS
-        ===================================================== */
-
-        .alert {
-
-            margin-bottom:
-                18px;
-
-            padding:
-                14px 16px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                13px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                650;
-        }
-
-
-        .alert[data-category="success"] {
-
-            background:
-                #f0fdf4;
-
-            color:
-                #166534;
-
-            border-color:
-                #bbf7d0;
-        }
-
-
-        .alert[data-category="error"] {
-
-            background:
-                #fef2f2;
-
-            color:
-                #b91c1c;
-
-            border-color:
-                #fecaca;
-        }
-
-
-        .alert[data-category="warning"] {
-
-            background:
-                #fffbeb;
-
-            color:
-                #92400e;
-
-            border-color:
-                #fde68a;
-        }
-
-
-        /* =====================================================
-           SCANNER CARD
-        ===================================================== */
-
-        .scanner-card {
-
-            margin-top:
-                20px;
-
-            padding:
-                22px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                20px;
-
+                1px
+                solid
+                #e5e7eb;
+            border-radius: 20px;
+            margin-bottom: 16px;
             box-shadow:
-                0 8px 30px
+                0
+                10px
+                30px
                 rgba(
                     15,
                     23,
                     42,
-                    0.05
+                    .05
                 );
         }
 
-
-        .scanner-card h3 {
-
-            margin:
-                0 0 6px;
-
-            color:
-                #111827;
-
-            font-size:
-                19px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                -0.025em;
+        .kicker {
+            display: block;
+            margin-bottom: 7px;
+            color: #6b7280;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .09em;
+            text-transform: uppercase;
         }
 
-
-        .scanner-card p {
-
-            margin-bottom:
-                18px;
-
-            font-size:
-                13px;
+        h1,
+        h2 {
+            margin-top: 0;
         }
 
+        .copy {
+            color: #6b7280;
+            line-height: 1.55;
+        }
 
-        #qr-reader {
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 850;
+        }
 
-            width:
-                100%;
-
-            min-height:
-                260px;
-
-            overflow:
-                hidden;
-
-            background:
-                #111111;
-
+        input {
+            width: 100%;
+            min-height: 52px;
+            padding: 12px 13px;
             border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                16px;
+                1px
+                solid
+                #d1d5db;
+            border-radius: 12px;
+            font: inherit;
         }
-
-
-        #qr-reader video {
-
-            border-radius:
-                16px;
-        }
-
-
-        .scanner-actions {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                1fr 1fr;
-
-            gap:
-                10px;
-
-            margin-top:
-                16px;
-        }
-
-
-        .scanner-button {
-
-            min-height:
-                48px;
-
-            padding:
-                11px 15px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-
-            border-radius:
-                12px;
-
-            font-family:
-                inherit;
-
-            font-size:
-                14px;
-
-            font-weight:
-                800;
-
-            cursor:
-                pointer;
-
-            transition:
-                transform 0.16s ease,
-                background 0.16s ease,
-                box-shadow 0.16s ease;
-        }
-
-
-        .scanner-button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 6px 18px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.09
-                );
-        }
-
-
-        .scanner-button.secondary {
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border-color:
-                #dbe1e8;
-        }
-
-
-        .scanner-button.secondary:hover {
-
-            background:
-                #f8fafc;
-        }
-
-
-        .scanner-button:disabled {
-
-            opacity:
-                0.45;
-
-            cursor:
-                not-allowed;
-
-            transform:
-                none;
-
-            box-shadow:
-                none;
-        }
-
-
-        .scanner-status {
-
-            margin-top:
-                13px;
-
-            padding:
-                11px 13px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #64748b;
-
-            border-radius:
-                10px;
-
-            font-size:
-                12px;
-        }
-
-
-        /* =====================================================
-           MANUAL CHECK-IN
-        ===================================================== */
-
-        .manual-checkin {
-
-            margin-top:
-                22px;
-
-            padding:
-                22px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                20px;
-
-            box-shadow:
-                0 8px 30px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.04
-                );
-        }
-
-
-        .manual-checkin h3 {
-
-            margin:
-                0 0 6px;
-
-            color:
-                #111827;
-
-            font-size:
-                19px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                -0.025em;
-        }
-
-
-        .manual-checkin p {
-
-            margin-bottom:
-                16px;
-
-            font-size:
-                13px;
-        }
-
-
-        .manual-checkin form {
-
-            display:
-                grid;
-
-            gap:
-                12px;
-        }
-
-
-        .manual-checkin input {
-
-            width:
-                100%;
-
-            min-height:
-                54px;
-
-            padding:
-                12px 14px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #dbe1e8;
-
-            border-radius:
-                12px;
-
-            outline:
-                none;
-
-            text-align:
-                center;
-
-            text-transform:
-                uppercase;
-
-            font-family:
-                ui-monospace,
-                SFMono-Regular,
-                Menlo,
-                Monaco,
-                Consolas,
-                monospace;
-
-            font-size:
-                16px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.08em;
-
-            transition:
-                border-color 0.16s ease,
-                box-shadow 0.16s ease;
-        }
-
-
-        .manual-checkin input:focus {
-
-            border-color:
-                #111111;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(
-                    17,
-                    17,
-                    17,
-                    0.07
-                );
-        }
-
-
-        .manual-checkin input::placeholder {
-
-            color:
-                #94a3b8;
-        }
-
-
-        /* =====================================================
-           STANDARD BUTTON
-        ===================================================== */
 
         .button {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            gap:
-                8px;
-
-            min-height:
-                48px;
-
-            padding:
-                11px 17px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-
-            border-radius:
-                12px;
-
-            text-decoration:
-                none;
-
-            font-family:
-                inherit;
-
-            font-size:
-                14px;
-
-            font-weight:
-                800;
-
-            cursor:
-                pointer;
-
-            transition:
-                transform 0.16s ease,
-                background 0.16s ease,
-                box-shadow 0.16s ease;
+            display: inline-flex;
+            width: 100%;
+            min-height: 50px;
+            margin-top: 12px;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 16px;
+            background: #111827;
+            color: #fff;
+            font: inherit;
+            font-weight: 900;
+            text-decoration: none;
+            cursor: pointer;
         }
 
-
-        .button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 6px 18px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.09
-                );
+        .button-success {
+            background: #047857;
         }
 
-
-        /* =====================================================
-           LOOKUP MESSAGE
-        ===================================================== */
-
-        .lookup-message {
-
-            margin-top:
-                20px;
-
-            padding:
-                14px 16px;
-
-            background:
-                #fef2f2;
-
-            color:
-                #b91c1c;
-
-            border:
-                1px solid #fecaca;
-
-            border-radius:
-                13px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                750;
-
-            text-align:
-                center;
+        .message {
+            padding: 13px 14px;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-weight: 750;
         }
 
-
-        /* =====================================================
-           VERIFICATION CARD
-        ===================================================== */
-
-        .verification-card {
-
-            margin-top:
-                24px;
-
-            padding:
-                24px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                20px;
-
-            box-shadow:
-                0 8px 30px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.05
-                );
+        .flash {
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border-radius: 11px;
+            background: #eef2ff;
+            color: #3730a3;
         }
 
-
-        .verification-card h2 {
-
-            margin:
-                0 0 16px;
-
-            color:
+        .ticket-result {
+            border-top:
+                6px
+                solid
                 #111827;
-
-            font-size:
-                24px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.035em;
         }
 
-
-        /* =====================================================
-           ATTENDEE
-        ===================================================== */
-
-        .attendee-name-box {
-
-            margin-top:
+        .type-banner {
+            margin:
+                10px
+                0
                 18px;
-
-            padding:
-                21px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border-radius:
-                16px;
-
-            text-align:
-                center;
+            padding: 18px;
+            border-radius: 15px;
+            background: #111827;
+            color: #fff4df;
         }
 
-
-        .attendee-name-box small {
-
-            display:
-                block;
-
-            margin-bottom:
-                7px;
-
-            color:
-                #cbd5e1;
-
-            font-size:
-                10px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.12em;
-
-            text-transform:
-                uppercase;
+        .type-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: .69rem;
+            font-weight: 900;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            opacity: .7;
         }
 
-
-        .attendee-name-box strong {
-
-            display:
-                block;
-
+        .type-name {
             font-size:
                 clamp(
-                    23px,
-                    6vw,
-                    30px
+                    26px,
+                    7vw,
+                    38px
                 );
-
-            line-height:
-                1.15;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.025em;
+            font-weight: 950;
         }
 
-
-        .name-verification-note {
-
-            margin-top:
-                13px;
-
-            padding:
-                13px 15px;
-
-            background:
-                #f8fafc;
-
-            color:
-                #475569;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                12px;
-
-            font-size:
-                12px;
-
-            line-height:
-                1.6;
-        }
-
-
-        /* =====================================================
-           VERIFICATION ROWS
-        ===================================================== */
-
-        .verification-details {
-
-            margin-top:
-                18px;
-
-            border-top:
-                1px solid #eef2f7;
-        }
-
-
-        .verification-row {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            justify-content:
-                space-between;
-
-            gap:
-                20px;
-
-            padding:
-                13px 0;
-
-            border-bottom:
-                1px solid #eef2f7;
-        }
-
-
-        .verification-row span {
-
-            color:
-                #64748b;
-
-            font-size:
-                12px;
-
-            font-weight:
-                650;
-        }
-
-
-        .verification-row strong {
-
-            color:
-                #111827;
-
-            text-align:
-                right;
-
-            font-size:
-                13px;
-
-            font-weight:
-                800;
-        }
-
-
-        /* =====================================================
-           STATUS
-        ===================================================== */
-
-        .valid-box {
-
-            margin-top:
-                18px;
-
-            padding:
-                15px;
-
-            background:
-                #f0fdf4;
-
-            color:
-                #166534;
-
-            border:
-                1px solid #bbf7d0;
-
-            border-radius:
-                13px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                850;
-
-            text-align:
-                center;
-        }
-
-
-        .invalid-box {
-
-            margin-top:
-                18px;
-
-            padding:
-                15px;
-
-            background:
-                #fef2f2;
-
-            color:
-                #b91c1c;
-
-            border:
-                1px solid #fecaca;
-
-            border-radius:
-                13px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                850;
-
-            text-align:
-                center;
-        }
-
-
-        .checkin-submit {
-
-            width:
-                100%;
-
-            min-height:
-                54px;
-
-            margin-top:
-                14px;
-
-            padding:
-                12px 18px;
-
-            background:
-                #15803d;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #15803d;
-
-            border-radius:
-                12px;
-
-            font-family:
-                inherit;
-
-            font-size:
-                14px;
-
-            font-weight:
-                850;
-
-            cursor:
-                pointer;
-
-            transition:
-                background 0.16s ease,
-                transform 0.16s ease,
-                box-shadow 0.16s ease;
-        }
-
-
-        .checkin-submit:hover {
-
-            background:
-                #166534;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 7px 18px
-                rgba(
-                    21,
-                    128,
-                    61,
-                    0.16
+        .details {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
                 );
+            gap: 10px;
         }
 
+        .detail {
+            padding: 13px;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
 
-        /* =====================================================
-           MOBILE
-        ===================================================== */
+        .detail-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #6b7280;
+            font-size: .7rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            display: block;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+        }
+
+        .status {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .status-valid {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .status-used {
+            background: #fff7ed;
+            color: #c2410c;
+        }
 
         @media (
-            max-width: 550px
+            max-width: 560px
         ) {
 
-            .checkin-shell {
-
-                padding:
-                    20px 14px 50px;
+            .details {
+                grid-template-columns: 1fr;
             }
-
-
-            .scanner-card,
-            .manual-checkin,
-            .verification-card {
-
-                padding:
-                    18px;
-
-                border-radius:
-                    16px;
-            }
-
-
-            .scanner-actions {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            #qr-reader {
-
-                min-height:
-                    220px;
-            }
-
-
-            .verification-row {
-
-                flex-direction:
-                    column;
-
-                gap:
-                    4px;
-            }
-
-
-            .verification-row strong {
-
-                text-align:
-                    left;
-            }
-
         }
 
     </style>
 
 </head>
 
+<body>
+
+    <main class="page">
 
 
-<body class="admin-body">
+        <div class="topbar">
 
+            <a
+                href="{{ url_for(
+                    'admin_dashboard'
+                ) }}"
+                class="back"
+            >
+                ← Dashboard
+            </a>
 
-<div class="checkin-shell">
+            <span class="brand">
+                Kalxa Ticketing
+            </span>
 
-
-    <!-- =========================================
-         BACK
-    ========================================== -->
-
-    <a
-        href="{{ url_for(
-            'admin_dashboard'
-        ) }}"
-        class="back-link"
-    >
-        ← Dashboard
-    </a>
-
-
-
-    <!-- =========================================
-         HEADER
-    ========================================== -->
-
-    <div class="checkin-header">
-
-
-        <div class="checkin-eyebrow">
-            KALXA EVENT ACCESS
         </div>
 
 
-        <h1>
-            Ticket Check-In
-        </h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
 
+            {% for category, flash_message in messages %}
 
-        <p class="muted">
-            Scan the attendee's ticket QR code and
-            confirm their identity before allowing entry.
-        </p>
-
-
-    </div>
-
-
-
-    <!-- =========================================
-         ORGANIZER SESSION NOTICE
-    ========================================== -->
-
-    <div class="secure-session-box">
-
-        <span>
-            🔒
-        </span>
-
-        <span>
-            Check-in is restricted to tickets belonging
-            to events owned by your authenticated Kalxa
-            organizer account.
-        </span>
-
-    </div>
-
-
-
-    <!-- =========================================
-         FLASH MESSAGES
-    ========================================== -->
-
-    {% with messages = get_flashed_messages(
-        with_categories=true
-    ) %}
-
-        {% if messages %}
-
-            {% for category, message in messages %}
-
-                <div
-                    class="alert"
-                    data-category="{{ category }}"
-                >
-                    {{ message }}
+                <div class="flash">
+                    {{ flash_message }}
                 </div>
 
             {% endfor %}
 
-        {% endif %}
+        {% endwith %}
 
-    {% endwith %}
 
+        <section class="card">
 
 
-    <!-- =========================================
-         CAMERA SCANNER
-    ========================================== -->
+            <span class="kicker">
+                EVENT ENTRY
+            </span>
 
-    <div class="scanner-card">
 
+            <h1>
+                Check In Ticket
+            </h1>
 
-        <h3>
-            Scan Ticket QR
-        </h3>
 
+            <p class="copy">
 
-        <p class="muted">
-            Allow camera access when prompted, then
-            point the camera at the attendee's ticket.
-        </p>
+                Scan the attendee QR code or enter the
+                Kalxa ticket code below.
 
+            </p>
 
-        <div id="qr-reader"></div>
 
+            {% if message %}
 
-        <div class="scanner-actions">
-
-
-            <button
-                type="button"
-                id="start-scanner"
-                class="scanner-button"
-            >
-                Start Camera
-            </button>
-
-
-            <button
-                type="button"
-                id="stop-scanner"
-                class="scanner-button secondary"
-                disabled
-            >
-                Stop Camera
-            </button>
-
-
-        </div>
-
-
-        <div
-            id="scanner-status"
-            class="scanner-status"
-        >
-            Camera not started.
-        </div>
-
-
-    </div>
-
-
-
-    <!-- =========================================
-         HIDDEN QR SUBMISSION
-    ========================================== -->
-
-    <form
-        method="POST"
-        action="{{ url_for(
-            'admin_checkin'
-        ) }}"
-        id="qr-submit-form"
-        style="display: none;"
-    >
-
-        <input
-            type="hidden"
-            name="entry_code"
-            id="qr-entry-code"
-        >
-
-    </form>
-
-
-
-    <!-- =========================================
-         MANUAL FALLBACK
-    ========================================== -->
-
-    <div class="manual-checkin">
-
-
-        <h3>
-            Enter Ticket Code
-        </h3>
-
-
-        <p class="muted">
-            Use the entry code if the camera cannot
-            scan the customer's QR ticket.
-        </p>
-
-
-        <form
-            method="POST"
-            action="{{ url_for(
-                'admin_checkin'
-            ) }}"
-        >
-
-            <input
-                type="text"
-                name="entry_code"
-                placeholder="KX-AB12-CD34"
-                autocomplete="off"
-                required
-            >
-
-
-            <button
-                type="submit"
-                class="button"
-            >
-                Verify Ticket
-            </button>
-
-
-        </form>
-
-
-    </div>
-
-
-
-    <!-- =========================================
-         LOOKUP MESSAGE
-    ========================================== -->
-
-    {% if message %}
-
-        <div class="lookup-message">
-            {{ message }}
-        </div>
-
-    {% endif %}
-
-
-
-    <!-- =========================================
-         VERIFIED ENTRY PASS
-    ========================================== -->
-
-    {% if entry_pass %}
-
-
-        <div class="verification-card">
-
-
-            <div class="checkin-eyebrow">
-                TICKET VERIFICATION
-            </div>
-
-
-            <h2>
-                {{ entry_pass.order.event.title }}
-            </h2>
-
-
-
-            <!-- =================================
-                 ATTENDEE NAME
-            ================================== -->
-
-            <div class="attendee-name-box">
-
-
-                <small>
-                    Confirm Attendee Name
-                </small>
-
-
-                <strong>
-                    {{ entry_pass.order.customer_name }}
-                </strong>
-
-
-            </div>
-
-
-            <div class="name-verification-note">
-
-                Ask the attendee to state their name.
-                Confirm that it matches the name above
-                before completing check-in.
-
-            </div>
-
-
-
-            <!-- =================================
-                 TICKET DETAILS
-            ================================== -->
-
-            <div class="verification-details">
-
-
-                <div class="verification-row">
-
-                    <span>
-                        Event
-                    </span>
-
-                    <strong>
-                        {{ entry_pass.order.event.title }}
-                    </strong>
-
+                <div class="message">
+                    {{ message }}
                 </div>
-
-
-
-                <div class="verification-row">
-
-                    <span>
-                        Entry Code
-                    </span>
-
-                    <strong>
-                        {{ entry_pass.entry_code }}
-                    </strong>
-
-                </div>
-
-
-
-                <div class="verification-row">
-
-                    <span>
-                        Booking Reference
-                    </span>
-
-                    <strong>
-                        {{ entry_pass.order.payment_reference }}
-                    </strong>
-
-                </div>
-
-
-
-                <div class="verification-row">
-
-                    <span>
-                        Payment
-                    </span>
-
-                    <strong>
-                        {{ entry_pass.order.payment_status|upper }}
-                    </strong>
-
-                </div>
-
-
-
-                <div class="verification-row">
-
-                    <span>
-                        Ticket Status
-                    </span>
-
-                    <strong>
-                        {{ entry_pass.status|upper }}
-                    </strong>
-
-                </div>
-
-
-
-                {% if entry_pass.order.event.venue %}
-
-                    <div class="verification-row">
-
-                        <span>
-                            Venue
-                        </span>
-
-                        <strong>
-                            {{ entry_pass.order.event.venue }}
-                        </strong>
-
-                    </div>
-
-                {% endif %}
-
-
-
-                {% if entry_pass.order.event.event_date %}
-
-                    <div class="verification-row">
-
-                        <span>
-                            Event Date
-                        </span>
-
-                        <strong>
-
-                            {{ entry_pass.order.event.event_date.strftime(
-                                '%d %B %Y'
-                            ) }}
-
-                            {% if entry_pass.order.event.event_time %}
-
-                                ·
-
-                                {{ entry_pass.order.event.event_time.strftime(
-                                    '%H:%M'
-                                ) }}
-
-                            {% endif %}
-
-                        </strong>
-
-                    </div>
-
-                {% endif %}
-
-
-            </div>
-
-
-
-            <!-- =================================
-                 VALID TICKET
-            ================================== -->
-
-            {% if
-                entry_pass.order.payment_status == "paid"
-                and
-                entry_pass.status == "valid"
-            %}
-
-
-                <div class="valid-box">
-                    ✓ VALID PAID TICKET
-                </div>
-
-
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'admin_confirm_checkin',
-                        pass_id=entry_pass.id
-                    ) }}"
-                >
-
-                    <button
-                        type="submit"
-                        class="checkin-submit"
-                    >
-                        NAME CONFIRMED — CHECK IN
-                    </button>
-
-                </form>
-
-
-
-            <!-- =================================
-                 USED
-            ================================== -->
-
-            {% elif entry_pass.status == "used" %}
-
-
-                <div class="invalid-box">
-
-                    ALREADY USED
-
-
-                    {% if entry_pass.checked_in_at %}
-
-                        <br>
-                        <br>
-
-                        Checked in:
-
-                        {{ entry_pass.checked_in_at.strftime(
-                            '%d %B %Y %H:%M'
-                        ) }}
-
-                    {% endif %}
-
-                </div>
-
-
-
-            <!-- =================================
-                 UNPAID
-            ================================== -->
-
-            {% elif
-                entry_pass.order.payment_status
-                != "paid"
-            %}
-
-
-                <div class="invalid-box">
-                    PAYMENT NOT CONFIRMED
-                </div>
-
-
-
-            <!-- =================================
-                 INVALID
-            ================================== -->
-
-            {% else %}
-
-
-                <div class="invalid-box">
-                    INVALID TICKET
-                </div>
-
 
             {% endif %}
 
 
-        </div>
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'admin_checkin'
+                ) }}"
+            >
 
+                <label for="entry_code">
+                    Ticket Code / QR Value
+                </label>
 
-    {% endif %}
+                <input
+                    id="entry_code"
+                    name="entry_code"
+                    type="text"
+                    placeholder="KX-XXXX-XXXX"
+                    autocomplete="off"
+                    autofocus
+                    required
+                >
 
+                <button
+                    type="submit"
+                    class="button"
+                >
+                    Find Ticket
+                </button>
 
-</div>
+            </form>
 
 
+        </section>
 
-<script>
 
-    // =====================================================
-    // QR SCANNER
-    // =====================================================
+        {% if entry_pass %}
 
-    const startScannerButton =
-        document.getElementById(
-            "start-scanner"
-        );
+            <section class="card ticket-result">
 
 
-    const stopScannerButton =
-        document.getElementById(
-            "stop-scanner"
-        );
+                <span class="kicker">
+                    TICKET RESULT
+                </span>
 
 
-    const scannerStatus =
-        document.getElementById(
-            "scanner-status"
-        );
+                <h2>
+                    {{
+                        entry_pass.event.title
+                        if entry_pass.event
+                        else 'Kalxa Event'
+                    }}
+                </h2>
 
 
-    const qrEntryCode =
-        document.getElementById(
-            "qr-entry-code"
-        );
+                <div class="type-banner">
 
+                    <span class="type-label">
+                        TICKET TYPE
+                    </span>
 
-    const qrSubmitForm =
-        document.getElementById(
-            "qr-submit-form"
-        );
+                    <span class="type-name">
+                        {{ entry_pass.ticket_type_name }}
+                    </span>
 
+                </div>
 
-    let qrScanner =
-        null;
 
+                <div class="details">
 
-    let scannerRunning =
-        false;
 
+                    <div class="detail">
 
-    let scanSubmitted =
-        false;
+                        <span class="detail-label">
+                            Attendee
+                        </span>
 
+                        <span class="detail-value">
+                            {{
+                                entry_pass.order.customer_name
+                                if entry_pass.order
+                                else '—'
+                            }}
+                        </span>
 
+                    </div>
 
-    // =====================================================
-    // UPDATE STATUS
-    // =====================================================
 
-    function setScannerStatus(
-        message
-    ) {
+                    <div class="detail">
 
-        if (
-            scannerStatus
-        ) {
+                        <span class="detail-label">
+                            Ticket Type
+                        </span>
 
-            scannerStatus.textContent =
-                message;
+                        <span class="detail-value">
+                            {{ entry_pass.ticket_type_name }}
+                        </span>
 
-        }
+                    </div>
 
-    }
 
+                    <div class="detail">
 
+                        <span class="detail-label">
+                            Entry Code
+                        </span>
 
-    // =====================================================
-    // NORMALIZE SCANNED VALUE
-    // =====================================================
-    //
-    // New Kalxa QR codes contain the actual entry code:
-    //
-    // KX-AB12-CD34
-    //
-    // This also supports older Kalxa QR codes that might
-    // contain a full /ticket/<entry_code> URL.
-    // =====================================================
+                        <span class="detail-value">
+                            {{ entry_pass.entry_code }}
+                        </span>
 
-    function normalizeEntryCode(
-        decodedText
-    ) {
+                    </div>
 
-        let value =
-            (
-                decodedText
-                ||
-                ""
-            )
-            .trim();
 
+                    <div class="detail">
 
-        if (
-            !value
-        ) {
+                        <span class="detail-label">
+                            Payment
+                        </span>
 
-            return "";
+                        <span class="detail-value">
+                            {{
+                                entry_pass.order.payment_status|upper
+                                if entry_pass.order
+                                else 'UNKNOWN'
+                            }}
+                        </span>
 
-        }
+                    </div>
 
 
-        // -----------------------------------------
-        // BACKWARD COMPATIBILITY FOR OLD QR URLS
-        // -----------------------------------------
+                </div>
 
-        try {
 
-            const parsedUrl =
-                new URL(
-                    value
-                );
+                {% if entry_pass.is_used %}
 
+                    <div class="status status-used">
+                        ALREADY CHECKED IN
+                    </div>
 
-            const parts =
-                parsedUrl.pathname
-                .split("/")
-                .filter(Boolean);
+                {% elif
+                    entry_pass.order
+                    and entry_pass.order.payment_status == 'paid'
+                    and entry_pass.status == 'valid'
+                %}
 
+                    <div class="status status-valid">
+                        ✓ VALID {{ entry_pass.ticket_type_name|upper }} TICKET
+                    </div>
 
-            const ticketIndex =
-                parts.indexOf(
-                    "ticket"
-                );
 
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_confirm_checkin',
+                            pass_id=
+                                entry_pass.id
+                        ) }}"
+                    >
 
-            if (
-                ticketIndex !== -1
-                &&
-                parts[
-                    ticketIndex + 1
-                ]
-            ) {
+                        <button
+                            type="submit"
+                            class="button button-success"
+                        >
+                            Check In
+                            {{ entry_pass.ticket_type_name }}
+                            Ticket
+                        </button>
 
-                value =
-                    parts[
-                        ticketIndex + 1
-                    ];
+                    </form>
 
-            }
+                {% endif %}
 
-        }
 
-        catch (
-            error
-        ) {
+            </section>
 
-            // Not a URL.
-            // Use the scanned value directly.
+        {% endif %}
 
-        }
 
-
-        return (
-            value
-            .trim()
-            .toUpperCase()
-        );
-
-    }
-
-
-
-    // =====================================================
-    // STOP SCANNER
-    // =====================================================
-
-    async function stopScanner() {
-
-        if (
-            !qrScanner
-            ||
-            !scannerRunning
-        ) {
-
-            return;
-
-        }
-
-
-        try {
-
-            await qrScanner.stop();
-
-
-            scannerRunning =
-                false;
-
-
-            if (
-                startScannerButton
-            ) {
-
-                startScannerButton.disabled =
-                    false;
-
-            }
-
-
-            if (
-                stopScannerButton
-            ) {
-
-                stopScannerButton.disabled =
-                    true;
-
-            }
-
-
-            setScannerStatus(
-                "Camera stopped."
-            );
-
-        }
-
-        catch (
-            error
-        ) {
-
-            console.error(
-                "Unable to stop scanner:",
-                error
-            );
-
-        }
-
-    }
-
-
-
-    // =====================================================
-    // SUCCESSFUL QR SCAN
-    // =====================================================
-
-    async function handleQrSuccess(
-        decodedText
-    ) {
-
-        if (
-            scanSubmitted
-        ) {
-
-            return;
-
-        }
-
-
-        const entryCode =
-            normalizeEntryCode(
-                decodedText
-            );
-
-
-        if (
-            !entryCode
-        ) {
-
-            setScannerStatus(
-                "QR detected, but no valid ticket code was found."
-            );
-
-            return;
-
-        }
-
-
-        scanSubmitted =
-            true;
-
-
-        setScannerStatus(
-            "Ticket detected. Verifying..."
-        );
-
-
-        if (
-            qrEntryCode
-            &&
-            qrSubmitForm
-        ) {
-
-            qrEntryCode.value =
-                entryCode;
-
-
-            try {
-
-                await stopScanner();
-
-            }
-
-            catch (
-                error
-            ) {
-
-                console.error(
-                    error
-                );
-
-            }
-
-
-            qrSubmitForm.submit();
-
-        }
-
-    }
-
-
-
-    // =====================================================
-    // START SCANNER
-    // =====================================================
-
-    async function startScanner() {
-
-        if (
-            scannerRunning
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            typeof Html5Qrcode
-            === "undefined"
-        ) {
-
-            setScannerStatus(
-                "QR scanner could not load. Use the manual ticket code instead."
-            );
-
-            return;
-
-        }
-
-
-        scanSubmitted =
-            false;
-
-
-        qrScanner =
-            new Html5Qrcode(
-                "qr-reader"
-            );
-
-
-        try {
-
-            setScannerStatus(
-                "Starting camera..."
-            );
-
-
-            await qrScanner.start(
-
-                {
-                    facingMode:
-                        "environment"
-                },
-
-                {
-                    fps:
-                        10,
-
-                    qrbox: {
-
-                        width:
-                            250,
-
-                        height:
-                            250
-                    }
-                },
-
-                handleQrSuccess,
-
-                function() {
-
-                    // Normal scan misses are ignored.
-
-                }
-
-            );
-
-
-            scannerRunning =
-                true;
-
-
-            if (
-                startScannerButton
-            ) {
-
-                startScannerButton.disabled =
-                    true;
-
-            }
-
-
-            if (
-                stopScannerButton
-            ) {
-
-                stopScannerButton.disabled =
-                    false;
-
-            }
-
-
-            setScannerStatus(
-                "Camera active. Point it at the ticket QR."
-            );
-
-        }
-
-        catch (
-            error
-        ) {
-
-            console.error(
-                "Camera scanner error:",
-                error
-            );
-
-
-            setScannerStatus(
-                "Camera could not start. Check browser permissions or enter the ticket code manually."
-            );
-
-
-            scannerRunning =
-                false;
-
-        }
-
-    }
-
-
-
-    // =====================================================
-    // BUTTON EVENTS
-    // =====================================================
-
-    if (
-        startScannerButton
-    ) {
-
-        startScannerButton.addEventListener(
-            "click",
-            function() {
-
-                startScanner();
-
-            }
-        );
-
-    }
-
-
-    if (
-        stopScannerButton
-    ) {
-
-        stopScannerButton.addEventListener(
-            "click",
-            function() {
-
-                stopScanner();
-
-            }
-        );
-
-    }
-
-
-
-    // =====================================================
-    // CLEAN UP CAMERA
-    // =====================================================
-
-    window.addEventListener(
-        "beforeunload",
-        function() {
-
-            if (
-                qrScanner
-                &&
-                scannerRunning
-            ) {
-
-                qrScanner.stop()
-                    .catch(
-                        function() {}
-                    );
-
-            }
-
-        }
-    );
-
-</script>
-
+    </main>
 
 </body>
 
 </html>
-
