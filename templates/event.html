@@ -1839,69 +1839,96 @@
 
 
                     <span class="ticket-label">
-                        Ticket Price
+                        Ticket Options
                     </span>
 
 
-                    <div class="ticket-price">
+                    {% if event.active_ticket_types %}
 
-                        {% if event.ticket_price == 0 %}
+                        <div style="display:grid;gap:10px;margin:14px 0 18px;">
 
-                            FREE
+                            {% for ticket_type in event.active_ticket_types %}
 
-                        {% else %}
+                                <div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);">
 
-                            R{{ "%.2f"|format(
-                                event.ticket_price
-                            ) }}
+                                    <div>
+                                        <strong>{{ ticket_type.name }}</strong>
 
-                        {% endif %}
+                                        {% if ticket_type.capacity is not none %}
+                                            <div class="ticket-availability" style="margin-top:3px;">
+                                                {% if ticket_type.is_sold_out %}
+                                                    SOLD OUT
+                                                {% else %}
+                                                    {{ ticket_type.remaining_quantity }} remaining
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
 
-                    </div>
+                                    <strong>
+                                        {% if ticket_type.price == 0 %}
+                                            FREE
+                                        {% else %}
+                                            R{{ "%.2f"|format(ticket_type.price) }}
+                                        {% endif %}
+                                    </strong>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="ticket-price">
+
+                            {% if event.ticket_price == 0 %}
+                                FREE
+                            {% else %}
+                                R{{ "%.2f"|format(event.ticket_price) }}
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
 
 
+                    {% if not event.active_ticket_types %}
 
-                    {% if event.ticket_capacity is not none %}
+                        {% if event.ticket_capacity is not none %}
 
+                            {% if event.is_sold_out %}
 
-                        {% if event.is_sold_out %}
+                                <p class="ticket-availability sold-out">
+                                    SOLD OUT
+                                </p>
 
-                            <p class="ticket-availability sold-out">
-                                SOLD OUT
-                            </p>
+                            {% elif event.remaining_tickets <= 10 %}
 
+                                <p class="ticket-availability low">
+                                    Only {{ event.remaining_tickets }}
+                                    ticket(s) remaining
+                                </p>
 
-                        {% elif event.remaining_tickets <= 10 %}
+                            {% else %}
 
-                            <p class="ticket-availability low">
+                                <p class="ticket-availability">
+                                    {{ event.remaining_tickets }}
+                                    ticket(s) remaining
+                                </p>
 
-                                Only
-                                {{ event.remaining_tickets }}
-                                ticket(s) remaining
-
-                            </p>
-
+                            {% endif %}
 
                         {% else %}
 
                             <p class="ticket-availability">
-
-                                {{ event.remaining_tickets }}
-                                ticket(s) remaining
-
+                                Tickets available
                             </p>
 
                         {% endif %}
 
-
-                    {% else %}
-
-                        <p class="ticket-availability">
-                            Tickets available
-                        </p>
-
                     {% endif %}
-
 
 
                     {% if event.is_sold_out %}
