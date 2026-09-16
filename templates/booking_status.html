@@ -1358,6 +1358,72 @@
 
 {% if firebase_push_configured %}
 
+    <div class="notification-card">
+
+        <h2>
+            🔔 Events near you
+        </h2>
+
+        <p>
+            Enter your area or town. Kalxa will notify you
+            about events within about 60 km of that area.
+        </p>
+
+        <label
+            for="notification-home-area"
+            style="display:block;font-weight:850;margin:12px 0 6px;"
+        >
+            Where do you live?
+        </label>
+
+        <input
+            id="notification-home-area"
+            type="text"
+            placeholder="e.g. KwaMhlanga"
+            autocomplete="address-level2"
+            style="width:100%;min-height:48px;padding:11px 12px;border:1px solid #d1d5db;border-radius:11px;font:inherit;"
+        >
+
+        <small style="display:block;margin-top:6px;color:#64748b;">
+            Area or town only — not your exact address.
+        </small>
+
+        <div class="notification-actions">
+
+            <button
+                type="button"
+                id="enable-notifications"
+                class="button notification-button"
+            >
+                🔔 Enable Nearby Event Notifications
+            </button>
+
+            <button
+                type="button"
+                id="disable-notifications"
+                class="button button-secondary"
+                hidden
+            >
+                Turn Off Notifications
+            </button>
+
+        </div>
+
+        <div
+            id="notification-status"
+            class="notification-status"
+            aria-live="polite"
+        >
+            Notifications are currently off.
+        </div>
+
+    </div>
+
+{% endif %}
+
+
+{% if firebase_push_configured %}
+
     <script
         id="firebase-web-config"
         type="application/json"
@@ -1394,6 +1460,12 @@
         const enableButton =
             document.getElementById(
                 "enable-notifications"
+            );
+
+
+        const homeAreaInput =
+            document.getElementById(
+                "notification-home-area"
             );
 
 
@@ -1436,6 +1508,22 @@
 
 
         let messaging = null;
+
+
+        const savedHomeArea =
+            localStorage.getItem(
+                "kalxa_notification_home_area"
+            );
+
+
+        if (
+            savedHomeArea
+            && homeAreaInput
+        ) {
+
+            homeAreaInput.value =
+                savedHomeArea;
+        }
 
 
         function setStatus(
@@ -1513,6 +1601,9 @@
 
                                     installation_id:
                                         installationId,
+
+                                    home_area:
+                                        homeAreaInput.value.trim(),
                                 }
                             ),
                     }
@@ -1542,6 +1633,12 @@
             localStorage.setItem(
                 "kalxa_firebase_installation_id",
                 installationId
+            );
+
+
+            localStorage.setItem(
+                "kalxa_notification_home_area",
+                homeAreaInput.value.trim()
             );
 
 
@@ -1691,6 +1788,18 @@
 
 
                 try {
+
+                    const homeArea =
+                        homeAreaInput.value.trim();
+
+
+                    if (!homeArea) {
+
+                        throw new Error(
+                            "Enter your area or town before enabling notifications."
+                        );
+                    }
+
 
                     const initialized =
                         (
