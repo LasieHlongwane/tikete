@@ -84,17 +84,21 @@ NOT ACTIVE
 </div>
 {% else %}
 <div class="control-note">
-Basic: R29 for one local campaign. Pro: R79 for launch + automated countdown reminders.
+Basic: R49 for one local campaign. Pro: R99 for launch + automated countdown reminders.
 </div>
 {% endif %}
 </section>
 
 <div class="main-grid">
 <main>
-<section class="section"><div class="section-header"><div><span class="kicker">RECENT ORDERS</span><h2>Ticket Activity</h2><p class="muted">Latest attendee reservations for this event.</p></div><a href="{{ url_for('admin_orders', event_id=event.id) }}" class="button button-secondary">View All Orders</a></div>
+<section class="section"><div class="section-header"><div><span class="kicker">RECENT ORDERS</span><h2>Ticket Activity</h2><p class="muted">Latest attendee reservations for this event.</p></div><a href="{{ url_for('admin_orders', event_id=event.id) }}" class="button button-secondary">View All Orders</a> <a href="{{ url_for('admin_attendees', event_id=event.id) }}" class="button button-secondary">📊 Attendees</a></div>
 {% if recent_orders %}<div class="order-list">{% for order in recent_orders %}<div class="order-row"><div><div class="order-name">{{ order.customer_name }}</div><div class="order-meta">{{ order.quantity }} ticket{% if order.quantity != 1 %}s{% endif %} · {{ order.payment_reference }}</div></div><div class="order-side"><span class="order-amount">R{{ '%.2f'|format(order.total_amount) }}</span><span class="order-status {{ order.payment_status }}">{{ order.payment_status }}</span></div></div>{% endfor %}</div>{% else %}<div class="empty">No ticket orders yet.</div>{% endif %}
 </section>
-<section class="section"><div class="section-header"><div><span class="kicker">EVENT DAY</span><h2>Entry & Check-In</h2><p class="muted">Scan attendee tickets and monitor event entry.</p></div></div><div class="metrics"><div class="metric"><span>Tickets Issued</span><strong>{{ paid_tickets }}</strong></div><div class="metric"><span>Checked In</span><strong>{{ checked_in }}</strong></div><div class="metric"><span>Not Yet Checked In</span><strong>{{ paid_tickets - checked_in }}</strong></div></div><a href="{{ url_for('admin_checkin') }}" class="button">🎟 Open QR Check-In</a></section>
+<section class="section"><div class="section-header"><div><span class="kicker">EVENT DAY</span><h2>Entry & Check-In</h2><p class="muted">Scan attendee tickets and monitor event entry.</p></div></div><div class="metrics"><div class="metric"><span>Tickets Issued</span><strong>{{ paid_tickets }}</strong></div><div class="metric"><span>Checked In</span><strong>{{ checked_in }}</strong></div><div class="metric"><span>Not Yet Checked In</span><strong>{{ paid_tickets - checked_in }}</strong></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;">
+<a href="{{ url_for('admin_checkin') }}" class="button">🎟 Open QR Check-In</a>
+<a href="{{ url_for('admin_staff') }}" class="button button-secondary">👥 Manage Gate Staff</a>
+<a href="{{ url_for('admin_attendees', event_id=event.id) }}" class="button button-secondary">📊 Attendee CRM</a>
+</div></section>
 </main>
 <aside>
 <section class="section"><span class="kicker">EVENT CONTROLS</span><h2>Manage Event</h2><p class="muted" style="margin-bottom:16px">Actions available for the current event state.</p><div class="control-stack">
