@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staff Check-In | Kalxa</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(800px,calc(100% - 28px));margin:0 auto;padding:28px 0 60px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;margin-bottom:14px}.button{display:inline-flex;min-height:46px;align-items:center;justify-content:center;padding:10px 14px;border-radius:11px;background:#111827;color:#fff;text-decoration:none;font-weight:900}.logout{color:#991b1b;text-decoration:none;font-weight:850}.event{padding:14px;background:#f8fafc;border-radius:12px;margin-top:9px}.meta{color:#64748b;font-size:.86rem}
+</style></head>
+<body><main class="page">
+<div class="top"><div><strong>{{ staff.name }}</strong><div class="meta">{{ staff.organizer.display_name }} · Gate Staff</div></div><a class="logout" href="{{ url_for('staff_logout') }}">Logout</a></div>
+<section class="card"><h1>Ticket Check-In</h1><p class="meta">You only have access to the events assigned to your staff account.</p><a class="button" href="{{ url_for('staff_checkin') }}">🎟 Open QR Check-In</a></section>
+<section class="card"><h2>Assigned Events</h2>
+{% for event in events %}<div class="event"><strong>{{ event.title }}</strong><div class="meta">{{ event.event_date or 'No date' }}{% if event.event_time %} · {{ event.event_time.strftime('%H:%M') }}{% endif %} · {{ event.venue or '' }}</div></div>{% else %}<p class="meta">No events are currently assigned to you.</p>{% endfor %}
+</section>
+</main></body></html>
