@@ -459,8 +459,16 @@
                                         Tickets
                                     </span>
                                     <span class="audit-value">
-                                        {{ order.quantity }}
-                                        × R{{ "%.2f"|format(order.ticket_price) }}
+                                        {% if order.order_items %}
+                                            {% for item in order.order_items %}
+                                                {{ item.quantity }} × {{ item.ticket_name }}
+                                                @ R{{ "%.2f"|format(item.unit_price) }}
+                                                {% if not loop.last %}<br>{% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            {{ order.quantity }}
+                                            × R{{ "%.2f"|format(order.ticket_price) }}
+                                        {% endif %}
                                     </span>
                                 </div>
 
