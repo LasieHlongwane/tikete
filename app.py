@@ -59,6 +59,8 @@ from models import (
     SubscriptionPayment,
     TicketEvent,
     TicketOrder,
+    TicketOrderItem,
+    TicketType,
     db,
 )
 
@@ -458,36 +460,72 @@ def finalize_paystack_ticket_order(
     )
 
 
-    existing_pass_count = len(
-        order.entry_passes
-    )
+    if order.order_items:
 
+        for item in order.order_items:
 
-    passes_to_create = max(
-        0,
-        (
-            order.quantity
-            - existing_pass_count
-        ),
-    )
-
-
-    for _ in range(
-        passes_to_create
-    ):
-
-        db.session.add(
-            EntryPass(
-                order_id=
-                    order.id,
-
-                entry_code=
-                    generate_entry_code(),
-
-                status=
-                    "valid",
+            existing_item_passes = len(
+                item.entry_passes
             )
+
+            passes_to_create = max(
+                0,
+                item.quantity
+                - existing_item_passes,
+            )
+
+
+            for _ in range(
+                passes_to_create
+            ):
+
+                db.session.add(
+                    EntryPass(
+                        order_id=
+                            order.id,
+
+                        order_item_id=
+                            item.id,
+
+                        entry_code=
+                            generate_entry_code(),
+
+                        status=
+                            "valid",
+                    )
+                )
+
+
+    else:
+
+        # Backward compatibility for legacy single-price orders.
+        existing_pass_count = len(
+            order.entry_passes
         )
+
+        passes_to_create = max(
+            0,
+            order.quantity
+            - existing_pass_count,
+        )
+
+
+        for _ in range(
+            passes_to_create
+        ):
+
+            db.session.add(
+                EntryPass(
+                    order_id=
+                        order.id,
+
+                    entry_code=
+                        generate_entry_code(),
+
+                    status=
+                        "valid",
+                )
+            )
 
 
     db.session.commit()
@@ -1373,8 +1411,9 @@ SUPERADMIN_PASSWORD_HASH = (
 #
 # These values describe money paid by organizers to Kalxa.
 #
-# They are separate from attendee ticket-payment bank details.
-# Configure the bank fields in Render Environment.
+# This subscription-payment configuration is separate from
+# attendee ticket payments. Attendee ticket payments are now
+# Paystack-only and never expose organizer bank details.
 # ============================================================
 
 KALXA_SUBSCRIPTION_PLAN_NAME = (
@@ -1446,6 +1485,221 @@ KALXA_SUBSCRIPTION_BANK = {
         .strip()
     ),
 }
+
+
+# ============================================================
+# TICKET TYPE FORM HELPERS
+# ============================================================
+
+def parse_ticket_type_form(
+    form,
+):
+
+    ids = form.getlist(
+        "ticket_type_id"
+    )
+
+    names = form.getlist(
+        "ticket_type_name"
+    )
+
+    prices = form.getlist(
+        "ticket_type_price"
+    )
+
+    capacities = form.getlist(
+        "ticket_type_capacity"
+    )
+
+
+    count = max(
+        len(names),
+        len(prices),
+        len(capacities),
+        len(ids),
+    )
+
+
+    if (
+        count < 1
+        or count > 10
+    ):
+
+        raise ValueError(
+            "Choose between 1 and 10 ticket types."
+        )
+
+
+    rows = []
+    seen_names = set()
+
+
+    for index in range(
+        count
+    ):
+
+        raw_id = (
+            ids[index].strip()
+            if index < len(ids)
+            else ""
+        )
+
+        name = (
+            names[index].strip()
+            if index < len(names)
+            else ""
+        )
+
+        raw_price = (
+            prices[index].strip()
+            if index < len(prices)
+            else ""
+        )
+
+        raw_capacity = (
+            capacities[index].strip()
+            if index < len(capacities)
+            else ""
+        )
+
+
+        if not name:
+
+            raise ValueError(
+                "Every ticket type needs a name."
+            )
+
+
+        key = name.casefold()
+
+
+        if key in seen_names:
+
+            raise ValueError(
+                "Ticket type names must be unique."
+            )
+
+
+        seen_names.add(
+            key
+        )
+
+
+        try:
+
+            price = Decimal(
+                raw_price
+                or "0"
+            ).quantize(
+                Decimal("0.01")
+            )
+
+
+        except InvalidOperation as error:
+
+            raise ValueError(
+                f"Enter a valid price for {name}."
+            ) from error
+
+
+        if price < 0:
+
+            raise ValueError(
+                f"{name} price cannot be negative."
+            )
+
+
+        capacity = None
+
+
+        if raw_capacity:
+
+            try:
+
+                capacity = int(
+                    raw_capacity
+                )
+
+            except ValueError as error:
+
+                raise ValueError(
+                    f"Enter a valid capacity for {name}."
+                ) from error
+
+
+            if capacity < 1:
+
+                raise ValueError(
+                    f"{name} capacity must be at least 1."
+                )
+
+
+        ticket_type_id = None
+
+
+        if raw_id:
+
+            try:
+
+                ticket_type_id = int(
+                    raw_id
+                )
+
+            except ValueError:
+
+                raise ValueError(
+                    "Invalid ticket type identifier."
+                )
+
+
+        rows.append(
+            {
+                "id":
+                    ticket_type_id,
+
+                "name":
+                    name,
+
+                "price":
+                    price,
+
+                "capacity":
+                    capacity,
+
+                "sort_order":
+                    index,
+            }
+        )
+
+
+    return rows
+
+
+def sync_event_legacy_ticket_summary(
+    event,
+    ticket_rows,
+):
+
+    event.ticket_price = min(
+        row["price"]
+        for row in ticket_rows
+    )
+
+
+    if all(
+        row["capacity"]
+        is not None
+        for row in ticket_rows
+    ):
+
+        event.ticket_capacity = sum(
+            row["capacity"]
+            for row in ticket_rows
+        )
+
+    else:
+
+        event.ticket_capacity = None
 
 
 # ============================================================
@@ -4872,10 +5126,7 @@ def reserve_ticket(
     ):
 
         flash(
-            (
-                "Secure Paystack payments are not "
-                "connected for this event yet."
-            ),
+            "Secure Paystack payments are not connected for this event yet.",
             "error",
         )
 
@@ -4904,6 +5155,11 @@ def reserve_ticket(
         )
 
 
+    ticket_types = (
+        event.active_ticket_types
+    )
+
+
     if request.method == "POST":
 
         customer_name = (
@@ -4914,7 +5170,6 @@ def reserve_ticket(
             .strip()
         )
 
-
         customer_phone = (
             request.form.get(
                 "customer_phone",
@@ -4922,7 +5177,6 @@ def reserve_ticket(
             )
             .strip()
         )
-
 
         customer_email = (
             request.form.get(
@@ -4934,12 +5188,6 @@ def reserve_ticket(
         )
 
 
-        quantity = request.form.get(
-            "quantity",
-            type=int,
-        )
-
-
         if (
             not customer_name
             or not customer_phone
@@ -4947,10 +5195,7 @@ def reserve_ticket(
         ):
 
             flash(
-                (
-                    "Name, phone number and email "
-                    "are required for secure checkout."
-                ),
+                "Name, phone number and email are required for secure checkout.",
                 "error",
             )
 
@@ -4958,16 +5203,14 @@ def reserve_ticket(
                 "reserve_ticket.html",
                 event=
                     event,
-
+                ticket_types=
+                    ticket_types,
                 processing_rate=
                     PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
 
 
-        if (
-            "@"
-            not in customer_email
-        ):
+        if "@" not in customer_email:
 
             flash(
                 "Enter a valid email address.",
@@ -4978,20 +5221,150 @@ def reserve_ticket(
                 "reserve_ticket.html",
                 event=
                     event,
-
+                ticket_types=
+                    ticket_types,
                 processing_rate=
                     PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
 
 
+        basket = []
+
+
+        if ticket_types:
+
+            for ticket_type in ticket_types:
+
+                quantity = (
+                    request.form.get(
+                        f"qty_{ticket_type.id}",
+                        type=int,
+                    )
+                    or 0
+                )
+
+
+                if quantity < 0:
+
+                    abort(400)
+
+
+                if quantity == 0:
+
+                    continue
+
+
+                if (
+                    ticket_type.capacity is not None
+                    and quantity
+                    > ticket_type.remaining_quantity
+                ):
+
+                    flash(
+                        (
+                            f"Only {ticket_type.remaining_quantity} "
+                            f"{ticket_type.name} ticket(s) remain."
+                        ),
+                        "error",
+                    )
+
+                    return render_template(
+                        "reserve_ticket.html",
+                        event=
+                            event,
+                        ticket_types=
+                            ticket_types,
+                        processing_rate=
+                            PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+                    )
+
+
+                basket.append(
+                    {
+                        "ticket_type":
+                            ticket_type,
+                        "name":
+                            ticket_type.name,
+                        "price":
+                            Decimal(
+                                str(
+                                    ticket_type.price
+                                )
+                            ),
+                        "quantity":
+                            quantity,
+                    }
+                )
+
+
+        else:
+
+            # Legacy single-price event fallback.
+            quantity = (
+                request.form.get(
+                    "quantity",
+                    type=int,
+                )
+                or 0
+            )
+
+
+            if quantity > 0:
+
+                if (
+                    event.ticket_capacity is not None
+                    and quantity
+                    > event.remaining_tickets
+                ):
+
+                    flash(
+                        "There are not enough tickets remaining.",
+                        "error",
+                    )
+
+                    return render_template(
+                        "reserve_ticket.html",
+                        event=
+                            event,
+                        ticket_types=
+                            [],
+                        processing_rate=
+                            PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+                    )
+
+
+                basket.append(
+                    {
+                        "ticket_type":
+                            None,
+                        "name":
+                            "General",
+                        "price":
+                            Decimal(
+                                str(
+                                    event.ticket_price
+                                    or 0
+                                )
+                            ),
+                        "quantity":
+                            quantity,
+                    }
+                )
+
+
+        total_quantity = sum(
+            item["quantity"]
+            for item in basket
+        )
+
+
         if (
-            not quantity
-            or quantity < 1
-            or quantity > 10
+            total_quantity < 1
+            or total_quantity > 10
         ):
 
             flash(
-                "Please choose between 1 and 10 tickets.",
+                "Choose between 1 and 10 tickets in total.",
                 "error",
             )
 
@@ -4999,53 +5372,19 @@ def reserve_ticket(
                 "reserve_ticket.html",
                 event=
                     event,
-
+                ticket_types=
+                    ticket_types,
                 processing_rate=
                     PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
 
 
-        if (
-            event.ticket_capacity
-            is not None
-        ):
-
-            remaining = (
-                event.remaining_tickets
+        total_amount = sum(
+            (
+                item["price"]
+                * item["quantity"]
             )
-
-
-            if (
-                quantity
-                > remaining
-            ):
-
-                flash(
-                    "There are not enough tickets remaining.",
-                    "error",
-                )
-
-                return render_template(
-                    "reserve_ticket.html",
-                    event=
-                        event,
-
-                    processing_rate=
-                        PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-                )
-
-
-        ticket_price = Decimal(
-            str(
-                event.ticket_price
-                or 0
-            )
-        )
-
-
-        total_amount = (
-            ticket_price
-            * quantity
+            for item in basket
         ).quantize(
             Decimal("0.01")
         )
@@ -5080,10 +5419,17 @@ def reserve_ticket(
                 customer_email,
 
             quantity=
-                quantity,
+                total_quantity,
 
-            ticket_price=
-                ticket_price,
+            # Legacy summary field retained for compatibility.
+            ticket_price=(
+                (
+                    total_amount
+                    / total_quantity
+                ).quantize(
+                    Decimal("0.01")
+                )
+            ),
 
             total_amount=
                 total_amount,
@@ -5111,6 +5457,44 @@ def reserve_ticket(
                 order
             )
 
+            db.session.flush()
+
+
+            for item in basket:
+
+                if item["ticket_type"] is None:
+                    continue
+
+                line_total = (
+                    item["price"]
+                    * item["quantity"]
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                db.session.add(
+                    TicketOrderItem(
+                        order_id=
+                            order.id,
+
+                        ticket_type_id=
+                            item["ticket_type"].id,
+
+                        ticket_name=
+                            item["name"],
+
+                        unit_price=
+                            item["price"],
+
+                        quantity=
+                            item["quantity"],
+
+                        line_total=
+                            line_total,
+                    )
+                )
+
+
             db.session.commit()
 
 
@@ -5122,7 +5506,6 @@ def reserve_ticket(
                     "https",
             )
 
-
             cancel_url = url_for(
                 "booking_status",
                 reference=
@@ -5132,6 +5515,21 @@ def reserve_ticket(
                 _scheme=
                     "https",
             )
+
+
+            basket_metadata = [
+                {
+                    "name":
+                        item["name"],
+                    "quantity":
+                        item["quantity"],
+                    "unit_price":
+                        str(
+                            item["price"]
+                        ),
+                }
+                for item in basket
+            ]
 
 
             payload = {
@@ -5162,9 +5560,6 @@ def reserve_ticket(
                 "callback_url":
                     callback_url,
 
-                # Keep the low-cost channels predictable so
-                # customer-paid processing fees can be shown
-                # accurately before checkout.
                 "channels": [
                     "eft",
                     "capitec_pay",
@@ -5173,9 +5568,6 @@ def reserve_ticket(
                 "subaccount":
                     organizer.paystack_subaccount_code,
 
-                # Organizer's subaccount bears the Paystack
-                # processing deduction, but the attendee-paid
-                # gross-up preserves the ticket face value.
                 "bearer":
                     "subaccount",
 
@@ -5184,20 +5576,18 @@ def reserve_ticket(
                         {
                             "kalxa_order_id":
                                 order.id,
-
                             "event_id":
                                 event.id,
-
                             "ticket_face_value":
                                 str(
                                     total_amount
                                 ),
-
                             "processing_fee":
                                 str(
                                     processing_fee
                                 ),
-
+                            "ticket_types":
+                                basket_metadata,
                             "cancel_action":
                                 cancel_url,
                         }
@@ -5221,7 +5611,6 @@ def reserve_ticket(
                 or {}
             )
 
-
             authorization_url = (
                 data.get(
                     "authorization_url"
@@ -5232,10 +5621,7 @@ def reserve_ticket(
             if not authorization_url:
 
                 raise RuntimeError(
-                    (
-                        "Paystack did not return "
-                        "a checkout URL."
-                    )
+                    "Paystack did not return a checkout URL."
                 )
 
 
@@ -5258,7 +5644,6 @@ def reserve_ticket(
 
             db.session.rollback()
 
-
             current_app.logger.exception(
                 (
                     "[Paystack Ticket Checkout] "
@@ -5269,7 +5654,6 @@ def reserve_ticket(
                 reference,
                 error,
             )
-
 
             try:
 
@@ -5282,7 +5666,6 @@ def reserve_ticket(
                     .first()
                 )
 
-
                 if persisted_order:
 
                     db.session.delete(
@@ -5291,26 +5674,22 @@ def reserve_ticket(
 
                     db.session.commit()
 
-
             except Exception:
 
                 db.session.rollback()
 
 
             flash(
-                (
-                    "Secure checkout could not be started. "
-                    "Please try again."
-                ),
+                "Secure checkout could not be started. Please try again.",
                 "error",
             )
-
 
             return render_template(
                 "reserve_ticket.html",
                 event=
                     event,
-
+                ticket_types=
+                    ticket_types,
                 processing_rate=
                     PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
             )
@@ -5325,7 +5704,8 @@ def reserve_ticket(
         "reserve_ticket.html",
         event=
             event,
-
+        ticket_types=
+            ticket_types,
         processing_rate=
             PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
     )
@@ -7896,29 +8276,23 @@ def admin_new_event():
 
 
     # ========================================================
-    # TICKET PRICE
+    # TICKET TYPES
     # ========================================================
 
     try:
 
-        ticket_price = float(
-            request.form.get(
-                "ticket_price",
-                0,
+        ticket_rows = (
+            parse_ticket_type_form(
+                request.form
             )
-            or 0
         )
 
 
-    except (
-        TypeError,
-        ValueError,
-    ):
+    except ValueError as error:
 
         flash(
-            (
-                "Please enter a valid "
-                "ticket price."
+            str(
+                error
             ),
             "error",
         )
@@ -7926,55 +8300,7 @@ def admin_new_event():
 
         return redirect(
             url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    if ticket_price < 0:
-
-        flash(
-            "Ticket price cannot be negative.",
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # TICKET CAPACITY
-    # ========================================================
-
-    ticket_capacity = (
-        request.form.get(
-            "ticket_capacity",
-            type=int,
-        )
-    )
-
-
-    if (
-        ticket_capacity is not None
-        and ticket_capacity < 1
-    ):
-
-        flash(
-            (
-                "Ticket capacity must be at least "
-                "1 when provided."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
+                "admin_new_event"
             )
         )
 
@@ -8191,10 +8517,22 @@ def admin_new_event():
             poster_image_filename,
 
         ticket_price=
-            ticket_price,
+            min(
+                row["price"]
+                for row in ticket_rows
+            ),
 
-        ticket_capacity=
-            ticket_capacity,
+        ticket_capacity=(
+            sum(
+                row["capacity"]
+                for row in ticket_rows
+            )
+            if all(
+                row["capacity"] is not None
+                for row in ticket_rows
+            )
+            else None
+        ),
 
         active=
             False,
@@ -8212,6 +8550,34 @@ def admin_new_event():
         db.session.add(
             event
         )
+
+        db.session.flush()
+
+
+        for row in ticket_rows:
+
+            db.session.add(
+                TicketType(
+                    event_id=
+                        event.id,
+
+                    name=
+                        row["name"],
+
+                    price=
+                        row["price"],
+
+                    capacity=
+                        row["capacity"],
+
+                    active=
+                        True,
+
+                    sort_order=
+                        row["sort_order"],
+                )
+            )
+
 
         db.session.commit()
 
@@ -8697,91 +9063,78 @@ def admin_edit_event(
 
         try:
 
-            ticket_price = Decimal(
-                str(
-                    request.form.get(
-                        "ticket_price",
-                        "0",
-                    )
-                    or "0"
+            ticket_rows = (
+                parse_ticket_type_form(
+                    request.form
                 )
             )
 
-        except InvalidOperation:
+
+        except ValueError as error:
 
             flash(
-                "Please enter a valid ticket price.",
-                "error",
-            )
-
-            return render_template(
-                "admin/edit_event.html",
-                event=
-                    event,
-            )
-
-
-        if ticket_price < 0:
-
-            flash(
-                "Ticket price cannot be negative.",
-                "error",
-            )
-
-            return render_template(
-                "admin/edit_event.html",
-                event=
-                    event,
-            )
-
-
-        ticket_capacity = (
-            request.form.get(
-                "ticket_capacity",
-                type=int,
-            )
-        )
-
-
-        if (
-            ticket_capacity is not None
-            and ticket_capacity < 1
-        ):
-
-            flash(
-                (
-                    "Ticket capacity must be at least "
-                    "1 when provided."
+                str(
+                    error
                 ),
                 "error",
             )
 
-            return render_template(
-                "admin/edit_event.html",
-                event=
-                    event,
-            )
-
-
-        if (
-            ticket_capacity is not None
-            and ticket_capacity
-            < event.paid_ticket_count
-        ):
-
-            flash(
-                (
-                    "Ticket capacity cannot be lower "
-                    "than tickets already sold."
-                ),
-                "error",
-            )
 
             return render_template(
                 "admin/edit_event.html",
                 event=
                     event,
             )
+
+
+        existing_types_by_id = {
+            ticket_type.id:
+                ticket_type
+            for ticket_type
+            in event.ticket_types
+        }
+
+
+        for row in ticket_rows:
+
+            if (
+                row["id"] is not None
+                and row["id"] not in existing_types_by_id
+            ):
+
+                abort(400)
+
+
+            if row["id"] is not None:
+
+                ticket_type = (
+                    existing_types_by_id[
+                        row["id"]
+                    ]
+                )
+
+
+                if (
+                    row["capacity"] is not None
+                    and row["capacity"]
+                    < ticket_type.sold_quantity
+                ):
+
+                    flash(
+                        (
+                            f"{ticket_type.name} capacity "
+                            "cannot be lower than tickets "
+                            "already sold."
+                        ),
+                        "error",
+                    )
+
+
+                    return render_template(
+                        "admin/edit_event.html",
+                        event=
+                            event,
+                    )
 
 
         poster_image = (
@@ -8939,13 +9292,95 @@ def admin_edit_event(
             event_time
         )
 
-        event.ticket_price = (
-            ticket_price
+        sync_event_legacy_ticket_summary(
+            event,
+            ticket_rows,
         )
 
-        event.ticket_capacity = (
-            ticket_capacity
-        )
+
+        submitted_ids = set()
+
+
+        for row in ticket_rows:
+
+            if row["id"] is not None:
+
+                ticket_type = (
+                    existing_types_by_id[
+                        row["id"]
+                    ]
+                )
+
+                submitted_ids.add(
+                    ticket_type.id
+                )
+
+                ticket_type.name = (
+                    row["name"]
+                )
+
+                ticket_type.price = (
+                    row["price"]
+                )
+
+                ticket_type.capacity = (
+                    row["capacity"]
+                )
+
+                ticket_type.sort_order = (
+                    row["sort_order"]
+                )
+
+                ticket_type.active = (
+                    True
+                )
+
+
+            else:
+
+                db.session.add(
+                    TicketType(
+                        event_id=
+                            event.id,
+
+                        name=
+                            row["name"],
+
+                        price=
+                            row["price"],
+
+                        capacity=
+                            row["capacity"],
+
+                        active=
+                            True,
+
+                        sort_order=
+                            row["sort_order"],
+                    )
+                )
+
+
+        for ticket_type in event.ticket_types:
+
+            if (
+                ticket_type.id
+                and ticket_type.id
+                not in submitted_ids
+            ):
+
+                if ticket_type.sold_quantity > 0:
+
+                    ticket_type.active = (
+                        False
+                    )
+
+                else:
+
+                    db.session.delete(
+                        ticket_type
+                    )
+
 
         # Payment settlement is organizer-level through
         # Paystack. Event-level bank details are intentionally
@@ -9841,255 +10276,20 @@ def admin_verify_paystack_order(
 
 
 # ============================================================
-# MARK PAYMENT PAID
+# TICKET PAYMENT POLICY
 # ============================================================
-
-@app.route(
-    "/admin/orders/<int:order_id>/mark-paid",
-    methods=[
-        "POST",
-    ],
-)
-def admin_mark_paid(
-    order_id,
-):
-
-    auth = (
-        require_ticketing_organizer()
-    )
-
-
-    if auth:
-
-        return auth
-
-
-    organizer = (
-        get_current_organizer()
-    )
-
-
-    order = (
-        TicketOrder.query
-
-        .join(
-            TicketEvent,
-            TicketOrder.event_id
-            == TicketEvent.id,
-        )
-
-        .filter(
-            TicketOrder.id
-            == order_id
-        )
-
-        .filter(
-            TicketEvent.organizer_id
-            == organizer.id
-        )
-
-        .first_or_404()
-    )
-
-
-    event = (
-        order.event
-    )
-
-
-    if (
-        order.payment_provider
-        == "paystack"
-    ):
-
-        flash(
-            (
-                "Paystack orders cannot be marked paid manually. "
-                "Use Paystack verification instead."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_orders",
-                event_id=
-                    event.id,
-            )
-        )
-
-
-    if (
-        order.payment_status
-        == "paid"
-    ):
-
-        flash(
-            "Order is already marked as paid.",
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_orders",
-                event_id=
-                    event.id,
-            )
-        )
-
-
-    if (
-        event.ticket_capacity
-        is not None
-    ):
-
-        remaining = (
-            event.remaining_tickets
-        )
-
-
-        if (
-            order.quantity
-            > remaining
-        ):
-
-            flash(
-                (
-                    "Cannot confirm payment because "
-                    "there are not enough tickets remaining."
-                ),
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_orders",
-                    event_id=
-                        event.id,
-                )
-            )
-
-
-    now = (
-        datetime.utcnow()
-    )
-
-
-    order.payment_status = (
-        "paid"
-    )
-
-
-    order.paid_at = (
-        now
-    )
-
-
-    existing_pass_count = (
-        len(
-            order.entry_passes
-        )
-    )
-
-
-    passes_to_create = (
-        order.quantity
-        -
-        existing_pass_count
-    )
-
-
-    if (
-        passes_to_create
-        < 0
-    ):
-
-        passes_to_create = 0
-
-
-    for _ in range(
-        passes_to_create
-    ):
-
-        entry_pass = EntryPass(
-
-            order_id=
-                order.id,
-
-            entry_code=
-                generate_entry_code(),
-
-            status=
-                "valid",
-        )
-
-
-        db.session.add(
-            entry_pass
-        )
-
-
-    try:
-
-        db.session.commit()
-
-
-    except Exception as error:
-
-        db.session.rollback()
-
-
-        current_app.logger.exception(
-            (
-                "[Ticketing Payment] "
-                "Failed to confirm ticket payment "
-                "organizer_id=%s "
-                "order_id=%s "
-                "error=%s"
-            ),
-            organizer.id,
-            order.id,
-            error,
-        )
-
-
-        flash(
-            (
-                "Payment confirmation failed. "
-                "Please try again."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_orders",
-                event_id=
-                    event.id,
-            )
-        )
-
-
-    flash(
-        (
-            "Payment confirmed and "
-            "entry pass generated."
-        ),
-        "success",
-    )
-
-
-    return redirect(
-        url_for(
-            "admin_orders",
-            event_id=
-                event.id,
-        )
-    )
+#
+# Ticket payments are Paystack-only.
+#
+# There is intentionally no organizer "mark paid" route.
+# A ticket order becomes paid only after:
+#   1. Paystack callback verification,
+#   2. signed Paystack webhook confirmation, or
+#   3. organizer-triggered server-side Paystack verification.
+#
+# This prevents manual payment confirmation from bypassing
+# Paystack's reference / amount / currency checks.
+# ============================================================
 
 
 # ============================================================
