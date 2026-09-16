@@ -239,6 +239,15 @@ class Organizer(db.Model):
     )
 
 
+    staff_accounts = db.relationship(
+        "StaffAccount",
+        back_populates="organizer",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="StaffAccount.name.asc(), StaffAccount.id.asc()",
+    )
+
+
     # ========================================================
     # PASSWORD HELPERS
     # ========================================================
@@ -655,6 +664,214 @@ class GeocodedArea(db.Model):
 
 
 # ============================================================
+# STAFF CHECK-IN ACCOUNT
+# ============================================================
+#
+# Limited account used only for event entry/check-in.
+# Staff never receives organizer dashboard/payment access.
+# ============================================================
+
+class StaffAccount(db.Model):
+
+    __tablename__ = "staff_accounts"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    name = db.Column(
+        db.String(150),
+        nullable=False,
+    )
+
+    username = db.Column(
+        db.String(120),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    password_hash = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+    last_login_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    organizer = db.relationship(
+        "Organizer",
+        back_populates="staff_accounts",
+    )
+
+    event_access = db.relationship(
+        "StaffEventAccess",
+        back_populates="staff",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+    checkins = db.relationship(
+        "CheckIn",
+        back_populates="staff_account",
+        lazy=True,
+    )
+
+
+    def set_password(
+        self,
+        password,
+    ):
+
+        self.password_hash = (
+            generate_password_hash(
+                password
+            )
+        )
+
+
+    def check_password(
+        self,
+        password,
+    ):
+
+        if not self.password_hash:
+            return False
+
+        return check_password_hash(
+            self.password_hash,
+            password,
+        )
+
+
+    @property
+    def assigned_event_ids(self):
+
+        return [
+            access.event_id
+            for access in self.event_access
+        ]
+
+
+    def can_access_event(
+        self,
+        event_id,
+    ):
+
+        try:
+            event_id = int(
+                event_id
+            )
+        except (
+            TypeError,
+            ValueError,
+        ):
+            return False
+
+        return event_id in set(
+            self.assigned_event_ids
+        )
+
+
+# ============================================================
+# STAFF EVENT ACCESS
+# ============================================================
+
+class StaffEventAccess(db.Model):
+
+    __tablename__ = "staff_event_access"
+
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    staff_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "staff_accounts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+
+    staff = db.relationship(
+        "StaffAccount",
+        back_populates="event_access",
+    )
+
+    event = db.relationship(
+        "TicketEvent",
+        back_populates="staff_access",
+    )
+
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "staff_id",
+            "event_id",
+            name="uq_staff_event_access",
+        ),
+    )
+
+
+# ============================================================
 # TICKET EVENT
 # ============================================================
 
@@ -912,6 +1129,14 @@ class TicketEvent(db.Model):
         lazy=True,
         cascade="all, delete-orphan",
         order_by="EventBoost.created_at.desc()",
+    )
+
+
+    staff_access = db.relationship(
+        "StaffEventAccess",
+        back_populates="event",
+        lazy=True,
+        cascade="all, delete-orphan",
     )
 
 
@@ -1856,9 +2081,24 @@ class CheckIn(db.Model):
         nullable=True,
     )
 
+    staff_account_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "staff_accounts.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
 
     entry_pass = db.relationship(
         "EntryPass",
+        back_populates="checkins",
+    )
+
+    staff_account = db.relationship(
+        "StaffAccount",
         back_populates="checkins",
     )
 
