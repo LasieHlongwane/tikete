@@ -36,6 +36,16 @@
 🚀 Boost Event
 {% endif %}
 </a>
+
+            <a
+                href="{{ url_for(
+                    'admin_featured_listing',
+                    event_id=event.id
+                ) }}"
+                class="button button-secondary"
+            >
+                ⭐ Featured Listing
+            </a>
 </div>
 </header>
 <section class="metrics">
