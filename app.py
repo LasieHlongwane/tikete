@@ -627,32 +627,53 @@ def finalize_paystack_ticket_order(
                 item.entry_passes
             )
 
+            attendee_names = (
+                item.attendee_names
+                if isinstance(
+                    item.attendee_names,
+                    list,
+                )
+                else []
+            )
+
             passes_to_create = max(
                 0,
                 item.quantity
                 - existing_item_passes,
             )
 
-
-            for _ in range(
+            for offset in range(
                 passes_to_create
             ):
 
+                attendee_index = (
+                    existing_item_passes
+                    + offset
+                )
+
+                attendee_name = (
+                    attendee_names[
+                        attendee_index
+                    ]
+                    if attendee_index
+                    < len(attendee_names)
+                    else order.customer_name
+                )
+
                 db.session.add(
                     EntryPass(
-                        order_id=
-                            order.id,
-
-                        order_item_id=
-                            item.id,
-
+                        order_id=order.id,
+                        order_item_id=item.id,
+                        attendee_name=(
+                            attendee_name
+                            or order.customer_name
+                        ),
                         entry_code=
                             generate_entry_code(),
-
-                        status=
-                            "valid",
+                        status="valid",
                     )
                 )
+
 
 
     else:
@@ -7598,12 +7619,56 @@ def reserve_ticket(
 
                 effective_price = current_phase.price if current_phase else ticket_type.price
 
+                attendee_names = []
+
+                for attendee_index in range(
+                    1,
+                    quantity + 1,
+                ):
+
+                    attendee_name = (
+                        request.form.get(
+                            (
+                                f"attendee_"
+                                f"{ticket_type.id}_"
+                                f"{attendee_index}"
+                            ),
+                            "",
+                        )
+                        .strip()
+                    )
+
+                    if not attendee_name:
+
+                        flash(
+                            (
+                                f"Enter the attendee name for "
+                                f"every {ticket_type.name} ticket."
+                            ),
+                            "error",
+                        )
+
+                        return render_template(
+                            "reserve_ticket.html",
+                            event=event,
+                            ticket_types=ticket_types,
+                            processing_rate=
+                                PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+                        )
+
+                    attendee_names.append(
+                        attendee_name
+                    )
+
+
+
                 basket.append({
                     "ticket_type": ticket_type,
                     "sale_phase": current_phase,
                     "name": ticket_type.name,
                     "price": Decimal(str(effective_price)),
                     "quantity": quantity,
+                    "attendee_names": attendee_names,
                 })
 
 
@@ -7642,13 +7707,50 @@ def reserve_ticket(
                             PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
                     )
 
+                attendee_names = []
+
+                for attendee_index in range(
+                    1,
+                    quantity + 1,
+                ):
+
+                    attendee_name = (
+                        request.form.get(
+                            f"attendee_general_{attendee_index}",
+                            "",
+                        )
+                        .strip()
+                    )
+
+                    if not attendee_name:
+
+                        flash(
+                            "Enter the attendee name for every General ticket.",
+                            "error",
+                        )
+
+                        return render_template(
+                            "reserve_ticket.html",
+                            event=event,
+                            ticket_types=[],
+                            processing_rate=
+                                PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+                        )
+
+                    attendee_names.append(
+                        attendee_name
+                    )
+
+
 
                 basket.append(
                     {
                         "ticket_type":
                             None,
                         "name":
-                            "General",
+                            "General",              
+                        "attendee_names": 
+                            attendee_names,
                         "price":
                             Decimal(
                                 str(
@@ -7772,8 +7874,7 @@ def reserve_ticket(
 
             for item in basket:
 
-                if item["ticket_type"] is None:
-                    continue
+
 
                 line_total = (
                     item["price"]
@@ -7784,30 +7885,32 @@ def reserve_ticket(
 
                 db.session.add(
                     TicketOrderItem(
-                        order_id=
-                            order.id,
-
-                        ticket_type_id=
-                            item["ticket_type"].id,
-
-                        sale_phase_id=(item["sale_phase"].id if item.get("sale_phase") else None),
-
-                        sale_phase_name=(item["sale_phase"].name if item.get("sale_phase") else None),
-
-                        ticket_name=
-                            item["name"],
-
-                        unit_price=
-                            item["price"],
-
-                        quantity=
-                            item["quantity"],
-
-                        line_total=
-                            line_total,
+                        order_id=order.id,
+                        ticket_type_id=(
+                            item["ticket_type"].id
+                            if item["ticket_type"]
+                            else None
+                        ),
+                        sale_phase_id=(
+                            item["sale_phase"].id
+                            if item.get("sale_phase")
+                            else None
+                        ),
+                        sale_phase_name=(
+                            item["sale_phase"].name
+                            if item.get("sale_phase")
+                            else None
+                        ),
+                        ticket_name=item["name"],
+                        unit_price=item["price"],
+                        quantity=item["quantity"],
+                        line_total=line_total,
+                        attendee_names=(
+                            item.get("attendee_names")
+                            or []
+                        ),
                     )
                 )
-
 
             db.session.commit()
 
@@ -16532,9 +16635,37 @@ def staff_event_guest_list(event_id):
     )
 
     q = (
-        request.args.get("q", "")
+        request.args.get(
+           "q",
+           "",
+        )
         .strip()
     )
+
+
+    if q:
+
+        like = f"%{q}%"
+
+        base_query = base_query.filter(
+          or_(
+            EntryPass.entry_code.ilike(
+                like
+            ),
+            EntryPass.attendee_name.ilike(
+                like
+            ),
+            TicketOrder.customer_name.ilike(
+                like
+            ),
+            TicketOrder.customer_phone.ilike(
+                like
+            ),
+            TicketOrder.customer_email.ilike(
+                like
+            ),
+          )
+        )
 
     ticket_type = (
         request.args.get(
