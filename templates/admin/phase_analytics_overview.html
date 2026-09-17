@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Phase Analytics | Kalxa Ticketing
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f6f8;
+            color: #111827;
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: min(
+                1180px,
+                calc(100% - 28px)
+            );
+            margin: 0 auto;
+            padding:
+                26px
+                0
+                60px;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .back {
+            color: #111827;
+            text-decoration: none;
+            font-weight: 850;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .muted {
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(0, 1fr)
+                );
+            gap: 10px;
+        }
+
+        .metric {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 15px;
+        }
+
+        .metric span {
+            display: block;
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 5px;
+            font-size: 1.35rem;
+        }
+
+        .events {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+            gap: 12px;
+        }
+
+        .event-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 17px;
+            background: #ffffff;
+        }
+
+        .event-card h3 {
+            margin:
+                0
+                0
+                5px;
+        }
+
+        .date {
+            color: #64748b;
+            font-size: .82rem;
+        }
+
+        .event-metrics {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .event-metric {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .event-metric small {
+            display: block;
+            color: #64748b;
+        }
+
+        .event-metric strong {
+            display: block;
+            margin-top: 3px;
+        }
+
+        .phase {
+            margin-top: 9px;
+            padding: 9px 11px;
+            background: #ecfdf5;
+            color: #166534;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 800;
+        }
+
+        .button {
+            display: inline-flex;
+            min-height: 42px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 14px;
+            padding: 9px 13px;
+            border-radius: 10px;
+            background: #111827;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 900;
+        }
+
+        .secondary {
+            background: #eef2f7;
+            color: #111827;
+            margin-left: 6px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 35px 15px;
+        }
+
+        @media (
+            max-width: 850px
+        ) {
+
+            .metrics {
+                grid-template-columns:
+                    1fr
+                    1fr;
+            }
+
+            .events {
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+        @media (
+            max-width: 520px
+        ) {
+
+            .metrics,
+            .event-metrics {
+                grid-template-columns:
+                    1fr;
+            }
+
+            .top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .secondary {
+                margin-left: 0;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<main class="page">
+
+    <div class="top">
+
+        <a
+            href="{{ url_for(
+                'admin_dashboard'
+            ) }}"
+            class="back"
+        >
+            ← Organizer Dashboard
+        </a>
+
+        <strong>
+            Kalxa Ticketing
+        </strong>
+
+    </div>
+
+
+    <section class="card">
+
+        <h1 style="margin-top:0;">
+            📈 Phase Analytics
+        </h1>
+
+        <p class="muted">
+            See Early Bird, General,
+            Late Entry and other sales-phase
+            performance across all your events.
+            Only paid phased ticket sales are
+            included in revenue and ticket totals.
+        </p>
+
+    </section>
+
+
+    <section class="card">
+
+        <div class="metrics">
+
+            <div class="metric">
+
+                <span>
+                    Phased Tickets Sold
+                </span>
+
+                <strong>
+                    {{ overall_tickets }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric">
+
+                <span>
+                    Phase Revenue
+                </span>
+
+                <strong>
+                    R{{ "%.2f"|format(
+                        overall_revenue
+                    ) }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric">
+
+                <span>
+                    Configured Phases
+                </span>
+
+                <strong>
+                    {{ overall_phases }}
+                </strong>
+
+            </div>
+
+
+            <div class="metric">
+
+                <span>
+                    Events Using Phases
+                </span>
+
+                <strong>
+                    {{ events_with_phases }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="card">
+
+        <h2>
+            Your Events
+        </h2>
+
+
+        {% if event_rows %}
+
+            <div class="events">
+
+                {% for row in event_rows %}
+
+                    <article class="event-card">
+
+                        <h3>
+                            {{ row.event.title }}
+                        </h3>
+
+
+                        <div class="date">
+
+                            {% if row.event.event_date %}
+
+                                {{
+                                    row.event.event_date.strftime(
+                                        "%d %B %Y"
+                                    )
+                                }}
+
+                            {% endif %}
+
+                            {% if row.event.venue %}
+
+                                · {{ row.event.venue }}
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="event-metrics">
+
+                            <div class="event-metric">
+
+                                <small>
+                                    Phases
+                                </small>
+
+                                <strong>
+                                    {{ row.phase_count }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="event-metric">
+
+                                <small>
+                                    Phase Tickets
+                                </small>
+
+                                <strong>
+                                    {{ row.tickets_sold }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="event-metric">
+
+                                <small>
+                                    Revenue
+                                </small>
+
+                                <strong>
+                                    R{{ "%.2f"|format(
+                                        row.revenue
+                                    ) }}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        {% for active in row.current_phases %}
+
+                            <div class="phase">
+
+                                LIVE ·
+                                {{ active.ticket_type }}
+                                ·
+                                {{ active.phase }}
+                                ·
+                                R{{ "%.2f"|format(
+                                    active.price
+                                ) }}
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        {% if row.phase_count %}
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_sales_phase_analytics',
+                                    event_id=row.event.id
+                                ) }}"
+                                class="button"
+                            >
+                                📈 View Analytics
+                            </a>
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_sales_phases',
+                                    event_id=row.event.id
+                                ) }}"
+                                class="button secondary"
+                            >
+                                ⏱ Manage Phases
+                            </a>
+
+                        {% else %}
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_sales_phases',
+                                    event_id=row.event.id
+                                ) }}"
+                                class="button"
+                            >
+                                + Set Up Sales Phases
+                            </a>
+
+                        {% endif %}
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+
+                <h3>
+                    No events yet
+                </h3>
+
+                <p class="muted">
+                    Create an event first,
+                    then configure Early Bird
+                    and other sales phases.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+</body>
+
+</html>
