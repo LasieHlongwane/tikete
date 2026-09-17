@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staff Check-In | Kalxa</title>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gate Staff | Kalxa</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f6f7f9;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(800px,calc(100% - 28px));margin:0 auto;padding:28px 0 60px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:20px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;margin-bottom:14px}.button{display:inline-flex;min-height:46px;align-items:center;justify-content:center;padding:10px 14px;border-radius:11px;background:#111827;color:#fff;text-decoration:none;font-weight:900}.logout{color:#991b1b;text-decoration:none;font-weight:850}.event{padding:14px;background:#f8fafc;border-radius:12px;margin-top:9px}.meta{color:#64748b;font-size:.86rem}
-</style></head>
-<body><main class="page">
+*{box-sizing:border-box}body{margin:0;background:#f4f5f7;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(920px,calc(100% - 26px));margin:auto;padding:22px 0 55px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.meta{color:#6b7280;font-size:.82rem}.logout{color:#991b1b;text-decoration:none;font-weight:900}.hero,.event-card{background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:19px;margin-bottom:13px}.hero h1{margin:0 0 5px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:9px 13px;border-radius:11px;background:#111827;color:#fff;text-decoration:none;font-weight:900}.button.secondary{background:#eef0f3;color:#111827}.event-head{display:flex;justify-content:space-between;gap:14px;align-items:start}.event-head h2{margin:0;font-size:1.12rem}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}.metric{padding:11px;border-radius:11px;background:#f4f5f7}.metric small{display:block;color:#6b7280;font-size:.65rem;font-weight:800;text-transform:uppercase}.metric strong{display:block;margin-top:3px;font-size:1.12rem}.types{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}.type-pill{padding:6px 8px;border-radius:999px;background:#f3f4f6;font-size:.7rem;font-weight:800}.empty{text-align:center;color:#6b7280;padding:30px}@media(max-width:560px){.metrics{grid-template-columns:1fr 1fr 1fr}.actions .button{flex:1}.event-head{display:block}.event-head .meta{margin-top:4px}}
+</style>
+</head><body><main class="page">
 <div class="top"><div><strong>{{ staff.name }}</strong><div class="meta">{{ staff.organizer.display_name }} · Gate Staff</div></div><a class="logout" href="{{ url_for('staff_logout') }}">Logout</a></div>
-<section class="card"><h1>Ticket Check-In</h1><p class="meta">You only have access to the events assigned to your staff account.</p><a class="button" href="{{ url_for('staff_checkin') }}">🎟 Open QR Check-In</a></section>
-<section class="card"><h2>Assigned Events</h2>
-{% for event in events %}<div class="event"><strong>{{ event.title }}</strong><div class="meta">{{ event.event_date or 'No date' }}{% if event.event_time %} · {{ event.event_time.strftime('%H:%M') }}{% endif %} · {{ event.venue or '' }}</div></div>{% else %}<p class="meta">No events are currently assigned to you.</p>{% endfor %}
+<section class="hero"><h1>Live Event Check-In</h1><p class="meta">Scan tickets, search guests and manage your assigned event lists. A ticket marked DONE cannot be used again.</p><div class="actions"><a class="button" href="{{ url_for('staff_checkin') }}">📷 Scan / Enter Code</a></div></section>
+{% for row in event_rows %}
+<section class="event-card">
+<div class="event-head"><div><h2>{{ row.event.title }}</h2><div class="meta">{% if row.event.event_date %}{{ row.event.event_date.strftime('%d %B %Y') }}{% else %}No date{% endif %}{% if row.event.event_time %} · {{ row.event.event_time.strftime('%H:%M') }}{% endif %}{% if row.event.venue %} · {{ row.event.venue }}{% endif %}</div></div></div>
+<div class="metrics"><div class="metric"><small>Total</small><strong>{{ row.total }}</strong></div><div class="metric"><small>Done</small><strong>{{ row.checked_in }}</strong></div><div class="metric"><small>Waiting</small><strong>{{ row.remaining }}</strong></div></div>
+{% if row.groups %}<div class="types">{% for group in row.groups %}<span class="type-pill">{{ group.name }} · {{ group.checked_in }}/{{ group.total }} done</span>{% endfor %}</div>{% endif %}
+<div class="actions"><a class="button" href="{{ url_for('staff_event_guest_list', event_id=row.event.id) }}">👥 Open Guest List</a><a class="button secondary" href="{{ url_for('staff_checkin', event_id=row.event.id) }}">📷 Scan This Event</a></div>
 </section>
+{% else %}<section class="hero empty">No events are currently assigned to you.</section>{% endfor %}
 </main></body></html>
