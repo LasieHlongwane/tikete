@@ -1933,7 +1933,22 @@
     </div>
 
 
-
+    {% if firebase_push_configured %}
+            <section class="notification-strip" id="updates">
+                <div>
+                    <p>🔔 RECEIVE NOTIFICATIONS</p>
+                </div>
+                <div class="notification-form">
+                    <input id="home-notification-area" type="text" placeholder="Your area or town" autocomplete="address-level2">
+                    <div class="notification-actions">
+                        <button type="button" id="home-enable-notifications" class="cream-button">Enable notifications</button>
+                        <button type="button" id="home-disable-notifications" class="quiet-button" hidden>Turn off</button>
+                    </div>
+                    <div id="home-notification-status" class="notification-status" aria-live="polite">Notifications are currently off.</div>
+                </div>
+            </section>
+    {% endif %}
+    
     {% if event %}
 
 
