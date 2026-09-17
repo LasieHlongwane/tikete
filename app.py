@@ -12816,6 +12816,270 @@ def admin_edit_event(
 
 
 # ============================================================
+# ORGANIZER - SALES PHASE PERFORMANCE ANALYTICS
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/sales-phases/analytics"
+)
+def admin_sales_phase_analytics(event_id):
+
+    auth = require_ticketing_organizer()
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    subscription_auth = require_active_subscription(
+        organizer
+    )
+    if subscription_auth:
+        return subscription_auth
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+        )
+        .first_or_404()
+    )
+
+    # Paid orders are the source of truth for performance.
+    paid_orders = (
+        TicketOrder.query
+        .filter_by(
+            event_id=event.id,
+            payment_status="paid",
+        )
+        .order_by(TicketOrder.created_at.asc())
+        .all()
+    )
+
+    paid_order_ids = {
+        order.id
+        for order in paid_orders
+    }
+
+    # All ticket types / phases are included so phases with zero sales
+    # still appear in the organizer report.
+    ticket_types = list(event.ticket_types)
+
+    phase_rows = []
+    row_lookup = {}
+
+    for ticket_type in ticket_types:
+        for phase in ticket_type.sale_phases:
+            row = {
+                "phase_id": phase.id,
+                "ticket_type_id": ticket_type.id,
+                "ticket_type": ticket_type.name,
+                "phase_name": phase.name,
+                "status": phase.sale_status,
+                "configured_price": phase.price,
+                "quantity_limit": phase.quantity_limit,
+                "tickets_sold": 0,
+                "revenue": Decimal("0.00"),
+                "orders": set(),
+                "buyers": set(),
+                "first_sale_at": None,
+                "last_sale_at": None,
+            }
+            phase_rows.append(row)
+            row_lookup[(ticket_type.id, phase.id)] = row
+
+    # Historical order-item snapshots mean analytics remain correct even
+    # after an organizer changes a phase's current price/name.
+    historical_only = {}
+
+    for order in paid_orders:
+        for item in order.order_items:
+
+            if not item.sale_phase_name:
+                continue
+
+            key = (
+                item.ticket_type_id,
+                item.sale_phase_id,
+            )
+
+            row = row_lookup.get(key)
+
+            if row is None:
+                history_key = (
+                    item.ticket_type_id,
+                    item.sale_phase_id,
+                    item.ticket_name,
+                    item.sale_phase_name,
+                )
+
+                row = historical_only.get(history_key)
+
+                if row is None:
+                    row = {
+                        "phase_id": item.sale_phase_id,
+                        "ticket_type_id": item.ticket_type_id,
+                        "ticket_type": item.ticket_name,
+                        "phase_name": item.sale_phase_name,
+                        "status": "historical",
+                        "configured_price": item.unit_price,
+                        "quantity_limit": None,
+                        "tickets_sold": 0,
+                        "revenue": Decimal("0.00"),
+                        "orders": set(),
+                        "buyers": set(),
+                        "first_sale_at": None,
+                        "last_sale_at": None,
+                    }
+                    historical_only[history_key] = row
+                    phase_rows.append(row)
+
+            quantity = int(item.quantity or 0)
+            line_total = Decimal(str(item.line_total or 0))
+
+            row["tickets_sold"] += quantity
+            row["revenue"] += line_total
+            row["orders"].add(order.id)
+
+            buyer_key = (
+                (order.customer_email or "").strip().lower()
+                or (order.customer_phone or "").strip()
+                or f"order:{order.id}"
+            )
+            row["buyers"].add(buyer_key)
+
+            sale_at = order.paid_at or order.created_at
+
+            if sale_at:
+                if (
+                    row["first_sale_at"] is None
+                    or sale_at < row["first_sale_at"]
+                ):
+                    row["first_sale_at"] = sale_at
+
+                if (
+                    row["last_sale_at"] is None
+                    or sale_at > row["last_sale_at"]
+                ):
+                    row["last_sale_at"] = sale_at
+
+    total_phase_tickets = sum(
+        row["tickets_sold"]
+        for row in phase_rows
+    )
+
+    total_phase_revenue = sum(
+        (row["revenue"] for row in phase_rows),
+        Decimal("0.00"),
+    )
+
+    for row in phase_rows:
+        row["order_count"] = len(row.pop("orders"))
+        row["buyer_count"] = len(row.pop("buyers"))
+
+        row["avg_ticket_price"] = (
+            row["revenue"] / row["tickets_sold"]
+            if row["tickets_sold"]
+            else Decimal("0.00")
+        )
+
+        row["ticket_share"] = (
+            (row["tickets_sold"] / total_phase_tickets) * 100
+            if total_phase_tickets
+            else 0
+        )
+
+        row["revenue_share"] = (
+            (float(row["revenue"]) / float(total_phase_revenue)) * 100
+            if total_phase_revenue
+            else 0
+        )
+
+        if row["quantity_limit"]:
+            row["sell_through"] = min(
+                (row["tickets_sold"] / row["quantity_limit"]) * 100,
+                100,
+            )
+            row["remaining_in_phase"] = max(
+                row["quantity_limit"] - row["tickets_sold"],
+                0,
+            )
+        else:
+            row["sell_through"] = None
+            row["remaining_in_phase"] = None
+
+    phase_rows.sort(
+        key=lambda row: (
+            str(row["ticket_type"]).lower(),
+            row["phase_id"] or 10**9,
+        )
+    )
+
+    # Ticket-type rollup.
+    ticket_type_rows = []
+
+    for ticket_type in ticket_types:
+        related = [
+            row
+            for row in phase_rows
+            if row["ticket_type_id"] == ticket_type.id
+        ]
+
+        tickets = sum(
+            row["tickets_sold"]
+            for row in related
+        )
+        revenue = sum(
+            (row["revenue"] for row in related),
+            Decimal("0.00"),
+        )
+
+        ticket_type_rows.append({
+            "name": ticket_type.name,
+            "tickets_sold": tickets,
+            "revenue": revenue,
+            "phase_count": len(related),
+        })
+
+    # Best-performing phase is descriptive: highest paid ticket volume.
+    phases_with_sales = [
+        row
+        for row in phase_rows
+        if row["tickets_sold"] > 0
+    ]
+
+    highest_volume_phase = (
+        max(
+            phases_with_sales,
+            key=lambda row: row["tickets_sold"],
+        )
+        if phases_with_sales
+        else None
+    )
+
+    highest_revenue_phase = (
+        max(
+            phases_with_sales,
+            key=lambda row: row["revenue"],
+        )
+        if phases_with_sales
+        else None
+    )
+
+    return render_template(
+        "admin/sales_phase_analytics.html",
+        event=event,
+        phase_rows=phase_rows,
+        ticket_type_rows=ticket_type_rows,
+        total_phase_tickets=total_phase_tickets,
+        total_phase_revenue=total_phase_revenue,
+        paid_order_count=len(paid_orders),
+        highest_volume_phase=highest_volume_phase,
+        highest_revenue_phase=highest_revenue_phase,
+    )
+
+
+# ============================================================
 # ORGANIZER - SALES PHASES / EARLY BIRD PRICING
 # ============================================================
 @app.route("/admin/events/<int:event_id>/sales-phases", methods=["GET", "POST"])
