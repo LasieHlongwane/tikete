@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Featured Listing | {{ event.title }} | Kalxa</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6f8;color:#111827;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(1050px,calc(100% - 28px));margin:0 auto;padding:26px 0 60px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}.back{color:#111827;text-decoration:none;font-weight:900}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:20px;margin-bottom:15px}.muted{color:#64748b;line-height:1.55}.flash{padding:12px 14px;border-radius:12px;margin-bottom:10px;background:#eef2ff;color:#3730a3}.active-box{padding:16px;border-radius:15px;background:#ecfdf5;color:#166534}.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.plan{border:1px solid #e5e7eb;border-radius:16px;padding:17px}.plan-price{font-size:1.7rem;font-weight:950;margin:7px 0}.button{display:inline-flex;min-height:44px;align-items:center;justify-content:center;border:0;border-radius:10px;padding:10px 14px;background:#111827;color:#fff;text-decoration:none;font:inherit;font-weight:900;cursor:pointer}.button[disabled]{opacity:.45;cursor:not-allowed}.poster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}.poster{aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:#e5e7eb}.poster img{width:100%;height:100%;object-fit:cover;display:block}input[type=file]{width:100%;margin:12px 0;padding:12px;border:1px dashed #94a3b8;border-radius:12px}.difference{display:grid;grid-template-columns:1fr 1fr;gap:10px}.difference>div{background:#f8fafc;border-radius:12px;padding:14px}@media(max-width:760px){.plans,.poster-grid,.difference{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.poster{max-width:420px}}
+</style>
+</head>
+<body>
+<main class="page">
+<div class="top"><a href="{{ url_for('admin_event_control', event_id=event.id) }}" class="back">← Event Control Centre</a><strong>⭐ Featured Listing</strong></div>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+{% for category,message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+{% endwith %}
+
+<section class="card"><h1 style="margin-top:0;">Feature {{ event.title }}</h1><p class="muted">Featured events appear above ordinary event listings on Kalxa. Customers can swipe through up to three event posters. Featured Listing changes placement only; Event Boost remains the push-notification product.</p></section>
+
+{% if active_listing %}
+<section class="card"><div class="active-box"><strong>⭐ FEATURED NOW</strong><h2>{{ active_listing.plan_name }}</h2><p>Active until {{ active_listing.ends_at.strftime("%d %B %Y %H:%M") }} UTC</p><p style="margin-bottom:0;">About {{ active_listing.remaining_days }} day{% if active_listing.remaining_days != 1 %}s{% endif %} remaining.</p></div></section>
+{% elif latest_listing and latest_listing.effective_status == "pending" %}
+<section class="card"><strong>Payment pending</strong><p class="muted">{{ latest_listing.plan_name }} is waiting for Paystack payment confirmation.</p></section>
+{% endif %}
+
+<section class="card">
+<h2>Featured Posters</h2>
+<p class="muted">Upload 1–3 images. Uploading a new set replaces the current Featured Listing posters. JPG, JPEG, PNG and WEBP are supported; each image must be 5 MB or smaller.</p>
+
+{% if images %}
+<div class="poster-grid">
+{% for image in images %}
+<div class="poster"><img src="{{ url_for('featured_listing_image', event_id=event.id, image_id=image.id) }}" alt="Featured poster {{ loop.index }}"></div>
+{% endfor %}
+</div>
+{% elif event.poster_image_mimetype or event.image_url %}
+<p class="muted">No special featured posters uploaded yet. Kalxa will use the normal event poster as a fallback.</p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('admin_save_featured_images', event_id=event.id) }}" enctype="multipart/form-data">
+<input type="file" name="featured_images" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple required>
+<button type="submit" class="button">Save Featured Posters</button>
+</form>
+</section>
+
+<section class="card">
+<h2>Choose a Package</h2>
+<div class="plans">
+{% for code,plan in plans.items() %}
+<div class="plan">
+<strong>{{ plan.duration_days }} Days</strong>
+<div class="plan-price">R{{ "%.2f"|format(plan.price) }}</div>
+<p class="muted">Featured placement for {{ plan.duration_days }} consecutive days from successful payment verification.</p>
+<form method="POST" action="{{ url_for('admin_purchase_featured_listing', event_id=event.id, plan_code=code) }}">
+<button class="button" type="submit" {% if active_listing %}disabled{% endif %}>{% if active_listing %}Already Featured{% else %}Buy {{ plan.duration_days }} Days{% endif %}</button>
+</form>
+</div>
+{% endfor %}
+</div>
+</section>
+
+<section class="card"><div class="difference"><div><strong>⭐ Featured Listing</strong><p class="muted">Premium placement at the top of Kalxa with a swipeable multi-poster card.</p></div><div><strong>📣 Event Boost</strong><p class="muted">Sends event notifications to the opted-in local audience within the configured radius.</p></div></div></section>
+</main>
+</body>
+</html>
