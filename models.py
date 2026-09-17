@@ -1132,6 +1132,24 @@ class TicketEvent(db.Model):
     )
 
 
+    featured_listings = db.relationship(
+        "FeaturedListing",
+        back_populates="event",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="FeaturedListing.created_at.desc()",
+    )
+
+
+    featured_images = db.relationship(
+        "FeaturedListingImage",
+        back_populates="event",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="FeaturedListingImage.image_order.asc()",
+    )
+
+
     staff_access = db.relationship(
         "StaffEventAccess",
         back_populates="event",
@@ -2537,6 +2555,268 @@ class PushSubscription(db.Model):
         )
 
 
+
+
+# ============================================================
+# FEATURED LISTING
+# ============================================================
+
+class FeaturedListing(db.Model):
+
+    __tablename__ = "featured_listings"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    plan_code = db.Column(
+        db.String(30),
+        nullable=False,
+        index=True,
+    )
+
+    plan_name = db.Column(
+        db.String(100),
+        nullable=False,
+    )
+
+    price = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    duration_days = db.Column(
+        db.Integer,
+        nullable=False,
+    )
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    payment_reference = db.Column(
+        db.String(100),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    payment_provider = db.Column(
+        db.String(30),
+        nullable=False,
+        default="paystack",
+    )
+
+    paystack_access_code = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    paystack_authorization_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    paystack_transaction_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    payment_channel = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    payment_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    paid_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    starts_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    ends_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    event = db.relationship(
+        "TicketEvent",
+        back_populates="featured_listings",
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+    )
+
+    @property
+    def is_active_now(self):
+
+        now = datetime.utcnow()
+
+        return (
+            self.status == "active"
+            and self.starts_at is not None
+            and self.ends_at is not None
+            and self.starts_at <= now < self.ends_at
+        )
+
+    @property
+    def effective_status(self):
+
+        if (
+            self.status == "active"
+            and self.ends_at
+            and datetime.utcnow() >= self.ends_at
+        ):
+            return "expired"
+
+        return self.status
+
+    @property
+    def remaining_seconds(self):
+
+        if not self.is_active_now:
+            return 0
+
+        return max(
+            0,
+            int(
+                (
+                    self.ends_at
+                    - datetime.utcnow()
+                ).total_seconds()
+            ),
+        )
+
+    @property
+    def remaining_days(self):
+
+        seconds = self.remaining_seconds
+
+        if seconds <= 0:
+            return 0
+
+        return max(
+            1,
+            (seconds + 86399) // 86400,
+        )
+
+
+# ============================================================
+# FEATURED LISTING IMAGE
+# ============================================================
+
+class FeaturedListingImage(db.Model):
+
+    __tablename__ = "featured_listing_images"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    image_order = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    image_data = deferred(
+        db.Column(
+            db.LargeBinary,
+            nullable=False,
+        )
+    )
+
+    image_mimetype = db.Column(
+        db.String(100),
+        nullable=False,
+    )
+
+    image_filename = db.Column(
+        db.String(255),
+        nullable=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    event = db.relationship(
+        "TicketEvent",
+        back_populates="featured_images",
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "event_id",
+            "image_order",
+            name="uq_featured_listing_image_order",
+        ),
+    )
 
 
 # ============================================================
