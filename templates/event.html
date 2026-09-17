@@ -2456,6 +2456,172 @@
             font-weight: 900 !important;
             letter-spacing: .045em !important;
         }
+
+
+        /* =====================================================
+           FINAL NOTIFICATION CARD LAYOUT
+           Larger area field + larger action button + centered title
+        ===================================================== */
+
+        #updates.notification-strip {
+            display: block !important;
+
+            width: 100% !important;
+            max-width: 680px !important;
+
+            margin: 10px auto 20px !important;
+            padding: 12px 14px 11px !important;
+
+            background: #e5e7eb !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 12px !important;
+            box-shadow: none !important;
+        }
+
+        #updates .notification-heading {
+            width: 100% !important;
+            margin: 0 0 9px !important;
+            text-align: center !important;
+        }
+
+        #updates .notification-heading h4 {
+            margin: 0 !important;
+            color: #374151 !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+            font-weight: 950 !important;
+            letter-spacing: .06em !important;
+            text-align: center !important;
+        }
+
+        #updates .notification-form {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        #updates .notification-form input {
+            width: 100% !important;
+            min-width: 0 !important;
+
+            height: 42px !important;
+            min-height: 42px !important;
+
+            padding: 0 13px !important;
+
+            background: #f8fafc !important;
+            color: #111827 !important;
+
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 9px !important;
+            outline: none !important;
+
+            font-size: 13px !important;
+            line-height: 1 !important;
+        }
+
+        #updates .notification-form input::placeholder {
+            color: #6b7280 !important;
+            opacity: 1 !important;
+        }
+
+        #updates .notification-actions {
+            display: flex !important;
+            gap: 6px !important;
+            margin: 0 !important;
+        }
+
+        #updates .cream-button,
+        #updates .quiet-button {
+            width: auto !important;
+
+            height: 42px !important;
+            min-height: 42px !important;
+
+            margin: 0 !important;
+            padding: 0 18px !important;
+
+            border-radius: 9px !important;
+
+            font-size: 12px !important;
+            line-height: 1 !important;
+            font-weight: 900 !important;
+
+            white-space: nowrap !important;
+        }
+
+        #updates .cream-button {
+            min-width: 165px !important;
+            background: #111827 !important;
+            color: #ffffff !important;
+            border: 1px solid #111827 !important;
+        }
+
+        #updates .quiet-button {
+            min-width: 86px !important;
+            background: #f8fafc !important;
+            color: #111827 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        #updates .notification-status {
+            grid-column: 1 / -1 !important;
+
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding-top: 1px !important;
+
+            color: #6b7280 !important;
+            font-size: 9px !important;
+            line-height: 1.2 !important;
+            text-align: center !important;
+        }
+
+        @media (max-width: 620px) {
+
+            #updates.notification-strip {
+                max-width: 100% !important;
+                margin: 8px auto 16px !important;
+                padding: 10px !important;
+            }
+
+            #updates .notification-heading {
+                margin-bottom: 8px !important;
+            }
+
+            #updates .notification-heading h4 {
+                font-size: 10px !important;
+            }
+
+            #updates .notification-form {
+                grid-template-columns: 1fr !important;
+                gap: 7px !important;
+            }
+
+            #updates .notification-form input {
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 13px !important;
+            }
+
+            #updates .notification-actions {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                width: 100% !important;
+            }
+
+            #updates .cream-button,
+            #updates .quiet-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 12px !important;
+            }
+        }
 </style>
 
 </head>
@@ -2551,21 +2717,50 @@
 
 
     </div>
-    <d>
-      <strong> 🔔 RECEIVE  NOTIFICATIONS </strong>
-    </d>
+
+
     {% if firebase_push_configured %}
-            <section class="notification-strip" id="updates">
-        
-                <div class="notification-form">
-                    <input id="home-notification-area" type="text" placeholder="Your area or town" autocomplete="address-level2">
-                    <div class="notification-actions">
-                        <button type="button" id="home-enable-notifications" class="cream-button">Enable notifications</button>
-                        <button type="button" id="home-disable-notifications" class="quiet-button" hidden>Turn off</button>
-                    </div>
-                    <div id="home-notification-status" class="notification-status" aria-live="polite">Notifications are currently off.</div>
+        <section class="notification-strip" id="updates">
+            <div class="notification-heading">
+                <h4>🔔 RECEIVE NOTIFICATIONS</h4>
+            </div>
+
+            <div class="notification-form">
+                <input
+                    id="home-notification-area"
+                    type="text"
+                    placeholder="Your area or town"
+                    autocomplete="address-level2"
+                >
+
+                <div class="notification-actions">
+                    <button
+                        type="button"
+                        id="home-enable-notifications"
+                        class="cream-button"
+                    >
+                        Enable notifications
+                    </button>
+
+                    <button
+                        type="button"
+                        id="home-disable-notifications"
+                        class="quiet-button"
+                        hidden
+                    >
+                        Turn off
+                    </button>
                 </div>
-            </section>
+
+                <div
+                    id="home-notification-status"
+                    class="notification-status"
+                    aria-live="polite"
+                >
+                    Notifications are currently off.
+                </div>
+            </div>
+        </section>
     {% endif %}
     
     {% if event %}
@@ -3090,7 +3285,10 @@
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
-        
+                    <div>
+                        
+                        <h2>🔥 Later On</h2>
+                    </div>
                     <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
                 </div>
 
@@ -3156,11 +3354,30 @@
                 {% if early.count == 0 %}<p class="section-empty">No Early Bird phases are live right now.</p>{% endif %}
             </section>
 
-
+            <section class="discovery-section" id="around-you-section">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">LOCAL DISCOVERY</span>
+                        <h2>📍 Around You</h2>
+                    </div>
+                    <span class="section-note">Current Kalxa listings</span>
+                </div>
+                <div class="event-rail">
+                    {% for item in events[:8] %}
+                        <a href="{{ url_for('event_page', event_id=item.id) }}" class="micro-card">
+                            {% if item.poster_image_mimetype or item.image_url %}<img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">{% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                            <div><strong>{{ item.title }}</strong><small>{% if item.venue %}{{ item.venue }}{% else %}Local event{% endif %}</small></div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
 
             <section class="discovery-section discover-more" id="discover-grid">
                 <div class="section-heading">
-               
+                    <div>
+                        <span class="section-kicker">EXPLORE EVERYTHING</span>
+                        <h2>Discover More</h2>
+                    </div>
                     <span class="results-count" id="results-count">{{ events|length }} events</span>
                 </div>
 
