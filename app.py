@@ -12816,6 +12816,127 @@ def admin_edit_event(
 
 
 # ============================================================
+# ORGANIZER - PHASE ANALYTICS OVERVIEW
+# ============================================================
+
+@app.route(
+    "/admin/sales-phases/analytics"
+)
+def admin_sales_phase_analytics_overview():
+
+    auth = require_ticketing_organizer()
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    subscription_auth = require_active_subscription(
+        organizer
+    )
+    if subscription_auth:
+        return subscription_auth
+
+    events = (
+        TicketEvent.query
+        .filter_by(
+            organizer_id=organizer.id,
+        )
+        .order_by(
+            TicketEvent.event_date.desc(),
+            TicketEvent.created_at.desc(),
+        )
+        .all()
+    )
+
+    event_rows = []
+
+    overall_tickets = 0
+    overall_revenue = Decimal("0.00")
+    overall_phases = 0
+    events_with_phases = 0
+
+    for event in events:
+
+        phase_count = sum(
+            len(ticket_type.sale_phases)
+            for ticket_type in event.ticket_types
+        )
+
+        if phase_count:
+            events_with_phases += 1
+
+        paid_orders = [
+            order
+            for order in event.orders
+            if order.payment_status == "paid"
+        ]
+
+        phased_tickets = 0
+        phased_revenue = Decimal("0.00")
+
+        for order in paid_orders:
+            for item in order.order_items:
+
+                if not item.sale_phase_name:
+                    continue
+
+                phased_tickets += int(
+                    item.quantity or 0
+                )
+
+                phased_revenue += Decimal(
+                    str(
+                        item.line_total or 0
+                    )
+                )
+
+        current_phases = []
+
+        for ticket_type in event.ticket_types:
+
+            phase = (
+                ticket_type.current_sale_phase
+            )
+
+            if phase:
+
+                current_phases.append(
+                    {
+                        "ticket_type":
+                            ticket_type.name,
+                        "phase":
+                            phase.name,
+                        "price":
+                            phase.price,
+                    }
+                )
+
+        event_rows.append(
+            {
+                "event": event,
+                "phase_count": phase_count,
+                "paid_orders": len(paid_orders),
+                "tickets_sold": phased_tickets,
+                "revenue": phased_revenue,
+                "current_phases": current_phases,
+            }
+        )
+
+        overall_tickets += phased_tickets
+        overall_revenue += phased_revenue
+        overall_phases += phase_count
+
+    return render_template(
+        "admin/phase_analytics_overview.html",
+        event_rows=event_rows,
+        overall_tickets=overall_tickets,
+        overall_revenue=overall_revenue,
+        overall_phases=overall_phases,
+        events_with_phases=events_with_phases,
+    )
+
+
+# ============================================================
 # ORGANIZER - SALES PHASE PERFORMANCE ANALYTICS
 # ============================================================
 
