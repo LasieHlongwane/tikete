@@ -1675,6 +1675,121 @@
         }
 
 
+ 
+       /* =========================================
+   COMPACT NOTIFICATION CARD
+========================================= */
+
+.notification-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    margin-top: 24px;
+    padding: 14px 16px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+
+    background: #e5e7eb;
+}
+
+.notification-strip h2 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.notification-strip p {
+    margin: 6px 0 0;
+
+    color: #6b7280;
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.notification-strip .section-kicker {
+    margin-bottom: 5px;
+
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+}
+
+.notification-form input {
+    width: 100%;
+    min-height: 38px;
+
+    padding: 7px 10px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+
+    background: #f3f4f6;
+    color: #111827;
+
+    font-size: 0.78rem;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 6px;
+
+    margin-top: 7px;
+}
+
+.cream-button,
+.quiet-button {
+    min-height: 36px;
+
+    padding: 6px 10px;
+
+    border-radius: 8px;
+
+    font-size: 0.66rem;
+    font-weight: 900;
+}
+
+.notification-status {
+    margin-top: 6px;
+
+    color: #6b7280;
+    font-size: 0.62rem;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 760px) {
+
+    .notification-strip {
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+
+        margin-top: 20px;
+        padding: 12px 13px;
+    }
+
+    .notification-strip h2 {
+        font-size: 0.95rem;
+    }
+
+    .notification-strip p {
+        font-size: 0.68rem;
+    }
+
+    .notification-actions {
+        flex-wrap: wrap;
+    }
+
+    .cream-button,
+    .quiet-button {
+        min-height: 34px;
+    }
+} 
+
 
 
         /* =========================================
