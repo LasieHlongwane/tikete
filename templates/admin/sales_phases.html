@@ -47,8 +47,8 @@
 
         .tabs {
             display: flex;
-            gap: 8px;
             flex-wrap: wrap;
+            gap: 8px;
         }
 
         .tab {
@@ -69,8 +69,8 @@
         .phase {
             display: grid;
             grid-template-columns: 1.3fr 0.8fr 1fr 1fr 0.8fr auto;
-            gap: 9px;
             align-items: end;
+            gap: 9px;
             margin-bottom: 10px;
             padding: 14px;
             background: #f8fafc;
@@ -97,9 +97,9 @@
 
         .button {
             display: inline-flex;
-            min-height: 42px;
             align-items: center;
             justify-content: center;
+            min-height: 42px;
             padding: 9px 13px;
             border: 0;
             border-radius: 9px;
@@ -205,7 +205,9 @@
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
-                <div class="flash">{{ message }}</div>
+                <div class="flash">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endwith %}
 
@@ -219,14 +221,40 @@
             </p>
         </section>
 
+        <section
+            class="card"
+            style="border-left: 4px solid #111827;"
+        >
+            <strong>
+                For an Early Bird that should be selling now:
+            </strong>
+
+            <p
+                class="muted"
+                style="margin-bottom: 0;"
+            >
+                Leave <b>Starts</b> blank, set the Early Bird price, then set
+                an <b>Ends</b> date or quantity limit. If Starts is a future
+                date, Kalxa will correctly keep that phase unavailable until
+                that date.
+            </p>
+        </section>
+
         <section class="card">
             <strong>Ticket type</strong>
 
-            <div class="tabs" style="margin-top: 10px;">
+            <div
+                class="tabs"
+                style="margin-top: 10px;"
+            >
                 {% for ticket_type in ticket_types %}
                     <a
                         class="tab {% if selected_ticket_type and selected_ticket_type.id == ticket_type.id %}active{% endif %}"
-                        href="{{ url_for('admin_sales_phases', event_id=event.id, ticket_type_id=ticket_type.id) }}"
+                        href="{{ url_for(
+                            'admin_sales_phases',
+                            event_id=event.id,
+                            ticket_type_id=ticket_type.id
+                        ) }}"
                     >
                         {{ ticket_type.name }}
                     </a>
@@ -275,7 +303,10 @@
             </section>
 
             <section class="card">
-                <form method="POST" id="phase-form">
+                <form
+                    method="POST"
+                    id="phase-form"
+                >
                     <input
                         type="hidden"
                         name="ticket_type_id"
@@ -314,7 +345,18 @@
                                 </div>
 
                                 <div class="field">
-                                    <label>Starts</label>
+                                    <label>
+                                        Starts
+                                        <span
+                                            style="
+                                                text-transform: none;
+                                                font-weight: 600;
+                                            "
+                                        >
+                                            (blank = immediately)
+                                        </span>
+                                    </label>
+
                                     <input
                                         name="phase_start_at"
                                         type="datetime-local"
@@ -323,7 +365,18 @@
                                 </div>
 
                                 <div class="field">
-                                    <label>Ends</label>
+                                    <label>
+                                        Ends
+                                        <span
+                                            style="
+                                                text-transform: none;
+                                                font-weight: 600;
+                                            "
+                                        >
+                                            (blank = no date limit)
+                                        </span>
+                                    </label>
+
                                     <input
                                         name="phase_end_at"
                                         type="datetime-local"
@@ -374,7 +427,10 @@
                             + Add Phase
                         </button>
 
-                        <button class="button" type="submit">
+                        <button
+                            class="button"
+                            type="submit"
+                        >
                             Save Sales Phases
                         </button>
                     </div>
@@ -389,13 +445,14 @@
                             ticket_type_id=selected_ticket_type.id
                         ) }}"
                         style="margin-top: 14px;"
-                        onsubmit="
-                            return confirm(
-                                'Disable all sales phases and return to the normal ticket price?'
-                            );
-                        "
+                        onsubmit="return confirm(
+                            'Disable all sales phases and return to the normal ticket price?'
+                        );"
                     >
-                        <button class="button danger" type="submit">
+                        <button
+                            class="button danger"
+                            type="submit"
+                        >
                             Disable Sales Phases
                         </button>
                     </form>
@@ -423,7 +480,9 @@
 
         if (add) {
             add.addEventListener("click", () => {
-                if (list.querySelectorAll(".phase-row").length >= 10) {
+                const phaseCount = list.querySelectorAll(".phase-row").length;
+
+                if (phaseCount >= 10) {
                     alert("Maximum 10 phases per ticket type.");
                     return;
                 }
@@ -431,7 +490,6 @@
                 const row = document.createElement("div");
 
                 row.className = "phase phase-row";
-
                 row.innerHTML = `
                     <input
                         type="hidden"
@@ -460,7 +518,18 @@
                     </div>
 
                     <div class="field">
-                        <label>Starts</label>
+                        <label>
+                            Starts
+                            <span
+                                style="
+                                    text-transform: none;
+                                    font-weight: 600;
+                                "
+                            >
+                                (blank = immediately)
+                            </span>
+                        </label>
+
                         <input
                             name="phase_start_at"
                             type="datetime-local"
@@ -468,7 +537,18 @@
                     </div>
 
                     <div class="field">
-                        <label>Ends</label>
+                        <label>
+                            Ends
+                            <span
+                                style="
+                                    text-transform: none;
+                                    font-weight: 600;
+                                "
+                            >
+                                (blank = no date limit)
+                            </span>
+                        </label>
+
                         <input
                             name="phase_end_at"
                             type="datetime-local"
