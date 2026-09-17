@@ -1537,10 +1537,12 @@ class TicketType(db.Model):
     @property
     def next_sale_phase(self):
         now = datetime.utcnow()
-        for phase in self.active_sale_phases:
-            if phase.start_at and phase.start_at > now:
-                return phase
-        return None
+        upcoming = [
+            phase
+            for phase in self.active_sale_phases
+            if phase.start_at and phase.start_at > now
+        ]
+        return upcoming[0] if upcoming else None
 
     @property
     def is_currently_on_sale(self):
@@ -1650,6 +1652,29 @@ class TicketSalePhase(db.Model):
         if not self.is_quantity_available:
             return False
         return True
+
+    @property
+    def sale_status(self):
+
+        if not self.active:
+            return "disabled"
+
+        now = datetime.utcnow()
+
+        if self.quantity_limit is not None and self.sold_quantity >= self.quantity_limit:
+            return "sold_out"
+
+        if self.end_at and now >= self.end_at:
+            return "ended"
+
+        if self.start_at and now < self.start_at:
+            return "upcoming"
+
+        return "live"
+
+    @property
+    def is_live(self):
+        return self.sale_status == "live"
 
 
 # ============================================================
