@@ -1675,6 +1675,28 @@
         }
 
 
+
+
+        /* =========================================
+           KALXA PREMIUM DISCOVERY HOME
+        ========================================= */
+        :root{--kx-bg:#0b0c0e;--kx-card:#121418;--kx-elev:#17191e;--kx-cream:#fff4df;--kx-muted:#9ca3af;--kx-border:rgba(255,255,255,.08);--kx-gold:#f5c451}
+        body{background:var(--kx-bg);color:var(--kx-cream)}
+        .kalxa-discovery{max-width:1180px;margin:0 auto;padding:0 0 92px}
+        .discovery-topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;min-height:68px;padding:10px 2px;background:rgba(11,12,14,.84);border-bottom:1px solid transparent;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:.25s ease}
+        .discovery-topbar.scrolled{min-height:58px;border-bottom-color:var(--kx-border)}
+        .brand-lockup{display:flex;align-items:center;gap:10px;color:var(--kx-cream);text-decoration:none}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--kx-cream);color:#0b0c0e;font-weight:1000;font-size:1.1rem}.brand-copy{display:flex;flex-direction:column;line-height:1}.brand-copy strong{letter-spacing:.08em;font-size:.9rem}.brand-copy small{margin-top:4px;color:var(--kx-muted);font-size:.58rem;letter-spacing:.2em}.topbar-actions{display:flex;gap:8px}.icon-button{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--kx-border);border-radius:12px;background:rgba(255,255,255,.04);color:var(--kx-cream);text-decoration:none;font:inherit;font-size:1.05rem;cursor:pointer}
+        .discovery-hero{padding:34px 0 20px}.hero-kicker,.section-kicker{margin:0 0 8px;color:var(--kx-gold);font-size:.66rem;font-weight:900;letter-spacing:.16em}.discovery-hero h1{max-width:760px;margin:0;font-size:clamp(2rem,6vw,4.4rem);line-height:.98;letter-spacing:-.055em}.discovery-hero>p:not(.hero-kicker){margin:16px 0 0;color:#c7c9ce;font-size:clamp(.95rem,2vw,1.12rem)}
+        .search-shell{display:flex;align-items:center;gap:10px;max-width:720px;margin-top:26px;padding:0 14px;min-height:54px;border:1px solid var(--kx-border);border-radius:16px;background:var(--kx-card);box-shadow:0 12px 36px rgba(0,0,0,.18)}.search-shell span{color:var(--kx-muted);font-size:1.2rem}.search-shell input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--kx-cream);font:inherit;font-size:.94rem}.search-shell input::placeholder{color:#727780}.search-shell button{border:0;background:transparent;color:var(--kx-muted);font-size:1.4rem;cursor:pointer}
+        .filter-chips{display:flex;gap:8px;margin-top:14px;padding-bottom:4px;overflow-x:auto;scrollbar-width:none}.filter-chips::-webkit-scrollbar{display:none}.filter-chip{flex:0 0 auto;padding:9px 13px;border:1px solid var(--kx-border);border-radius:999px;background:rgba(255,255,255,.025);color:#c8cbd0;font:inherit;font-size:.78rem;font-weight:800;cursor:pointer}.filter-chip.active{background:var(--kx-cream);border-color:var(--kx-cream);color:#0b0c0e}
+        .discovery-section{margin-top:36px}.section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}.section-heading h2{margin:0;font-size:clamp(1.2rem,3vw,1.65rem);letter-spacing:-.025em}.section-note,.results-count{color:var(--kx-muted);font-size:.72rem}.text-button{border:0;background:transparent;color:var(--kx-cream);font:inherit;font-size:.78rem;font-weight:800;cursor:pointer}
+        .featured-event-stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:18px}.featured-hero-card{overflow:hidden;border:1px solid rgba(245,196,81,.22);border-radius:24px;background:var(--kx-card);box-shadow:0 24px 70px rgba(0,0,0,.3)}.featured-media{position:relative;overflow:hidden;aspect-ratio:16/10;background:#08090b}.featured-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.featured-track::-webkit-scrollbar{display:none}.featured-slide{flex:0 0 100%;height:100%;scroll-snap-align:start}.featured-slide img{width:100%;height:100%;object-fit:cover;display:block}.poster-gradient{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(5,6,8,.97) 0%,rgba(5,6,8,.56) 35%,rgba(5,6,8,.06) 72%,transparent 100%)}.poster-gradient.small{background:linear-gradient(to top,rgba(5,6,8,.72),transparent 55%)}.featured-badge,.live-state,.card-state,.scarcity-pill,.mini-state,.phase-corner{position:absolute;z-index:5;border-radius:999px;font-weight:900;letter-spacing:.04em}.featured-badge{top:14px;left:14px;padding:7px 10px;background:rgba(11,12,14,.82);color:var(--kx-gold);font-size:.66rem;backdrop-filter:blur(8px)}.live-state{top:14px;right:14px;padding:7px 10px;background:rgba(11,12,14,.82);color:#fff;font-size:.65rem}.featured-overlay-copy{position:absolute;z-index:4;left:18px;right:18px;bottom:18px}.featured-overlay-copy h3{margin:0;color:#fff;font-size:clamp(1.35rem,4vw,2rem);line-height:1.05;letter-spacing:-.035em}.featured-meta-line{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;color:#d4d7dc;font-size:.78rem}.featured-price-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}.featured-price-line strong{font-size:1.15rem}.phase-pill{display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;background:rgba(245,196,81,.14);color:#f8d780;font-size:.64rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.phase-pill.small{padding:4px 7px;font-size:.58rem}.featured-dots{position:absolute;z-index:6;left:50%;bottom:8px;display:flex;gap:5px;transform:translateX(-50%)}.featured-dot{width:6px;height:6px;padding:0;border:0;border-radius:99px;background:rgba(255,255,255,.46)}.featured-dot.active{width:18px;background:#fff}.featured-cta-row{display:flex;gap:9px;padding:12px}.featured-view,.featured-buy{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;text-decoration:none;font-size:.78rem;font-weight:900}.featured-view{flex:1;border:1px solid var(--kx-border);color:var(--kx-cream)}.featured-buy{flex:1.25;background:var(--kx-cream);color:#0b0c0e}
+        .event-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(190px,230px);gap:12px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;scrollbar-width:none}.event-rail::-webkit-scrollbar{display:none}.rail-card{overflow:hidden;border:1px solid var(--kx-border);border-radius:18px;background:var(--kx-card);color:var(--kx-cream);text-decoration:none;scroll-snap-align:start}.rail-poster{position:relative;aspect-ratio:4/5;overflow:hidden;background:#15171b}.rail-poster img{width:100%;height:100%;object-fit:cover;display:block}.mini-state{top:10px;left:10px;padding:5px 7px;background:rgba(11,12,14,.8);color:#fff;font-size:.56rem}.phase-corner{left:9px;bottom:9px;padding:6px 8px;background:#fff4df;color:#0b0c0e;font-size:.58rem}.rail-copy{padding:11px 12px 13px}.rail-copy h3{display:-webkit-box;margin:0;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:.9rem;line-height:1.2}.rail-copy p{margin:7px 0 0;color:var(--kx-muted);font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.price-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.price-row span{color:#f8d780;font-size:.61rem;font-weight:850;text-transform:uppercase}.price-row strong{font-size:.84rem}.micro-card{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;width:220px;padding:8px;border:1px solid var(--kx-border);border-radius:15px;background:var(--kx-card);color:var(--kx-cream);text-decoration:none;scroll-snap-align:start}.micro-card img,.micro-card>.poster-fallback{width:64px;height:76px;border-radius:10px;object-fit:cover}.micro-card strong{display:-webkit-box;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:.8rem}.micro-card small{display:block;margin-top:5px;color:var(--kx-muted);font-size:.65rem}.section-empty{margin:0;color:var(--kx-muted);font-size:.82rem}
+        .premium-event-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:15px}.premium-event-card{overflow:hidden;border:1px solid var(--kx-border);border-radius:20px;background:var(--kx-card);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}.premium-event-card:hover{transform:translateY(-3px);border-color:rgba(255,244,223,.18);box-shadow:0 18px 44px rgba(0,0,0,.24)}.poster-link{display:block}.premium-poster{position:relative;aspect-ratio:4/5;overflow:hidden;background:#15171b}.premium-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}.premium-event-card:hover .premium-poster img{transform:scale(1.025)}.poster-fallback{display:grid;place-items:center;width:100%;height:100%;background:linear-gradient(135deg,#181b20,#0e1013);color:rgba(255,244,223,.65);font-weight:1000;letter-spacing:.12em}.card-state{top:11px;left:11px;padding:6px 8px;background:rgba(11,12,14,.82);color:#fff;font-size:.58rem;backdrop-filter:blur(7px)}.scarcity-pill{top:11px;right:11px;padding:6px 8px;background:#7f1d1d;color:#fecaca;font-size:.56rem}.premium-card-copy{padding:13px}.card-title{display:-webkit-box;overflow:hidden;color:var(--kx-cream);text-decoration:none;font-size:1rem;font-weight:900;line-height:1.2;-webkit-line-clamp:2;-webkit-box-orient:vertical}.card-meta{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:8px;color:var(--kx-muted);font-size:.68rem}.card-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:14px}.card-price{display:block;margin-top:6px;font-size:.96rem}.ticket-cta{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 11px;border-radius:10px;background:var(--kx-cream);color:#0b0c0e;text-decoration:none;font-size:.68rem;font-weight:950}.ticket-cta.disabled{background:#272a30;color:#80858d}.no-results{display:grid;place-items:center;gap:6px;min-height:170px;border:1px dashed var(--kx-border);border-radius:18px;color:var(--kx-muted);text-align:center}.no-results strong{color:var(--kx-cream)}
+        .notification-strip{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;margin-top:42px;padding:22px;border:1px solid var(--kx-border);border-radius:22px;background:linear-gradient(135deg,#15181d,#101216)}.notification-strip h2{margin:0;font-size:1.25rem}.notification-strip p{margin:9px 0 0;color:var(--kx-muted);font-size:.82rem;line-height:1.5}.notification-form input{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--kx-border);border-radius:11px;outline:0;background:#0c0e11;color:var(--kx-cream);font:inherit}.notification-actions{display:flex;gap:8px;margin-top:9px}.cream-button,.quiet-button{min-height:42px;padding:0 13px;border-radius:10px;font:inherit;font-size:.72rem;font-weight:900;cursor:pointer}.cream-button{border:0;background:var(--kx-cream);color:#0b0c0e}.quiet-button{border:1px solid var(--kx-border);background:transparent;color:var(--kx-cream)}.notification-status{margin-top:8px;color:var(--kx-muted);font-size:.67rem}.premium-empty{display:grid;place-items:center;min-height:360px;text-align:center}.premium-empty>span{display:grid;place-items:center;width:64px;height:64px;border-radius:20px;background:var(--kx-cream);color:#0b0c0e;font-size:1.6rem;font-weight:1000}.premium-empty h2{margin:14px 0 4px}.premium-empty p{margin:0;color:var(--kx-muted)}
+        .mobile-bottom-nav{display:none}.event-searchable[hidden]{display:none!important}
+        @media(max-width:760px){.kalxa-discovery{padding-left:2px;padding-right:2px}.discovery-hero{padding-top:24px}.discovery-hero h1{max-width:330px}.featured-event-stack{grid-template-columns:1fr}.featured-media{aspect-ratio:4/5}.featured-overlay-copy{left:15px;right:15px;bottom:19px}.premium-event-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.premium-card-copy{padding:10px}.card-bottom{align-items:stretch;flex-direction:column}.ticket-cta{width:100%}.notification-strip{grid-template-columns:1fr}.mobile-bottom-nav{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:80;display:grid;grid-template-columns:repeat(4,1fr);padding:7px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(18,20,24,.9);box-shadow:0 18px 50px rgba(0,0,0,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}.mobile-bottom-nav a{display:flex;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:11px;color:#8f949c;text-decoration:none;font-size:.88rem}.mobile-bottom-nav a small{font-size:.55rem}.mobile-bottom-nav a.active{background:rgba(255,244,223,.08);color:var(--kx-cream)}body{padding-bottom:82px}}
+        @media(max-width:430px){.premium-event-grid{grid-template-columns:1fr 1fr}.premium-event-card{border-radius:16px}.premium-poster{aspect-ratio:3/4}.card-title{font-size:.86rem}.card-meta{font-size:.6rem}.event-rail{grid-auto-columns:185px}.micro-card{width:205px}.featured-cta-row{flex-direction:column}.featured-view,.featured-buy{width:100%}}
 </style>
 
 </head>
@@ -2158,474 +2180,354 @@
 
 
         <!-- =====================================
-             EVENT LIST
+             PREMIUM EVENT DISCOVERY HOME
         ====================================== -->
 
-        <div class="event-list-header">
+        <div class="kalxa-discovery" id="discover">
 
+            <header class="discovery-topbar" id="top">
 
-            <p class="eyebrow">
-                KALXA EVENTS
-            </p>
+                <a href="{{ url_for('home') }}" class="brand-lockup" aria-label="Kalxa home">
+                    <span class="brand-mark">K</span>
+                    <span class="brand-copy">
+                        <strong>KALXA</strong>
+                        <small>EVENTS</small>
+                    </span>
+                </a>
 
+                <div class="topbar-actions">
+                    <button type="button" class="icon-button" id="focus-search" aria-label="Search events">⌕</button>
+                    {% if firebase_push_configured %}
+                    <a href="#updates" class="icon-button" aria-label="Event updates">🔔</a>
+                    {% endif %}
+                </div>
 
-            <h1>
-                Ticketed Events
-            </h1>
+            </header>
 
+            <section class="discovery-hero">
+                <p class="hero-kicker">DISCOVER LOCAL EXPERIENCES</p>
+                <h1>What's happening around you?</h1>
+                <p>Find something worth leaving the house for.</p>
 
-            <p class="muted">
+                <div class="search-shell">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="event-search"
+                        placeholder="Search events, venues or organizers"
+                        autocomplete="off"
+                        aria-label="Search events"
+                    >
+                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
+                </div>
 
-                Discover events and buy directly
-                from the organizer.
+                <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                    <button type="button" class="filter-chip active" data-filter="all">All</button>
+                    <button type="button" class="filter-chip" data-filter="today">Today</button>
+                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
+                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
+                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
+                </div>
+            </section>
 
-            </p>
+            {% if featured_events %}
+            <section class="discovery-section featured-shell" aria-labelledby="featured-title">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">CURATED VISIBILITY</span>
+                        <h2 id="featured-title">⭐ Featured</h2>
+                    </div>
+                    <span class="section-note">Swipe posters</span>
+                </div>
 
+                <div class="featured-event-stack">
+                    {% for featured in featured_events %}
+                        {% set item = featured.event %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_price is not none %}
+                                {% if ns.price is none or tt.current_price < ns.price %}
+                                    {% set ns.price = tt.current_price %}
+                                {% endif %}
+                                {% if ns.phase is none and tt.current_sale_phase %}
+                                    {% set ns.phase = tt.current_sale_phase.name %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <article class="featured-hero-card event-searchable"
+                            data-title="{{ item.title|lower }}"
+                            data-venue="{{ (item.venue or '')|lower }}"
+                            data-organizer="{{ ((item.organizer.display_name if item.organizer else item.organizer_name) or '')|lower }}"
+                            data-date="{{ item.event_date.strftime('%Y-%m-%d') if item.event_date else '' }}"
+                            data-time="{{ item.event_time.strftime('%H:%M:%S') if item.event_time else '00:00:00' }}"
+                            data-earlybird="{{ 'true' if ns.phase and 'early' in ns.phase|lower else 'false' }}"
+                            data-sellingfast="{{ 'true' if item.ticket_capacity is not none and item.remaining_tickets <= 20 else 'false' }}"
+                        >
+                            <div class="featured-media" data-featured-carousel>
+                                <div class="featured-track" data-featured-track>
+                                    {% if featured.images %}
+                                        {% for image in featured.images %}
+                                        <div class="featured-slide" data-featured-slide>
+                                            <img
+                                                src="{{ url_for('featured_listing_image', event_id=item.id, image_id=image.id) }}"
+                                                alt="{{ item.title }} poster {{ loop.index }}"
+                                                loading="{{ 'eager' if loop.first else 'lazy' }}"
+                                            >
+                                        </div>
+                                        {% endfor %}
+                                    {% elif item.poster_image_mimetype or item.image_url %}
+                                        <div class="featured-slide" data-featured-slide>
+                                            <img
+                                                src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}"
+                                                alt="{{ item.title }}"
+                                                loading="eager"
+                                            >
+                                        </div>
+                                    {% else %}
+                                        <div class="featured-slide poster-fallback"><span>KALXA</span></div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="poster-gradient"></div>
+                                <div class="featured-badge">⭐ FEATURED</div>
+                                <div class="live-state event-countdown" data-countdown>UPCOMING</div>
+
+                                {% if featured.images|length > 1 %}
+                                <div class="featured-dots" data-featured-dots>
+                                    {% for image in featured.images %}
+                                    <button type="button" class="featured-dot {% if loop.first %}active{% endif %}" data-featured-dot="{{ loop.index0 }}" aria-label="Poster {{ loop.index }}"></button>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <div class="featured-overlay-copy">
+                                    <h3>{{ item.title }}</h3>
+                                    <div class="featured-meta-line">
+                                        {% if item.event_date %}<span>{{ item.event_date.strftime('%d %b')|upper }}</span>{% endif %}
+                                        {% if item.event_time %}<span>· {{ item.event_time.strftime('%H:%M') }}</span>{% endif %}
+                                        {% if item.venue %}<span>· {{ item.venue }}</span>{% endif %}
+                                    </div>
+                                    <div class="featured-price-line">
+                                        {% if ns.phase %}<span class="phase-pill">{{ ns.phase }}</span>{% endif %}
+                                        {% if item.is_sold_out %}
+                                            <strong>SOLD OUT</strong>
+                                        {% elif ns.price is not none %}
+                                            <strong>{% if ns.price == 0 %}FREE{% else %}R{{ '%.2f'|format(ns.price) }}{% endif %}</strong>
+                                        {% elif item.ticket_price == 0 %}
+                                            <strong>FREE</strong>
+                                        {% else %}
+                                            <strong>R{{ '%.2f'|format(item.ticket_price) }}</strong>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="featured-cta-row">
+                                <a href="{{ url_for('event_page', event_id=item.id) }}" class="featured-view">View event</a>
+                                {% if not item.is_sold_out and item.sales_open %}
+                                <a href="{{ url_for('reserve_ticket', event_id=item.id) }}" class="featured-buy">Get tickets →</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if events %}
+            <section class="discovery-section" id="soon-section">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">DON'T HEAR ABOUT IT LATE</span>
+                        <h2>🔥 Happening Soon</h2>
+                    </div>
+                    <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
+                </div>
+
+                <div class="event-rail">
+                    {% for item in events[:8] %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_price is not none %}
+                                {% if ns.price is none or tt.current_price < ns.price %}{% set ns.price = tt.current_price %}{% endif %}
+                                {% if ns.phase is none and tt.current_sale_phase %}{% set ns.phase = tt.current_sale_phase.name %}{% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('event_page', event_id=item.id) }}" class="rail-card">
+                            <div class="rail-poster">
+                                {% if item.poster_image_mimetype or item.image_url %}
+                                <img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                                {% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                                <div class="poster-gradient small"></div>
+                                <span class="mini-state event-countdown" data-date="{{ item.event_date.strftime('%Y-%m-%d') if item.event_date else '' }}" data-time="{{ item.event_time.strftime('%H:%M:%S') if item.event_time else '00:00:00' }}">UPCOMING</span>
+                            </div>
+                            <div class="rail-copy">
+                                <h3>{{ item.title }}</h3>
+                                <p>{% if item.event_date %}{{ item.event_date.strftime('%d %b') }}{% endif %}{% if item.venue %} · {{ item.venue }}{% endif %}</p>
+                                <div class="price-row">
+                                    {% if ns.phase %}<span>{{ ns.phase }}</span>{% endif %}
+                                    <strong>{% if item.is_sold_out %}SOLD OUT{% elif ns.price is not none %}{% if ns.price == 0 %}FREE{% else %}R{{ '%.0f'|format(ns.price) }}{% endif %}{% elif item.ticket_price == 0 %}FREE{% else %}R{{ '%.0f'|format(item.ticket_price) }}{% endif %}</strong>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="discovery-section earlybird-section" id="earlybird-section">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">BUY EARLY, PAY LESS</span>
+                        <h2>🎟 Early Bird</h2>
+                    </div>
+                </div>
+                <div class="event-rail earlybird-rail">
+                    {% set early = namespace(count=0) %}
+                    {% for item in events %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_sale_phase and 'early' in tt.current_sale_phase.name|lower %}
+                                {% if ns.price is none or tt.current_price < ns.price %}{% set ns.price = tt.current_price %}{% endif %}
+                                {% if ns.phase is none %}{% set ns.phase = tt.current_sale_phase.name %}{% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if ns.phase and early.count < 8 %}
+                            {% set early.count = early.count + 1 %}
+                            <a href="{{ url_for('event_page', event_id=item.id) }}" class="rail-card compact">
+                                <div class="rail-poster">
+                                    {% if item.poster_image_mimetype or item.image_url %}<img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">{% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                                    <span class="phase-corner">{{ ns.phase }}</span>
+                                </div>
+                                <div class="rail-copy"><h3>{{ item.title }}</h3><p>{% if item.event_date %}{{ item.event_date.strftime('%d %b') }}{% endif %}{% if item.venue %} · {{ item.venue }}{% endif %}</p><div class="price-row"><span>From</span><strong>{% if ns.price == 0 %}FREE{% else %}R{{ '%.0f'|format(ns.price) }}{% endif %}</strong></div></div>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% if early.count == 0 %}<p class="section-empty">No Early Bird phases are live right now.</p>{% endif %}
+            </section>
+
+            <section class="discovery-section" id="around-you-section">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">LOCAL DISCOVERY</span>
+                        <h2>📍 Around You</h2>
+                    </div>
+                    <span class="section-note">Current Kalxa listings</span>
+                </div>
+                <div class="event-rail">
+                    {% for item in events[:8] %}
+                        <a href="{{ url_for('event_page', event_id=item.id) }}" class="micro-card">
+                            {% if item.poster_image_mimetype or item.image_url %}<img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">{% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                            <div><strong>{{ item.title }}</strong><small>{% if item.venue %}{{ item.venue }}{% else %}Local event{% endif %}</small></div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="discovery-section discover-more" id="discover-grid">
+                <div class="section-heading">
+                    <div>
+                        <span class="section-kicker">EXPLORE EVERYTHING</span>
+                        <h2>Discover More</h2>
+                    </div>
+                    <span class="results-count" id="results-count">{{ events|length }} events</span>
+                </div>
+
+                <div class="premium-event-grid" id="premium-event-grid">
+                    {% for item in events %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_price is not none %}
+                                {% if ns.price is none or tt.current_price < ns.price %}{% set ns.price = tt.current_price %}{% endif %}
+                                {% if ns.phase is none and tt.current_sale_phase %}{% set ns.phase = tt.current_sale_phase.name %}{% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% set fast = item.ticket_capacity is not none and item.remaining_tickets <= 20 and item.remaining_tickets > 0 %}
+                        <article
+                            class="premium-event-card event-searchable"
+                            data-title="{{ item.title|lower }}"
+                            data-venue="{{ (item.venue or '')|lower }}"
+                            data-organizer="{{ ((item.organizer.display_name if item.organizer else item.organizer_name) or '')|lower }}"
+                            data-date="{{ item.event_date.strftime('%Y-%m-%d') if item.event_date else '' }}"
+                            data-time="{{ item.event_time.strftime('%H:%M:%S') if item.event_time else '00:00:00' }}"
+                            data-earlybird="{{ 'true' if ns.phase and 'early' in ns.phase|lower else 'false' }}"
+                            data-sellingfast="{{ 'true' if fast else 'false' }}"
+                        >
+                            <a href="{{ url_for('event_page', event_id=item.id) }}" class="poster-link" aria-label="View {{ item.title }}">
+                                <div class="premium-poster">
+                                    {% if item.poster_image_mimetype or item.image_url %}
+                                    <img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                                    {% else %}<div class="poster-fallback"><span>KALXA</span></div>{% endif %}
+                                    <div class="poster-gradient"></div>
+                                    <span class="card-state event-countdown" data-countdown>UPCOMING</span>
+                                    {% if fast %}<span class="scarcity-pill">{{ item.remaining_tickets }} LEFT</span>{% endif %}
+                                </div>
+                            </a>
+
+                            <div class="premium-card-copy">
+                                <a href="{{ url_for('event_page', event_id=item.id) }}" class="card-title">{{ item.title }}</a>
+                                <div class="card-meta">
+                                    {% if item.event_date %}<span>{{ item.event_date.strftime('%d %b')|upper }}</span>{% endif %}
+                                    {% if item.event_time %}<span>{{ item.event_time.strftime('%H:%M') }}</span>{% endif %}
+                                    {% if item.venue %}<span>{{ item.venue }}</span>{% endif %}
+                                </div>
+                                <div class="card-bottom">
+                                    <div>
+                                        {% if ns.phase %}<span class="phase-pill small">{{ ns.phase }}</span>{% endif %}
+                                        <strong class="card-price">{% if item.is_sold_out %}SOLD OUT{% elif ns.price is not none %}{% if ns.price == 0 %}FREE{% else %}R{{ '%.2f'|format(ns.price) }}{% endif %}{% elif item.ticket_price == 0 %}FREE{% else %}R{{ '%.2f'|format(item.ticket_price) }}{% endif %}</strong>
+                                    </div>
+                                    {% if not item.is_sold_out and item.sales_open %}
+                                    <a href="{{ url_for('reserve_ticket', event_id=item.id) }}" class="ticket-cta">Get Tickets</a>
+                                    {% else %}
+                                    <span class="ticket-cta disabled">Unavailable</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <div class="no-results" id="no-results" hidden>
+                    <strong>No matching events</strong>
+                    <span>Try another search or filter.</span>
+                </div>
+            </section>
+            {% elif not featured_events %}
+            <div class="empty-state premium-empty">
+                <span>K</span>
+                <h2>No events yet</h2>
+                <p>New Kalxa experiences will appear here.</p>
+            </div>
+            {% endif %}
+
+            {% if firebase_push_configured %}
+            <section class="notification-strip" id="updates">
+                <div>
+                    <span class="section-kicker">STAY IN THE LOOP</span>
+                    <h2>🔔 Don't hear about it late.</h2>
+                    <p>Enter your town or area and Kalxa can notify you about nearby events. No street address or live GPS required.</p>
+                </div>
+                <div class="notification-form">
+                    <input id="home-notification-area" type="text" placeholder="Your area or town" autocomplete="address-level2">
+                    <div class="notification-actions">
+                        <button type="button" id="home-enable-notifications" class="cream-button">Enable notifications</button>
+                        <button type="button" id="home-disable-notifications" class="quiet-button" hidden>Turn off</button>
+                    </div>
+                    <div id="home-notification-status" class="notification-status" aria-live="polite">Notifications are currently off.</div>
+                </div>
+            </section>
+            {% endif %}
 
         </div>
 
-
-
-        
-        {% if firebase_push_configured %}
-
-            <section class="home-notification-card">
-
-                <div class="home-notification-copy">
-                    <h2>
-                        🔔 Never miss a Kalxa event
-                    </h2>
-
-                    <p>
-                        Enter your area, then enable notifications.
-                        Kalxa will notify you about events happening
-                        within about 60 km. No exact address or live
-                        GPS is required.
-                    </p>
-                </div>
-
-                <div class="home-notification-controls">
-
-                    <div style="margin-bottom:12px;">
-
-                        <label
-                            for="home-notification-area"
-                            style="display:block;font-weight:850;margin-bottom:6px;"
-                        >
-                            Where do you live?
-                        </label>
-
-                        <input
-                            id="home-notification-area"
-                            type="text"
-                            placeholder="e.g. KwaMhlanga"
-                            autocomplete="address-level2"
-                            style="width:100%;min-height:46px;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font:inherit;"
-                        >
-
-                        <small style="display:block;margin-top:6px;color:#64748b;">
-                            Area or town only — not your street address.
-                        </small>
-
-                    </div>
-
-
-                    <div class="home-notification-actions">
-
-                        <button
-                            type="button"
-                            id="home-enable-notifications"
-                            class="home-notification-button"
-                        >
-                            🔔 Enable Notifications
-                        </button>
-
-                        <button
-                            type="button"
-                            id="home-disable-notifications"
-                            class="home-notification-off"
-                            hidden
-                        >
-                            Turn Off
-                        </button>
-
-                    </div>
-
-                    <div
-                        id="home-notification-status"
-                        class="home-notification-status"
-                        aria-live="polite"
-                    >
-                        Notifications are currently off.
-                    </div>
-
-                </div>
-
-            </section>
-
-        {% endif %}
-
-{% if featured_events %}
-
-            <section class="featured-section">
-
-                <div class="featured-heading">
-
-                    <h2>
-                        ⭐ Featured Events
-                    </h2>
-
-                    <span>
-                        SWIPE POSTERS
-                    </span>
-
-                </div>
-
-
-                <div class="featured-grid">
-
-                    {% for featured in featured_events %}
-
-                        {% set item = featured.event %}
-
-                        <article class="featured-card">
-
-                            <div
-                                class="featured-carousel"
-                                data-featured-carousel
-                            >
-
-                                <div class="featured-badge">
-                                    ⭐ FEATURED
-                                </div>
-
-
-                                <div
-                                    class="featured-track"
-                                    data-featured-track
-                                >
-
-                                    {% if featured.images %}
-
-                                        {% for image in featured.images %}
-
-                                            <div
-                                                class="featured-slide"
-                                                data-featured-slide
-                                            >
-
-                                                <img
-                                                    src="{{ url_for(
-                                                        'featured_listing_image',
-                                                        event_id=item.id,
-                                                        image_id=image.id
-                                                    ) }}"
-                                                    alt="{{ item.title }} poster {{ loop.index }}"
-                                                    loading="lazy"
-                                                >
-
-                                            </div>
-
-                                        {% endfor %}
-
-                                    {% elif item.poster_image_mimetype or item.image_url %}
-
-                                        <div
-                                            class="featured-slide"
-                                            data-featured-slide
-                                        >
-
-                                            <img
-                                                src="{{
-                                                    url_for(
-                                                        'event_poster',
-                                                        event_id=item.id
-                                                    )
-                                                    if item.poster_image_mimetype
-                                                    else item.image_url
-                                                }}"
-                                                alt="{{ item.title }}"
-                                                loading="lazy"
-                                            >
-
-                                        </div>
-
-                                    {% endif %}
-
-                                </div>
-
-
-                                {% if featured.images|length > 1 %}
-
-                                    <div
-                                        class="featured-dots"
-                                        data-featured-dots
-                                    >
-
-                                        {% for image in featured.images %}
-
-                                            <button
-                                                type="button"
-                                                class="featured-dot {% if loop.first %}active{% endif %}"
-                                                data-featured-dot="{{ loop.index0 }}"
-                                                aria-label="Show poster {{ loop.index }}"
-                                            ></button>
-
-                                        {% endfor %}
-
-                                    </div>
-
-                                {% endif %}
-
-                            </div>
-
-
-                            <div class="featured-content">
-
-                                <h3>
-                                    {{ item.title }}
-                                </h3>
-
-                                {% if item.event_date %}
-
-                                    <div class="featured-meta">
-                                        📅
-                                        {{
-                                            item.event_date.strftime(
-                                                "%d %B %Y"
-                                            )
-                                        }}
-                                    </div>
-
-                                {% endif %}
-
-
-                                {% if item.event_time %}
-
-                                    <div class="featured-meta">
-                                        🕒
-                                        {{
-                                            item.event_time.strftime(
-                                                "%H:%M"
-                                            )
-                                        }}
-                                    </div>
-
-                                {% endif %}
-
-
-                                {% if item.venue %}
-
-                                    <div class="featured-meta">
-                                        📍 {{ item.venue }}
-                                    </div>
-
-                                {% endif %}
-
-
-                                <a
-                                    href="{{ url_for(
-                                        'event_page',
-                                        event_id=item.id
-                                    ) }}"
-                                    class="featured-action"
-                                >
-                                    View Event →
-                                </a>
-
-                            </div>
-
-                        </article>
-
-                    {% endfor %}
-
-                </div>
-
-            </section>
-
-        {% endif %}
-
-
-        {% if events %}
-
-
-            <div class="event-grid">
-
-
-                {% for item in events %}
-
-
-                    <a
-                        href="{{ url_for(
-                            'event_page',
-                            event_id=item.id
-                        ) }}"
-                        class="event-card"
-                    >
-
-
-                        {% if item.poster_image_mimetype or item.image_url %}
-
-                            <img
-                                src="{{
-        url_for(
-            'event_poster',
-            event_id=item.id
-        )
-        if item.poster_image_mimetype
-        else item.image_url
-    }}"
-                                alt="{{ item.title }}"
-                                class="event-image"
-                                loading="lazy"
-                            >
-
-                        {% endif %}
-
-
-
-                        <div class="event-card-content">
-
-
-                            <h2>
-                                {{ item.title }}
-                            </h2>
-
-
-
-                            {% if item.organizer %}
-
-                                <div class="event-card-organizer">
-
-                                    Hosted by
-                                    {{ item.organizer.display_name }}
-
-                                </div>
-
-
-                            {% elif item.organizer_name %}
-
-                                <div class="event-card-organizer">
-
-                                    Hosted by
-                                    {{ item.organizer_name }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if item.event_date %}
-
-                                <div class="event-card-date">
-
-                                    📅
-
-                                    {{ item.event_date.strftime(
-                                        '%d %B %Y'
-                                    ) }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if item.event_time %}
-
-                                <div class="event-card-date">
-
-                                    🕒
-
-                                    {{ item.event_time.strftime(
-                                        '%H:%M'
-                                    ) }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if item.venue %}
-
-                                <div class="event-card-date">
-
-                                    📍 {{ item.venue }}
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            <div class="event-card-price">
-
-                                {% if item.ticket_price == 0 %}
-
-                                    FREE
-
-                                {% else %}
-
-                                    R{{ "%.2f"|format(
-                                        item.ticket_price
-                                    ) }}
-
-                                {% endif %}
-
-                            </div>
-
-
-
-                            {% if item.is_sold_out %}
-
-                                <div class="event-card-status">
-                                    SOLD OUT
-                                </div>
-
-
-                            {% elif item.ticket_capacity is not none %}
-
-                                <div class="event-card-status">
-
-                                    {{ item.remaining_tickets }}
-                                    remaining
-
-                                </div>
-
-                            {% else %}
-
-                                <div class="event-card-status">
-                                    Tickets available
-                                </div>
-
-                            {% endif %}
-
-
-                        </div>
-
-
-                    </a>
-
-
-                {% endfor %}
-
-
-            </div>
-
-
-        {% elif not featured_events %}
-
-
-            <div class="empty-state">
-
-                No ticketed events are available yet.
-
-            </div>
-
-
-        {% endif %}
+        <nav class="mobile-bottom-nav" aria-label="Kalxa navigation">
+            <a href="{{ url_for('home') }}" class="active"><span>⌂</span><small>Home</small></a>
+            <a href="#discover"><span>⌕</span><small>Discover</small></a>
+            <a href="{{ url_for('track_ticket') }}"><span>🎟</span><small>My Tickets</small></a>
+            {% if firebase_push_configured %}<a href="#updates"><span>🔔</span><small>Updates</small></a>{% endif %}
+        </nav>
 
 
     {% endif %}
@@ -3851,6 +3753,93 @@ document.querySelectorAll(
 });
 </script>
 
+
+<script>
+(() => {
+    const search = document.getElementById('event-search');
+    const clear = document.getElementById('clear-search');
+    const chips = Array.from(document.querySelectorAll('[data-filter]'));
+    const cards = Array.from(document.querySelectorAll('#premium-event-grid .event-searchable'));
+    const resultCount = document.getElementById('results-count');
+    const noResults = document.getElementById('no-results');
+    let activeFilter = 'all';
+
+    const saDate = (date, time='00:00:00') => date ? new Date(`${date}T${time}+02:00`) : null;
+    const now = () => new Date();
+    const isSameSADay = (a, b) => {
+        const fmt = new Intl.DateTimeFormat('en-ZA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'});
+        return fmt.format(a) === fmt.format(b);
+    };
+    const isThisWeekend = (d) => {
+        if (!d) return false;
+        const n = now();
+        const saNow = new Date(n.toLocaleString('en-US',{timeZone:'Africa/Johannesburg'}));
+        const day = saNow.getDay();
+        const daysToSat = (6-day+7)%7;
+        const sat = new Date(saNow); sat.setHours(0,0,0,0); sat.setDate(saNow.getDate()+daysToSat);
+        const mon = new Date(sat); mon.setDate(sat.getDate()+2);
+        return d >= sat && d < mon;
+    };
+
+    function matchesFilter(card){
+        const d = saDate(card.dataset.date, card.dataset.time);
+        if (activeFilter === 'today') return d && isSameSADay(d, now());
+        if (activeFilter === 'weekend') return isThisWeekend(d);
+        if (activeFilter === 'earlybird') return card.dataset.earlybird === 'true';
+        if (activeFilter === 'sellingfast') return card.dataset.sellingfast === 'true';
+        return true;
+    }
+
+    function applyFilters(){
+        const q = (search?.value || '').trim().toLowerCase();
+        let shown = 0;
+        cards.forEach(card => {
+            const haystack = `${card.dataset.title||''} ${card.dataset.venue||''} ${card.dataset.organizer||''}`;
+            const visible = (!q || haystack.includes(q)) && matchesFilter(card);
+            card.hidden = !visible;
+            if (visible) shown += 1;
+        });
+        if (resultCount) resultCount.textContent = `${shown} event${shown===1?'':'s'}`;
+        if (noResults) noResults.hidden = shown !== 0;
+        if (clear) clear.hidden = !q;
+    }
+
+    search?.addEventListener('input', applyFilters);
+    clear?.addEventListener('click', () => { search.value=''; search.focus(); applyFilters(); });
+    document.getElementById('focus-search')?.addEventListener('click', () => search?.focus());
+    chips.forEach(chip => chip.addEventListener('click', () => {
+        activeFilter = chip.dataset.filter;
+        chips.forEach(c => c.classList.toggle('active', c === chip));
+        applyFilters();
+        document.getElementById('discover-grid')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+    document.querySelectorAll('[data-scroll-target]').forEach(btn => btn.addEventListener('click', () => document.getElementById(btn.dataset.scrollTarget)?.scrollIntoView({behavior:'smooth'})));
+
+    function updateCountdown(el){
+        const card = el.closest('[data-date]');
+        const date = el.dataset.date || card?.dataset.date;
+        const time = el.dataset.time || card?.dataset.time || '00:00:00';
+        const start = saDate(date,time);
+        if (!start) return;
+        const diff = start - now();
+        const hours = diff / 3600000;
+        const days = Math.ceil(diff / 86400000);
+        if (diff <= 0 && diff > -6*3600000) el.textContent = '🔴 HAPPENING NOW';
+        else if (diff <= -6*3600000) el.textContent = 'EVENT ENDED';
+        else if (hours <= 8) el.textContent = '🔥 TONIGHT';
+        else if (days === 1) el.textContent = 'TOMORROW';
+        else if (days > 1 && days <= 7) el.textContent = `${days} DAYS TO GO`;
+        else el.textContent = new Intl.DateTimeFormat('en-ZA',{day:'2-digit',month:'short',timeZone:'Africa/Johannesburg'}).format(start).toUpperCase();
+    }
+    document.querySelectorAll('.event-countdown').forEach(updateCountdown);
+    setInterval(() => document.querySelectorAll('.event-countdown').forEach(updateCountdown), 60000);
+
+    const topbar = document.querySelector('.discovery-topbar');
+    const setSticky = () => topbar?.classList.toggle('scrolled', window.scrollY > 18);
+    setSticky(); window.addEventListener('scroll', setSticky, {passive:true});
+    applyFilters();
+})();
+</script>
 </body>
 
 </html>
