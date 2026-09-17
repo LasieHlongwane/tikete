@@ -2067,6 +2067,395 @@
   }
   #updates .notification-status{font-size:8px!important}
 }
+
+
+        /* =====================================================
+           FINAL EVENT CARD POLISH
+           Clean spacing, premium pricing, tighter badges
+        ===================================================== */
+
+        .featured-event-stack {
+            gap: 16px !important;
+        }
+
+        .featured-hero-card {
+            overflow: hidden !important;
+            background: #f3f4f6 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .08) !important;
+        }
+
+        .featured-media {
+            aspect-ratio: 16 / 10;
+        }
+
+        .featured-badge,
+        .live-state,
+        .card-state,
+        .scarcity-pill,
+        .mini-state,
+        .phase-corner {
+            letter-spacing: .025em !important;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .10);
+        }
+
+        .featured-badge,
+        .live-state {
+            padding: 5px 8px !important;
+            font-size: .57rem !important;
+        }
+
+        .featured-overlay-copy {
+            left: 16px !important;
+            right: 16px !important;
+            bottom: 15px !important;
+        }
+
+        .featured-overlay-copy h3 {
+            max-width: 92%;
+            margin: 0 !important;
+            font-size: clamp(1.25rem, 3.5vw, 1.8rem) !important;
+            line-height: 1.04 !important;
+            letter-spacing: -.035em !important;
+            font-weight: 950 !important;
+        }
+
+        .featured-meta-line {
+            margin-top: 7px !important;
+            gap: 4px !important;
+            color: rgba(255,255,255,.82) !important;
+            font-size: .68rem !important;
+            font-weight: 650;
+        }
+
+        .featured-price-line {
+            margin-top: 9px !important;
+        }
+
+        .featured-price-line strong {
+            color: #ffffff;
+            font-size: 1.12rem !important;
+            line-height: 1;
+            font-weight: 950 !important;
+            letter-spacing: -.025em;
+        }
+
+        .phase-pill {
+            padding: 4px 7px !important;
+            border-radius: 999px !important;
+            background: rgba(255,244,223,.16) !important;
+            font-size: .55rem !important;
+            line-height: 1 !important;
+            letter-spacing: .035em !important;
+        }
+
+        .phase-pill.small {
+            padding: 4px 6px !important;
+            background: #fff4df !important;
+            color: #5b4500 !important;
+            font-size: .52rem !important;
+        }
+
+        .featured-cta-row {
+            gap: 7px !important;
+            padding: 10px !important;
+        }
+
+        .featured-view,
+        .featured-buy {
+            min-height: 40px !important;
+            border-radius: 10px !important;
+            font-size: .7rem !important;
+            font-weight: 900 !important;
+        }
+
+        .featured-view {
+            background: #ffffff !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+        }
+
+        .featured-buy {
+            background: #111827 !important;
+            color: #ffffff !important;
+        }
+
+        .event-rail {
+            gap: 10px !important;
+        }
+
+        .rail-card {
+            overflow: hidden !important;
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, .055);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .rail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .09);
+        }
+
+        .mini-state,
+        .phase-corner {
+            padding: 4px 6px !important;
+            font-size: .50rem !important;
+        }
+
+        .rail-copy {
+            padding: 10px 11px 11px !important;
+        }
+
+        .rail-copy h3 {
+            min-height: 2.25em;
+            font-size: .86rem !important;
+            line-height: 1.14 !important;
+            font-weight: 900 !important;
+            letter-spacing: -.015em;
+        }
+
+        .rail-copy p {
+            margin-top: 5px !important;
+            color: #6b7280 !important;
+            font-size: .62rem !important;
+        }
+
+        .price-row {
+            margin-top: 8px !important;
+            align-items: flex-end !important;
+        }
+
+        .price-row span {
+            color: #6b7280 !important;
+            font-size: .52rem !important;
+            letter-spacing: .05em;
+        }
+
+        .price-row strong {
+            color: #111827;
+            font-size: .94rem !important;
+            line-height: 1;
+            font-weight: 950 !important;
+            letter-spacing: -.025em;
+        }
+
+        .micro-card {
+            grid-template-columns: 58px 1fr !important;
+            width: 210px !important;
+            gap: 9px !important;
+            padding: 7px !important;
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 14px !important;
+            box-shadow: 0 5px 16px rgba(15, 23, 42, .045);
+        }
+
+        .micro-card img,
+        .micro-card > .poster-fallback {
+            width: 58px !important;
+            height: 70px !important;
+            border-radius: 9px !important;
+        }
+
+        .micro-card strong {
+            font-size: .76rem !important;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+
+        .micro-card small {
+            margin-top: 4px !important;
+            color: #6b7280 !important;
+            font-size: .59rem !important;
+        }
+
+        .premium-event-grid {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)) !important;
+            gap: 13px !important;
+        }
+
+        .premium-event-card {
+            overflow: hidden !important;
+            background: #f3f4f6 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 18px !important;
+            box-shadow: 0 7px 22px rgba(15, 23, 42, .06) !important;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+        }
+
+        .premium-event-card:hover {
+            transform: translateY(-3px) !important;
+            border-color: #c4cbd4 !important;
+            box-shadow: 0 13px 30px rgba(15, 23, 42, .10) !important;
+        }
+
+        .premium-poster {
+            aspect-ratio: 4 / 5 !important;
+        }
+
+        .premium-event-card:hover .premium-poster img {
+            transform: scale(1.018) !important;
+        }
+
+        .card-state {
+            top: 9px !important;
+            left: 9px !important;
+            padding: 4px 6px !important;
+            font-size: .50rem !important;
+            background: rgba(17,24,39,.82) !important;
+        }
+
+        .scarcity-pill {
+            top: 9px !important;
+            right: 9px !important;
+            padding: 4px 6px !important;
+            background: #991b1b !important;
+            color: #ffffff !important;
+            font-size: .49rem !important;
+        }
+
+        .premium-card-copy {
+            padding: 12px 12px 11px !important;
+        }
+
+        .card-title {
+            min-height: 2.28em;
+            color: #111827 !important;
+            font-size: .94rem !important;
+            line-height: 1.14 !important;
+            font-weight: 950 !important;
+            letter-spacing: -.022em;
+        }
+
+        .card-meta {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: 5px !important;
+            margin-top: 6px !important;
+            overflow: hidden;
+            color: #6b7280 !important;
+            font-size: .60rem !important;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .card-meta span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-bottom {
+            align-items: flex-end !important;
+            margin-top: 11px !important;
+            gap: 8px !important;
+        }
+
+        .price-eyebrow {
+            display: block;
+            margin: 5px 0 2px;
+            color: #6b7280;
+            font-size: .50rem;
+            font-weight: 850;
+            line-height: 1;
+            letter-spacing: .075em;
+            text-transform: uppercase;
+        }
+
+        .card-price {
+            display: block !important;
+            margin: 0 !important;
+            color: #111827 !important;
+            font-size: 1.12rem !important;
+            line-height: 1 !important;
+            font-weight: 950 !important;
+            letter-spacing: -.035em;
+        }
+
+        .ticket-cta {
+            min-height: 35px !important;
+            padding: 0 10px !important;
+            border-radius: 9px !important;
+            background: #111827 !important;
+            color: #ffffff !important;
+            font-size: .62rem !important;
+            font-weight: 950 !important;
+            white-space: nowrap;
+        }
+
+        .ticket-cta.disabled {
+            background: #d1d5db !important;
+            color: #6b7280 !important;
+        }
+
+        @media (max-width: 760px) {
+
+            .featured-media {
+                aspect-ratio: 4 / 5;
+            }
+
+            .premium-event-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 9px !important;
+            }
+
+            .premium-card-copy {
+                padding: 9px !important;
+            }
+
+            .card-title {
+                min-height: 2.25em;
+                font-size: .82rem !important;
+            }
+
+            .card-meta {
+                font-size: .54rem !important;
+            }
+
+            .card-bottom {
+                display: block !important;
+                margin-top: 8px !important;
+            }
+
+            .card-price {
+                font-size: 1rem !important;
+            }
+
+            .ticket-cta {
+                width: 100% !important;
+                min-height: 33px !important;
+                margin-top: 8px;
+            }
+        }
+
+        @media (max-width: 390px) {
+
+            .premium-event-grid {
+                gap: 7px !important;
+            }
+
+            .premium-event-card {
+                border-radius: 14px !important;
+            }
+
+            .card-title {
+                font-size: .78rem !important;
+            }
+        }
+
+
+        #updates.notification-strip h4 {
+            margin: 0 !important;
+            color: #374151 !important;
+            font-size: 10px !important;
+            line-height: 1.15 !important;
+            font-weight: 900 !important;
+            letter-spacing: .045em !important;
+        }
 </style>
 
 </head>
@@ -2840,6 +3229,7 @@
                                 <div class="card-bottom">
                                     <div>
                                         {% if ns.phase %}<span class="phase-pill small">{{ ns.phase }}</span>{% endif %}
+                                        {% if not item.is_sold_out %}<span class="price-eyebrow">From</span>{% endif %}
                                         <strong class="card-price">{% if item.is_sold_out %}SOLD OUT{% elif ns.price is not none %}{% if ns.price == 0 %}FREE{% else %}R{{ '%.2f'|format(ns.price) }}{% endif %}{% elif item.ticket_price == 0 %}FREE{% else %}R{{ '%.2f'|format(item.ticket_price) }}{% endif %}</strong>
                                     </div>
                                     {% if not item.is_sold_out and item.sales_open %}
@@ -2866,21 +3256,6 @@
             </div>
             {% endif %}
 
-            {% if firebase_push_configured %}
-            <section class="notification-strip" id="updates">
-                <div>
-                    <p>🔔 RECEIVE NOTIFICATIONS</p>
-                </div>
-                <div class="notification-form">
-                    <input id="home-notification-area" type="text" placeholder="Your area or town" autocomplete="address-level2">
-                    <div class="notification-actions">
-                        <button type="button" id="home-enable-notifications" class="cream-button">Enable notifications</button>
-                        <button type="button" id="home-disable-notifications" class="quiet-button" hidden>Turn off</button>
-                    </div>
-                    <div id="home-notification-status" class="notification-status" aria-live="polite">Notifications are currently off.</div>
-                </div>
-            </section>
-            {% endif %}
 
         </div>
 
@@ -4121,84 +4496,322 @@ document.querySelectorAll(
     const search = document.getElementById('event-search');
     const clear = document.getElementById('clear-search');
     const chips = Array.from(document.querySelectorAll('[data-filter]'));
-    const cards = Array.from(document.querySelectorAll('#premium-event-grid .event-searchable'));
     const resultCount = document.getElementById('results-count');
     const noResults = document.getElementById('no-results');
     let activeFilter = 'all';
 
-    const saDate = (date, time='00:00:00') => date ? new Date(`${date}T${time}+02:00`) : null;
+    const saDate = (date, time='00:00:00') =>
+        date ? new Date(`${date}T${time}+02:00`) : null;
+
     const now = () => new Date();
+
+    function southAfricaTodayString() {
+        const parts = new Intl.DateTimeFormat(
+            'en-CA',
+            {
+                timeZone: 'Africa/Johannesburg',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }
+        ).formatToParts(new Date());
+
+        const values = {};
+        parts.forEach((part) => {
+            if (part.type !== 'literal') {
+                values[part.type] = part.value;
+            }
+        });
+
+        return `${values.year}-${values.month}-${values.day}`;
+    }
+
+    const todaySA = southAfricaTodayString();
+
+    function isExpiredDate(dateString) {
+        return Boolean(
+            dateString
+            && dateString < todaySA
+        );
+    }
+
+    /* ========================================================
+       REMOVE EXPIRED EVENTS FROM THE MAIN PAGE
+       --------------------------------------------------------
+       The event stays visible for its entire event date.
+       It disappears when the Johannesburg calendar moves
+       to the following day.
+    ======================================================== */
+
+    const expiredEventHrefs = new Set();
+
+    document.querySelectorAll(
+        '#premium-event-grid .premium-event-card[data-date]'
+    ).forEach((card) => {
+        if (!isExpiredDate(card.dataset.date)) {
+            return;
+        }
+
+        const link = card.querySelector('.poster-link');
+        const href = link?.getAttribute('href');
+
+        if (href) {
+            expiredEventHrefs.add(href);
+        }
+
+        card.remove();
+    });
+
+    document.querySelectorAll(
+        '.featured-hero-card[data-date]'
+    ).forEach((card) => {
+        if (isExpiredDate(card.dataset.date)) {
+            card.remove();
+        }
+    });
+
+    if (expiredEventHrefs.size) {
+        document.querySelectorAll(
+            'a.rail-card, a.micro-card'
+        ).forEach((card) => {
+            const href = card.getAttribute('href');
+            if (expiredEventHrefs.has(href)) {
+                card.remove();
+            }
+        });
+    }
+
+    const featuredShell = document.querySelector('.featured-shell');
+    if (
+        featuredShell
+        && !featuredShell.querySelector('.featured-hero-card')
+    ) {
+        featuredShell.hidden = true;
+    }
+
+    [
+        document.getElementById('soon-section'),
+        document.getElementById('earlybird-section'),
+        document.getElementById('around-you-section')
+    ].forEach((section) => {
+        if (!section) {
+            return;
+        }
+
+        const rail = section.querySelector('.event-rail');
+        if (
+            rail
+            && !rail.querySelector('.rail-card, .micro-card')
+        ) {
+            section.hidden = true;
+        }
+    });
+
+    const cards = Array.from(
+        document.querySelectorAll(
+            '#premium-event-grid .event-searchable'
+        )
+    );
+
     const isSameSADay = (a, b) => {
-        const fmt = new Intl.DateTimeFormat('en-ZA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'});
+        const fmt = new Intl.DateTimeFormat(
+            'en-ZA',
+            {
+                timeZone: 'Africa/Johannesburg',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }
+        );
         return fmt.format(a) === fmt.format(b);
     };
+
     const isThisWeekend = (d) => {
         if (!d) return false;
+
         const n = now();
-        const saNow = new Date(n.toLocaleString('en-US',{timeZone:'Africa/Johannesburg'}));
+        const saNow = new Date(
+            n.toLocaleString(
+                'en-US',
+                { timeZone: 'Africa/Johannesburg' }
+            )
+        );
+
         const day = saNow.getDay();
-        const daysToSat = (6-day+7)%7;
-        const sat = new Date(saNow); sat.setHours(0,0,0,0); sat.setDate(saNow.getDate()+daysToSat);
-        const mon = new Date(sat); mon.setDate(sat.getDate()+2);
+        const daysToSat = (6 - day + 7) % 7;
+        const sat = new Date(saNow);
+        sat.setHours(0, 0, 0, 0);
+        sat.setDate(saNow.getDate() + daysToSat);
+
+        const mon = new Date(sat);
+        mon.setDate(sat.getDate() + 2);
+
         return d >= sat && d < mon;
     };
 
-    function matchesFilter(card){
-        const d = saDate(card.dataset.date, card.dataset.time);
-        if (activeFilter === 'today') return d && isSameSADay(d, now());
-        if (activeFilter === 'weekend') return isThisWeekend(d);
-        if (activeFilter === 'earlybird') return card.dataset.earlybird === 'true';
-        if (activeFilter === 'sellingfast') return card.dataset.sellingfast === 'true';
+    function matchesFilter(card) {
+        const d = saDate(
+            card.dataset.date,
+            card.dataset.time
+        );
+
+        if (activeFilter === 'today') {
+            return d && isSameSADay(d, now());
+        }
+
+        if (activeFilter === 'weekend') {
+            return isThisWeekend(d);
+        }
+
+        if (activeFilter === 'earlybird') {
+            return card.dataset.earlybird === 'true';
+        }
+
+        if (activeFilter === 'sellingfast') {
+            return card.dataset.sellingfast === 'true';
+        }
+
         return true;
     }
 
-    function applyFilters(){
-        const q = (search?.value || '').trim().toLowerCase();
+    function applyFilters() {
+        const q = (
+            search?.value || ''
+        ).trim().toLowerCase();
+
         let shown = 0;
-        cards.forEach(card => {
-            const haystack = `${card.dataset.title||''} ${card.dataset.venue||''} ${card.dataset.organizer||''}`;
-            const visible = (!q || haystack.includes(q)) && matchesFilter(card);
+
+        cards.forEach((card) => {
+            const haystack = `${card.dataset.title || ''} ${card.dataset.venue || ''} ${card.dataset.organizer || ''}`;
+
+            const visible =
+                (!q || haystack.includes(q))
+                && matchesFilter(card);
+
             card.hidden = !visible;
-            if (visible) shown += 1;
+
+            if (visible) {
+                shown += 1;
+            }
         });
-        if (resultCount) resultCount.textContent = `${shown} event${shown===1?'':'s'}`;
-        if (noResults) noResults.hidden = shown !== 0;
-        if (clear) clear.hidden = !q;
+
+        if (resultCount) {
+            resultCount.textContent = `${shown} event${shown === 1 ? '' : 's'}`;
+        }
+
+        if (noResults) {
+            noResults.hidden = shown !== 0;
+        }
+
+        if (clear) {
+            clear.hidden = !q;
+        }
     }
 
-    search?.addEventListener('input', applyFilters);
-    clear?.addEventListener('click', () => { search.value=''; search.focus(); applyFilters(); });
-    document.getElementById('focus-search')?.addEventListener('click', () => search?.focus());
-    chips.forEach(chip => chip.addEventListener('click', () => {
-        activeFilter = chip.dataset.filter;
-        chips.forEach(c => c.classList.toggle('active', c === chip));
-        applyFilters();
-        document.getElementById('discover-grid')?.scrollIntoView({behavior:'smooth',block:'start'});
-    }));
-    document.querySelectorAll('[data-scroll-target]').forEach(btn => btn.addEventListener('click', () => document.getElementById(btn.dataset.scrollTarget)?.scrollIntoView({behavior:'smooth'})));
+    search?.addEventListener(
+        'input',
+        applyFilters
+    );
 
-    function updateCountdown(el){
+    clear?.addEventListener(
+        'click',
+        () => {
+            search.value = '';
+            search.focus();
+            applyFilters();
+        }
+    );
+
+    document.getElementById('focus-search')?.addEventListener(
+        'click',
+        () => search?.focus()
+    );
+
+    chips.forEach((chip) => {
+        chip.addEventListener(
+            'click',
+            () => {
+                activeFilter = chip.dataset.filter;
+
+                chips.forEach((c) => {
+                    c.classList.toggle(
+                        'active',
+                        c === chip
+                    );
+                });
+
+                applyFilters();
+
+                document.getElementById(
+                    'discover-grid'
+                )?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        );
+    });
+
+    document.querySelectorAll(
+        '[data-scroll-target]'
+    ).forEach((btn) => {
+        btn.addEventListener(
+            'click',
+            () => document.getElementById(
+                btn.dataset.scrollTarget
+            )?.scrollIntoView({
+                behavior: 'smooth'
+            })
+        );
+    });
+
+    function updateCountdown(el) {
         const card = el.closest('[data-date]');
         const date = el.dataset.date || card?.dataset.date;
         const time = el.dataset.time || card?.dataset.time || '00:00:00';
-        const start = saDate(date,time);
-        if (!start) return;
+        const start = saDate(date, time);
+
+        if (!start) {
+            return;
+        }
+
         const diff = start - now();
         const hours = diff / 3600000;
         const days = Math.ceil(diff / 86400000);
-        if (diff <= 0 && diff > -6*3600000) el.textContent = '🔴 HAPPENING NOW';
-        else if (diff <= -6*3600000) el.textContent = 'EVENT ENDED';
-        else if (hours <= 8) el.textContent = '🔥 TONIGHT';
-        else if (days === 1) el.textContent = 'TOMORROW';
-        else if (days > 1 && days <= 7) el.textContent = `${days} DAYS TO GO`;
-        else el.textContent = new Intl.DateTimeFormat('en-ZA',{day:'2-digit',month:'short',timeZone:'Africa/Johannesburg'}).format(start).toUpperCase();
-    }
-    document.querySelectorAll('.event-countdown').forEach(updateCountdown);
-    setInterval(() => document.querySelectorAll('.event-countdown').forEach(updateCountdown), 60000);
 
-    const topbar = document.querySelector('.discovery-topbar');
-    const setSticky = () => topbar?.classList.toggle('scrolled', window.scrollY > 18);
-    setSticky(); window.addEventListener('scroll', setSticky, {passive:true});
+        if (diff <= 0 && diff > -6 * 3600000) {
+            el.textContent = '🔴 HAPPENING NOW';
+        } else if (diff <= -6 * 3600000) {
+            el.textContent = 'TODAY';
+        } else if (hours <= 8) {
+            el.textContent = '🔥 TONIGHT';
+        } else if (days === 1) {
+            el.textContent = 'TOMORROW';
+        } else if (days > 1 && days <= 7) {
+            el.textContent = `${days} DAYS TO GO`;
+        } else {
+            el.textContent = new Intl.DateTimeFormat(
+                'en-ZA',
+                {
+                    day: '2-digit',
+                    month: 'short',
+                    timeZone: 'Africa/Johannesburg'
+                }
+            ).format(start).toUpperCase();
+        }
+    }
+
+    document.querySelectorAll(
+        '.event-countdown'
+    ).forEach(updateCountdown);
+
+    setInterval(
+        () => document.querySelectorAll(
+            '.event-countdown'
+        ).forEach(updateCountdown),
+        60000
+    );
+
     applyFilters();
 })();
 </script>
