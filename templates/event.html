@@ -1853,7 +1853,13 @@
 
                                     <div>
                                         <strong>{{ ticket_type.name }}</strong>
-                                        {% if ticket_type.current_sale_phase %}<small style="display:block;color:#facc15;">{{ ticket_type.current_sale_phase.name }}</small>{% endif %}
+                                        {% if ticket_type.active_sale_phases and not ticket_type.current_sale_phase %}
+                                            {% if ticket_type.next_sale_phase %}
+                                                <small style="display:block;color:#facc15;">Sales phase has not started yet</small>
+                                            {% else %}
+                                                <small style="display:block;color:#fca5a5;">No sales phase is currently active</small>
+                                            {% endif %}
+                                        {% endif %}
 
                                         {% if ticket_type.capacity is not none %}
                                             <div class="ticket-availability" style="margin-top:3px;">
@@ -1866,8 +1872,19 @@
                                         {% endif %}
                                     </div>
 
-                                    <strong>
-                                        {% if ticket_type.price == 0 %}
+                                    <strong style="text-align:right;">
+                                        {% if ticket_type.current_sale_phase %}
+                                            {% if ticket_type.current_price == 0 %}
+                                                FREE
+                                            {% else %}
+                                                R{{ "%.2f"|format(ticket_type.current_price) }}
+                                            {% endif %}
+                                            <small style="display:block;color:#facc15;font-weight:700;margin-top:2px;">{{ ticket_type.current_sale_phase.name }}</small>
+                                        {% elif ticket_type.active_sale_phases and ticket_type.next_sale_phase %}
+                                            <span style="font-size:.78rem;color:#facc15;">UPCOMING</span>
+                                        {% elif ticket_type.active_sale_phases %}
+                                            <span style="font-size:.78rem;color:#fca5a5;">NOT ON SALE</span>
+                                        {% elif ticket_type.price == 0 %}
                                             FREE
                                         {% else %}
                                             R{{ "%.2f"|format(ticket_type.price) }}
