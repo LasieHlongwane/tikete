@@ -61,6 +61,8 @@ from models import (
     EntryPass,
     EventBoost,
     EventBoostReminder,
+    FeaturedListing,
+    FeaturedListingImage,
     GeocodedArea,
     KalxaBridgeTokenUse,
     Organizer,
@@ -148,6 +150,53 @@ EVENT_BOOST_PLANS = {
         ],
     },
 }
+
+
+# ============================================================
+# KALXA FEATURED LISTING
+# ============================================================
+
+FEATURED_LISTING_3_DAY_PRICE = Decimal(
+    os.environ.get(
+        "FEATURED_LISTING_3_DAY_PRICE",
+        "9.00",
+    )
+)
+
+FEATURED_LISTING_7_DAY_PRICE = Decimal(
+    os.environ.get(
+        "FEATURED_LISTING_7_DAY_PRICE",
+        "19.00",
+    )
+)
+
+FEATURED_LISTING_14_DAY_PRICE = Decimal(
+    os.environ.get(
+        "FEATURED_LISTING_14_DAY_PRICE",
+        "29.00",
+    )
+)
+
+FEATURED_LISTING_PLANS = {
+    "3_day": {
+        "name": "3 Day Featured Listing",
+        "price": FEATURED_LISTING_3_DAY_PRICE,
+        "duration_days": 3,
+    },
+    "7_day": {
+        "name": "7 Day Featured Listing",
+        "price": FEATURED_LISTING_7_DAY_PRICE,
+        "duration_days": 7,
+    },
+    "14_day": {
+        "name": "14 Day Featured Listing",
+        "price": FEATURED_LISTING_14_DAY_PRICE,
+        "duration_days": 14,
+    },
+}
+
+FEATURED_IMAGE_MAX_COUNT = 3
+FEATURED_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 
 
 # ============================================================
@@ -1695,6 +1744,216 @@ def send_push_campaign(
 
 
     return campaign
+
+
+# ============================================================
+# FEATURED LISTING HELPERS
+# ============================================================
+
+def featured_listing_plan(plan_code):
+
+    plan = FEATURED_LISTING_PLANS.get(
+        str(plan_code or "")
+        .strip()
+        .lower()
+    )
+
+    if not plan:
+        raise ValueError(
+            "Invalid featured listing plan."
+        )
+
+    return plan
+
+
+def generate_featured_listing_reference():
+
+    return (
+        "KXFEATURED-"
+        + secrets.token_hex(6).upper()
+    )
+
+
+def get_active_featured_listing(event_id):
+
+    now = datetime.utcnow()
+
+    return (
+        FeaturedListing.query
+        .filter(
+            FeaturedListing.event_id
+            == event_id,
+            FeaturedListing.status
+            == "active",
+            FeaturedListing.starts_at
+            <= now,
+            FeaturedListing.ends_at
+            > now,
+        )
+        .order_by(
+            FeaturedListing.starts_at.desc()
+        )
+        .first()
+    )
+
+
+def validate_featured_image_upload(image_file):
+
+    filename = secure_filename(
+        image_file.filename or ""
+    )
+
+    if (
+        not filename
+        or "."
+        not in filename
+    ):
+        raise ValueError(
+            "Featured posters must be JPG, JPEG, PNG or WEBP images."
+        )
+
+    extension = (
+        filename
+        .rsplit(".", 1)[1]
+        .lower()
+    )
+
+    mimetypes = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "webp": "image/webp",
+    }
+
+    if extension not in mimetypes:
+        raise ValueError(
+            "Featured posters must be JPG, JPEG, PNG or WEBP images."
+        )
+
+    data = image_file.read()
+
+    if not data:
+        raise ValueError(
+            "One of the featured poster images is empty."
+        )
+
+    if len(data) > FEATURED_IMAGE_MAX_BYTES:
+        raise ValueError(
+            "Each featured poster must be 5 MB or smaller."
+        )
+
+    return {
+        "data": data,
+        "mimetype": mimetypes[extension],
+        "filename": filename,
+    }
+
+
+def finalize_featured_listing_payment(
+    listing,
+    transaction_data,
+):
+
+    if listing.is_active_now:
+        return listing
+
+    if (
+        not isinstance(
+            transaction_data,
+            dict,
+        )
+        or transaction_data.get("status")
+        != "success"
+    ):
+        raise RuntimeError(
+            "Paystack featured-listing transaction is not successful."
+        )
+
+    reference = str(
+        transaction_data.get(
+            "reference",
+            "",
+        )
+    ).strip()
+
+    if reference != listing.payment_reference:
+        raise RuntimeError(
+            "Paystack featured-listing reference does not match."
+        )
+
+    expected_amount = int(
+        (
+            Decimal(
+                str(listing.price)
+            )
+            * 100
+        )
+        .quantize(
+            Decimal("1"),
+            rounding=ROUND_UP,
+        )
+    )
+
+    actual_amount = int(
+        transaction_data.get(
+            "amount"
+        )
+        or 0
+    )
+
+    if actual_amount != expected_amount:
+        raise RuntimeError(
+            "Paystack featured-listing amount does not match."
+        )
+
+    currency = str(
+        transaction_data.get(
+            "currency",
+            "",
+        )
+    ).strip().upper()
+
+    if (
+        currency
+        and currency != "ZAR"
+    ):
+        raise RuntimeError(
+            "Paystack featured-listing currency does not match."
+        )
+
+    now = datetime.utcnow()
+
+    listing.status = "active"
+    listing.paid_at = now
+    listing.payment_verified_at = now
+    listing.starts_at = now
+    listing.ends_at = (
+        now
+        + timedelta(
+            days=listing.duration_days
+        )
+    )
+
+    listing.paystack_transaction_id = (
+        str(
+            transaction_data.get(
+                "id"
+            )
+            or ""
+        )
+        or None
+    )
+
+    listing.payment_channel = (
+        transaction_data.get(
+            "channel"
+        )
+        or None
+    )
+
+    db.session.commit()
+
+    return listing
 
 
 # ============================================================
@@ -6193,11 +6452,75 @@ def home():
     )
 
 
+    now = datetime.utcnow()
+
+    active_featured_listings = (
+        FeaturedListing.query
+        .join(
+            TicketEvent,
+            FeaturedListing.event_id
+            == TicketEvent.id,
+        )
+        .filter(
+            FeaturedListing.status
+            == "active",
+            FeaturedListing.starts_at
+            <= now,
+            FeaturedListing.ends_at
+            > now,
+            TicketEvent.active.is_(True),
+            TicketEvent.status
+            == "published",
+            TicketEvent.organizer_deleted.is_(False),
+            TicketEvent.event_date
+            >= today,
+        )
+        .order_by(
+            FeaturedListing.starts_at.desc()
+        )
+        .all()
+    )
+
+    featured_by_event = {}
+
+    for listing in active_featured_listings:
+        if listing.event_id not in featured_by_event:
+            featured_by_event[
+                listing.event_id
+            ] = listing
+
+    featured_events = [
+        {
+            "event": listing.event,
+            "listing": listing,
+            "images": list(
+                listing.event.featured_images
+            )[:FEATURED_IMAGE_MAX_COUNT],
+        }
+        for listing
+        in featured_by_event.values()
+    ]
+
+    featured_event_ids = {
+        item["event"].id
+        for item in featured_events
+    }
+
+    normal_events = [
+        event
+        for event in events
+        if event.id not in featured_event_ids
+    ]
+
+
     return render_template(
         "event.html",
 
+        featured_events=
+            featured_events,
+
         events=
-            events,
+            normal_events,
 
         event=
             None,
@@ -6248,6 +6571,39 @@ def event_poster(
         event.poster_image_data,
         mimetype=
             event.poster_image_mimetype,
+    )
+
+    response.headers[
+        "Cache-Control"
+    ] = "public, max-age=3600"
+
+    return response
+
+
+# ============================================================
+# PUBLIC FEATURED LISTING IMAGE
+# ============================================================
+
+@app.route(
+    "/featured/events/<int:event_id>/images/<int:image_id>"
+)
+def featured_listing_image(
+    event_id,
+    image_id,
+):
+
+    image = (
+        FeaturedListingImage.query
+        .filter_by(
+            id=image_id,
+            event_id=event_id,
+        )
+        .first_or_404()
+    )
+
+    response = Response(
+        image.image_data,
+        mimetype=image.image_mimetype,
     )
 
     response.headers[
@@ -7912,6 +8268,51 @@ def paystack_ticket_webhook():
 
 
             if not boost:
+
+                featured_listing = (
+                    FeaturedListing.query
+                    .filter_by(
+                        payment_reference=
+                            reference
+                    )
+                    .first()
+                )
+
+
+                if not featured_listing:
+
+                    return (
+                        "",
+                        200,
+                    )
+
+
+                try:
+
+                    finalize_featured_listing_payment(
+                        featured_listing,
+                        transaction_data,
+                    )
+
+
+                except Exception as error:
+
+                    db.session.rollback()
+
+                    current_app.logger.exception(
+                        (
+                            "[Paystack Featured Listing Webhook] "
+                            "Failed reference=%s error=%s"
+                        ),
+                        reference,
+                        error,
+                    )
+
+                    return (
+                        "",
+                        500,
+                    )
+
 
                 return (
                     "",
@@ -11446,6 +11847,581 @@ def admin_event_boost(
 
         radius_km=
             EVENT_BOOST_RADIUS_KM,
+    )
+
+
+# ============================================================
+# ORGANIZER - FEATURED LISTING
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/featured"
+)
+def admin_featured_listing(event_id):
+
+    auth = require_ticketing_organizer()
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+    if subscription_auth:
+        return subscription_auth
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+        )
+        .first_or_404()
+    )
+
+    active_listing = (
+        get_active_featured_listing(
+            event.id
+        )
+    )
+
+    latest_listing = (
+        FeaturedListing.query
+        .filter_by(
+            event_id=event.id,
+            organizer_id=organizer.id,
+        )
+        .order_by(
+            FeaturedListing.created_at.desc()
+        )
+        .first()
+    )
+
+    images = list(
+        event.featured_images
+    )[:FEATURED_IMAGE_MAX_COUNT]
+
+    return render_template(
+        "admin/featured_listing.html",
+        organizer=organizer,
+        event=event,
+        active_listing=active_listing,
+        latest_listing=latest_listing,
+        images=images,
+        plans=FEATURED_LISTING_PLANS,
+        max_images=FEATURED_IMAGE_MAX_COUNT,
+    )
+
+
+@app.route(
+    "/admin/events/<int:event_id>/featured/images",
+    methods=["POST"],
+)
+def admin_save_featured_images(event_id):
+
+    auth = require_ticketing_organizer()
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+    if subscription_auth:
+        return subscription_auth
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+        )
+        .first_or_404()
+    )
+
+    uploaded = [
+        file
+        for file in request.files.getlist(
+            "featured_images"
+        )
+        if file and file.filename
+    ]
+
+    if not uploaded:
+        flash(
+            "Choose between 1 and 3 featured poster images.",
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    if len(uploaded) > FEATURED_IMAGE_MAX_COUNT:
+        flash(
+            "You can upload a maximum of 3 featured poster images.",
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    try:
+        prepared = [
+            validate_featured_image_upload(
+                image
+            )
+            for image in uploaded
+        ]
+    except ValueError as error:
+        flash(
+            str(error),
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    try:
+
+        for existing in list(
+            event.featured_images
+        ):
+            db.session.delete(
+                existing
+            )
+
+        db.session.flush()
+
+        for index, image in enumerate(
+            prepared,
+            start=1,
+        ):
+            db.session.add(
+                FeaturedListingImage(
+                    event_id=event.id,
+                    image_order=index,
+                    image_data=image["data"],
+                    image_mimetype=image[
+                        "mimetype"
+                    ],
+                    image_filename=image[
+                        "filename"
+                    ],
+                )
+            )
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Featured Listing] "
+                "Failed saving images "
+                "event_id=%s error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+        flash(
+            "Featured posters could not be saved.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    flash(
+        (
+            f"{len(prepared)} featured poster"
+            f"{'s' if len(prepared) != 1 else ''} saved."
+        ),
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "admin_featured_listing",
+            event_id=event.id,
+        )
+    )
+
+
+@app.route(
+    "/admin/events/<int:event_id>/featured/purchase/<plan_code>",
+    methods=["POST"],
+)
+def admin_purchase_featured_listing(
+    event_id,
+    plan_code,
+):
+
+    auth = require_ticketing_organizer()
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    subscription_auth = (
+        require_active_subscription(
+            organizer
+        )
+    )
+
+    if subscription_auth:
+        return subscription_auth
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+        )
+        .first_or_404()
+    )
+
+    try:
+        plan = featured_listing_plan(
+            plan_code
+        )
+    except ValueError:
+        abort(400)
+
+    if (
+        event.status != "published"
+        or not event.active
+    ):
+        flash(
+            "Publish the event before buying a Featured Listing.",
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    if (
+        event.event_date
+        and event.event_date < date.today()
+    ):
+        flash(
+            "Past events cannot be featured.",
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    if get_active_featured_listing(
+        event.id
+    ):
+        flash(
+            (
+                "This event already has an active Featured Listing. "
+                "Buy another package after it expires."
+            ),
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    if (
+        not event.featured_images
+        and not event.poster_image_mimetype
+        and not event.image_url
+    ):
+        flash(
+            (
+                "Upload at least one featured poster image "
+                "or add a normal event poster first."
+            ),
+            "error",
+        )
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    pending = (
+        FeaturedListing.query
+        .filter_by(
+            event_id=event.id,
+            organizer_id=organizer.id,
+            status="pending",
+        )
+        .order_by(
+            FeaturedListing.created_at.desc()
+        )
+        .first()
+    )
+
+    if (
+        pending
+        and pending.plan_code != plan_code
+    ):
+        db.session.delete(
+            pending
+        )
+        db.session.commit()
+        pending = None
+
+    if not pending:
+
+        pending = FeaturedListing(
+            event_id=event.id,
+            organizer_id=organizer.id,
+            plan_code=plan_code,
+            plan_name=plan["name"],
+            price=plan["price"],
+            duration_days=plan[
+                "duration_days"
+            ],
+            status="pending",
+            payment_reference=
+                generate_featured_listing_reference(),
+            payment_provider="paystack",
+        )
+
+        db.session.add(
+            pending
+        )
+        db.session.commit()
+
+    if pending.paystack_authorization_url:
+        return redirect(
+            pending.paystack_authorization_url
+        )
+
+    callback_url = url_for(
+        "paystack_featured_listing_callback",
+        _external=True,
+        _scheme="https",
+    )
+
+    payload = {
+        "email": organizer.email,
+        "amount": str(
+            int(
+                (
+                    Decimal(
+                        str(pending.price)
+                    )
+                    * 100
+                )
+                .quantize(
+                    Decimal("1"),
+                    rounding=ROUND_UP,
+                )
+            )
+        ),
+        "currency": "ZAR",
+        "reference":
+            pending.payment_reference,
+        "callback_url":
+            callback_url,
+        "channels": [
+            "eft",
+            "capitec_pay",
+        ],
+        "metadata": json.dumps(
+            {
+                "payment_type":
+                    "kalxa_featured_listing",
+                "featured_listing_id":
+                    pending.id,
+                "event_id":
+                    event.id,
+                "organizer_id":
+                    organizer.id,
+                "plan_code":
+                    pending.plan_code,
+            }
+        ),
+    }
+
+    try:
+
+        result = paystack_api_request(
+            "POST",
+            "/transaction/initialize",
+            payload,
+        )
+
+        data = result.get(
+            "data"
+        ) or {}
+
+        authorization_url = data.get(
+            "authorization_url"
+        )
+
+        if not authorization_url:
+            raise RuntimeError(
+                "Paystack did not return a Featured Listing checkout URL."
+            )
+
+        pending.paystack_access_code = (
+            data.get("access_code")
+            or None
+        )
+
+        pending.paystack_authorization_url = (
+            authorization_url
+        )
+
+        db.session.commit()
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Featured Listing Paystack] "
+                "Checkout initialization failed "
+                "listing_id=%s event_id=%s error=%s"
+            ),
+            pending.id,
+            event.id,
+            error,
+        )
+
+        flash(
+            (
+                "Featured Listing checkout could not be started. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_featured_listing",
+                event_id=event.id,
+            )
+        )
+
+    return redirect(
+        authorization_url
+    )
+
+
+@app.route(
+    "/payments/paystack/featured/callback"
+)
+def paystack_featured_listing_callback():
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+    if not reference:
+        abort(400)
+
+    listing = (
+        FeaturedListing.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first_or_404()
+    )
+
+    try:
+
+        result = paystack_api_request(
+            "GET",
+            (
+                "/transaction/verify/"
+                + urllib.parse.quote(
+                    reference,
+                    safe="",
+                )
+            ),
+        )
+
+        transaction_data = (
+            result.get("data")
+            or {}
+        )
+
+        finalize_featured_listing_payment(
+            listing,
+            transaction_data,
+        )
+
+        flash(
+            (
+                f"{listing.plan_name} activated. "
+                "Your event is now featured at the top of Kalxa."
+            ),
+            "success",
+        )
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Featured Listing Callback] "
+                "Verification failed reference=%s error=%s"
+            ),
+            reference,
+            error,
+        )
+
+        flash(
+            (
+                "Your Featured Listing payment is still being "
+                "verified. Please refresh shortly."
+            ),
+            "error",
+        )
+
+    return redirect(
+        url_for(
+            "admin_featured_listing",
+            event_id=listing.event_id,
+        )
     )
 
 
