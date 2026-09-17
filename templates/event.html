@@ -2622,6 +2622,17 @@
                 font-size: 12px !important;
             }
         }
+
+
+        /* =====================================================
+           ENABLED NOTIFICATION STATUS
+        ===================================================== */
+
+        #updates .home-notification-status.success,
+        #updates .notification-status.success {
+            color: #166534 !important;
+            font-weight: 900 !important;
+        }
 </style>
 
 </head>
@@ -2722,14 +2733,14 @@
     {% if firebase_push_configured %}
         <section class="notification-strip" id="updates">
             <div class="notification-heading">
-                <h3>🔔 RECEIVE NOTIFICATIONS</h3>
+                <h4>🔔 RECEIVE NOTIFICATIONS</h4>
             </div>
 
             <div class="notification-form">
                 <input
                     id="home-notification-area"
                     type="text"
-                    placeholder="Enter Your Area or Hometown"
+                    placeholder="Your area or town"
                     autocomplete="address-level2"
                 >
 
