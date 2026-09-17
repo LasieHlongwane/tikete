@@ -943,7 +943,7 @@
         .button.disabled {
 
             background:
-                white;
+                #e5e7eb;
 
             color:
                 #94a3b8;
@@ -1680,7 +1680,7 @@
         /* =========================================
            KALXA PREMIUM DISCOVERY HOME
         ========================================= */
-        :root{--kx-bg:#e5e7eb;--kx-card:#121418;--kx-elev:#17191e;--kx-cream:#fff4df;--kx-muted:#9ca3af;--kx-border:rgba(255,255,255,.08);--kx-gold:#f5c451}
+        :root{--kx-bg:#ffffff;--kx-card:#e5e7eb;--kx-elev:#d1d5db;--kx-cream:#fff4df;--kx-muted:#9ca3af;--kx-border:rgba(255,255,255,.08);--kx-gold:#f5c451}
         body{background:var(--kx-bg);color:var(--kx-cream)}
         .kalxa-discovery{max-width:1180px;margin:0 auto;padding:0 0 92px}
         .discovery-topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;min-height:68px;padding:10px 2px;background:rgba(11,12,14,.84);border-bottom:1px solid transparent;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:.25s ease}
@@ -1697,6 +1697,145 @@
         .mobile-bottom-nav{display:none}.event-searchable[hidden]{display:none!important}
         @media(max-width:760px){.kalxa-discovery{padding-left:2px;padding-right:2px}.discovery-hero{padding-top:24px}.discovery-hero h1{max-width:330px}.featured-event-stack{grid-template-columns:1fr}.featured-media{aspect-ratio:4/5}.featured-overlay-copy{left:15px;right:15px;bottom:19px}.premium-event-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.premium-card-copy{padding:10px}.card-bottom{align-items:stretch;flex-direction:column}.ticket-cta{width:100%}.notification-strip{grid-template-columns:1fr}.mobile-bottom-nav{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:80;display:grid;grid-template-columns:repeat(4,1fr);padding:7px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(18,20,24,.9);box-shadow:0 18px 50px rgba(0,0,0,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}.mobile-bottom-nav a{display:flex;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:11px;color:#8f949c;text-decoration:none;font-size:.88rem}.mobile-bottom-nav a small{font-size:.55rem}.mobile-bottom-nav a.active{background:rgba(255,244,223,.08);color:var(--kx-cream)}body{padding-bottom:82px}}
         @media(max-width:430px){.premium-event-grid{grid-template-columns:1fr 1fr}.premium-event-card{border-radius:16px}.premium-poster{aspect-ratio:3/4}.card-title{font-size:.86rem}.card-meta{font-size:.6rem}.event-rail{grid-auto-columns:185px}.micro-card{width:205px}.featured-cta-row{flex-direction:column}.featured-view,.featured-buy{width:100%}}
+
+
+        /* =========================================
+           LIGHT KALXA COLOUR OVERRIDES
+        ========================================= */
+        body {
+            background: #ffffff;
+            color: #111827;
+        }
+
+        .kalxa-discovery {
+            color: #111827;
+        }
+
+        .discovery-hero {
+            padding-top: 18px;
+        }
+
+        .search-shell {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+            box-shadow: none;
+        }
+
+        .search-shell input {
+            color: #111827;
+        }
+
+        .search-shell input::placeholder {
+            color: #6b7280;
+        }
+
+        .search-shell span,
+        .search-shell button {
+            color: #4b5563;
+        }
+
+        .filter-chip {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .filter-chip.active {
+            background: #111827;
+            border-color: #111827;
+            color: #ffffff;
+        }
+
+        .section-heading h2,
+        .text-button,
+        .results-count {
+            color: #111827;
+        }
+
+        .section-note,
+        .results-count,
+        .section-empty {
+            color: #6b7280;
+        }
+
+        .featured-hero-card,
+        .rail-card,
+        .micro-card,
+        .premium-event-card,
+        .notification-strip {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+        }
+
+        .featured-view {
+            border-color: #cbd5e1;
+            color: #111827;
+            background: #f3f4f6;
+        }
+
+        .featured-buy,
+        .ticket-cta,
+        .cream-button {
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .rail-card,
+        .micro-card,
+        .card-title,
+        .premium-event-card {
+            color: #111827;
+        }
+
+        .rail-copy p,
+        .micro-card small,
+        .card-meta,
+        .notification-strip p,
+        .notification-status {
+            color: #6b7280;
+        }
+
+        .notification-form input {
+            background: #f3f4f6;
+            color: #111827;
+            border-color: #d1d5db;
+        }
+
+        .quiet-button {
+            color: #111827;
+            border-color: #cbd5e1;
+        }
+
+        .mobile-bottom-nav {
+            background: rgba(243,244,246,.96);
+            border-color: #d1d5db;
+        }
+
+        .mobile-bottom-nav a {
+            color: #6b7280;
+        }
+
+        .mobile-bottom-nav a.active {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .no-results {
+            border-color: #d1d5db;
+            color: #6b7280;
+        }
+
+        .no-results strong {
+            color: #111827;
+        }
+
+        .premium-empty h2 {
+            color: #111827;
+        }
+
+        .premium-empty p {
+            color: #6b7280;
+        }
 </style>
 
 </head>
@@ -1721,7 +1860,7 @@
             ) }}"
             class="brand"
         >
-            KALXA 
+            KALXA TICKETING
         </a>
 
 
@@ -2185,30 +2324,9 @@
 
         <div class="kalxa-discovery" id="discover">
 
-            <header class="discovery-topbar" id="top">
 
-                <a href="{{ url_for('home') }}" class="brand-lockup" aria-label="Kalxa home">
-                    <span class="brand-mark">K</span>
-                    <span class="brand-copy">
-                        <strong>KALXA</strong>
-                        <small>EVENTS</small>
-                    </span>
-                </a>
-
-                <div class="topbar-actions">
-                    <button type="button" class="icon-button" id="focus-search" aria-label="Search events">⌕</button>
-                    {% if firebase_push_configured %}
-                    <a href="#updates" class="icon-button" aria-label="Event updates">🔔</a>
-                    {% endif %}
-                </div>
-
-            </header>
 
             <section class="discovery-hero">
-                <p class="hero-kicker">DISCOVER LOCAL EXPERIENCES</p>
-                <h1>What's happening around you?</h1>
-                <p>Find something worth leaving the house for.</p>
-
                 <div class="search-shell">
                     <span aria-hidden="true">⌕</span>
                     <input
