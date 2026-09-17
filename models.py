@@ -1991,6 +1991,12 @@ class TicketOrderItem(db.Model):
         db.Integer,
         nullable=False,
     )
+    
+    attendee_names = db.Column(
+        db.JSON,
+        nullable=True,
+    )
+
 
     line_total = db.Column(
         db.Numeric(10, 2),
@@ -2070,6 +2076,13 @@ class EntryPass(db.Model):
             "ticket_order_items.id",
             ondelete="CASCADE",
         ),
+        nullable=True,
+        index=True,
+    )
+    
+    
+    attendee_name = db.Column(
+        db.String(150),
         nullable=True,
         index=True,
     )
@@ -2183,6 +2196,18 @@ class EntryPass(db.Model):
             or self.checked_in_at
             is not None
         )
+        
+        
+    @property
+    def display_attendee_name(self):
+
+        if self.attendee_name:
+            return self.attendee_name
+
+        if self.order:
+            return self.order.customer_name
+
+        return "Guest"
 
 
     def __repr__(self):
