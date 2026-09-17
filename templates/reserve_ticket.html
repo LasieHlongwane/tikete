@@ -73,7 +73,16 @@ You can buy different ticket types in one Paystack payment.
                     </div>
 
                     <div class="ticket-meta">
-                        {% if ticket_type.current_price is not none %}R{{ "%.2f"|format(ticket_type.current_price) }}{% else %}Not on sale{% endif %}
+                        {% if ticket_type.current_sale_phase %}
+                            R{{ "%.2f"|format(ticket_type.current_price) }}
+                            · {{ ticket_type.current_sale_phase.name }}
+                        {% elif ticket_type.active_sale_phases and ticket_type.next_sale_phase %}
+                            Sales open {{ ticket_type.next_sale_phase.start_at.strftime('%d %b %Y %H:%M') }} UTC
+                        {% elif ticket_type.active_sale_phases %}
+                            Not currently on sale
+                        {% else %}
+                            R{{ "%.2f"|format(ticket_type.price) }}
+                        {% endif %}
                         {% if ticket_type.capacity is not none %}
                             · {{ ticket_type.remaining_quantity }} remaining
                         {% endif %}
@@ -87,7 +96,7 @@ You can buy different ticket types in one Paystack payment.
                     min="0"
                     max="{% if ticket_type.remaining_quantity is not none %}{{ [ticket_type.remaining_quantity, 10]|min }}{% else %}10{% endif %}"
                     value="0"
-                    {% if ticket_type.is_sold_out %}disabled{% endif %}
+                    {% if ticket_type.is_sold_out or not ticket_type.is_currently_on_sale %}disabled{% endif %}
                     aria-label="{{ ticket_type.name }} quantity"
                 >
 
