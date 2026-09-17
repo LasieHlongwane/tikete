@@ -1951,6 +1951,122 @@
         .premium-empty p {
             color: #6b7280;
         }
+
+/* FINAL COMPACT NOTIFICATION CARD OVERRIDE */
+#updates.notification-strip{
+  display:grid!important;
+  grid-template-columns:145px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:9px!important;
+  width:100%!important;
+  max-width:560px!important;
+  margin:8px 0 16px!important;
+  padding:7px 9px!important;
+  background:#e5e7eb!important;
+  border:1px solid #d1d5db!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+}
+#updates.notification-strip>div:first-child{min-width:0!important}
+#updates.notification-strip>div:first-child p{
+  margin:0!important;
+  color:#374151!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  letter-spacing:.045em!important;
+  white-space:nowrap!important;
+}
+#updates .notification-form{
+  display:grid!important;
+  grid-template-columns:minmax(120px,1fr) auto!important;
+  gap:6px!important;
+  align-items:center!important;
+  min-width:0!important;
+}
+#updates .notification-form input{
+  width:100%!important;
+  min-width:0!important;
+  height:32px!important;
+  min-height:32px!important;
+  padding:4px 8px!important;
+  background:#f3f4f6!important;
+  color:#111827!important;
+  border:1px solid #cbd5e1!important;
+  border-radius:7px!important;
+  font-size:11px!important;
+  line-height:1!important;
+}
+#updates .notification-actions{
+  display:flex!important;
+  gap:5px!important;
+  margin:0!important;
+}
+#updates .cream-button,#updates .quiet-button{
+  width:auto!important;
+  height:32px!important;
+  min-height:32px!important;
+  margin:0!important;
+  padding:4px 9px!important;
+  border-radius:7px!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+#updates .cream-button{
+  background:#111827!important;
+  color:#fff!important;
+  border:1px solid #111827!important;
+}
+#updates .quiet-button{
+  background:#f8fafc!important;
+  color:#111827!important;
+  border:1px solid #cbd5e1!important;
+}
+#updates .notification-status{
+  grid-column:1/-1!important;
+  min-height:0!important;
+  margin:-1px 0 0!important;
+  color:#6b7280!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+}
+@media(max-width:560px){
+  #updates.notification-strip{
+    grid-template-columns:112px minmax(0,1fr)!important;
+    max-width:100%!important;
+    gap:7px!important;
+    margin:6px 0 12px!important;
+    padding:6px 7px!important;
+    border-radius:9px!important;
+  }
+  #updates.notification-strip>div:first-child p{
+    font-size:9px!important;
+    white-space:normal!important;
+  }
+  #updates .notification-form{
+    grid-template-columns:1fr!important;
+    gap:4px!important;
+  }
+  #updates .notification-form input{
+    height:30px!important;
+    min-height:30px!important;
+    font-size:10px!important;
+  }
+  #updates .notification-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  #updates .cream-button,#updates .quiet-button{
+    width:100%!important;
+    height:29px!important;
+    min-height:29px!important;
+    padding:3px 7px!important;
+    font-size:9px!important;
+  }
+  #updates .notification-status{font-size:8px!important}
+}
 </style>
 
 </head>
