@@ -16408,40 +16408,23 @@ def staff_logout():
         )
     )
 
-
 @app.route(
     "/staff"
 )
 def staff_dashboard():
 
-    auth = (
-        require_staff_account()
-    )
-
-
+    auth = require_staff_account()
     if auth:
-
         return auth
 
-
-    staff = (
-        get_current_staff()
-    )
-
-
-    event_ids = (
-        get_staff_event_ids(
-            staff
-        )
-    )
-
+    staff = get_current_staff()
+    event_ids = get_staff_event_ids(staff)
 
     events = (
         TicketEvent.query
         .filter(
             TicketEvent.id.in_(
-                event_ids
-                or [-1]
+                event_ids or [-1]
             )
         )
         .order_by(
@@ -16451,20 +16434,262 @@ def staff_dashboard():
         .all()
     )
 
+    event_rows = []
+
+    for event in events:
+
+        passes = (
+            EntryPass.query
+            .join(
+                TicketOrder,
+                EntryPass.order_id
+                == TicketOrder.id,
+            )
+            .filter(
+                TicketOrder.event_id
+                == event.id,
+                TicketOrder.payment_status
+                == "paid",
+            )
+            .all()
+        )
+
+        total = len(passes)
+        checked_in = sum(
+            1
+            for entry_pass in passes
+            if entry_pass.is_used
+        )
+
+        groups = {}
+
+        for entry_pass in passes:
+            ticket_name = (
+                entry_pass.ticket_type_name
+                or "General"
+            )
+
+            if ticket_name not in groups:
+                groups[ticket_name] = {
+                    "name": ticket_name,
+                    "total": 0,
+                    "checked_in": 0,
+                    "remaining": 0,
+                }
+
+            groups[ticket_name]["total"] += 1
+
+            if entry_pass.is_used:
+                groups[ticket_name]["checked_in"] += 1
+            else:
+                groups[ticket_name]["remaining"] += 1
+
+        event_rows.append({
+            "event": event,
+            "total": total,
+            "checked_in": checked_in,
+            "remaining": max(0, total - checked_in),
+            "groups": sorted(
+                groups.values(),
+                key=lambda row: row["name"].lower(),
+            ),
+        })
 
     return render_template(
         "staff/dashboard.html",
-
-        staff=
-            staff,
-
-        events=
-            events,
+        staff=staff,
+        events=events,
+        event_rows=event_rows,
     )
 
 
 # ============================================================
-# STAFF CHECK-IN
+# STAFF LIVE GUEST LIST
+# ============================================================
+
+@app.route(
+    "/staff/events/<int:event_id>/guest-list"
+)
+def staff_event_guest_list(event_id):
+
+    auth = require_staff_account()
+    if auth:
+        return auth
+
+    staff = get_current_staff()
+    event_ids = get_staff_event_ids(staff)
+
+    if event_id not in set(event_ids or []):
+        abort(403)
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=staff.organizer_id,
+        )
+        .first_or_404()
+    )
+
+    q = (
+        request.args.get("q", "")
+        .strip()
+    )
+
+    ticket_type = (
+        request.args.get(
+            "ticket_type",
+            "all",
+        )
+        .strip()
+    )
+
+    status_filter = (
+        request.args.get(
+            "status",
+            "all",
+        )
+        .strip()
+        .lower()
+    )
+
+    base_query = (
+        EntryPass.query
+        .join(
+            TicketOrder,
+            EntryPass.order_id
+            == TicketOrder.id,
+        )
+        .outerjoin(
+            TicketOrderItem,
+            EntryPass.order_item_id
+            == TicketOrderItem.id,
+        )
+        .filter(
+            TicketOrder.event_id
+            == event.id,
+            TicketOrder.payment_status
+            == "paid",
+        )
+    )
+
+    all_passes = (
+        base_query
+        .order_by(
+            TicketOrderItem.ticket_name.asc(),
+            TicketOrder.customer_name.asc(),
+            EntryPass.id.asc(),
+        )
+        .all()
+    )
+
+    ticket_type_names = sorted({
+        (
+            entry_pass.ticket_type_name
+            or "General"
+        )
+        for entry_pass in all_passes
+    }, key=str.lower)
+
+    total_count = len(all_passes)
+    checked_in_count = sum(
+        1
+        for entry_pass in all_passes
+        if entry_pass.is_used
+    )
+    remaining_count = max(
+        0,
+        total_count - checked_in_count,
+    )
+
+    if q:
+        like = f"%{q}%"
+
+        base_query = base_query.filter(
+            or_(
+                EntryPass.entry_code.ilike(like),
+                TicketOrder.customer_name.ilike(like),
+                TicketOrder.customer_phone.ilike(like),
+                TicketOrder.customer_email.ilike(like),
+            )
+        )
+
+    if ticket_type and ticket_type != "all":
+        base_query = base_query.filter(
+            TicketOrderItem.ticket_name
+            == ticket_type
+        )
+
+    if status_filter == "done":
+        base_query = base_query.filter(
+            or_(
+                EntryPass.status == "used",
+                EntryPass.checked_in_at.isnot(None),
+            )
+        )
+    elif status_filter == "waiting":
+        base_query = base_query.filter(
+            EntryPass.status == "valid",
+            EntryPass.checked_in_at.is_(None),
+        )
+
+    filtered_passes = (
+        base_query
+        .order_by(
+            TicketOrderItem.ticket_name.asc(),
+            TicketOrder.customer_name.asc(),
+            EntryPass.id.asc(),
+        )
+        .all()
+    )
+
+    grouped_passes = []
+    group_map = {}
+
+    for entry_pass in filtered_passes:
+
+        name = (
+            entry_pass.ticket_type_name
+            or "General"
+        )
+
+        if name not in group_map:
+            group = {
+                "name": name,
+                "passes": [],
+                "total": 0,
+                "checked_in": 0,
+                "remaining": 0,
+            }
+            group_map[name] = group
+            grouped_passes.append(group)
+
+        group = group_map[name]
+        group["passes"].append(entry_pass)
+        group["total"] += 1
+
+        if entry_pass.is_used:
+            group["checked_in"] += 1
+        else:
+            group["remaining"] += 1
+
+    return render_template(
+        "staff/guest_list.html",
+        staff=staff,
+        event=event,
+        grouped_passes=grouped_passes,
+        ticket_type_names=ticket_type_names,
+        total_count=total_count,
+        checked_in_count=checked_in_count,
+        remaining_count=remaining_count,
+        q=q,
+        selected_ticket_type=ticket_type,
+        selected_status=status_filter,
+    )
+
+
+# ============================================================
+# STAFF CHECK-IN — QR / CODE LOOKUP
 # ============================================================
 
 @app.route(
@@ -16476,31 +16701,47 @@ def staff_dashboard():
 )
 def staff_checkin():
 
-    auth = (
-        require_staff_account()
-    )
-
-
+    auth = require_staff_account()
     if auth:
-
         return auth
 
+    staff = get_current_staff()
+    event_ids = get_staff_event_ids(staff)
 
-    staff = (
-        get_current_staff()
-    )
-
-
-    event_ids = (
-        get_staff_event_ids(
-            staff
+    assigned_events = (
+        TicketEvent.query
+        .filter(
+            TicketEvent.id.in_(
+                event_ids or [-1]
+            )
         )
+        .order_by(
+            TicketEvent.event_date.asc(),
+            TicketEvent.event_time.asc(),
+        )
+        .all()
     )
 
+    selected_event_id = request.args.get(
+        "event_id",
+        type=int,
+    )
+
+    if request.method == "POST":
+        selected_event_id = request.form.get(
+            "event_id",
+            type=int,
+        )
+
+    if (
+        selected_event_id
+        and selected_event_id
+        not in set(event_ids or [])
+    ):
+        abort(403)
 
     entry_pass = None
     message = None
-
 
     if request.method == "POST":
 
@@ -16512,180 +16753,119 @@ def staff_checkin():
             .strip()
         )
 
-
         if not raw_value:
-
             message = (
                 "No ticket code was provided."
             )
 
-
         else:
 
-            entry_code = (
-                raw_value
-                .upper()
-            )
-
+            entry_code = raw_value.upper()
 
             if "/TICKET/" in entry_code:
-
                 entry_code = (
                     entry_code
                     .split(
                         "/TICKET/",
                         1,
                     )[1]
-                    .split(
-                        "?",
-                        1,
-                    )[0]
-                    .split(
-                        "#",
-                        1,
-                    )[0]
+                    .split("?", 1)[0]
+                    .split("#", 1)[0]
                     .strip()
                 )
 
-
-            entry_pass = (
+            lookup = (
                 EntryPass.query
-
                 .join(
                     TicketOrder,
                     EntryPass.order_id
                     == TicketOrder.id,
                 )
-
                 .join(
                     TicketEvent,
                     TicketOrder.event_id
                     == TicketEvent.id,
                 )
-
                 .filter(
                     EntryPass.entry_code
-                    == entry_code
-                )
-
-                .filter(
+                    == entry_code,
                     TicketEvent.organizer_id
-                    == staff.organizer_id
-                )
-
-                .filter(
+                    == staff.organizer_id,
                     TicketEvent.id.in_(
-                        event_ids
-                        or [-1]
-                    )
+                        event_ids or [-1]
+                    ),
                 )
-
-                .first()
             )
 
+            if selected_event_id:
+                lookup = lookup.filter(
+                    TicketEvent.id
+                    == selected_event_id
+                )
+
+            entry_pass = lookup.first()
 
             if not entry_pass:
-
                 message = (
                     "Ticket not found for your assigned events."
                 )
-
-
             elif (
                 entry_pass.order.payment_status
                 != "paid"
             ):
-
                 message = (
                     "Payment has not been confirmed."
                 )
-
-
             elif entry_pass.is_used:
-
                 message = (
                     "This ticket has already been used."
                 )
-
-
             elif not entry_pass.is_valid:
-
                 message = (
                     "This ticket is not valid."
                 )
 
-
     return render_template(
         "staff/checkin.html",
-
-        staff=
-            staff,
-
-        entry_pass=
-            entry_pass,
-
-        message=
-            message,
+        staff=staff,
+        assigned_events=assigned_events,
+        selected_event_id=selected_event_id,
+        entry_pass=entry_pass,
+        message=message,
     )
 
 
 @app.route(
     "/staff/checkin/<int:pass_id>",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
-def staff_confirm_checkin(
-    pass_id,
-):
+def staff_confirm_checkin(pass_id):
 
-    auth = (
-        require_staff_account()
-    )
-
-
+    auth = require_staff_account()
     if auth:
-
         return auth
 
+    staff = get_current_staff()
+    event_ids = get_staff_event_ids(staff)
 
-    staff = (
-        get_current_staff()
+    return_event_id = request.form.get(
+        "event_id",
+        type=int,
     )
-
-
-    event_ids = (
-        get_staff_event_ids(
-            staff
-        )
-    )
-
 
     try:
 
-        (
-            success,
-            message,
-            entry_pass,
-        ) = perform_ticket_checkin(
-
-            pass_id=
-                pass_id,
-
-            organizer_id=
-                staff.organizer_id,
-
-            checked_in_by=(
-                f"staff:{staff.id}:{staff.username}"
-            ),
-
-            staff_account_id=
-                staff.id,
-
-            allowed_event_ids=
-                event_ids,
+        success, message, entry_pass = (
+            perform_ticket_checkin(
+                pass_id=pass_id,
+                organizer_id=staff.organizer_id,
+                checked_in_by=(
+                    f"staff:{staff.id}:{staff.username}"
+                ),
+                staff_account_id=staff.id,
+                allowed_event_ids=event_ids,
+            )
         )
-
 
     except Exception as error:
 
@@ -16706,28 +16886,54 @@ def staff_confirm_checkin(
             "error",
         )
 
-        return redirect(
-            url_for(
-                "staff_checkin"
+        if (
+            return_event_id
+            and return_event_id
+            in set(event_ids or [])
+        ):
+            return redirect(
+                url_for(
+                    "staff_event_guest_list",
+                    event_id=return_event_id,
+                )
             )
-        )
 
+        return redirect(
+            url_for("staff_checkin")
+        )
 
     flash(
         message,
-        (
-            "success"
-            if success
-            else "error"
-        ),
+        "success" if success else "error",
     )
 
+    if (
+        return_event_id
+        and return_event_id
+        in set(event_ids or [])
+    ):
+        return redirect(
+            url_for(
+                "staff_event_guest_list",
+                event_id=return_event_id,
+            )
+        )
+
+    event_id = (
+        entry_pass.event.id
+        if entry_pass
+        and entry_pass.event
+        else None
+    )
 
     return redirect(
         url_for(
-            "staff_checkin"
+            "staff_checkin",
+            event_id=event_id,
         )
     )
+
+
 
 
 # ============================================================
