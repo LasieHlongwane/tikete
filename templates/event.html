@@ -3091,10 +3091,7 @@
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
-                    <div>
-                        
-                        <h2>🔥 Later On</h2>
-                    </div>
+        
                     <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
                 </div>
 
@@ -3160,23 +3157,7 @@
                 {% if early.count == 0 %}<p class="section-empty">No Early Bird phases are live right now.</p>{% endif %}
             </section>
 
-            <section class="discovery-section" id="around-you-section">
-                <div class="section-heading">
-                    <div>
-                        <span class="section-kicker">LOCAL DISCOVERY</span>
-                        <h2>📍 Around You</h2>
-                    </div>
-                    <span class="section-note">Current Kalxa listings</span>
-                </div>
-                <div class="event-rail">
-                    {% for item in events[:8] %}
-                        <a href="{{ url_for('event_page', event_id=item.id) }}" class="micro-card">
-                            {% if item.poster_image_mimetype or item.image_url %}<img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">{% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
-                            <div><strong>{{ item.title }}</strong><small>{% if item.venue %}{{ item.venue }}{% else %}Local event{% endif %}</small></div>
-                        </a>
-                    {% endfor %}
-                </div>
-            </section>
+
 
             <section class="discovery-section discover-more" id="discover-grid">
                 <div class="section-heading">
