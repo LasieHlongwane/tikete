@@ -418,9 +418,12 @@
 
                     <span class="detail-value">
                         {{
-                            entry_pass.order.customer_name
-                            if entry_pass.order
-                            else '—'
+                            entry_pass.attendee_name
+                            or (
+                                entry_pass.order.customer_name
+                                if entry_pass.order
+                                else '—'
+                            )
                         }}
                     </span>
 
@@ -504,4 +507,3 @@
 </body>
 
 </html>
-
