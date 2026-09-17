@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phase Analytics | {{ event.title }} | Kalxa</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f6f8;
+            color: #111827;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .page {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 26px 0 60px;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .back,
+        .manage {
+            color: #111827;
+            text-decoration: none;
+            font-weight: 850;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .muted {
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .metric {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 15px;
+        }
+
+        .metric span {
+            display: block;
+            color: #64748b;
+            font-size: 0.72rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.35rem;
+            margin-top: 5px;
+        }
+
+        .highlights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .highlight {
+            padding: 15px;
+            background: #111827;
+            color: #fff;
+            border-radius: 14px;
+        }
+
+        .highlight span {
+            display: block;
+            color: #cbd5e1;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .highlight strong {
+            display: block;
+            margin-top: 5px;
+            font-size: 1.05rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 940px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.86rem;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        td.num,
+        th.num {
+            text-align: right;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .live {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .upcoming {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .ended,
+        .sold_out,
+        .disabled,
+        .historical {
+            background: #e5e7eb;
+            color: #475569;
+        }
+
+        .bar {
+            height: 7px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .bar > span {
+            display: block;
+            height: 100%;
+            background: #111827;
+            border-radius: 999px;
+        }
+
+        .ticket-rollup {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .ticket-card {
+            padding: 14px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .ticket-card strong {
+            display: block;
+        }
+
+        .ticket-card small {
+            display: block;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 850px) {
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .highlights,
+            .ticket-rollup {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <div class="top">
+            <a
+                class="back"
+                href="{{ url_for('admin_event_control', event_id=event.id) }}"
+            >
+                ← Event Control Centre
+            </a>
+
+            <a
+                class="manage"
+                href="{{ url_for('admin_sales_phases', event_id=event.id) }}"
+            >
+                Manage Sales Phases →
+            </a>
+        </div>
+
+        <section class="card">
+            <h1 style="margin-top: 0;">📈 Phase Performance</h1>
+
+            <h2 style="margin-bottom: 6px;">
+                {{ event.title }}
+            </h2>
+
+            <p class="muted" style="margin-bottom: 0;">
+                Performance is calculated from <b>paid orders only</b>.
+                Revenue is the ticket line total before attendee processing
+                fees. Historical phase names and prices remain measurable
+                because Kalxa stores the phase snapshot on each order item.
+            </p>
+        </section>
+
+        <section class="card">
+            <div class="metrics">
+                <div class="metric">
+                    <span>Phase Tickets Sold</span>
+                    <strong>{{ total_phase_tickets }}</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Phase Revenue</span>
+                    <strong>
+                        R{{ '%.2f'|format(total_phase_revenue) }}
+                    </strong>
+                </div>
+
+                <div class="metric">
+                    <span>Paid Orders</span>
+                    <strong>{{ paid_order_count }}</strong>
+                </div>
+
+                <div class="metric">
+                    <span>Configured Phases</span>
+                    <strong>{{ phase_rows|length }}</strong>
+                </div>
+            </div>
+        </section>
+
+        {% if highest_volume_phase or highest_revenue_phase %}
+            <section class="card">
+                <div class="highlights">
+                    {% if highest_volume_phase %}
+                        <div class="highlight">
+                            <span>Highest ticket volume</span>
+
+                            <strong>
+                                {{ highest_volume_phase.ticket_type }}
+                                ·
+                                {{ highest_volume_phase.phase_name }}
+                            </strong>
+
+                            <small>
+                                {{ highest_volume_phase.tickets_sold }}
+                                tickets
+                            </small>
+                        </div>
+                    {% endif %}
+
+                    {% if highest_revenue_phase %}
+                        <div class="highlight">
+                            <span>Highest phase revenue</span>
+
+                            <strong>
+                                {{ highest_revenue_phase.ticket_type }}
+                                ·
+                                {{ highest_revenue_phase.phase_name }}
+                            </strong>
+
+                            <small>
+                                R{{ '%.2f'|format(highest_revenue_phase.revenue) }}
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if ticket_type_rows %}
+            <section class="card">
+                <h2>Ticket Type Roll-up</h2>
+
+                <div class="ticket-rollup">
+                    {% for row in ticket_type_rows %}
+                        <div class="ticket-card">
+                            <strong>{{ row.name }}</strong>
+
+                            <small>
+                                {{ row.tickets_sold }} phased tickets ·
+                                R{{ '%.2f'|format(row.revenue) }} revenue ·
+                                {{ row.phase_count }} phase{% if row.phase_count != 1 %}s{% endif %}
+                            </small>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <section class="card">
+            <h2>Phase Breakdown</h2>
+
+            {% if phase_rows %}
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket / Phase</th>
+                                <th>Status</th>
+                                <th class="num">Price</th>
+                                <th class="num">Sold</th>
+                                <th class="num">Orders</th>
+                                <th class="num">Buyers</th>
+                                <th class="num">Revenue</th>
+                                <th class="num">Avg / Ticket</th>
+                                <th class="num">Ticket Share</th>
+                                <th>Quantity Progress</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in phase_rows %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ row.ticket_type }}</strong>
+                                        <br>
+                                        <span class="muted">
+                                            {{ row.phase_name }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge {{ row.status }}">
+                                            {{ row.status|replace('_', ' ') }}
+                                        </span>
+                                    </td>
+
+                                    <td class="num">
+                                        R{{ '%.2f'|format(row.configured_price) }}
+                                    </td>
+
+                                    <td class="num">
+                                        <strong>{{ row.tickets_sold }}</strong>
+                                    </td>
+
+                                    <td class="num">
+                                        {{ row.order_count }}
+                                    </td>
+
+                                    <td class="num">
+                                        {{ row.buyer_count }}
+                                    </td>
+
+                                    <td class="num">
+                                        <strong>
+                                            R{{ '%.2f'|format(row.revenue) }}
+                                        </strong>
+                                    </td>
+
+                                    <td class="num">
+                                        R{{ '%.2f'|format(row.avg_ticket_price) }}
+                                    </td>
+
+                                    <td class="num">
+                                        {{ '%.1f'|format(row.ticket_share) }}%
+                                    </td>
+
+                                    <td>
+                                        {% if row.quantity_limit %}
+                                            <span>
+                                                {{ row.tickets_sold }}
+                                                /
+                                                {{ row.quantity_limit }}
+                                            </span>
+
+                                            <div class="bar">
+                                                <span
+                                                    style="width: {{ '%.1f'|format(row.sell_through) }}%;"
+                                                ></span>
+                                            </div>
+
+                                            <small class="muted">
+                                                {{ row.remaining_in_phase }}
+                                                remaining ·
+                                                {{ '%.1f'|format(row.sell_through) }}%
+                                                used
+                                            </small>
+                                        {% else %}
+                                            <span class="muted">
+                                                No phase quantity limit
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="muted">
+                    No sales phases have been configured for this event yet.
+                </p>
+            {% endif %}
+        </section>
+
+        <section class="card">
+            <h2>How to read this</h2>
+
+            <p class="muted">
+                <b>Ticket Share</b> shows what percentage of all tickets sold
+                through sales phases came from that phase.
+                <b>Quantity Progress</b> is only available when that phase has
+                a quantity limit. This page deliberately does not call these
+                figures a conversion rate because Kalxa is not yet recording
+                checkout views per phase.
+            </p>
+        </section>
+    </main>
+</body>
+</html>
