@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>{{ event.title }} Guest List | Kalxa</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f5f7;
+            color: #111827;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+
+        .page {
+            width: min(1180px, calc(100% - 24px));
+            margin: auto;
+            padding: 20px 0 60px;
+        }
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .back,
+        .logout {
+            color: #111827;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .logout {
+            color: #991b1b;
+        }
+
+        .card {
+            margin-bottom: 12px;
+            padding: 17px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+        }
+
+        .event-title {
+            margin: 0;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 13px;
+        }
+
+        .metric {
+            padding: 12px;
+            background: #f4f5f7;
+            border-radius: 12px;
+        }
+
+        .metric small {
+            display: block;
+            color: #6b7280;
+            font-size: 0.62rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            font-size: 1.25rem;
+        }
+
+        .quick {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 13px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 8px 12px;
+            border: 0;
+            border-radius: 10px;
+            background: #111827;
+            color: #ffffff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .button.secondary {
+            background: #eef0f3;
+            color: #111827;
+        }
+
+        .button.done {
+            background: #dcfce7;
+            color: #166534;
+            cursor: default;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: minmax(180px, 1.8fr) 1fr 1fr auto;
+            gap: 8px;
+        }
+
+        .filters input,
+        .filters select {
+            width: 100%;
+            min-height: 44px;
+            padding: 8px 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: #ffffff;
+            font: inherit;
+        }
+
+        .group {
+            margin-top: 16px;
+        }
+
+        .group-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .group-head h2 {
+            margin: 0;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            background: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            min-width: 850px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 11px 10px;
+            border-bottom: 1px solid #eef0f2;
+            font-size: 0.79rem;
+            text-align: left;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.64rem;
+            text-transform: uppercase;
+        }
+
+        .status {
+            display: inline-flex;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 0.62rem;
+            font-weight: 950;
+        }
+
+        .status.done {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.waiting {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-weight: 800;
+        }
+
+        .flash {
+            margin-bottom: 10px;
+            padding: 11px 13px;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .empty {
+            padding: 30px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        @media (max-width: 720px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .quick .button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page">
+        <div class="top">
+            <a
+                class="back"
+                href="{{ url_for('staff_dashboard') }}"
+            >
+                ← Staff Home
+            </a>
+
+            <a
+                class="logout"
+                href="{{ url_for('staff_logout') }}"
+            >
+                Logout
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="card">
+            <h1 class="event-title">
+                {{ event.title }}
+            </h1>
+
+            <div class="muted">
+                {% if event.event_date %}
+                    {{ event.event_date.strftime('%d %B %Y') }}
+                {% endif %}
+
+                {% if event.event_time %}
+                    · {{ event.event_time.strftime('%H:%M') }}
+                {% endif %}
+
+                {% if event.venue %}
+                    · {{ event.venue }}
+                {% endif %}
+            </div>
+
+            <div class="metrics">
+                <div class="metric">
+                    <small>Total Tickets</small>
+                    <strong>{{ total_count }}</strong>
+                </div>
+
+                <div class="metric">
+                    <small>Done</small>
+                    <strong>{{ checked_in_count }}</strong>
+                </div>
+
+                <div class="metric">
+                    <small>Waiting</small>
+                    <strong>{{ remaining_count }}</strong>
+                </div>
+            </div>
+
+            <div class="quick">
+                <a
+                    class="button"
+                    href="{{ url_for('staff_checkin', event_id=event.id) }}"
+                >
+                    📷 Scan Ticket
+                </a>
+
+                <a
+                    class="button secondary"
+                    href="{{ url_for('staff_event_guest_list', event_id=event.id) }}"
+                >
+                    Clear Filters
+                </a>
+            </div>
+        </section>
+
+        <section class="card">
+            <form
+                class="filters"
+                method="GET"
+            >
+                <input
+                    name="q"
+                    value="{{ q }}"
+                    placeholder="Search name, phone, email or ticket code"
+                >
+
+                <select name="ticket_type">
+                    <option value="all">
+                        All Ticket Types
+                    </option>
+
+                    {% for name in ticket_type_names %}
+                        <option
+                            value="{{ name }}"
+                            {% if selected_ticket_type == name %}selected{% endif %}
+                        >
+                            {{ name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="status">
+                    <option
+                        value="all"
+                        {% if selected_status == 'all' %}selected{% endif %}
+                    >
+                        All Statuses
+                    </option>
+
+                    <option
+                        value="waiting"
+                        {% if selected_status == 'waiting' %}selected{% endif %}
+                    >
+                        Waiting
+                    </option>
+
+                    <option
+                        value="done"
+                        {% if selected_status == 'done' %}selected{% endif %}
+                    >
+                        Done
+                    </option>
+                </select>
+
+                <button
+                    class="button"
+                    type="submit"
+                >
+                    Search
+                </button>
+            </form>
+        </section>
+
+        {% for group in grouped_passes %}
+            <section class="group">
+                <div class="group-head">
+                    <div>
+                        <h2>
+                            {{ group.name }}
+                        </h2>
+
+                        <div class="muted">
+                            {{ group.checked_in }} done ·
+                            {{ group.remaining }} waiting ·
+                            {{ group.total }} shown
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Purchase Date</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Checked In</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for pass in group.passes %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {{ pass.order.customer_name }}
+                                        </strong>
+
+                                        {% if pass.order.customer_email %}
+                                            <div class="muted">
+                                                {{ pass.order.customer_email }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="code">
+                                        {{ pass.entry_code }}
+                                    </td>
+
+                                    <td>
+                                        {{
+                                            pass.order.paid_at.strftime(
+                                                '%d %b %Y %H:%M'
+                                            )
+                                            if pass.order.paid_at
+                                            else pass.issued_at.strftime(
+                                                '%d %b %Y %H:%M'
+                                            )
+                                        }}
+                                    </td>
+
+                                    <td>
+                                        {{ pass.order.customer_phone }}
+                                    </td>
+
+                                    <td>
+                                        {% if pass.is_used %}
+                                            <span class="status done">
+                                                ✓ DONE
+                                            </span>
+                                        {% else %}
+                                            <span class="status waiting">
+                                                WAITING
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if pass.checked_in_at %}
+                                            {{
+                                                pass.checked_in_at.strftime(
+                                                    '%d %b %H:%M'
+                                                )
+                                            }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if (
+                                            pass.is_valid
+                                            and pass.order.payment_status == 'paid'
+                                        ) %}
+                                            <form
+                                                method="POST"
+                                                action="{{
+                                                    url_for(
+                                                        'staff_confirm_checkin',
+                                                        pass_id=pass.id
+                                                    )
+                                                }}"
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="event_id"
+                                                    value="{{ event.id }}"
+                                                >
+
+                                                <button
+                                                    class="button"
+                                                    type="submit"
+                                                >
+                                                    ✓ Check In
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="button done">
+                                                Done
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% else %}
+            <section class="card empty">
+                No guests match the current search or filters.
+            </section>
+        {% endfor %}
+    </main>
+</body>
+</html>
