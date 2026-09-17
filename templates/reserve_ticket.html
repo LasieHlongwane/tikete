@@ -28,6 +28,13 @@ input{width:100%;min-height:49px;padding:11px 12px;border:1px solid #d1d5db;bord
 .button{width:100%;min-height:52px;margin-top:22px;border:0;border-radius:12px;background:#111827;color:#fff;font:inherit;font-weight:900;cursor:pointer}
 .note{margin-top:16px;padding:13px 14px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;color:#64748b;font-size:.86rem;line-height:1.55}
 .flash{margin-top:14px;padding:12px 14px;border-radius:10px;background:#fff7ed;color:#9a3412}
+.attendee-fields{display:grid;gap:14px;margin:24px 0 4px}
+.attendee-group{padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#f8fafc}
+.attendee-group h3{margin:0 0 5px;font-size:1rem}
+.attendee-group p{margin:0 0 12px;color:#6b7280;font-size:.8rem;line-height:1.45}
+.attendee-input-row{margin-top:10px}
+.attendee-input-row label{margin:0 0 6px;font-size:.82rem}
+.attendee-number{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:7px;border-radius:999px;background:#111827;color:#fff;font-size:.68rem}
 </style>
 </head>
 <body>
@@ -52,7 +59,7 @@ Choose the ticket types and quantities you want.
 You can buy different ticket types in one Paystack payment.
 </p>
 
-<form method="POST">
+<form method="POST" id="checkout-form">
 
 {% if ticket_types %}
 
@@ -133,6 +140,8 @@ You can buy different ticket types in one Paystack payment.
 
 {% endif %}
 
+<div id="attendee-fields" class="attendee-fields"></div>
+
 <div class="summary">
 <div class="row"><span>Total tickets</span><span class="value" id="summary-quantity">0</span></div>
 <div class="row"><span>Ticket total</span><span class="value" id="ticket-total">R0.00</span></div>
@@ -164,9 +173,96 @@ the organizer's ticket price. Paystack processing is shown separately.
 <script>
 const rate = Number({{ processing_rate|float }});
 const qtyInputs = [...document.querySelectorAll(".qty")];
+const attendeeFields = document.getElementById("attendee-fields");
+const purchaserName = document.getElementById("customer_name");
 
 function money(value) {
     return "R" + value.toFixed(2);
+}
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function existingAttendeeValues() {
+    const values = {};
+    attendeeFields
+        .querySelectorAll("input[data-attendee-input]")
+        .forEach((input) => {
+            values[input.name] = input.value;
+        });
+    return values;
+}
+
+function rebuildAttendeeFields() {
+    const previous = existingAttendeeValues();
+    const groups = [];
+
+    qtyInputs.forEach((input) => {
+        const row = input.closest(".ticket-type");
+        const quantity = Math.max(
+            0,
+            Number(input.value || 0)
+        );
+
+        if (!quantity) {
+            return;
+        }
+
+        const ticketName = row.dataset.name || "General";
+        const match = input.name.match(/^qty_(\d+)$/);
+        const prefix = match
+            ? `attendee_${match[1]}_`
+            : "attendee_general_";
+
+        let inputs = "";
+
+        for (let index = 1; index <= quantity; index += 1) {
+            const fieldName = `${prefix}${index}`;
+            let value = previous[fieldName] || "";
+
+            if (!value && index === 1 && purchaserName?.value.trim()) {
+                value = purchaserName.value.trim();
+            }
+
+            inputs += `
+                <div class="attendee-input-row">
+                    <label for="${fieldName}">
+                        <span class="attendee-number">${index}</span>
+                        ${escapeHtml(ticketName)} attendee name
+                    </label>
+                    <input
+                        id="${fieldName}"
+                        name="${fieldName}"
+                        type="text"
+                        value="${escapeHtml(value)}"
+                        placeholder="Full name on this ticket"
+                        autocomplete="off"
+                        data-attendee-input
+                        required
+                    >
+                </div>
+            `;
+        }
+
+        groups.push(`
+            <section class="attendee-group">
+                <h3>${escapeHtml(ticketName)}</h3>
+                <p>
+                    Enter the person who will use each ticket.
+                    Every person receives their own QR code and gate record.
+                </p>
+                ${inputs}
+            </section>
+        `);
+    });
+
+    attendeeFields.innerHTML = groups.join("");
 }
 
 function updateSummary() {
@@ -193,10 +289,16 @@ function updateSummary() {
     document.getElementById("ticket-total").textContent = money(face);
     document.getElementById("processing-fee").textContent = money(fee);
     document.getElementById("checkout-total").textContent = money(checkout);
+
+    rebuildAttendeeFields();
 }
 
 qtyInputs.forEach((input) => {
     input.addEventListener("input", updateSummary);
+});
+
+purchaserName?.addEventListener("blur", () => {
+    rebuildAttendeeFields();
 });
 
 updateSummary();
