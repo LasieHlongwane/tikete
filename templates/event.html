@@ -1525,6 +1525,156 @@
             }
         }
 
+
+        /* =========================================
+           FEATURED LISTINGS
+        ========================================= */
+
+        .featured-section {
+            margin: 0 auto 28px;
+        }
+
+        .featured-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .featured-heading h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .featured-heading span {
+            color: #facc15;
+            font-size: .76rem;
+            font-weight: 900;
+            letter-spacing: .06em;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        min(100%, 310px),
+                        1fr
+                    )
+                );
+            gap: 16px;
+        }
+
+        .featured-card {
+            overflow: hidden;
+            border: 1px solid rgba(250,204,21,.32);
+            border-radius: 22px;
+            background: #121418;
+            box-shadow: 0 18px 45px rgba(0,0,0,.28);
+        }
+
+        .featured-carousel {
+            position: relative;
+            overflow: hidden;
+            background: #08090b;
+        }
+
+        .featured-track {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .featured-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .featured-slide {
+            flex: 0 0 100%;
+            aspect-ratio: 4 / 5;
+            scroll-snap-align: start;
+        }
+
+        .featured-slide img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 5;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(8,9,11,.88);
+            color: #facc15;
+            font-size: .72rem;
+            font-weight: 950;
+            letter-spacing: .06em;
+            backdrop-filter: blur(8px);
+        }
+
+        .featured-dots {
+            position: absolute;
+            left: 50%;
+            bottom: 11px;
+            z-index: 5;
+            display: flex;
+            gap: 6px;
+            transform: translateX(-50%);
+        }
+
+        .featured-dot {
+            width: 7px;
+            height: 7px;
+            border: 0;
+            border-radius: 999px;
+            padding: 0;
+            background: rgba(255,255,255,.5);
+        }
+
+        .featured-dot.active {
+            width: 19px;
+            background: #fff;
+        }
+
+        .featured-content {
+            padding: 16px;
+        }
+
+        .featured-content h3 {
+            margin: 0 0 8px;
+            font-size: 1.08rem;
+        }
+
+        .featured-meta {
+            margin-top: 6px;
+            color: #cbd5e1;
+            font-size: .82rem;
+        }
+
+        .featured-action {
+            display: inline-flex;
+            width: 100%;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 14px;
+            border-radius: 11px;
+            background: #fff4df;
+            color: #0b0c0e;
+            text-decoration: none;
+            font-weight: 950;
+        }
+
+
 </style>
 
 </head>
@@ -2115,7 +2265,188 @@
 
         {% endif %}
 
-{% if events %}
+{% if featured_events %}
+
+            <section class="featured-section">
+
+                <div class="featured-heading">
+
+                    <h2>
+                        ⭐ Featured Events
+                    </h2>
+
+                    <span>
+                        SWIPE POSTERS
+                    </span>
+
+                </div>
+
+
+                <div class="featured-grid">
+
+                    {% for featured in featured_events %}
+
+                        {% set item = featured.event %}
+
+                        <article class="featured-card">
+
+                            <div
+                                class="featured-carousel"
+                                data-featured-carousel
+                            >
+
+                                <div class="featured-badge">
+                                    ⭐ FEATURED
+                                </div>
+
+
+                                <div
+                                    class="featured-track"
+                                    data-featured-track
+                                >
+
+                                    {% if featured.images %}
+
+                                        {% for image in featured.images %}
+
+                                            <div
+                                                class="featured-slide"
+                                                data-featured-slide
+                                            >
+
+                                                <img
+                                                    src="{{ url_for(
+                                                        'featured_listing_image',
+                                                        event_id=item.id,
+                                                        image_id=image.id
+                                                    ) }}"
+                                                    alt="{{ item.title }} poster {{ loop.index }}"
+                                                    loading="lazy"
+                                                >
+
+                                            </div>
+
+                                        {% endfor %}
+
+                                    {% elif item.poster_image_mimetype or item.image_url %}
+
+                                        <div
+                                            class="featured-slide"
+                                            data-featured-slide
+                                        >
+
+                                            <img
+                                                src="{{
+                                                    url_for(
+                                                        'event_poster',
+                                                        event_id=item.id
+                                                    )
+                                                    if item.poster_image_mimetype
+                                                    else item.image_url
+                                                }}"
+                                                alt="{{ item.title }}"
+                                                loading="lazy"
+                                            >
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                {% if featured.images|length > 1 %}
+
+                                    <div
+                                        class="featured-dots"
+                                        data-featured-dots
+                                    >
+
+                                        {% for image in featured.images %}
+
+                                            <button
+                                                type="button"
+                                                class="featured-dot {% if loop.first %}active{% endif %}"
+                                                data-featured-dot="{{ loop.index0 }}"
+                                                aria-label="Show poster {{ loop.index }}"
+                                            ></button>
+
+                                        {% endfor %}
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="featured-content">
+
+                                <h3>
+                                    {{ item.title }}
+                                </h3>
+
+                                {% if item.event_date %}
+
+                                    <div class="featured-meta">
+                                        📅
+                                        {{
+                                            item.event_date.strftime(
+                                                "%d %B %Y"
+                                            )
+                                        }}
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if item.event_time %}
+
+                                    <div class="featured-meta">
+                                        🕒
+                                        {{
+                                            item.event_time.strftime(
+                                                "%H:%M"
+                                            )
+                                        }}
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if item.venue %}
+
+                                    <div class="featured-meta">
+                                        📍 {{ item.venue }}
+                                    </div>
+
+                                {% endif %}
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'event_page',
+                                        event_id=item.id
+                                    ) }}"
+                                    class="featured-action"
+                                >
+                                    View Event →
+                                </a>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        {% if events %}
 
 
             <div class="event-grid">
@@ -2284,7 +2615,7 @@
             </div>
 
 
-        {% else %}
+        {% elif not featured_events %}
 
 
             <div class="empty-state">
@@ -3419,6 +3750,106 @@
 
 </script>
 
+
+
+<script>
+document.querySelectorAll(
+    "[data-featured-carousel]"
+).forEach((carousel) => {
+
+    const track =
+        carousel.querySelector(
+            "[data-featured-track]"
+        );
+
+    const slides = Array.from(
+        carousel.querySelectorAll(
+            "[data-featured-slide]"
+        )
+    );
+
+    const dots = Array.from(
+        carousel.querySelectorAll(
+            "[data-featured-dot]"
+        )
+    );
+
+    if (!track || slides.length < 2) {
+        return;
+    }
+
+    const updateDots = () => {
+
+        const width =
+            track.clientWidth
+            || 1;
+
+        const index = Math.max(
+            0,
+            Math.min(
+                slides.length - 1,
+                Math.round(
+                    track.scrollLeft
+                    / width
+                )
+            )
+        );
+
+        dots.forEach(
+            (dot, dotIndex) => {
+                dot.classList.toggle(
+                    "active",
+                    dotIndex === index
+                );
+            }
+        );
+    };
+
+    let ticking = false;
+
+    track.addEventListener(
+        "scroll",
+        () => {
+
+            if (ticking) {
+                return;
+            }
+
+            ticking = true;
+
+            requestAnimationFrame(
+                () => {
+                    updateDots();
+                    ticking = false;
+                }
+            );
+        },
+        { passive: true }
+    );
+
+    dots.forEach(
+        (dot, index) => {
+
+            dot.addEventListener(
+                "click",
+                () => {
+
+                    track.scrollTo({
+                        left:
+                            track.clientWidth
+                            * index,
+                        behavior:
+                            "smooth"
+                    });
+
+                }
+            );
+
+        }
+    );
+
+});
+</script>
 
 </body>
 
