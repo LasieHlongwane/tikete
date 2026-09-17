@@ -1997,6 +1997,204 @@
         }
 
 
+
+
+        /* =====================================================
+           ORGANIZER SIDEBAR NAVIGATION
+        ===================================================== */
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .admin-shell {
+            width: auto;
+            max-width: none;
+            margin: 0 22px 0 270px;
+            padding: 22px 0 60px;
+        }
+
+        .admin-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 40;
+
+            width: 248px;
+            height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 18px;
+
+            margin: 0;
+            padding: 20px 14px;
+
+            background: #111827;
+            border: 0;
+            border-right: 1px solid rgba(255,255,255,.08);
+            border-radius: 0;
+            box-shadow: 12px 0 36px rgba(15,23,42,.12);
+
+            overflow-y: auto;
+            backdrop-filter: none;
+        }
+
+        .admin-nav .brand-block {
+            width: 100%;
+            padding: 2px 4px 17px;
+            border-bottom: 1px solid rgba(255,255,255,.10);
+        }
+
+        .admin-nav .brand-mark {
+            width: 40px;
+            height: 40px;
+            background: #fff4df;
+            color: #111827;
+            border-radius: 12px;
+        }
+
+        .admin-nav .brand-title {
+            color: #ffffff;
+        }
+
+        .admin-nav .brand-subtitle {
+            color: #94a3b8;
+        }
+
+        .admin-nav-actions {
+            width: 100%;
+            flex: 1;
+
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 6px;
+
+            flex-wrap: nowrap;
+        }
+
+        .admin-nav-link {
+            width: 100%;
+            min-height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+
+            padding: 10px 12px;
+
+            color: #cbd5e1;
+            border: 1px solid transparent;
+            border-radius: 10px;
+
+            font-size: 13px;
+            font-weight: 750;
+            white-space: nowrap;
+        }
+
+        .admin-nav-link:hover {
+            background: rgba(255,255,255,.07);
+            color: #ffffff;
+            border-color: rgba(255,255,255,.08);
+        }
+
+        .admin-nav-link:first-child {
+            background: #fff4df;
+            color: #111827;
+            border-color: #fff4df;
+            font-weight: 900;
+        }
+
+        .admin-nav-link.create-event-nav {
+            background: #ffffff;
+            color: #111827 !important;
+            border-color: #ffffff;
+            font-weight: 900;
+        }
+
+        .admin-nav-link.create-event-nav:hover {
+            background: #fff4df;
+            border-color: #fff4df;
+            color: #111827 !important;
+        }
+
+        .admin-nav-link.logout {
+            margin-top: auto;
+            color: #fecaca;
+            border-color: rgba(254,202,202,.12);
+        }
+
+        .admin-nav-link.logout:hover {
+            background: rgba(127,29,29,.35);
+            color: #ffffff;
+        }
+
+        .mobile-admin-menu {
+            display: none;
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            z-index: 60;
+
+            width: 50px;
+            height: 50px;
+
+            place-items: center;
+
+            border: 0;
+            border-radius: 14px;
+
+            background: #111827;
+            color: #ffffff;
+
+            box-shadow: 0 12px 34px rgba(15,23,42,.26);
+            font-size: 21px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+
+            .admin-shell {
+                width: min(100% - 22px, 1180px);
+                margin: 0 auto;
+                padding-top: 14px;
+            }
+
+            .admin-nav {
+                width: min(285px, 86vw);
+                transform: translateX(-105%);
+                transition: transform .22s ease;
+            }
+
+            .admin-nav.sidebar-open {
+                transform: translateX(0);
+            }
+
+            .mobile-admin-menu {
+                display: grid;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 35;
+                background: rgba(15,23,42,.40);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+        }
 </style>
 
 </head>
@@ -2150,6 +2348,22 @@
 
 
     </nav>
+
+    <button
+        type="button"
+        class="mobile-admin-menu"
+        id="mobile-admin-menu"
+        aria-label="Open organizer navigation"
+        aria-expanded="false"
+    >
+        ☰
+    </button>
+
+    <div
+        class="sidebar-overlay"
+        id="sidebar-overlay"
+    ></div>
+
 
 
 
@@ -3010,6 +3224,50 @@
 </div>
 
 
+
+
+<script>
+    (() => {
+
+        const sidebar = document.querySelector('.admin-nav');
+        const toggle = document.getElementById('mobile-admin-menu');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        if (!sidebar || !toggle || !overlay) {
+            return;
+        }
+
+        function setOpen(open) {
+            sidebar.classList.toggle('sidebar-open', open);
+            overlay.classList.toggle('show', open);
+            toggle.textContent = open ? '×' : '☰';
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        toggle.addEventListener('click', () => {
+            setOpen(!sidebar.classList.contains('sidebar-open'));
+        });
+
+        overlay.addEventListener('click', () => {
+            setOpen(false);
+        });
+
+        sidebar.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 900) {
+                    setOpen(false);
+                }
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+                setOpen(false);
+            }
+        });
+
+    })();
+</script>
 </body>
 
 </html>
