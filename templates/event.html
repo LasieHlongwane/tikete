@@ -3279,7 +3279,7 @@
                 <div class="section-heading">
                     <div>
                     
-                        <h2 id="featured-title">⭐</h2>
+                        <h4 id="featured-title">⭐</h4>
                     </div>
                     <span class="section-note">Swipe posters</span>
                 </div>
@@ -3526,10 +3526,7 @@
                     {% endfor %}
                 </div>
 
-                <div class="no-results" id="no-results" hidden>
-                    <strong>No matching events</strong>
-                    <span>Try another search or filter.</span>
-                </div>
+
             </section>
             {% elif not featured_events %}
             <div class="empty-state premium-empty">
@@ -3565,13 +3562,13 @@
                     <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
                 </div>
 
-               {# <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                <div class="filter-chips" id="event-filters" aria-label="Event filters">
                     <button type="button" class="filter-chip active" data-filter="all">All</button>
                     <button type="button" class="filter-chip" data-filter="today">Today</button>
                     <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
                     <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
                     <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
-                #} </div>
+                </div>
                 
             </section>
 
