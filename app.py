@@ -28,7 +28,7 @@ import cloudinary
 import cloudinary.uploader
 from openpyxl import Workbook
 from sqlalchemy import or_
-
+from sqlalchemy.exc import IntegrityError
 import firebase_admin
 from firebase_admin import (
     credentials,
