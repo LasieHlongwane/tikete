@@ -23,6 +23,8 @@ from decimal import Decimal, InvalidOperation, ROUND_UP
 from zoneinfo import ZoneInfo
 
 import qrcode
+import cloudinary
+import cloudinary.uploader
 from openpyxl import Workbook
 from sqlalchemy import or_
 
@@ -78,6 +80,7 @@ from models import (
     TicketType,
     TicketSalePhase,
     db,
+    EventReel,
 )
 
 
@@ -88,6 +91,55 @@ from models import (
 load_dotenv()
 
 
+
+
+
+
+# ============================================================
+# CLOUDINARY / EVENT REELS
+# ============================================================
+
+CLOUDINARY_CLOUD_NAME = (
+    os.environ.get(
+        "CLOUDINARY_CLOUD_NAME",
+        "",
+    )
+    .strip()
+)
+
+CLOUDINARY_API_KEY = (
+    os.environ.get(
+        "CLOUDINARY_API_KEY",
+        "",
+    )
+    .strip()
+)
+
+CLOUDINARY_API_SECRET = (
+    os.environ.get(
+        "CLOUDINARY_API_SECRET",
+        "",
+    )
+    .strip()
+)
+
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True,
+)
+
+
+EVENT_REEL_MAX_DURATION_SECONDS = 30
+EVENT_REEL_MAX_FILE_BYTES = 30 * 1024 * 1024
+
+EVENT_REEL_ALLOWED_EXTENSIONS = {
+    "mp4",
+    "mov",
+    "webm",
+    "m4v",
+}
 # ============================================================
 # KALXA EVENT BOOST
 # ============================================================
@@ -479,6 +531,64 @@ def paystack_api_request(
 
 
     return result
+
+
+def cloudinary_reels_configured():
+
+    return all(
+        [
+            CLOUDINARY_CLOUD_NAME,
+            CLOUDINARY_API_KEY,
+            CLOUDINARY_API_SECRET,
+        ]
+    )
+
+
+def allowed_event_reel_filename(filename):
+
+    if (
+        not filename
+        or "." not in filename
+    ):
+        return False
+
+    extension = (
+        filename
+        .rsplit(".", 1)[1]
+        .lower()
+    )
+
+    return (
+        extension
+        in EVENT_REEL_ALLOWED_EXTENSIONS
+    )
+
+
+def delete_cloudinary_reel(public_id):
+
+    if not public_id:
+        return
+
+    try:
+
+        cloudinary.uploader.destroy(
+            public_id,
+            resource_type="video",
+            invalidate=True,
+        )
+
+    except Exception as error:
+
+        current_app.logger.exception(
+            (
+                "[Event Reel] Unable to delete "
+                "Cloudinary asset "
+                "public_id=%s error=%s"
+            ),
+            public_id,
+            error,
+        )
+
 
 
 def finalize_paystack_ticket_order(
@@ -1723,8 +1833,6 @@ def send_push_campaign(
             db.session.add(
                 delivery
             )
-
-
     campaign.sent_at = (
         now
     )
@@ -6534,6 +6642,35 @@ def home():
     ]
 
 
+    # ========================================================
+    # EVENT REELS
+    # ========================================================
+    # Only reels attached to current/future published events
+    # are shown on the public homepage.
+    # ========================================================
+
+    reels = (
+        EventReel.query
+        .join(
+            TicketEvent,
+            EventReel.event_id
+            == TicketEvent.id,
+        )
+        .filter(
+            EventReel.active.is_(True),
+            TicketEvent.active.is_(True),
+            TicketEvent.status == "published",
+            TicketEvent.organizer_deleted.is_(False),
+            TicketEvent.event_date >= today,
+        )
+        .order_by(
+            EventReel.created_at.desc()
+        )
+        .limit(12)
+        .all()
+    )
+
+
     return render_template(
         "event.html",
 
@@ -6545,6 +6682,9 @@ def home():
 
         event=
             None,
+
+        reels=
+            reels,
 
         firebase_config=
             FIREBASE_WEB_CONFIG,
@@ -8008,7 +8148,6 @@ def reserve_ticket(
                         }
                     ),
             }
-
 
             paystack_result = (
                 paystack_api_request(
@@ -9564,8 +9703,6 @@ def notification_unsubscribe():
         )
         .first()
     )
-
-
     if not order:
 
         return {
@@ -9808,6 +9945,511 @@ def organizer_admin_redirect():
     )
 
 
+# ============================================================
+# ORGANIZER EVENT REEL
+# ============================================================
+
+@app.route(
+    "/admin/events/<int:event_id>/reel",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_event_reel(
+    event_id,
+):
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+            organizer_deleted=False,
+        )
+        .first_or_404()
+    )
+
+
+    reel = (
+        EventReel.query
+        .filter_by(
+            event_id=event.id,
+        )
+        .first()
+    )
+
+
+    if request.method == "POST":
+
+        if not cloudinary_reels_configured():
+
+            flash(
+                (
+                    "Event Reel storage is not "
+                    "configured yet."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_event_reel",
+                    event_id=event.id,
+                )
+            )
+
+
+        video = (
+            request.files.get(
+                "reel_video"
+            )
+        )
+
+
+        if (
+            not video
+            or not video.filename
+        ):
+
+            flash(
+                "Choose a video to upload.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_event_reel",
+                    event_id=event.id,
+                )
+            )
+
+
+        if not allowed_event_reel_filename(
+            video.filename
+        ):
+
+            flash(
+                (
+                    "Use an MP4, MOV, M4V "
+                    "or WebM video."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_event_reel",
+                    event_id=event.id,
+                )
+            )
+
+
+        video.stream.seek(
+            0,
+            os.SEEK_END,
+        )
+
+        file_size = (
+            video.stream.tell()
+        )
+
+        video.stream.seek(0)
+
+
+        if (
+            file_size
+            > EVENT_REEL_MAX_FILE_BYTES
+        ):
+
+            flash(
+                (
+                    "The reel is too large. "
+                    "Maximum size is 30 MB."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_event_reel",
+                    event_id=event.id,
+                )
+            )
+
+
+        uploaded_public_id = None
+
+
+        try:
+
+            upload_result = (
+                cloudinary.uploader.upload(
+                    video,
+                    resource_type="video",
+                    folder=(
+                        "kalxa/"
+                        f"organizers/{organizer.id}/"
+                        f"events/{event.id}/reels"
+                    ),
+                    use_filename=True,
+                    unique_filename=True,
+                    overwrite=False,
+                )
+            )
+
+
+            uploaded_public_id = (
+                upload_result.get(
+                    "public_id"
+                )
+            )
+
+
+            duration_seconds = float(
+                upload_result.get(
+                    "duration",
+                    0,
+                )
+                or 0
+            )
+
+
+            if (
+                duration_seconds <= 0
+            ):
+
+                raise ValueError(
+                    "Unable to determine video duration."
+                )
+
+
+            if (
+                duration_seconds
+                > EVENT_REEL_MAX_DURATION_SECONDS
+            ):
+
+                delete_cloudinary_reel(
+                    uploaded_public_id
+                )
+
+                flash(
+                    (
+                        "Your Event Reel must be "
+                        "30 seconds or shorter."
+                    ),
+                    "error",
+                )
+
+                return redirect(
+                    url_for(
+                        "admin_event_reel",
+                        event_id=event.id,
+                    )
+                )
+
+
+            secure_url = (
+                upload_result.get(
+                    "secure_url"
+                )
+            )
+
+
+            if not secure_url:
+
+                raise ValueError(
+                    (
+                        "Cloudinary did not return "
+                        "a secure video URL."
+                    )
+                )
+
+
+            # Cloudinary image thumbnail generated
+            # from the first useful video frame.
+            thumbnail_url = (
+                cloudinary.CloudinaryVideo(
+                    uploaded_public_id
+                )
+                .build_url(
+                    resource_type="video",
+                    format="jpg",
+                    start_offset="1",
+                    width=720,
+                    crop="limit",
+                    secure=True,
+                )
+            )
+
+
+            old_public_id = (
+                reel.cloudinary_public_id
+                if reel
+                else None
+            )
+
+
+            if reel is None:
+
+                reel = EventReel(
+                    event_id=event.id,
+                    organizer_id=organizer.id,
+                    cloudinary_public_id=uploaded_public_id,
+                    video_url=secure_url,
+                    thumbnail_url=thumbnail_url,
+                    duration_seconds=duration_seconds,
+                    width=upload_result.get(
+                        "width"
+                    ),
+                    height=upload_result.get(
+                        "height"
+                    ),
+                    file_bytes=upload_result.get(
+                        "bytes"
+                    ),
+                    active=True,
+                )
+
+                db.session.add(
+                    reel
+                )
+
+            else:
+
+                reel.cloudinary_public_id = (
+                    uploaded_public_id
+                )
+
+                reel.video_url = (
+                    secure_url
+                )
+
+                reel.thumbnail_url = (
+                    thumbnail_url
+                )
+
+                reel.duration_seconds = (
+                    duration_seconds
+                )
+
+                reel.width = (
+                    upload_result.get(
+                        "width"
+                    )
+                )
+
+                reel.height = (
+                    upload_result.get(
+                        "height"
+                    )
+                )
+
+                reel.file_bytes = (
+                    upload_result.get(
+                        "bytes"
+                    )
+                )
+
+                reel.active = True
+
+
+            db.session.commit()
+
+
+            if (
+                old_public_id
+                and old_public_id
+                != uploaded_public_id
+            ):
+
+                delete_cloudinary_reel(
+                    old_public_id
+                )
+
+
+            flash(
+                "Event Reel published successfully.",
+                "success",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_event_reel",
+                    event_id=event.id,
+                )
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            if uploaded_public_id:
+
+                delete_cloudinary_reel(
+                    uploaded_public_id
+                )
+
+
+            current_app.logger.exception(
+                (
+                    "[Event Reel] Upload failed "
+                    "event_id=%s "
+                    "organizer_id=%s "
+                    "error=%s"
+                ),
+                event.id,
+                organizer.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Kalxa could not upload this "
+                    "reel. Please try again."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_event_reel",
+                    event_id=event.id,
+                )
+            )
+
+
+    return render_template(
+        "admin/event_reel.html",
+        organizer=organizer,
+        event=event,
+        reel=reel,
+    )
+   
+@app.route(
+    "/admin/events/<int:event_id>/reel/delete",
+    methods=[
+        "POST",
+    ],
+)
+def admin_delete_event_reel(
+    event_id,
+):
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            organizer_id=organizer.id,
+            organizer_deleted=False,
+        )
+        .first_or_404()
+    )
+
+
+    reel = (
+        EventReel.query
+        .filter_by(
+            event_id=event.id,
+            organizer_id=organizer.id,
+        )
+        .first()
+    )
+
+
+    if not reel:
+
+        flash(
+            "This event does not have a reel.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_event_reel",
+                event_id=event.id,
+            )
+        )
+
+
+    public_id = (
+        reel.cloudinary_public_id
+    )
+
+
+    try:
+
+        db.session.delete(
+            reel
+        )
+
+        db.session.commit()
+
+
+        delete_cloudinary_reel(
+            public_id
+        )
+
+
+        flash(
+            "Event Reel removed.",
+            "success",
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Event Reel] Delete failed "
+                "event_id=%s error=%s"
+            ),
+            event.id,
+            error,
+        )
+
+        flash(
+            "Unable to remove Event Reel.",
+            "error",
+        )
+
+
+    return redirect(
+        url_for(
+            "admin_event_reel",
+            event_id=event.id,
+        )
+    )   
+ 
 # ============================================================
 # ORGANIZER SUBSCRIPTION
 # ============================================================
@@ -10754,6 +11396,7 @@ def admin_dashboard():
         "POST",
     ],
 )
+
 def admin_new_event():
 
     auth = (
@@ -11624,6 +12267,15 @@ def admin_event_control(
 
     recent_orders = orders[:8]
 
+    event_reel = (
+        EventReel.query
+        .filter_by(
+            event_id=event.id,
+            organizer_id=organizer.id,
+        )
+        .first()
+    )
+
     total_orders = len(orders)
 
     paid_orders = sum(
@@ -11653,6 +12305,7 @@ def admin_event_control(
         paid_orders=paid_orders,
         pending_orders=pending_orders,
         cancelled_orders=cancelled_orders,
+        event_reel=event_reel,
         paid_tickets=event.paid_ticket_count,
         checked_in=event.checked_in_ticket_count,
         revenue=event.paid_revenue,
@@ -13703,7 +14356,6 @@ def admin_edit_event(
             .strip()
             or None
         )
-
         event.notification_area = (
             event_area
         )
@@ -14984,7 +15636,6 @@ def admin_orders(
         checkout_total=
             checkout_total,
     )
-
 
 # ============================================================
 # VERIFY PAYSTACK ORDER
