@@ -3379,36 +3379,11 @@
             </section>
             {% endif %}
 
-            <section class="discovery-hero">
-                <div class="search-shell">
-                    <span aria-hidden="true">⌕</span>
-                    <input
-                        type="search"
-                        id="event-search"
-                        placeholder="Search events, venues or organizers"
-                        autocomplete="off"
-                        aria-label="Search events"
-                    >
-                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
-                </div>
-
-               {# <div class="filter-chips" id="event-filters" aria-label="Event filters">
-                    <button type="button" class="filter-chip active" data-filter="all">All</button>
-                    <button type="button" class="filter-chip" data-filter="today">Today</button>
-                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
-                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
-                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
-                #} </div>
-                
-            </section>
 
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
-                    <div>
-                        
-                        <h2>🔥 Later On</h2>
-                    </div>
+                  
                     <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
                 </div>
 
@@ -3576,6 +3551,30 @@
 
 
     {% endif %}
+
+                <section class="discovery-hero">
+                <div class="search-shell">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="event-search"
+                        placeholder="Search events, venues or organizers"
+                        autocomplete="off"
+                        aria-label="Search events"
+                    >
+                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
+                </div>
+
+               {# <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                    <button type="button" class="filter-chip active" data-filter="all">All</button>
+                    <button type="button" class="filter-chip" data-filter="today">Today</button>
+                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
+                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
+                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
+                #} </div>
+                
+            </section>
+
 
 
 
