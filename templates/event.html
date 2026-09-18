@@ -2741,6 +2741,334 @@
                 padding-bottom: 78px;
             }
         }
+
+    /* =====================================================
+       SEE THE VIBE — EVENT REELS
+       Lightweight thumbnail rail + full-screen video viewer
+    ===================================================== */
+
+    .vibe-section {
+        margin: 4px 0 30px;
+    }
+
+    .vibe-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 13px;
+    }
+
+    .vibe-heading-copy {
+        min-width: 0;
+    }
+
+    .vibe-kicker {
+        display: block;
+        margin-bottom: 3px;
+        color: #6b7280;
+        font-size: .58rem;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .vibe-heading h2 {
+        margin: 0;
+        color: #111827;
+        font-size: clamp(1.28rem, 3vw, 1.72rem);
+        line-height: 1.05;
+        font-weight: 950;
+        letter-spacing: -.035em;
+    }
+
+    .vibe-heading-note {
+        flex: 0 0 auto;
+        color: #6b7280;
+        font-size: .68rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .vibe-rail {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(154px, 184px);
+        gap: 11px;
+        overflow-x: auto;
+        padding: 2px 2px 10px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .vibe-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+    .vibe-card {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 9 / 16;
+        padding: 0;
+        border: 1px solid #d1d5db;
+        border-radius: 18px;
+        background: #111827;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .10);
+        scroll-snap-align: start;
+        cursor: pointer;
+        isolation: isolate;
+    }
+
+    .vibe-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+            linear-gradient(
+                to top,
+                rgba(3, 7, 18, .94) 0%,
+                rgba(3, 7, 18, .40) 34%,
+                rgba(3, 7, 18, .04) 67%,
+                rgba(3, 7, 18, .08) 100%
+            );
+        pointer-events: none;
+    }
+
+    .vibe-card img,
+    .vibe-card-fallback {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+    }
+
+    .vibe-card-fallback {
+        display: grid;
+        place-items: center;
+        background:
+            radial-gradient(circle at 30% 20%, #374151 0%, #111827 44%, #030712 100%);
+        color: rgba(255,255,255,.78);
+        font-size: 1rem;
+        font-weight: 1000;
+        letter-spacing: .12em;
+    }
+
+    .vibe-play {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        padding-left: 2px;
+        border: 1px solid rgba(255,255,255,.28);
+        border-radius: 999px;
+        background: rgba(17,24,39,.68);
+        color: #ffffff;
+        font-size: .86rem;
+        box-shadow: 0 6px 20px rgba(0,0,0,.20);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .vibe-duration {
+        position: absolute;
+        top: 13px;
+        left: 11px;
+        z-index: 3;
+        padding: 5px 7px;
+        border-radius: 999px;
+        background: rgba(17,24,39,.70);
+        color: #ffffff;
+        font-size: .53rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .03em;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .vibe-card-copy {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 3;
+        text-align: left;
+    }
+
+    .vibe-card-copy strong {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 0;
+        color: #ffffff;
+        font-size: .82rem;
+        line-height: 1.16;
+        font-weight: 950;
+        letter-spacing: -.015em;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .vibe-card-copy small {
+        display: block;
+        overflow: hidden;
+        margin-top: 5px;
+        color: rgba(255,255,255,.72);
+        font-size: .57rem;
+        line-height: 1.2;
+        font-weight: 700;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .vibe-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 13px 30px rgba(15, 23, 42, .16);
+    }
+
+    .vibe-card {
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .vibe-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(3, 7, 18, .94);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    .vibe-modal.open {
+        display: flex;
+    }
+
+    .vibe-modal-shell {
+        position: relative;
+        width: min(430px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 22px;
+        background: #000000;
+        box-shadow: 0 30px 90px rgba(0,0,0,.56);
+    }
+
+    .vibe-modal-video {
+        width: 100%;
+        max-height: calc(100vh - 28px);
+        display: block;
+        aspect-ratio: 9 / 16;
+        object-fit: contain;
+        background: #000000;
+    }
+
+    .vibe-modal-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 5;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: 1.15rem;
+        font-weight: 900;
+        cursor: pointer;
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
+    .vibe-modal-info {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 4;
+        padding: 42px 16px 15px;
+        background: linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,0));
+        pointer-events: none;
+    }
+
+    .vibe-modal-title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 1rem;
+        line-height: 1.2;
+        font-weight: 950;
+    }
+
+    .vibe-modal-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        margin-top: 8px;
+        padding: 0 11px;
+        border-radius: 9px;
+        background: #fff4df;
+        color: #111827;
+        font-size: .66rem;
+        font-weight: 950;
+        text-decoration: none;
+        pointer-events: auto;
+    }
+
+    @media (max-width: 620px) {
+        .vibe-section {
+            margin-top: 2px;
+            margin-bottom: 24px;
+        }
+
+        .vibe-heading {
+            margin-bottom: 11px;
+        }
+
+        .vibe-heading-note {
+            font-size: .60rem;
+        }
+
+        .vibe-rail {
+            grid-auto-columns: minmax(138px, 158px);
+            gap: 9px;
+        }
+
+        .vibe-card {
+            border-radius: 16px;
+        }
+
+        .vibe-play {
+            width: 34px;
+            height: 34px;
+            top: 10px;
+            right: 10px;
+        }
+
+        .vibe-duration {
+            top: 11px;
+            left: 9px;
+        }
+
+        .vibe-card-copy {
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+        }
+    }
+
 </style>
 
 </head>
@@ -3274,10 +3602,77 @@
 
 
 
+            
+
+            {% if reels %}
+            <!-- =========================================
+                 SEE THE VIBE — EVENT REELS
+            ========================================== -->
+            <section class="vibe-section" aria-labelledby="vibe-title">
+                <div class="vibe-heading">
+                    <div class="vibe-heading-copy">
+                        <span class="vibe-kicker">EVENT REELS</span>
+                        <h2 id="vibe-title">🎬 See the Vibe</h2>
+                    </div>
+                    <span class="vibe-heading-note">Tap to watch</span>
+                </div>
+
+                <div class="vibe-rail" aria-label="Event reels">
+                    {% for reel in reels %}
+                        {% if reel.event %}
+                            <button
+                                type="button"
+                                class="vibe-card"
+                                data-vibe-reel
+                                data-video-url="{{ reel.video_url }}"
+                                data-poster-url="{{ reel.thumbnail_url or '' }}"
+                                data-event-title="{{ reel.event.title|e }}"
+                                data-event-url="{{ url_for('event_page', event_id=reel.event.id) }}"
+                                aria-label="Watch {{ reel.event.title }} reel"
+                            >
+                                {% if reel.thumbnail_url %}
+                                    <img
+                                        src="{{ reel.thumbnail_url }}"
+                                        alt="{{ reel.event.title }} reel preview"
+                                        loading="lazy"
+                                    >
+                                {% else %}
+                                    <span class="vibe-card-fallback">KALXA</span>
+                                {% endif %}
+
+                                {% if reel.duration_seconds %}
+                                    <span class="vibe-duration">
+                                        {{ '%.0f'|format(reel.duration_seconds) }}s
+                                    </span>
+                                {% endif %}
+
+                                <span class="vibe-play" aria-hidden="true">▶</span>
+
+                                <span class="vibe-card-copy">
+                                    <strong>{{ reel.event.title }}</strong>
+                                    <small>
+                                        {% if reel.event.event_date %}
+                                            {{ reel.event.event_date.strftime('%d %b') }}
+                                        {% endif %}
+                                        {% if reel.event.venue %}
+                                            {% if reel.event.event_date %} · {% endif %}{{ reel.event.venue }}
+                                        {% endif %}
+                                    </small>
+                                </span>
+                            </button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
             {% if featured_events %}
             <section class="discovery-section featured-shell" aria-labelledby="featured-title">
                 <div class="section-heading">
-                 
+                    <div>
+                    
+                        <h2 id="featured-title">⭐</h2>
+                    </div>
                     <span class="section-note">Swipe posters</span>
                 </div>
 
@@ -3376,11 +3771,35 @@
             </section>
             {% endif %}
 
+            <section class="discovery-hero">
+                <div class="search-shell">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="event-search"
+                        placeholder="Search events, venues or organizers"
+                        autocomplete="off"
+                        aria-label="Search events"
+                    >
+                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
+                </div>
+
+                <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                    <button type="button" class="filter-chip active" data-filter="all">All</button>
+                    <button type="button" class="filter-chip" data-filter="today">Today</button>
+                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
+                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
+                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
+                </div>
+            </section>
 
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
-                  
+                    <div>
+                        
+                        <h2>🔥 Later On</h2>
+                    </div>
                     <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
                 </div>
 
@@ -3523,7 +3942,10 @@
                     {% endfor %}
                 </div>
 
-
+                <div class="no-results" id="no-results" hidden>
+                    <strong>No matching events</strong>
+                    <span>Try another search or filter.</span>
+                </div>
             </section>
             {% elif not featured_events %}
             <div class="empty-state premium-empty">
@@ -3545,30 +3967,6 @@
 
 
     {% endif %}
-
-                <section class="discovery-hero">
-                <div class="search-shell">
-                    <span aria-hidden="true">⌕</span>
-                    <input
-                        type="search"
-                        id="event-search"
-                        placeholder="Search events, venues or organizers"
-                        autocomplete="off"
-                        aria-label="Search events"
-                    >
-                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
-                </div>
-
-                <div class="filter-chips" id="event-filters" aria-label="Event filters">
-                    <button type="button" class="filter-chip active" data-filter="all">All</button>
-                    <button type="button" class="filter-chip" data-filter="today">Today</button>
-                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
-                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
-                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
-                </div>
-                
-            </section>
-
 
 
 
@@ -4308,6 +4706,57 @@
 
 {% endif %}
 
+
+
+
+
+    {% if not event and reels %}
+        <!-- =========================================
+             SEE THE VIBE — REEL VIEWER
+        ========================================== -->
+        <div
+            class="vibe-modal"
+            id="vibe-modal"
+            aria-hidden="true"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Event reel viewer"
+        >
+            <div class="vibe-modal-shell">
+                <button
+                    type="button"
+                    class="vibe-modal-close"
+                    id="vibe-modal-close"
+                    aria-label="Close reel"
+                >
+                    ×
+                </button>
+
+                <video
+                    class="vibe-modal-video"
+                    id="vibe-modal-video"
+                    controls
+                    playsinline
+                    preload="metadata"
+                ></video>
+
+                <div class="vibe-modal-info">
+                    <p
+                        class="vibe-modal-title"
+                        id="vibe-modal-title"
+                    ></p>
+
+                    <a
+                        href="#"
+                        class="vibe-modal-link"
+                        id="vibe-modal-link"
+                    >
+                        View event →
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
 
 <div
@@ -5219,6 +5668,94 @@ document.querySelectorAll(
     applyFilters();
 })();
 </script>
+
+<script>
+(() => {
+    const reelButtons = Array.from(
+        document.querySelectorAll('[data-vibe-reel]')
+    );
+
+    const modal = document.getElementById('vibe-modal');
+    const video = document.getElementById('vibe-modal-video');
+    const closeButton = document.getElementById('vibe-modal-close');
+    const title = document.getElementById('vibe-modal-title');
+    const eventLink = document.getElementById('vibe-modal-link');
+
+    if (!reelButtons.length || !modal || !video) {
+        return;
+    }
+
+    let lastTrigger = null;
+
+    function closeReel() {
+        video.pause();
+        video.removeAttribute('src');
+        video.removeAttribute('poster');
+        video.load();
+
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+
+        if (lastTrigger) {
+            lastTrigger.focus({ preventScroll: true });
+        }
+    }
+
+    function openReel(button) {
+        const videoUrl = button.dataset.videoUrl;
+
+        if (!videoUrl) {
+            return;
+        }
+
+        lastTrigger = button;
+
+        video.src = videoUrl;
+
+        if (button.dataset.posterUrl) {
+            video.poster = button.dataset.posterUrl;
+        } else {
+            video.removeAttribute('poster');
+        }
+
+        if (title) {
+            title.textContent = button.dataset.eventTitle || 'Kalxa Event';
+        }
+
+        if (eventLink) {
+            eventLink.href = button.dataset.eventUrl || '#';
+        }
+
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        video.play().catch(() => {
+            // Browser may require a second explicit tap to play.
+        });
+    }
+
+    reelButtons.forEach((button) => {
+        button.addEventListener('click', () => openReel(button));
+    });
+
+    closeButton?.addEventListener('click', closeReel);
+
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeReel();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal.classList.contains('open')) {
+            closeReel();
+        }
+    });
+})();
+</script>
+
 </body>
 
 </html>
