@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Event Reel | Kalxa
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .reel-admin-shell {
+            width: min(100% - 28px, 760px);
+            margin: 0 auto;
+            padding: 28px 0 70px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            margin-bottom: 18px;
+
+            color: #4b5563;
+
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .reel-admin-card {
+            padding: 24px;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+
+            box-shadow:
+                0 12px 36px
+                rgba(15,23,42,.07);
+        }
+
+        .reel-kicker {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #6b7280;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            letter-spacing: .11em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size:
+                clamp(26px, 6vw, 38px);
+
+            line-height: 1.05;
+
+            letter-spacing: -.04em;
+        }
+
+        .event-name {
+            margin: 9px 0 0;
+
+            color: #6b7280;
+
+            font-size: 14px;
+        }
+
+        .rules {
+            display: grid;
+            gap: 8px;
+
+            margin: 22px 0;
+
+            padding: 15px;
+
+            background: #f3f4f6;
+
+            border-radius: 13px;
+
+            color: #4b5563;
+
+            font-size: 12px;
+        }
+
+        .upload-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .upload-label {
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .upload-input {
+            width: 100%;
+
+            padding: 13px;
+
+            background: #f8fafc;
+
+            border: 1px solid #d1d5db;
+            border-radius: 11px;
+        }
+
+        .button {
+            min-height: 46px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 10px 16px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border: 1px solid #111827;
+            border-radius: 11px;
+
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button-danger {
+            background: #ffffff;
+            color: #b91c1c;
+
+            border-color: #fecaca;
+        }
+
+        .current-reel {
+            margin-top: 28px;
+
+            padding-top: 22px;
+
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .video-frame {
+            width: min(100%, 300px);
+
+            margin: 14px auto;
+
+            overflow: hidden;
+
+            background: #000000;
+
+            border-radius: 17px;
+
+            box-shadow:
+                0 12px 32px
+                rgba(15,23,42,.16);
+        }
+
+        .video-frame video {
+            display: block;
+
+            width: 100%;
+            aspect-ratio: 9 / 16;
+
+            object-fit: cover;
+        }
+
+        .reel-meta {
+            color: #6b7280;
+
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .flash {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+
+            background: #ffffff;
+
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="reel-admin-shell">
+
+    <a
+        href="{{ url_for(
+            'admin_event_control',
+            event_id=event.id
+        ) }}"
+        class="back-link"
+    >
+        ← Back to Event Control Centre
+    </a>
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% for category, message in messages %}
+
+            <div class="flash">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <section class="reel-admin-card">
+
+        <span class="reel-kicker">
+            EVENT MARKETING
+        </span>
+
+        <h1>
+            🎬 Event Reel
+        </h1>
+
+        <p class="event-name">
+            {{ event.title }}
+        </p>
+
+
+        <div class="rules">
+
+            <strong>
+                Show attendees what the experience feels like.
+            </strong>
+
+            <span>
+                Maximum video duration: 30 seconds
+            </span>
+
+            <span>
+                Maximum file size: 30 MB
+            </span>
+
+            <span>
+                Vertical 9:16 video is recommended.
+            </span>
+
+            <span>
+                MP4 is recommended for best compatibility.
+            </span>
+
+        </div>
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="upload-form"
+        >
+
+            <label
+                for="reel-video"
+                class="upload-label"
+            >
+                {% if reel %}
+                    Replace Event Reel
+                {% else %}
+                    Upload Event Reel
+                {% endif %}
+            </label>
+
+            <input
+                id="reel-video"
+                class="upload-input"
+                type="file"
+                name="reel_video"
+                accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
+                required
+            >
+
+            <button
+                type="submit"
+                class="button"
+            >
+                {% if reel %}
+                    Replace Reel
+                {% else %}
+                    Publish Reel
+                {% endif %}
+            </button>
+
+        </form>
+
+
+        {% if reel %}
+
+            <div class="current-reel">
+
+                <span class="reel-kicker">
+                    CURRENT REEL
+                </span>
+
+                <div class="video-frame">
+
+                    <video
+                        controls
+                        playsinline
+                        preload="metadata"
+                        {% if reel.thumbnail_url %}
+                            poster="{{ reel.thumbnail_url }}"
+                        {% endif %}
+                    >
+                        <source
+                            src="{{ reel.video_url }}"
+                            type="video/mp4"
+                        >
+                    </video>
+
+                </div>
+
+                <div class="reel-meta">
+
+                    {{ "%.1f"|format(
+                        reel.duration_seconds
+                    ) }} seconds
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'admin_delete_event_reel',
+                        event_id=event.id
+                    ) }}"
+                    style="margin-top:16px;"
+                    onsubmit="return confirm(
+                        'Remove this event reel?'
+                    );"
+                >
+
+                    <button
+                        type="submit"
+                        class="button button-danger"
+                        style="width:100%;"
+                    >
+                        Remove Reel
+                    </button>
+
+                </form>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+</body>
+</html>
