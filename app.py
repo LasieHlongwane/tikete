@@ -82,6 +82,7 @@ from models import (
     TicketSalePhase,
     db,
     EventReel,
+    EventReelAnalytics,
 )
 
 
