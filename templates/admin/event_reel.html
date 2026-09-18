@@ -312,6 +312,180 @@
             text-align: center;
         }
 
+        /* =====================================================
+           REEL ANALYTICS
+        ===================================================== */
+
+        .analytics-section {
+            margin-top: 28px;
+            padding-top: 22px;
+
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .analytics-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+
+            margin-bottom: 14px;
+        }
+
+        .analytics-heading h2 {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 18px;
+            line-height: 1.15;
+            font-weight: 950;
+
+            letter-spacing: -.025em;
+        }
+
+        .analytics-heading p {
+            margin: 4px 0 0;
+
+            color: #6b7280;
+
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .analytics-badge {
+            flex: 0 0 auto;
+
+            padding: 6px 8px;
+
+            background: #f3f4f6;
+            color: #4b5563;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .analytics-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 10px;
+        }
+
+        .analytics-card {
+            min-width: 0;
+
+            padding: 13px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 13px;
+        }
+
+        .analytics-label {
+            display: block;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            line-height: 1.2;
+            font-weight: 900;
+
+            letter-spacing: .07em;
+            text-transform: uppercase;
+        }
+
+        .analytics-value {
+            display: block;
+
+            margin-top: 6px;
+
+            color: #111827;
+
+            font-size: 24px;
+            line-height: 1;
+            font-weight: 950;
+
+            letter-spacing: -.035em;
+        }
+
+        .analytics-note {
+            display: block;
+
+            margin-top: 5px;
+
+            color: #9ca3af;
+
+            font-size: 9px;
+            line-height: 1.35;
+        }
+
+        .analytics-rates {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 8px;
+
+            margin-top: 10px;
+        }
+
+        .analytics-rate {
+            padding: 10px;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 11px;
+
+            text-align: center;
+        }
+
+        .analytics-rate strong {
+            display: block;
+
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 950;
+        }
+
+        .analytics-rate span {
+            display: block;
+
+            margin-top: 2px;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 800;
+        }
+
+        .analytics-footnote {
+            margin: 10px 0 0;
+
+            color: #9ca3af;
+
+            font-size: 9px;
+            line-height: 1.5;
+        }
+
         .flash {
             margin-bottom: 14px;
             padding: 12px 14px;
@@ -339,6 +513,23 @@
 
             .video-frame {
                 width: min(100%, 290px);
+            }
+
+            .analytics-grid {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
+
+            .analytics-rates {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-heading {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
 
@@ -483,7 +674,6 @@
                     >
                         <source
                             src="{{ reel.video_url }}"
-                            type="video/mp4"
                         >
                     </video>
 
@@ -515,6 +705,206 @@
                     ) }} seconds
 
                 </div>
+
+
+                {% set analytics = reel_analytics|default({}) %}
+                {% set impressions = analytics.get('impression', 0) %}
+                {% set plays = analytics.get('play', 0) %}
+                {% set opens = analytics.get('open', 0) %}
+                {% set half_watched = analytics.get('half_watched', 0) %}
+                {% set completed = analytics.get('completed', 0) %}
+                {% set view_event = analytics.get('view_event', 0) %}
+
+                <section class="analytics-section">
+
+                    <div class="analytics-heading">
+
+                        <div>
+                            <span class="reel-kicker">
+                                REEL PERFORMANCE
+                            </span>
+
+                            <h2>
+                                Analytics
+                            </h2>
+
+                            <p>
+                                Anonymous engagement with this reel.
+                            </p>
+                        </div>
+
+                        <span class="analytics-badge">
+                            Live data
+                        </span>
+
+                    </div>
+
+
+                    <div class="analytics-grid">
+
+                        <div class="analytics-card">
+                            <span class="analytics-label">
+                                Impressions
+                            </span>
+
+                            <strong class="analytics-value">
+                                {{ impressions }}
+                            </strong>
+
+                            <span class="analytics-note">
+                                Reel shown on screen
+                            </span>
+                        </div>
+
+
+                        <div class="analytics-card">
+                            <span class="analytics-label">
+                                Plays
+                            </span>
+
+                            <strong class="analytics-value">
+                                {{ plays }}
+                            </strong>
+
+                            <span class="analytics-note">
+                                Playback started
+                            </span>
+                        </div>
+
+
+                        <div class="analytics-card">
+                            <span class="analytics-label">
+                                Reel Opens
+                            </span>
+
+                            <strong class="analytics-value">
+                                {{ opens }}
+                            </strong>
+
+                            <span class="analytics-note">
+                                Full viewer opened
+                            </span>
+                        </div>
+
+
+                        <div class="analytics-card">
+                            <span class="analytics-label">
+                                50% Watched
+                            </span>
+
+                            <strong class="analytics-value">
+                                {{ half_watched }}
+                            </strong>
+
+                            <span class="analytics-note">
+                                Reached halfway
+                            </span>
+                        </div>
+
+
+                        <div class="analytics-card">
+                            <span class="analytics-label">
+                                Completed
+                            </span>
+
+                            <strong class="analytics-value">
+                                {{ completed }}
+                            </strong>
+
+                            <span class="analytics-note">
+                                Reached the end
+                            </span>
+                        </div>
+
+
+                        <div class="analytics-card">
+                            <span class="analytics-label">
+                                Event Visits
+                            </span>
+
+                            <strong class="analytics-value">
+                                {{ view_event }}
+                            </strong>
+
+                            <span class="analytics-note">
+                                View event clicked
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="analytics-rates">
+
+                        <div class="analytics-rate">
+
+                            <strong>
+                                {% if impressions %}
+                                    {{ "%.1f"|format(
+                                        (opens * 100.0)
+                                        / impressions
+                                    ) }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </strong>
+
+                            <span>
+                                Open rate
+                            </span>
+
+                        </div>
+
+
+                        <div class="analytics-rate">
+
+                            <strong>
+                                {% if opens %}
+                                    {{ "%.1f"|format(
+                                        (completed * 100.0)
+                                        / opens
+                                    ) }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </strong>
+
+                            <span>
+                                Completion rate
+                            </span>
+
+                        </div>
+
+
+                        <div class="analytics-rate">
+
+                            <strong>
+                                {% if opens %}
+                                    {{ "%.1f"|format(
+                                        (view_event * 100.0)
+                                        / opens
+                                    ) }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </strong>
+
+                            <span>
+                                Event click rate
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <p class="analytics-footnote">
+                        Kalxa Reel analytics use anonymous session
+                        tracking. Repeated actions from the same
+                        session are de-duplicated by the backend.
+                    </p>
+
+                </section>
 
 
                 <form
@@ -630,10 +1020,6 @@
 
             } catch (error) {
 
-                /*
-                 * Some browsers may block autoplay.
-                 * The organizer can still tap the video.
-                 */
                 console.debug(
                     "[Kalxa Reel] Preview autoplay blocked.",
                     error
@@ -653,19 +1039,12 @@
         }
 
 
-        /*
-         * Clicking / tapping directly on the video
-         * changes sound.
-         */
         video.addEventListener(
             "click",
             toggleSound
         );
 
 
-        /*
-         * Sound button does the same.
-         */
         soundButton.addEventListener(
             "click",
             async (event) => {
@@ -678,9 +1057,6 @@
         );
 
 
-        /*
-         * Prevent the ordinary browser context menu.
-         */
         video.addEventListener(
             "contextmenu",
             (event) => {
@@ -690,10 +1066,6 @@
         );
 
 
-        /*
-         * Start the organizer preview automatically,
-         * muted.
-         */
         const startPreview =
             () => {
 
