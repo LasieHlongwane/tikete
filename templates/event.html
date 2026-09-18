@@ -2993,6 +2993,26 @@
         -webkit-backdrop-filter: blur(9px);
     }
 
+    .vibe-modal-sound {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 5;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: .9rem;
+        cursor: pointer;
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
     .vibe-modal-info {
         position: absolute;
         left: 0;
@@ -4722,6 +4742,67 @@
 {% endif %}
 
 
+{% if not event and reels %}
+<!-- =========================================
+     SEE THE VIBE — FULL REEL VIEWER
+========================================== -->
+<div
+    class="vibe-modal"
+    id="vibe-modal"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Event reel viewer"
+>
+    <div class="vibe-modal-shell">
+        <button
+            type="button"
+            class="vibe-modal-close"
+            id="vibe-modal-close"
+            aria-label="Close reel"
+        >
+            ×
+        </button>
+
+        <video
+            class="vibe-modal-video"
+            id="vibe-modal-video"
+            playsinline
+            loop
+            preload="metadata"
+            controlslist="nodownload noremoteplayback"
+            disablepictureinpicture
+            oncontextmenu="return false;"
+        ></video>
+
+        <button
+            type="button"
+            class="vibe-modal-sound"
+            id="vibe-modal-sound"
+            aria-label="Mute reel"
+        >
+            🔊
+        </button>
+
+        <div class="vibe-modal-info">
+            <p
+                class="vibe-modal-title"
+                id="vibe-modal-title"
+            ></p>
+
+            <a
+                href="#"
+                class="vibe-modal-link"
+                id="vibe-modal-link"
+            >
+                View event →
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
 <div
     class="pwa-install-card"
     id="pwa-install-card"
@@ -5646,7 +5727,15 @@ document.querySelectorAll(
         return;
     }
 
+    const modal = document.getElementById('vibe-modal');
+    const modalVideo = document.getElementById('vibe-modal-video');
+    const modalClose = document.getElementById('vibe-modal-close');
+    const modalSound = document.getElementById('vibe-modal-sound');
+    const modalTitle = document.getElementById('vibe-modal-title');
+    const modalLink = document.getElementById('vibe-modal-link');
+
     let activeVideo = null;
+    let lastTrigger = null;
 
     function soundButtonFor(video) {
         return video
@@ -5668,12 +5757,12 @@ document.querySelectorAll(
         }
     }
 
-    function muteOtherReels(video) {
-        reelVideos.forEach((otherVideo) => {
-            if (otherVideo !== video) {
-                setMuted(otherVideo, true);
-            }
+    function pauseAllInlineReels() {
+        reelVideos.forEach((video) => {
+            video.pause();
+            setMuted(video, true);
         });
+        activeVideo = null;
     }
 
     function pauseOtherReels(video) {
@@ -5686,76 +5775,232 @@ document.querySelectorAll(
     }
 
     function playMuted(video) {
+        if (!video || modal?.classList.contains('open')) {
+            return;
+        }
+
         pauseOtherReels(video);
         setMuted(video, true);
         activeVideo = video;
 
         video.play().catch(() => {
-            // Muted autoplay can still be blocked by some browsers.
+            // Some browsers can still block muted autoplay.
         });
     }
 
-    function toggleSound(video) {
-        if (!video) {
+    function openReel(card) {
+        if (!card || !modal || !modalVideo) {
             return;
         }
 
-        if (video.paused) {
-            pauseOtherReels(video);
-            activeVideo = video;
-            video.play().catch(() => {});
+        const inlineVideo = card.querySelector('.vibe-card-video');
+        const source = inlineVideo?.querySelector('source');
+        const videoUrl = source?.src || source?.getAttribute('src');
+
+        if (!videoUrl) {
+            return;
         }
 
-        const shouldUnmute = video.muted;
+        lastTrigger = card;
+        pauseAllInlineReels();
 
-        if (shouldUnmute) {
-            muteOtherReels(video);
-            setMuted(video, false);
+        modalVideo.pause();
+        modalVideo.src = videoUrl;
+
+        const poster = inlineVideo.getAttribute('poster');
+        if (poster) {
+            modalVideo.poster = poster;
         } else {
-            setMuted(video, true);
+            modalVideo.removeAttribute('poster');
+        }
+
+        modalVideo.muted = false;
+
+        if (modalSound) {
+            modalSound.textContent = '🔊';
+            modalSound.setAttribute('aria-label', 'Mute reel');
+        }
+
+        if (modalTitle) {
+            modalTitle.textContent =
+                card.querySelector('.vibe-card-copy strong')?.textContent?.trim()
+                || 'Kalxa Event';
+        }
+
+        if (modalLink) {
+            const eventLink = card.querySelector('.vibe-card-event-link');
+            modalLink.href = eventLink?.href || '#';
+        }
+
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        /*
+         * The reel opens because of a real user click/tap, so we first
+         * try to play it with sound. If the browser refuses, fall back
+         * to muted playback while keeping the viewer open.
+         */
+        modalVideo.play().catch(() => {
+            modalVideo.muted = true;
+
+            if (modalSound) {
+                modalSound.textContent = '🔇';
+                modalSound.setAttribute('aria-label', 'Turn sound on');
+            }
+
+            modalVideo.play().catch(() => {});
+        });
+    }
+
+    function closeReel() {
+        if (!modal || !modalVideo) {
+            return;
+        }
+
+        modalVideo.pause();
+        modalVideo.removeAttribute('src');
+        modalVideo.removeAttribute('poster');
+        modalVideo.load();
+
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+
+        if (lastTrigger) {
+            lastTrigger.focus?.({ preventScroll: true });
+        }
+
+        const firstVisibleVideo = reelVideos.find((video) => {
+            const rect = video.getBoundingClientRect();
+            return (
+                rect.bottom > 0
+                && rect.top < window.innerHeight
+                && rect.right > 0
+                && rect.left < window.innerWidth
+            );
+        });
+
+        if (firstVisibleVideo) {
+            playMuted(firstVisibleVideo);
         }
     }
 
-    reelVideos.forEach((video) => {
-        setMuted(video, true);
+    reelCards.forEach((card) => {
+        const video = card.querySelector('.vibe-card-video');
+        const soundButton = card.querySelector('.vibe-sound-toggle');
+        const eventLink = card.querySelector('.vibe-card-event-link');
 
-        video.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            toggleSound(video);
+        if (video) {
+            setMuted(video, true);
+
+            video.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                openReel(card);
+            });
+
+            video.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+            });
+        }
+
+        card.addEventListener('click', (event) => {
+            if (
+                event.target.closest('.vibe-sound-toggle')
+                || event.target.closest('.vibe-card-event-link')
+            ) {
+                return;
+            }
+
+            openReel(card);
         });
 
-        video.addEventListener('contextmenu', (event) => {
+        soundButton?.addEventListener('click', (event) => {
             event.preventDefault();
+            event.stopPropagation();
+
+            if (!video) {
+                return;
+            }
+
+            if (video.paused) {
+                pauseOtherReels(video);
+                activeVideo = video;
+                video.play().catch(() => {});
+            }
+
+            setMuted(video, !video.muted);
+        });
+
+        eventLink?.addEventListener('click', (event) => {
+            event.stopPropagation();
         });
     });
 
-    document.querySelectorAll('.vibe-sound-toggle').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const video = button
-                .closest('[data-vibe-reel]')
-                ?.querySelector('.vibe-card-video');
-
-            toggleSound(video);
-        });
+    modalClose?.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeReel();
     });
 
-    /*
-     * Start the first reel immediately when the public homepage loads.
-     * It is deliberately muted so browser autoplay rules allow it.
-     */
+    modalSound?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!modalVideo) {
+            return;
+        }
+
+        modalVideo.muted = !modalVideo.muted;
+        modalSound.textContent = modalVideo.muted ? '🔇' : '🔊';
+        modalSound.setAttribute(
+            'aria-label',
+            modalVideo.muted ? 'Turn sound on' : 'Mute reel'
+        );
+
+        if (modalVideo.paused) {
+            modalVideo.play().catch(() => {});
+        }
+    });
+
+    modal?.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeReel();
+        }
+    });
+
+    modalVideo?.addEventListener('click', () => {
+        if (modalVideo.paused) {
+            modalVideo.play().catch(() => {});
+        } else {
+            modalVideo.pause();
+        }
+    });
+
+    modalVideo?.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal?.classList.contains('open')) {
+            closeReel();
+        }
+    });
+
+    /* First reel autoplays muted on the public homepage. */
     const firstVideo = reelVideos[0];
     playMuted(firstVideo);
 
     /*
-     * Only one reel plays at a time. When another reel becomes the
-     * main visible reel, it starts muted and the previous reel pauses.
+     * As the attendee horizontally swipes, the reel that becomes the
+     * main visible card starts muted and the previous reel pauses.
      */
     const observer = new IntersectionObserver(
         (entries) => {
+            if (modal?.classList.contains('open')) {
+                return;
+            }
+
             const visibleEntries = entries
                 .filter((entry) => entry.isIntersecting)
                 .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
@@ -5772,14 +6017,12 @@ document.querySelectorAll(
 
             entries.forEach((entry) => {
                 if (
-                    !entry.isIntersecting
-                    || entry.intersectionRatio < 0.25
+                    (!entry.isIntersecting || entry.intersectionRatio < 0.25)
+                    && entry.target === activeVideo
                 ) {
-                    if (entry.target === activeVideo) {
-                        entry.target.pause();
-                        setMuted(entry.target, true);
-                        activeVideo = null;
-                    }
+                    entry.target.pause();
+                    setMuted(entry.target, true);
+                    activeVideo = null;
                 }
             });
         },
@@ -5794,11 +6037,10 @@ document.querySelectorAll(
 
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            reelVideos.forEach((video) => {
-                video.pause();
-                setMuted(video, true);
-            });
-            activeVideo = null;
+            pauseAllInlineReels();
+            modalVideo?.pause();
+        } else if (modal?.classList.contains('open')) {
+            modalVideo?.play().catch(() => {});
         } else if (firstVideo) {
             playMuted(firstVideo);
         }
