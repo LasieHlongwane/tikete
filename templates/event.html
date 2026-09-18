@@ -3068,7 +3068,7 @@
             bottom: 10px;
         }
     }
-
+\n\n    /* =====================================================\n       SEE THE VIBE — INLINE AUTOPLAY REELS\n       First reel autoplays muted. Tap video for sound.\n    ===================================================== */\n\n    .vibe-card {\n        display: block;\n        border: 1px solid #d1d5db;\n        color: #ffffff;\n        text-align: left;\n    }\n\n    .vibe-card-video {\n        position: absolute;\n        inset: 0;\n        z-index: 0;\n        width: 100%;\n        height: 100%;\n        display: block;\n        object-fit: cover;\n        background: #000000;\n        cursor: pointer;\n        -webkit-user-select: none;\n        user-select: none;\n    }\n\n    .vibe-card::after {\n        z-index: 1;\n    }\n\n    .vibe-duration {\n        z-index: 4;\n    }\n\n    .vibe-sound-toggle {\n        position: absolute;\n        top: 11px;\n        right: 11px;\n        z-index: 5;\n        width: 36px;\n        height: 36px;\n        display: grid;\n        place-items: center;\n        padding: 0;\n        border: 1px solid rgba(255,255,255,.24);\n        border-radius: 999px;\n        background: rgba(17,24,39,.72);\n        color: #ffffff;\n        font-size: .86rem;\n        line-height: 1;\n        cursor: pointer;\n        box-shadow: 0 6px 20px rgba(0,0,0,.18);\n        backdrop-filter: blur(9px);\n        -webkit-backdrop-filter: blur(9px);\n    }\n\n    .vibe-sound-toggle:hover {\n        background: rgba(17,24,39,.90);\n    }\n\n    .vibe-card-copy {\n        z-index: 4;\n        pointer-events: none;\n    }\n\n    .vibe-card-event-link {\n        display: inline-flex;\n        align-items: center;\n        justify-content: center;\n        min-height: 30px;\n        margin-top: 8px;\n        padding: 0 9px;\n        border-radius: 8px;\n        background: #fff4df;\n        color: #111827;\n        font-size: .58rem;\n        line-height: 1;\n        font-weight: 950;\n        text-decoration: none;\n        pointer-events: auto;\n    }\n\n    .vibe-card-event-link:hover {\n        background: #ffffff;\n    }\n\n    @media (max-width: 620px) {\n        .vibe-sound-toggle {\n            top: 9px;\n            right: 9px;\n            width: 33px;\n            height: 33px;\n            font-size: .8rem;\n        }\n\n        .vibe-card-event-link {\n            min-height: 29px;\n            margin-top: 7px;\n            padding: 0 8px;\n            font-size: .55rem;\n        }\n    }\n
 </style>
 
 </head>
@@ -3614,31 +3614,33 @@
                         <span class="vibe-kicker">EVENT REELS</span>
                         <h2 id="vibe-title">🎬 See the Vibe</h2>
                     </div>
-                    <span class="vibe-heading-note">Tap to watch</span>
+                    <span class="vibe-heading-note">Tap video for sound</span>
                 </div>
 
                 <div class="vibe-rail" aria-label="Event reels">
                     {% for reel in reels %}
                         {% if reel.event %}
-                            <button
-                                type="button"
+                            <article
                                 class="vibe-card"
                                 data-vibe-reel
-                                data-video-url="{{ reel.video_url }}"
-                                data-poster-url="{{ reel.thumbnail_url or '' }}"
-                                data-event-title="{{ reel.event.title|e }}"
-                                data-event-url="{{ url_for('event_page', event_id=reel.event.id) }}"
-                                aria-label="Watch {{ reel.event.title }} reel"
+                                data-reel-index="{{ loop.index0 }}"
                             >
-                                {% if reel.thumbnail_url %}
-                                    <img
-                                        src="{{ reel.thumbnail_url }}"
-                                        alt="{{ reel.event.title }} reel preview"
-                                        loading="lazy"
-                                    >
-                                {% else %}
-                                    <span class="vibe-card-fallback">KALXA</span>
-                                {% endif %}
+                                <video
+                                    class="vibe-card-video"
+                                    playsinline
+                                    muted
+                                    loop
+                                    preload="metadata"
+                                    controlslist="nodownload noremoteplayback"
+                                    disablepictureinpicture
+                                    oncontextmenu="return false;"
+                                    {% if reel.thumbnail_url %}
+                                        poster="{{ reel.thumbnail_url }}"
+                                    {% endif %}
+                                    aria-label="{{ reel.event.title }} event reel"
+                                >
+                                    <source src="{{ reel.video_url }}">
+                                </video>
 
                                 {% if reel.duration_seconds %}
                                     <span class="vibe-duration">
@@ -3646,9 +3648,15 @@
                                     </span>
                                 {% endif %}
 
-                                <span class="vibe-play" aria-hidden="true">▶</span>
+                                <button
+                                    type="button"
+                                    class="vibe-sound-toggle"
+                                    aria-label="Turn sound on"
+                                >
+                                    🔇
+                                </button>
 
-                                <span class="vibe-card-copy">
+                                <div class="vibe-card-copy">
                                     <strong>{{ reel.event.title }}</strong>
                                     <small>
                                         {% if reel.event.event_date %}
@@ -3658,8 +3666,15 @@
                                             {% if reel.event.event_date %} · {% endif %}{{ reel.event.venue }}
                                         {% endif %}
                                     </small>
-                                </span>
-                            </button>
+
+                                    <a
+                                        href="{{ url_for('event_page', event_id=reel.event.id) }}"
+                                        class="vibe-card-event-link"
+                                    >
+                                        View event →
+                                    </a>
+                                </div>
+                            </article>
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -4707,58 +4722,6 @@
 {% endif %}
 
 
-
-
-
-    {% if not event and reels %}
-        <!-- =========================================
-             SEE THE VIBE — REEL VIEWER
-        ========================================== -->
-        <div
-            class="vibe-modal"
-            id="vibe-modal"
-            aria-hidden="true"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Event reel viewer"
-        >
-            <div class="vibe-modal-shell">
-                <button
-                    type="button"
-                    class="vibe-modal-close"
-                    id="vibe-modal-close"
-                    aria-label="Close reel"
-                >
-                    ×
-                </button>
-
-                <video
-                    class="vibe-modal-video"
-                    id="vibe-modal-video"
-                    controls
-                    playsinline
-                    preload="metadata"
-                ></video>
-
-                <div class="vibe-modal-info">
-                    <p
-                        class="vibe-modal-title"
-                        id="vibe-modal-title"
-                    ></p>
-
-                    <a
-                        href="#"
-                        class="vibe-modal-link"
-                        id="vibe-modal-link"
-                    >
-                        View event →
-                    </a>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-
-
 <div
     class="pwa-install-card"
     id="pwa-install-card"
@@ -5671,86 +5634,173 @@ document.querySelectorAll(
 
 <script>
 (() => {
-    const reelButtons = Array.from(
+    const reelCards = Array.from(
         document.querySelectorAll('[data-vibe-reel]')
     );
 
-    const modal = document.getElementById('vibe-modal');
-    const video = document.getElementById('vibe-modal-video');
-    const closeButton = document.getElementById('vibe-modal-close');
-    const title = document.getElementById('vibe-modal-title');
-    const eventLink = document.getElementById('vibe-modal-link');
+    const reelVideos = reelCards
+        .map((card) => card.querySelector('.vibe-card-video'))
+        .filter(Boolean);
 
-    if (!reelButtons.length || !modal || !video) {
+    if (!reelVideos.length) {
         return;
     }
 
-    let lastTrigger = null;
+    let activeVideo = null;
 
-    function closeReel() {
-        video.pause();
-        video.removeAttribute('src');
-        video.removeAttribute('poster');
-        video.load();
+    function soundButtonFor(video) {
+        return video
+            .closest('[data-vibe-reel]')
+            ?.querySelector('.vibe-sound-toggle');
+    }
 
-        modal.classList.remove('open');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
+    function setMuted(video, muted) {
+        video.muted = muted;
 
-        if (lastTrigger) {
-            lastTrigger.focus({ preventScroll: true });
+        const button = soundButtonFor(video);
+
+        if (button) {
+            button.textContent = muted ? '🔇' : '🔊';
+            button.setAttribute(
+                'aria-label',
+                muted ? 'Turn sound on' : 'Mute video'
+            );
         }
     }
 
-    function openReel(button) {
-        const videoUrl = button.dataset.videoUrl;
-
-        if (!videoUrl) {
-            return;
-        }
-
-        lastTrigger = button;
-
-        video.src = videoUrl;
-
-        if (button.dataset.posterUrl) {
-            video.poster = button.dataset.posterUrl;
-        } else {
-            video.removeAttribute('poster');
-        }
-
-        if (title) {
-            title.textContent = button.dataset.eventTitle || 'Kalxa Event';
-        }
-
-        if (eventLink) {
-            eventLink.href = button.dataset.eventUrl || '#';
-        }
-
-        modal.classList.add('open');
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-
-        video.play().catch(() => {
-            // Browser may require a second explicit tap to play.
+    function muteOtherReels(video) {
+        reelVideos.forEach((otherVideo) => {
+            if (otherVideo !== video) {
+                setMuted(otherVideo, true);
+            }
         });
     }
 
-    reelButtons.forEach((button) => {
-        button.addEventListener('click', () => openReel(button));
-    });
+    function pauseOtherReels(video) {
+        reelVideos.forEach((otherVideo) => {
+            if (otherVideo !== video) {
+                otherVideo.pause();
+                setMuted(otherVideo, true);
+            }
+        });
+    }
 
-    closeButton?.addEventListener('click', closeReel);
+    function playMuted(video) {
+        pauseOtherReels(video);
+        setMuted(video, true);
+        activeVideo = video;
 
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            closeReel();
+        video.play().catch(() => {
+            // Muted autoplay can still be blocked by some browsers.
+        });
+    }
+
+    function toggleSound(video) {
+        if (!video) {
+            return;
         }
+
+        if (video.paused) {
+            pauseOtherReels(video);
+            activeVideo = video;
+            video.play().catch(() => {});
+        }
+
+        const shouldUnmute = video.muted;
+
+        if (shouldUnmute) {
+            muteOtherReels(video);
+            setMuted(video, false);
+        } else {
+            setMuted(video, true);
+        }
+    }
+
+    reelVideos.forEach((video) => {
+        setMuted(video, true);
+
+        video.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleSound(video);
+        });
+
+        video.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
     });
 
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal.classList.contains('open')) {
-            closeReel();
+    document.querySelectorAll('.vibe-sound-toggle').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const video = button
+                .closest('[data-vibe-reel]')
+                ?.querySelector('.vibe-card-video');
+
+            toggleSound(video);
+        });
+    });
+
+    /*
+     * Start the first reel immediately when the public homepage loads.
+     * It is deliberately muted so browser autoplay rules allow it.
+     */
+    const firstVideo = reelVideos[0];
+    playMuted(firstVideo);
+
+    /*
+     * Only one reel plays at a time. When another reel becomes the
+     * main visible reel, it starts muted and the previous reel pauses.
+     */
+    const observer = new IntersectionObserver(
+        (entries) => {
+            const visibleEntries = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+            const bestEntry = visibleEntries[0];
+
+            if (
+                bestEntry
+                && bestEntry.intersectionRatio >= 0.65
+                && bestEntry.target !== activeVideo
+            ) {
+                playMuted(bestEntry.target);
+            }
+
+            entries.forEach((entry) => {
+                if (
+                    !entry.isIntersecting
+                    || entry.intersectionRatio < 0.25
+                ) {
+                    if (entry.target === activeVideo) {
+                        entry.target.pause();
+                        setMuted(entry.target, true);
+                        activeVideo = null;
+                    }
+                }
+            });
+        },
+        {
+            threshold: [0, 0.25, 0.65, 1],
+        }
+    );
+
+    reelVideos.forEach((video) => {
+        observer.observe(video);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            reelVideos.forEach((video) => {
+                video.pause();
+                setMuted(video, true);
+            });
+            activeVideo = null;
+        } else if (firstVideo) {
+            playMuted(firstVideo);
         }
     });
 })();
