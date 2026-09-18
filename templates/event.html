@@ -3274,28 +3274,6 @@
 
 
 
-            <section class="discovery-hero">
-                <div class="search-shell">
-                    <span aria-hidden="true">⌕</span>
-                    <input
-                        type="search"
-                        id="event-search"
-                        placeholder="Search events, venues or organizers"
-                        autocomplete="off"
-                        aria-label="Search events"
-                    >
-                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
-                </div>
-
-                <div class="filter-chips" id="event-filters" aria-label="Event filters">
-                    <button type="button" class="filter-chip active" data-filter="all">All</button>
-                    <button type="button" class="filter-chip" data-filter="today">Today</button>
-                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
-                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
-                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
-                </div>
-            </section>
-
             {% if featured_events %}
             <section class="discovery-section featured-shell" aria-labelledby="featured-title">
                 <div class="section-heading">
@@ -3401,11 +3379,36 @@
             </section>
             {% endif %}
 
+            <section class="discovery-hero">
+                <div class="search-shell">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="event-search"
+                        placeholder="Search events, venues or organizers"
+                        autocomplete="off"
+                        aria-label="Search events"
+                    >
+                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
+                </div>
+
+                <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                    <button type="button" class="filter-chip active" data-filter="all">All</button>
+                    <button type="button" class="filter-chip" data-filter="today">Today</button>
+                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
+                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
+                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
+                </div>
+            </section>
+
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
-                 
-                    <button type="button" class="text-button" data-scroll-target="discover-grid">Swipe →</button>
+                    <div>
+                        
+                        <h2>🔥 Later On</h2>
+                    </div>
+                    <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
                 </div>
 
                 <div class="event-rail">
@@ -3441,7 +3444,7 @@
             <section class="discovery-section earlybird-section" id="earlybird-section">
                 <div class="section-heading">
                     <div>
-                   
+
                         <h2>🎟 Early Bird</h2>
                     </div>
                 </div>
@@ -3472,7 +3475,7 @@
 
             <section class="discovery-section" id="around-you-section">
                 <div class="section-heading">
-                   
+
                     <span class="section-note">Current Kalxa listings</span>
                 </div>
                 <div class="event-rail">
@@ -3487,7 +3490,7 @@
 
             <section class="discovery-section discover-more" id="discover-grid">
                 <div class="section-heading">
-                    
+
                     <span class="results-count" id="results-count">{{ events|length }} events</span>
                 </div>
 
@@ -3581,7 +3584,7 @@
             id="bottom-notification-control"
             hidden
         >
-            <h4>🔔 Notifications enabled</h4>
+            <span>🔔 Notifications enabled</span>
             <button
                 type="button"
                 id="home-bottom-disable-notifications"
