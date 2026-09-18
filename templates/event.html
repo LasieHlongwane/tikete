@@ -1,4 +1,6182 @@
-#copy
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
+    
+    <!-- =========================================
+         PWA / INSTALLABLE APP
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="{{ url_for(
+            'pwa_manifest'
+        ) }}"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="192x192"
+        href="{{ url_for(
+            'static',
+            filename='icons/kalxa-192.png'
+        ) }}"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="Kalxa"
+    >
 
 
-   
+    <title>
+        Kalxa Tickets
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/style.css'
+        ) }}"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            font-size:
+                16px;
+
+            line-height:
+                1.6;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+
+        a {
+            color: inherit;
+        }
+
+
+        .muted {
+            color:
+                #64748b;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .page-shell {
+
+            width:
+                100%;
+
+            max-width:
+                1100px;
+
+            margin:
+                0 auto;
+
+            padding:
+                24px 18px 70px;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .topbar {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                16px;
+
+            margin-bottom:
+                28px;
+
+            padding-bottom:
+                14px;
+
+            border-bottom:
+                1px solid #eef2f7;
+        }
+
+
+        .brand {
+
+            color:
+                #111111;
+
+            font-size:
+                15px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.02em;
+
+            text-decoration:
+                none;
+        }
+
+
+        .topbar-actions {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                10px;
+
+            flex-wrap:
+                wrap;
+
+            justify-content:
+                flex-end;
+        }
+
+
+        .topbar-link {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                38px;
+
+            padding:
+                8px 11px;
+
+            color:
+                #334155;
+
+            border-radius:
+                10px;
+
+            font-size:
+                13px;
+
+            font-weight:
+                750;
+
+            text-decoration:
+                none;
+
+            transition:
+                background 0.15s ease,
+                color 0.15s ease;
+        }
+
+
+        .topbar-link:hover {
+
+            background:
+                #f8fafc;
+
+            color:
+                #111827;
+        }
+
+
+        .topbar-link.track-link {
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border:
+                1px solid #111111;
+        }
+
+
+        .topbar-link.track-link:hover {
+
+            background:
+                #27272a;
+
+            color:
+                #ffffff;
+        }
+
+
+        /* =====================================================
+           TYPOGRAPHY
+        ===================================================== */
+
+        .eyebrow {
+
+            margin:
+                0 0 8px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                0.14em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        h1 {
+
+            margin:
+                0 0 14px;
+
+            color:
+                #111827;
+
+            font-size:
+                clamp(
+                    34px,
+                    7vw,
+                    54px
+                );
+
+            line-height:
+                1.02;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.05em;
+        }
+
+
+        h2 {
+
+            margin:
+                0;
+
+            color:
+                #111827;
+
+            font-size:
+                21px;
+
+            line-height:
+                1.2;
+
+            font-weight:
+                850;
+
+            letter-spacing:
+                -0.03em;
+        }
+
+
+        /* =====================================================
+           DETAIL CARD
+        ===================================================== */
+
+        .event-detail {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                minmax(0, 1.15fr)
+                minmax(320px, 0.85fr);
+
+            gap:
+                34px;
+
+            align-items:
+                start;
+
+            padding:
+                26px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                24px;
+
+            box-shadow:
+                0 12px 40px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.06
+                );
+        }
+
+
+        .event-detail-image-wrap {
+
+            overflow:
+                hidden;
+
+            background:
+                #f8fafc;
+
+            border-radius:
+                18px;
+        }
+
+
+        .event-detail-image {
+
+            width:
+                100%;
+
+            height:
+                auto;
+
+            min-height:
+                360px;
+
+            display:
+                block;
+
+            object-fit:
+                cover;
+        }
+
+
+        .event-detail-content {
+
+            min-width:
+                0;
+        }
+
+
+        .event-description {
+
+            margin:
+                0 0 22px;
+
+            color:
+                #475569;
+
+            font-size:
+                15px;
+
+            line-height:
+                1.75;
+        }
+
+
+        /* =====================================================
+           ORGANIZER
+        ===================================================== */
+
+        .organizer-card {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                14px;
+
+            margin:
+                0 0 22px;
+
+            padding:
+                14px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                14px;
+        }
+
+
+        .organizer-label {
+
+            display:
+                block;
+
+            margin-bottom:
+                2px;
+
+            color:
+                #64748b;
+
+            font-size:
+                10px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.08em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .organizer-name {
+
+            color:
+                #111827;
+
+            font-size:
+                14px;
+
+            font-weight:
+                850;
+        }
+
+
+        .organizer-phone {
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+
+            text-decoration:
+                none;
+        }
+
+
+        /* =====================================================
+           EVENT META
+        ===================================================== */
+
+        .event-meta-list {
+
+            display:
+                grid;
+
+            gap:
+                10px;
+
+            margin:
+                24px 0;
+        }
+
+
+        .event-meta {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                10px;
+
+            padding:
+                12px 14px;
+
+            background:
+                #f8fafc;
+
+            color:
+                #334155;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                12px;
+
+            font-size:
+                13px;
+
+            font-weight:
+                650;
+        }
+
+
+        /* =====================================================
+           EVENT POSTER VIEWER
+        ===================================================== */
+
+        .event-poster-button {
+
+            width: 100%;
+
+            display: block;
+
+            padding: 0;
+
+            background: transparent;
+
+            border: 0;
+
+            cursor: zoom-in;
+        }
+
+
+        .event-poster-hint {
+
+            position: absolute;
+
+            right: 12px;
+
+            bottom: 12px;
+
+            padding: 7px 10px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    0.82
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            pointer-events: none;
+        }
+
+
+        .event-detail-image-wrap {
+
+            position: relative;
+        }
+
+
+        .poster-modal {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 1000;
+
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 18px;
+
+            background:
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.92
+                );
+        }
+
+
+        .poster-modal.open {
+
+            display: flex;
+        }
+
+
+        .poster-modal-image {
+
+            max-width: 96vw;
+
+            max-height: 92vh;
+
+            width: auto;
+
+            height: auto;
+
+            display: block;
+
+            object-fit: contain;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 20px 60px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.45
+                );
+        }
+
+
+        .poster-modal-close {
+
+            position: fixed;
+
+            top: 18px;
+
+            right: 18px;
+
+            width: 44px;
+
+            height: 44px;
+
+            display: grid;
+
+            place-items: center;
+
+            background: #ffffff;
+
+            color: #111827;
+
+            border: 0;
+
+            border-radius: 999px;
+
+            font-size: 24px;
+
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+
+        .sales-note {
+
+            margin-top: 12px;
+
+            padding: 11px 12px;
+
+            background: #fff7ed;
+
+            color: #9a3412;
+
+            border:
+                1px solid #fed7aa;
+
+            border-radius: 10px;
+
+            font-size: 12px;
+
+            font-weight: 750;
+        }
+
+
+        /* =====================================================
+           TICKET BOX
+        ===================================================== */
+
+        .ticket-box {
+
+            margin-top:
+                24px;
+
+            padding:
+                22px;
+
+            background:
+                #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius:
+                18px;
+        }
+
+
+        .ticket-label {
+
+            display:
+                block;
+
+            margin-bottom:
+                5px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                0.08em;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .ticket-price {
+
+            color:
+                #111827;
+
+            font-size:
+                clamp(
+                    32px,
+                    6vw,
+                    42px
+                );
+
+            line-height:
+                1;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                -0.045em;
+        }
+
+
+        .ticket-availability {
+
+            margin:
+                10px 0 0;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+
+            font-weight:
+                650;
+        }
+
+
+        .ticket-availability.low {
+
+            color:
+                #b45309;
+        }
+
+
+        .ticket-availability.sold-out {
+
+            color:
+                #b91c1c;
+        }
+
+
+        /* =====================================================
+           BUTTON
+        ===================================================== */
+
+        .button {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                100%;
+
+            min-height:
+                52px;
+
+            margin-top:
+                18px;
+
+            padding:
+                12px 18px;
+
+            background:
+                #111111;
+
+            color:
+                #ffffff;
+
+            border:
+                1px solid #111111;
+
+            border-radius:
+                12px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                15px;
+
+            font-weight:
+                850;
+
+            cursor:
+                pointer;
+
+            transition:
+                background 0.16s ease,
+                transform 0.16s ease,
+                box-shadow 0.16s ease;
+        }
+
+
+        .button:hover {
+
+            background:
+                #27272a;
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 8px 20px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.1
+                );
+        }
+
+
+        .button.disabled {
+
+            background:
+                #e5e7eb;
+
+            color:
+                #94a3b8;
+
+            border-color:
+                #e5e7eb;
+
+            cursor:
+                not-allowed;
+
+            box-shadow:
+                none;
+
+            transform:
+                none;
+        }
+
+
+        /* =====================================================
+           EVENT LIST
+        ===================================================== */
+
+        .event-list-header {
+
+            margin-bottom:
+                24px;
+        }
+
+
+        .event-list-header h1 {
+
+            margin-bottom:
+                8px;
+        }
+
+
+        .event-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                18px;
+        }
+
+
+        .event-card {
+
+            overflow:
+                hidden;
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius:
+                18px;
+
+            text-decoration:
+                none;
+
+            box-shadow:
+                0 8px 28px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.045
+                );
+
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                border-color 0.18s ease;
+        }
+
+
+        .event-card:hover {
+
+            transform:
+                translateY(-3px);
+
+            border-color:
+                #cbd5e1;
+
+            box-shadow:
+                0 14px 32px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.08
+                );
+        }
+
+
+        .event-image {
+
+            width:
+                100%;
+
+            height:
+                220px;
+
+            display:
+                block;
+
+            object-fit:
+                cover;
+
+            background:
+                #f1f5f9;
+        }
+
+
+        .event-card-content {
+
+            display:
+                flex;
+
+            flex:
+                1;
+
+            flex-direction:
+                column;
+
+            padding:
+                18px;
+        }
+
+
+        .event-card-date {
+
+            margin-top:
+                8px;
+
+            color:
+                #64748b;
+
+            font-size:
+                12px;
+        }
+
+
+        .event-card-organizer {
+
+            margin-top:
+                10px;
+
+            color:
+                #475569;
+
+            font-size:
+                12px;
+
+            font-weight:
+                700;
+        }
+
+
+        .event-card-price {
+
+            margin-top:
+                auto;
+
+            padding-top:
+                18px;
+
+            color:
+                #111827;
+
+            font-size:
+                18px;
+
+            font-weight:
+                900;
+        }
+
+
+        .event-card-status {
+
+            margin-top:
+                6px;
+
+            color:
+                #64748b;
+
+            font-size:
+                11px;
+
+            font-weight:
+                700;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty-state {
+
+            padding:
+                34px 22px;
+
+            background:
+                #f8fafc;
+
+            color:
+                #64748b;
+
+            border:
+                1px dashed #cbd5e1;
+
+            border-radius:
+                16px;
+
+            text-align:
+                center;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (
+            max-width: 850px
+        ) {
+
+            .event-detail {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .event-detail-image {
+
+                min-height:
+                    280px;
+            }
+
+
+            .event-grid {
+
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
+
+        }
+
+
+        @media (
+            max-width: 560px
+        ) {
+
+            .page-shell {
+
+                padding:
+                    18px 14px 50px;
+            }
+
+
+            .topbar {
+
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+            }
+
+
+            .topbar-actions {
+
+                width:
+                    100%;
+
+                justify-content:
+                    flex-start;
+            }
+
+
+            .topbar-link {
+
+                flex:
+                    0 0 auto;
+            }
+
+
+            .event-detail {
+
+                gap:
+                    22px;
+
+                padding:
+                    16px;
+
+                border-radius:
+                    18px;
+            }
+
+
+            .event-detail-image {
+
+                min-height:
+                    220px;
+
+                border-radius:
+                    14px;
+            }
+
+
+            .ticket-box {
+
+                padding:
+                    18px;
+            }
+
+
+            .event-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .event-image {
+
+                height:
+                    210px;
+            }
+
+        }
+
+    
+        /* =====================================================
+           PWA INSTALL
+        ===================================================== */
+
+        .pwa-install-card {
+
+            position: fixed;
+
+            right: 16px;
+
+            bottom: 16px;
+
+            z-index: 900;
+
+            width:
+                min(
+                    360px,
+                    calc(100% - 32px)
+                );
+
+            padding: 16px;
+
+            background: #111111;
+
+            color: #ffffff;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.12
+                );
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 18px 50px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.28
+                );
+
+            display: none;
+        }
+
+
+        .pwa-install-card.show {
+            display: block;
+        }
+
+
+        .pwa-install-title {
+
+            margin: 0 0 5px;
+
+            font-size: 14px;
+
+            font-weight: 900;
+        }
+
+
+        .pwa-install-copy {
+
+            margin: 0 0 12px;
+
+            color: #cbd5e1;
+
+            font-size: 12px;
+        }
+
+
+        .pwa-install-actions {
+
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .pwa-install-button {
+
+            min-height: 38px;
+
+            padding: 8px 12px;
+
+            background: #fff4df;
+
+            color: #0b0c0e;
+
+            border: 0;
+
+            border-radius: 9px;
+
+            font-size: 12px;
+
+            font-weight: 850;
+
+            cursor: pointer;
+        }
+
+
+        .pwa-install-dismiss {
+
+            min-height: 38px;
+
+            padding: 8px 12px;
+
+            background: transparent;
+
+            color: #cbd5e1;
+
+            border:
+                1px solid #475569;
+
+            border-radius: 9px;
+
+            font-size: 12px;
+
+            font-weight: 750;
+
+            cursor: pointer;
+        }
+
+
+        .pwa-ios-steps {
+
+            margin: 10px 0 0;
+
+            padding-left: 18px;
+
+            color: #e2e8f0;
+
+            font-size: 12px;
+        }
+
+
+    
+        /* =====================================================
+           MAIN PAGE PUSH NOTIFICATIONS
+        ===================================================== */
+
+        .home-notification-card {
+            margin: 0 0 28px;
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            align-items: center;
+            background: linear-gradient(135deg, #111827, #0f172a);
+            color: #ffffff;
+            border-radius: 16px;
+        }
+
+        .home-notification-copy h2 {
+            margin: 0 0 5px;
+            font-size: 17px;
+        }
+
+        .home-notification-copy p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .home-notification-controls {
+            min-width: 260px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .home-notification-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .home-notification-button {
+            min-height: 40px;
+            padding: 9px 13px;
+            background: #fff4df;
+            color: #111827;
+            border: 0;
+            border-radius: 10px;
+            font-weight: 850;
+            cursor: pointer;
+        }
+
+        .home-notification-off {
+            min-height: 40px;
+            padding: 9px 13px;
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid #64748b;
+            border-radius: 10px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        .home-notification-status {
+            min-height: 18px;
+            color: #cbd5e1;
+            font-size: 11px;
+        }
+
+        .home-notification-status.success {
+            color: #bbf7d0;
+        }
+
+        .home-notification-status.error {
+            color: #fecaca;
+        }
+
+        @media (max-width: 700px) {
+            .home-notification-card {
+                grid-template-columns: 1fr;
+            }
+
+            .home-notification-controls {
+                min-width: 0;
+            }
+        }
+
+
+        /* =========================================
+           FEATURED LISTINGS
+        ========================================= */
+
+        .featured-section {
+            margin: 0 auto 28px;
+        }
+
+        .featured-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .featured-heading h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .featured-heading span {
+            color: #facc15;
+            font-size: .76rem;
+            font-weight: 900;
+            letter-spacing: .06em;
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        min(100%, 310px),
+                        1fr
+                    )
+                );
+            gap: 16px;
+        }
+
+        .featured-card {
+            overflow: hidden;
+            border: 1px solid rgba(250,204,21,.32);
+            border-radius: 22px;
+            background: #121418;
+            box-shadow: 0 18px 45px rgba(0,0,0,.28);
+        }
+
+        .featured-carousel {
+            position: relative;
+            overflow: hidden;
+            background: #08090b;
+        }
+
+        .featured-track {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .featured-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .featured-slide {
+            flex: 0 0 100%;
+            aspect-ratio: 4 / 5;
+            scroll-snap-align: start;
+        }
+
+        .featured-slide img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 5;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(8,9,11,.88);
+            color: #facc15;
+            font-size: .72rem;
+            font-weight: 950;
+            letter-spacing: .06em;
+            backdrop-filter: blur(8px);
+        }
+
+        .featured-dots {
+            position: absolute;
+            left: 50%;
+            bottom: 11px;
+            z-index: 5;
+            display: flex;
+            gap: 6px;
+            transform: translateX(-50%);
+        }
+
+        .featured-dot {
+            width: 7px;
+            height: 7px;
+            border: 0;
+            border-radius: 999px;
+            padding: 0;
+            background: rgba(255,255,255,.5);
+        }
+
+        .featured-dot.active {
+            width: 19px;
+            background: #fff;
+        }
+
+        .featured-content {
+            padding: 16px;
+        }
+
+        .featured-content h3 {
+            margin: 0 0 8px;
+            font-size: 1.08rem;
+        }
+
+        .featured-meta {
+            margin-top: 6px;
+            color: #cbd5e1;
+            font-size: .82rem;
+        }
+
+        .featured-action {
+            display: inline-flex;
+            width: 100%;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 14px;
+            border-radius: 11px;
+            background: #fff4df;
+            color: #0b0c0e;
+            text-decoration: none;
+            font-weight: 950;
+        }
+
+
+ 
+       /* =========================================
+   COMPACT NOTIFICATION CARD
+========================================= */
+
+.notification-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    margin-top: 24px;
+    padding: 14px 16px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+
+    background: #e5e7eb;
+}
+
+.notification-strip h2 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.notification-strip p {
+    margin: 6px 0 0;
+
+    color: #6b7280;
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.notification-strip .section-kicker {
+    margin-bottom: 5px;
+
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+}
+
+.notification-form input {
+    width: 100%;
+    min-height: 38px;
+
+    padding: 7px 10px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+
+    background: #f3f4f6;
+    color: #111827;
+
+    font-size: 0.78rem;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 6px;
+
+    margin-top: 7px;
+}
+
+.cream-button,
+.quiet-button {
+    min-height: 36px;
+
+    padding: 6px 10px;
+
+    border-radius: 8px;
+
+    font-size: 0.66rem;
+    font-weight: 900;
+}
+
+.notification-status {
+    margin-top: 6px;
+
+    color: #6b7280;
+    font-size: 0.62rem;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 760px) {
+
+    .notification-strip {
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+
+        margin-top: 20px;
+        padding: 12px 13px;
+    }
+
+    .notification-strip h2 {
+        font-size: 0.95rem;
+    }
+
+    .notification-strip p {
+        font-size: 0.68rem;
+    }
+
+    .notification-actions {
+        flex-wrap: wrap;
+    }
+
+    .cream-button,
+    .quiet-button {
+        min-height: 34px;
+    }
+} 
+
+
+
+        /* =========================================
+           KALXA PREMIUM DISCOVERY HOME
+        ========================================= */
+        :root{--kx-bg:#ffffff;--kx-card:#e5e7eb;--kx-elev:#d1d5db;--kx-cream:#fff4df;--kx-muted:#9ca3af;--kx-border:rgba(255,255,255,.08);--kx-gold:#f5c451}
+        body{background:var(--kx-bg);color:var(--kx-cream)}
+        .kalxa-discovery{max-width:1180px;margin:0 auto;padding:0 0 92px}
+        .discovery-topbar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;min-height:68px;padding:10px 2px;background:rgba(11,12,14,.84);border-bottom:1px solid transparent;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);transition:.25s ease}
+        .discovery-topbar.scrolled{min-height:58px;border-bottom-color:var(--kx-border)}
+        .brand-lockup{display:flex;align-items:center;gap:10px;color:var(--kx-cream);text-decoration:none}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--kx-cream);color:#0b0c0e;font-weight:1000;font-size:1.1rem}.brand-copy{display:flex;flex-direction:column;line-height:1}.brand-copy strong{letter-spacing:.08em;font-size:.9rem}.brand-copy small{margin-top:4px;color:var(--kx-muted);font-size:.58rem;letter-spacing:.2em}.topbar-actions{display:flex;gap:8px}.icon-button{display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--kx-border);border-radius:12px;background:rgba(255,255,255,.04);color:var(--kx-cream);text-decoration:none;font:inherit;font-size:1.05rem;cursor:pointer}
+        .discovery-hero{padding:34px 0 20px}.hero-kicker,.section-kicker{margin:0 0 8px;color:var(--kx-gold);font-size:.66rem;font-weight:900;letter-spacing:.16em}.discovery-hero h1{max-width:760px;margin:0;font-size:clamp(2rem,6vw,4.4rem);line-height:.98;letter-spacing:-.055em}.discovery-hero>p:not(.hero-kicker){margin:16px 0 0;color:#c7c9ce;font-size:clamp(.95rem,2vw,1.12rem)}
+        .search-shell{display:flex;align-items:center;gap:10px;max-width:720px;margin-top:26px;padding:0 14px;min-height:54px;border:1px solid var(--kx-border);border-radius:16px;background:var(--kx-card);box-shadow:0 12px 36px rgba(0,0,0,.18)}.search-shell span{color:var(--kx-muted);font-size:1.2rem}.search-shell input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--kx-cream);font:inherit;font-size:.94rem}.search-shell input::placeholder{color:#727780}.search-shell button{border:0;background:transparent;color:var(--kx-muted);font-size:1.4rem;cursor:pointer}
+        .filter-chips{display:flex;gap:8px;margin-top:14px;padding-bottom:4px;overflow-x:auto;scrollbar-width:none}.filter-chips::-webkit-scrollbar{display:none}.filter-chip{flex:0 0 auto;padding:9px 13px;border:1px solid var(--kx-border);border-radius:999px;background:rgba(255,255,255,.025);color:#c8cbd0;font:inherit;font-size:.78rem;font-weight:800;cursor:pointer}.filter-chip.active{background:var(--kx-cream);border-color:var(--kx-cream);color:#0b0c0e}
+        .discovery-section{margin-top:36px}.section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}.section-heading h2{margin:0;font-size:clamp(1.2rem,3vw,1.65rem);letter-spacing:-.025em}.section-note,.results-count{color:var(--kx-muted);font-size:.72rem}.text-button{border:0;background:transparent;color:var(--kx-cream);font:inherit;font-size:.78rem;font-weight:800;cursor:pointer}
+        .featured-event-stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:18px}.featured-hero-card{overflow:hidden;border:1px solid rgba(245,196,81,.22);border-radius:24px;background:var(--kx-card);box-shadow:0 24px 70px rgba(0,0,0,.3)}.featured-media{position:relative;overflow:hidden;aspect-ratio:16/10;background:#08090b}.featured-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.featured-track::-webkit-scrollbar{display:none}.featured-slide{flex:0 0 100%;height:100%;scroll-snap-align:start}.featured-slide img{width:100%;height:100%;object-fit:cover;display:block}.poster-gradient{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(5,6,8,.97) 0%,rgba(5,6,8,.56) 35%,rgba(5,6,8,.06) 72%,transparent 100%)}.poster-gradient.small{background:linear-gradient(to top,rgba(5,6,8,.72),transparent 55%)}.featured-badge,.live-state,.card-state,.scarcity-pill,.mini-state,.phase-corner{position:absolute;z-index:5;border-radius:999px;font-weight:900;letter-spacing:.04em}.featured-badge{top:14px;left:14px;padding:7px 10px;background:rgba(11,12,14,.82);color:var(--kx-gold);font-size:.66rem;backdrop-filter:blur(8px)}.live-state{top:14px;right:14px;padding:7px 10px;background:rgba(11,12,14,.82);color:#fff;font-size:.65rem}.featured-overlay-copy{position:absolute;z-index:4;left:18px;right:18px;bottom:18px}.featured-overlay-copy h3{margin:0;color:#fff;font-size:clamp(1.35rem,4vw,2rem);line-height:1.05;letter-spacing:-.035em}.featured-meta-line{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;color:#d4d7dc;font-size:.78rem}.featured-price-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}.featured-price-line strong{font-size:1.15rem}.phase-pill{display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;background:rgba(245,196,81,.14);color:#f8d780;font-size:.64rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.phase-pill.small{padding:4px 7px;font-size:.58rem}.featured-dots{position:absolute;z-index:6;left:50%;bottom:8px;display:flex;gap:5px;transform:translateX(-50%)}.featured-dot{width:6px;height:6px;padding:0;border:0;border-radius:99px;background:rgba(255,255,255,.46)}.featured-dot.active{width:18px;background:#fff}.featured-cta-row{display:flex;gap:9px;padding:12px}.featured-view,.featured-buy{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;text-decoration:none;font-size:.78rem;font-weight:900}.featured-view{flex:1;border:1px solid var(--kx-border);color:var(--kx-cream)}.featured-buy{flex:1.25;background:var(--kx-cream);color:#0b0c0e}
+        .event-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(190px,230px);gap:12px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;scrollbar-width:none}.event-rail::-webkit-scrollbar{display:none}.rail-card{overflow:hidden;border:1px solid var(--kx-border);border-radius:18px;background:var(--kx-card);color:var(--kx-cream);text-decoration:none;scroll-snap-align:start}.rail-poster{position:relative;aspect-ratio:4/5;overflow:hidden;background:#15171b}.rail-poster img{width:100%;height:100%;object-fit:cover;display:block}.mini-state{top:10px;left:10px;padding:5px 7px;background:rgba(11,12,14,.8);color:#fff;font-size:.56rem}.phase-corner{left:9px;bottom:9px;padding:6px 8px;background:#fff4df;color:#0b0c0e;font-size:.58rem}.rail-copy{padding:11px 12px 13px}.rail-copy h3{display:-webkit-box;margin:0;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:.9rem;line-height:1.2}.rail-copy p{margin:7px 0 0;color:var(--kx-muted);font-size:.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.price-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.price-row span{color:#f8d780;font-size:.61rem;font-weight:850;text-transform:uppercase}.price-row strong{font-size:.84rem}.micro-card{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;width:220px;padding:8px;border:1px solid var(--kx-border);border-radius:15px;background:var(--kx-card);color:var(--kx-cream);text-decoration:none;scroll-snap-align:start}.micro-card img,.micro-card>.poster-fallback{width:64px;height:76px;border-radius:10px;object-fit:cover}.micro-card strong{display:-webkit-box;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:.8rem}.micro-card small{display:block;margin-top:5px;color:var(--kx-muted);font-size:.65rem}.section-empty{margin:0;color:var(--kx-muted);font-size:.82rem}
+        .premium-event-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:15px}.premium-event-card{overflow:hidden;border:1px solid var(--kx-border);border-radius:20px;background:var(--kx-card);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}.premium-event-card:hover{transform:translateY(-3px);border-color:rgba(255,244,223,.18);box-shadow:0 18px 44px rgba(0,0,0,.24)}.poster-link{display:block}.premium-poster{position:relative;aspect-ratio:4/5;overflow:hidden;background:#15171b}.premium-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}.premium-event-card:hover .premium-poster img{transform:scale(1.025)}.poster-fallback{display:grid;place-items:center;width:100%;height:100%;background:linear-gradient(135deg,#181b20,#0e1013);color:rgba(255,244,223,.65);font-weight:1000;letter-spacing:.12em}.card-state{top:11px;left:11px;padding:6px 8px;background:rgba(11,12,14,.82);color:#fff;font-size:.58rem;backdrop-filter:blur(7px)}.scarcity-pill{top:11px;right:11px;padding:6px 8px;background:#7f1d1d;color:#fecaca;font-size:.56rem}.premium-card-copy{padding:13px}.card-title{display:-webkit-box;overflow:hidden;color:var(--kx-cream);text-decoration:none;font-size:1rem;font-weight:900;line-height:1.2;-webkit-line-clamp:2;-webkit-box-orient:vertical}.card-meta{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:8px;color:var(--kx-muted);font-size:.68rem}.card-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:14px}.card-price{display:block;margin-top:6px;font-size:.96rem}.ticket-cta{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 11px;border-radius:10px;background:var(--kx-cream);color:#0b0c0e;text-decoration:none;font-size:.68rem;font-weight:950}.ticket-cta.disabled{background:#272a30;color:#80858d}.no-results{display:grid;place-items:center;gap:6px;min-height:170px;border:1px dashed var(--kx-border);border-radius:18px;color:var(--kx-muted);text-align:center}.no-results strong{color:var(--kx-cream)}
+        .notification-strip{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;margin-top:42px;padding:22px;border:1px solid var(--kx-border);border-radius:22px;background:linear-gradient(135deg,#15181d,#101216)}.notification-strip h2{margin:0;font-size:1.25rem}.notification-strip p{margin:9px 0 0;color:var(--kx-muted);font-size:.82rem;line-height:1.5}.notification-form input{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--kx-border);border-radius:11px;outline:0;background:#0c0e11;color:var(--kx-cream);font:inherit}.notification-actions{display:flex;gap:8px;margin-top:9px}.cream-button,.quiet-button{min-height:42px;padding:0 13px;border-radius:10px;font:inherit;font-size:.72rem;font-weight:900;cursor:pointer}.cream-button{border:0;background:var(--kx-cream);color:#0b0c0e}.quiet-button{border:1px solid var(--kx-border);background:transparent;color:var(--kx-cream)}.notification-status{margin-top:8px;color:var(--kx-muted);font-size:.67rem}.premium-empty{display:grid;place-items:center;min-height:360px;text-align:center}.premium-empty>span{display:grid;place-items:center;width:64px;height:64px;border-radius:20px;background:var(--kx-cream);color:#0b0c0e;font-size:1.6rem;font-weight:1000}.premium-empty h2{margin:14px 0 4px}.premium-empty p{margin:0;color:var(--kx-muted)}
+        .mobile-bottom-nav{display:none}.event-searchable[hidden]{display:none!important}
+        @media(max-width:760px){.kalxa-discovery{padding-left:2px;padding-right:2px}.discovery-hero{padding-top:24px}.discovery-hero h1{max-width:330px}.featured-event-stack{grid-template-columns:1fr}.featured-media{aspect-ratio:4/5}.featured-overlay-copy{left:15px;right:15px;bottom:19px}.premium-event-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.premium-card-copy{padding:10px}.card-bottom{align-items:stretch;flex-direction:column}.ticket-cta{width:100%}.notification-strip{grid-template-columns:1fr}.mobile-bottom-nav{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:80;display:grid;grid-template-columns:repeat(4,1fr);padding:7px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(18,20,24,.9);box-shadow:0 18px 50px rgba(0,0,0,.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}.mobile-bottom-nav a{display:flex;min-width:0;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:11px;color:#8f949c;text-decoration:none;font-size:.88rem}.mobile-bottom-nav a small{font-size:.55rem}.mobile-bottom-nav a.active{background:rgba(255,244,223,.08);color:var(--kx-cream)}body{padding-bottom:82px}}
+        @media(max-width:430px){.premium-event-grid{grid-template-columns:1fr 1fr}.premium-event-card{border-radius:16px}.premium-poster{aspect-ratio:3/4}.card-title{font-size:.86rem}.card-meta{font-size:.6rem}.event-rail{grid-auto-columns:185px}.micro-card{width:205px}.featured-cta-row{flex-direction:column}.featured-view,.featured-buy{width:100%}}
+
+
+        /* =========================================
+           LIGHT KALXA COLOUR OVERRIDES
+        ========================================= */
+        body {
+            background: #ffffff;
+            color: #111827;
+        }
+
+        .kalxa-discovery {
+            color: #111827;
+        }
+
+        .discovery-hero {
+            padding-top: 18px;
+        }
+
+        .search-shell {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+            box-shadow: none;
+        }
+
+        .search-shell input {
+            color: #111827;
+        }
+
+        .search-shell input::placeholder {
+            color: #6b7280;
+        }
+
+        .search-shell span,
+        .search-shell button {
+            color: #4b5563;
+        }
+
+        .filter-chip {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .filter-chip.active {
+            background: #111827;
+            border-color: #111827;
+            color: #ffffff;
+        }
+
+        .section-heading h2,
+        .text-button,
+        .results-count {
+            color: #111827;
+        }
+
+        .section-note,
+        .results-count,
+        .section-empty {
+            color: #6b7280;
+        }
+
+        .featured-hero-card,
+        .rail-card,
+        .micro-card,
+        .premium-event-card,
+        .notification-strip {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+        }
+
+        .featured-view {
+            border-color: #cbd5e1;
+            color: #111827;
+            background: #f3f4f6;
+        }
+
+        .featured-buy,
+        .ticket-cta,
+        .cream-button {
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .rail-card,
+        .micro-card,
+        .card-title,
+        .premium-event-card {
+            color: #111827;
+        }
+
+        .rail-copy p,
+        .micro-card small,
+        .card-meta,
+        .notification-strip p,
+        .notification-status {
+            color: #6b7280;
+        }
+
+        .notification-form input {
+            background: #f3f4f6;
+            color: #111827;
+            border-color: #d1d5db;
+        }
+
+        .quiet-button {
+            color: #111827;
+            border-color: #cbd5e1;
+        }
+
+        .mobile-bottom-nav {
+            background: rgba(243,244,246,.96);
+            border-color: #d1d5db;
+        }
+
+        .mobile-bottom-nav a {
+            color: #6b7280;
+        }
+
+        .mobile-bottom-nav a.active {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .no-results {
+            border-color: #d1d5db;
+            color: #6b7280;
+        }
+
+        .no-results strong {
+            color: #111827;
+        }
+
+        .premium-empty h2 {
+            color: #111827;
+        }
+
+        .premium-empty p {
+            color: #6b7280;
+        }
+
+/* FINAL COMPACT NOTIFICATION CARD OVERRIDE */
+#updates.notification-strip{
+  display:grid!important;
+  grid-template-columns:145px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:9px!important;
+  width:100%!important;
+  max-width:560px!important;
+  margin:8px 0 16px!important;
+  padding:7px 9px!important;
+  background:#e5e7eb!important;
+  border:1px solid #d1d5db!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+}
+#updates.notification-strip>div:first-child{min-width:0!important}
+#updates.notification-strip>div:first-child p{
+  margin:0!important;
+  color:#374151!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  letter-spacing:.045em!important;
+  white-space:nowrap!important;
+}
+#updates .notification-form{
+  display:grid!important;
+  grid-template-columns:minmax(120px,1fr) auto!important;
+  gap:6px!important;
+  align-items:center!important;
+  min-width:0!important;
+}
+#updates .notification-form input{
+  width:100%!important;
+  min-width:0!important;
+  height:32px!important;
+  min-height:32px!important;
+  padding:4px 8px!important;
+  background:#f3f4f6!important;
+  color:#111827!important;
+  border:1px solid #cbd5e1!important;
+  border-radius:7px!important;
+  font-size:11px!important;
+  line-height:1!important;
+}
+#updates .notification-actions{
+  display:flex!important;
+  gap:5px!important;
+  margin:0!important;
+}
+#updates .cream-button,#updates .quiet-button{
+  width:auto!important;
+  height:32px!important;
+  min-height:32px!important;
+  margin:0!important;
+  padding:4px 9px!important;
+  border-radius:7px!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+#updates .cream-button{
+  background:#111827!important;
+  color:#fff!important;
+  border:1px solid #111827!important;
+}
+#updates .quiet-button{
+  background:#f8fafc!important;
+  color:#111827!important;
+  border:1px solid #cbd5e1!important;
+}
+#updates .notification-status{
+  grid-column:1/-1!important;
+  min-height:0!important;
+  margin:-1px 0 0!important;
+  color:#6b7280!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+}
+@media(max-width:560px){
+  #updates.notification-strip{
+    grid-template-columns:112px minmax(0,1fr)!important;
+    max-width:100%!important;
+    gap:7px!important;
+    margin:6px 0 12px!important;
+    padding:6px 7px!important;
+    border-radius:9px!important;
+  }
+  #updates.notification-strip>div:first-child p{
+    font-size:9px!important;
+    white-space:normal!important;
+  }
+  #updates .notification-form{
+    grid-template-columns:1fr!important;
+    gap:4px!important;
+  }
+  #updates .notification-form input{
+    height:30px!important;
+    min-height:30px!important;
+    font-size:10px!important;
+  }
+  #updates .notification-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  #updates .cream-button,#updates .quiet-button{
+    width:100%!important;
+    height:29px!important;
+    min-height:29px!important;
+    padding:3px 7px!important;
+    font-size:9px!important;
+  }
+  #updates .notification-status{font-size:8px!important}
+}
+
+
+        /* =====================================================
+           FINAL EVENT CARD POLISH
+           Clean spacing, premium pricing, tighter badges
+        ===================================================== */
+
+        .featured-event-stack {
+            gap: 16px !important;
+        }
+
+        .featured-hero-card {
+            overflow: hidden !important;
+            background: #f3f4f6 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 20px !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .08) !important;
+        }
+
+        .featured-media {
+            aspect-ratio: 16 / 10;
+        }
+
+        .featured-badge,
+        .live-state,
+        .card-state,
+        .scarcity-pill,
+        .mini-state,
+        .phase-corner {
+            letter-spacing: .025em !important;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .10);
+        }
+
+        .featured-badge,
+        .live-state {
+            padding: 5px 8px !important;
+            font-size: .57rem !important;
+        }
+
+        .featured-overlay-copy {
+            left: 16px !important;
+            right: 16px !important;
+            bottom: 15px !important;
+        }
+
+        .featured-overlay-copy h3 {
+            max-width: 92%;
+            margin: 0 !important;
+            font-size: clamp(1.25rem, 3.5vw, 1.8rem) !important;
+            line-height: 1.04 !important;
+            letter-spacing: -.035em !important;
+            font-weight: 950 !important;
+        }
+
+        .featured-meta-line {
+            margin-top: 7px !important;
+            gap: 4px !important;
+            color: rgba(255,255,255,.82) !important;
+            font-size: .68rem !important;
+            font-weight: 650;
+        }
+
+        .featured-price-line {
+            margin-top: 9px !important;
+        }
+
+        .featured-price-line strong {
+            color: #ffffff;
+            font-size: 1.12rem !important;
+            line-height: 1;
+            font-weight: 950 !important;
+            letter-spacing: -.025em;
+        }
+
+        .phase-pill {
+            padding: 4px 7px !important;
+            border-radius: 999px !important;
+            background: rgba(255,244,223,.16) !important;
+            font-size: .55rem !important;
+            line-height: 1 !important;
+            letter-spacing: .035em !important;
+        }
+
+        .phase-pill.small {
+            padding: 4px 6px !important;
+            background: #fff4df !important;
+            color: #5b4500 !important;
+            font-size: .52rem !important;
+        }
+
+        .featured-cta-row {
+            gap: 7px !important;
+            padding: 10px !important;
+        }
+
+        .featured-view,
+        .featured-buy {
+            min-height: 40px !important;
+            border-radius: 10px !important;
+            font-size: .7rem !important;
+            font-weight: 900 !important;
+        }
+
+        .featured-view {
+            background: #ffffff !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+        }
+
+        .featured-buy {
+            background: #111827 !important;
+            color: #ffffff !important;
+        }
+
+        .event-rail {
+            gap: 10px !important;
+        }
+
+        .rail-card {
+            overflow: hidden !important;
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, .055);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .rail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .09);
+        }
+
+        .mini-state,
+        .phase-corner {
+            padding: 4px 6px !important;
+            font-size: .50rem !important;
+        }
+
+        .rail-copy {
+            padding: 10px 11px 11px !important;
+        }
+
+        .rail-copy h3 {
+            min-height: 2.25em;
+            font-size: .86rem !important;
+            line-height: 1.14 !important;
+            font-weight: 900 !important;
+            letter-spacing: -.015em;
+        }
+
+        .rail-copy p {
+            margin-top: 5px !important;
+            color: #6b7280 !important;
+            font-size: .62rem !important;
+        }
+
+        .price-row {
+            margin-top: 8px !important;
+            align-items: flex-end !important;
+        }
+
+        .price-row span {
+            color: #6b7280 !important;
+            font-size: .52rem !important;
+            letter-spacing: .05em;
+        }
+
+        .price-row strong {
+            color: #111827;
+            font-size: .94rem !important;
+            line-height: 1;
+            font-weight: 950 !important;
+            letter-spacing: -.025em;
+        }
+
+        .micro-card {
+            grid-template-columns: 58px 1fr !important;
+            width: 210px !important;
+            gap: 9px !important;
+            padding: 7px !important;
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 14px !important;
+            box-shadow: 0 5px 16px rgba(15, 23, 42, .045);
+        }
+
+        .micro-card img,
+        .micro-card > .poster-fallback {
+            width: 58px !important;
+            height: 70px !important;
+            border-radius: 9px !important;
+        }
+
+        .micro-card strong {
+            font-size: .76rem !important;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+
+        .micro-card small {
+            margin-top: 4px !important;
+            color: #6b7280 !important;
+            font-size: .59rem !important;
+        }
+
+        .premium-event-grid {
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)) !important;
+            gap: 13px !important;
+        }
+
+        .premium-event-card {
+            overflow: hidden !important;
+            background: #f3f4f6 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 18px !important;
+            box-shadow: 0 7px 22px rgba(15, 23, 42, .06) !important;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+        }
+
+        .premium-event-card:hover {
+            transform: translateY(-3px) !important;
+            border-color: #c4cbd4 !important;
+            box-shadow: 0 13px 30px rgba(15, 23, 42, .10) !important;
+        }
+
+        .premium-poster {
+            aspect-ratio: 4 / 5 !important;
+        }
+
+        .premium-event-card:hover .premium-poster img {
+            transform: scale(1.018) !important;
+        }
+
+        .card-state {
+            top: 9px !important;
+            left: 9px !important;
+            padding: 4px 6px !important;
+            font-size: .50rem !important;
+            background: rgba(17,24,39,.82) !important;
+        }
+
+        .scarcity-pill {
+            top: 9px !important;
+            right: 9px !important;
+            padding: 4px 6px !important;
+            background: #991b1b !important;
+            color: #ffffff !important;
+            font-size: .49rem !important;
+        }
+
+        .premium-card-copy {
+            padding: 12px 12px 11px !important;
+        }
+
+        .card-title {
+            min-height: 2.28em;
+            color: #111827 !important;
+            font-size: .94rem !important;
+            line-height: 1.14 !important;
+            font-weight: 950 !important;
+            letter-spacing: -.022em;
+        }
+
+        .card-meta {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: 5px !important;
+            margin-top: 6px !important;
+            overflow: hidden;
+            color: #6b7280 !important;
+            font-size: .60rem !important;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .card-meta span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-bottom {
+            align-items: flex-end !important;
+            margin-top: 11px !important;
+            gap: 8px !important;
+        }
+
+        .price-eyebrow {
+            display: block;
+            margin: 5px 0 2px;
+            color: #6b7280;
+            font-size: .50rem;
+            font-weight: 850;
+            line-height: 1;
+            letter-spacing: .075em;
+            text-transform: uppercase;
+        }
+
+        .card-price {
+            display: block !important;
+            margin: 0 !important;
+            color: #111827 !important;
+            font-size: 1.12rem !important;
+            line-height: 1 !important;
+            font-weight: 950 !important;
+            letter-spacing: -.035em;
+        }
+
+        .ticket-cta {
+            min-height: 35px !important;
+            padding: 0 10px !important;
+            border-radius: 9px !important;
+            background: #111827 !important;
+            color: #ffffff !important;
+            font-size: .62rem !important;
+            font-weight: 950 !important;
+            white-space: nowrap;
+        }
+
+        .ticket-cta.disabled {
+            background: #d1d5db !important;
+            color: #6b7280 !important;
+        }
+
+        @media (max-width: 760px) {
+
+            .featured-media {
+                aspect-ratio: 4 / 5;
+            }
+
+            .premium-event-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 9px !important;
+            }
+
+            .premium-card-copy {
+                padding: 9px !important;
+            }
+
+            .card-title {
+                min-height: 2.25em;
+                font-size: .82rem !important;
+            }
+
+            .card-meta {
+                font-size: .54rem !important;
+            }
+
+            .card-bottom {
+                display: block !important;
+                margin-top: 8px !important;
+            }
+
+            .card-price {
+                font-size: 1rem !important;
+            }
+
+            .ticket-cta {
+                width: 100% !important;
+                min-height: 33px !important;
+                margin-top: 8px;
+            }
+        }
+
+        @media (max-width: 390px) {
+
+            .premium-event-grid {
+                gap: 7px !important;
+            }
+
+            .premium-event-card {
+                border-radius: 14px !important;
+            }
+
+            .card-title {
+                font-size: .78rem !important;
+            }
+        }
+
+
+        #updates.notification-strip h4 {
+            margin: 0 !important;
+            color: #374151 !important;
+            font-size: 10px !important;
+            line-height: 1.15 !important;
+            font-weight: 900 !important;
+            letter-spacing: .045em !important;
+        }
+
+
+        /* =====================================================
+           FINAL NOTIFICATION CARD LAYOUT
+           Larger area field + larger action button + centered title
+        ===================================================== */
+
+        #updates.notification-strip {
+            display: block !important;
+
+            width: 100% !important;
+            max-width: 680px !important;
+
+            margin: 10px auto 20px !important;
+            padding: 12px 14px 11px !important;
+
+            background: #e5e7eb !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 12px !important;
+            box-shadow: none !important;
+        }
+
+        #updates .notification-heading {
+            width: 100% !important;
+            margin: 0 0 9px !important;
+            text-align: center !important;
+        }
+
+        #updates .notification-heading h4 {
+            margin: 0 !important;
+            color: #374151 !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+            font-weight: 950 !important;
+            letter-spacing: .06em !important;
+            text-align: center !important;
+        }
+
+        #updates .notification-form {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        #updates .notification-form input {
+            width: 100% !important;
+            min-width: 0 !important;
+
+            height: 42px !important;
+            min-height: 42px !important;
+
+            padding: 0 13px !important;
+
+            background: #f8fafc !important;
+            color: #111827 !important;
+
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 9px !important;
+            outline: none !important;
+
+            font-size: 13px !important;
+            line-height: 1 !important;
+        }
+
+        #updates .notification-form input::placeholder {
+            color: #6b7280 !important;
+            opacity: 1 !important;
+        }
+
+        #updates .notification-actions {
+            display: flex !important;
+            gap: 6px !important;
+            margin: 0 !important;
+        }
+
+        #updates .cream-button,
+        #updates .quiet-button {
+            width: auto !important;
+
+            height: 42px !important;
+            min-height: 42px !important;
+
+            margin: 0 !important;
+            padding: 0 18px !important;
+
+            border-radius: 9px !important;
+
+            font-size: 12px !important;
+            line-height: 1 !important;
+            font-weight: 900 !important;
+
+            white-space: nowrap !important;
+        }
+
+        #updates .cream-button {
+            min-width: 165px !important;
+            background: #111827 !important;
+            color: #ffffff !important;
+            border: 1px solid #111827 !important;
+        }
+
+        #updates .quiet-button {
+            min-width: 86px !important;
+            background: #f8fafc !important;
+            color: #111827 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        #updates .notification-status {
+            grid-column: 1 / -1 !important;
+
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding-top: 1px !important;
+
+            color: #6b7280 !important;
+            font-size: 9px !important;
+            line-height: 1.2 !important;
+            text-align: center !important;
+        }
+
+        @media (max-width: 620px) {
+
+            #updates.notification-strip {
+                max-width: 100% !important;
+                margin: 8px auto 16px !important;
+                padding: 10px !important;
+            }
+
+            #updates .notification-heading {
+                margin-bottom: 8px !important;
+            }
+
+            #updates .notification-heading h4 {
+                font-size: 10px !important;
+            }
+
+            #updates .notification-form {
+                grid-template-columns: 1fr !important;
+                gap: 7px !important;
+            }
+
+            #updates .notification-form input {
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 13px !important;
+            }
+
+            #updates .notification-actions {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                width: 100% !important;
+            }
+
+            #updates .cream-button,
+            #updates .quiet-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                height: 44px !important;
+                min-height: 44px !important;
+                font-size: 12px !important;
+            }
+        }
+
+
+        /* =====================================================
+           ENABLED NOTIFICATION STATUS
+        ===================================================== */
+
+        #updates .home-notification-status.success,
+        #updates .notification-status.success {
+            color: #166534 !important;
+            font-weight: 900 !important;
+        }
+
+
+        /* =====================================================
+           NOTIFICATION SUCCESS / AUTO-HIDE FLOW
+        ===================================================== */
+
+        #updates.notification-strip {
+            transition: opacity .28s ease, transform .28s ease, max-height .32s ease, margin .32s ease, padding .32s ease, border-width .32s ease;
+        }
+
+        #updates .notification-heading h3 {
+            margin: 0 !important;
+            color: #374151 !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+            font-weight: 950 !important;
+            letter-spacing: .06em !important;
+            text-align: center !important;
+        }
+
+        #updates.notification-strip.confirmation-only {
+            display: grid !important;
+            place-items: center !important;
+            min-height: 58px !important;
+            max-width: 680px !important;
+            padding: 14px !important;
+        }
+
+        #updates.notification-strip.confirmation-only .notification-heading,
+        #updates.notification-strip.confirmation-only #home-notification-area,
+        #updates.notification-strip.confirmation-only .notification-actions {
+            display: none !important;
+        }
+
+        #updates.notification-strip.confirmation-only .notification-form {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        #updates.notification-strip.confirmation-only .notification-status {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #166534 !important;
+            font-size: 13px !important;
+            line-height: 1.35 !important;
+            font-weight: 950 !important;
+            text-align: center !important;
+        }
+
+        #updates.notification-strip.notification-card-hidden {
+            opacity: 0 !important;
+            transform: translateY(-8px) !important;
+            max-height: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-width: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .bottom-notification-control {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 34px auto 10px;
+            padding: 12px 14px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .bottom-notification-control[hidden] {
+            display: none !important;
+        }
+
+        .bottom-notification-off {
+            min-height: 34px;
+            padding: 7px 11px;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .bottom-notification-off:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        @media (max-width: 560px) {
+            .bottom-notification-control {
+                flex-direction: column;
+                gap: 7px;
+                margin-top: 26px;
+                padding-bottom: 78px;
+            }
+        }
+
+    /* =====================================================
+       SEE THE VIBE — EVENT REELS
+       Lightweight thumbnail rail + full-screen video viewer
+    ===================================================== */
+
+    .vibe-section {
+        margin: 4px 0 30px;
+    }
+
+    .vibe-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 13px;
+    }
+
+    .vibe-heading-copy {
+        min-width: 0;
+    }
+
+    .vibe-kicker {
+        display: block;
+        margin-bottom: 3px;
+        color: #6b7280;
+        font-size: .58rem;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .vibe-heading h2 {
+        margin: 0;
+        color: #111827;
+        font-size: clamp(1.28rem, 3vw, 1.72rem);
+        line-height: 1.05;
+        font-weight: 950;
+        letter-spacing: -.035em;
+    }
+
+    .vibe-heading-note {
+        flex: 0 0 auto;
+        color: #6b7280;
+        font-size: .68rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .vibe-rail {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(154px, 184px);
+        gap: 11px;
+        overflow-x: auto;
+        padding: 2px 2px 10px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .vibe-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+    .vibe-card {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 9 / 16;
+        padding: 0;
+        border: 1px solid #d1d5db;
+        border-radius: 18px;
+        background: #111827;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .10);
+        scroll-snap-align: start;
+        cursor: pointer;
+        isolation: isolate;
+    }
+
+    .vibe-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+            linear-gradient(
+                to top,
+                rgba(3, 7, 18, .94) 0%,
+                rgba(3, 7, 18, .40) 34%,
+                rgba(3, 7, 18, .04) 67%,
+                rgba(3, 7, 18, .08) 100%
+            );
+        pointer-events: none;
+    }
+
+    .vibe-card img,
+    .vibe-card-fallback {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+    }
+
+    .vibe-card-fallback {
+        display: grid;
+        place-items: center;
+        background:
+            radial-gradient(circle at 30% 20%, #374151 0%, #111827 44%, #030712 100%);
+        color: rgba(255,255,255,.78);
+        font-size: 1rem;
+        font-weight: 1000;
+        letter-spacing: .12em;
+    }
+
+    .vibe-play {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        padding-left: 2px;
+        border: 1px solid rgba(255,255,255,.28);
+        border-radius: 999px;
+        background: rgba(17,24,39,.68);
+        color: #ffffff;
+        font-size: .86rem;
+        box-shadow: 0 6px 20px rgba(0,0,0,.20);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .vibe-duration {
+        position: absolute;
+        top: 13px;
+        left: 11px;
+        z-index: 3;
+        padding: 5px 7px;
+        border-radius: 999px;
+        background: rgba(17,24,39,.70);
+        color: #ffffff;
+        font-size: .53rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .03em;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .vibe-card-copy {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 3;
+        text-align: left;
+    }
+
+    .vibe-card-copy strong {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 0;
+        color: #ffffff;
+        font-size: .82rem;
+        line-height: 1.16;
+        font-weight: 950;
+        letter-spacing: -.015em;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .vibe-card-copy small {
+        display: block;
+        overflow: hidden;
+        margin-top: 5px;
+        color: rgba(255,255,255,.72);
+        font-size: .57rem;
+        line-height: 1.2;
+        font-weight: 700;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .vibe-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 13px 30px rgba(15, 23, 42, .16);
+    }
+
+    .vibe-card {
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .vibe-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(3, 7, 18, .94);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+    }
+
+    .vibe-modal.open {
+        display: flex;
+    }
+
+    .vibe-modal-shell {
+        position: relative;
+        width: min(430px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 22px;
+        background: #000000;
+        box-shadow: 0 30px 90px rgba(0,0,0,.56);
+    }
+
+    .vibe-modal-video {
+        width: 100%;
+        max-height: calc(100vh - 28px);
+        display: block;
+        aspect-ratio: 9 / 16;
+        object-fit: contain;
+        background: #000000;
+    }
+
+    .vibe-modal-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 5;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: 1.15rem;
+        font-weight: 900;
+        cursor: pointer;
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
+    .vibe-modal-sound {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 5;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: .9rem;
+        cursor: pointer;
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
+    .vibe-modal-info {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 4;
+        padding: 42px 16px 15px;
+        background: linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,0));
+        pointer-events: none;
+    }
+
+    .vibe-modal-title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 1rem;
+        line-height: 1.2;
+        font-weight: 950;
+    }
+
+    .vibe-modal-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        margin-top: 8px;
+        padding: 0 11px;
+        border-radius: 9px;
+        background: #fff4df;
+        color: #111827;
+        font-size: .66rem;
+        font-weight: 950;
+        text-decoration: none;
+        pointer-events: auto;
+    }
+
+    @media (max-width: 620px) {
+        .vibe-section {
+            margin-top: 2px;
+            margin-bottom: 24px;
+        }
+
+        .vibe-heading {
+            margin-bottom: 11px;
+        }
+
+        .vibe-heading-note {
+            font-size: .60rem;
+        }
+
+        .vibe-rail {
+            grid-auto-columns: minmax(138px, 158px);
+            gap: 9px;
+        }
+
+        .vibe-card {
+            border-radius: 16px;
+        }
+
+        .vibe-play {
+            width: 34px;
+            height: 34px;
+            top: 10px;
+            right: 10px;
+        }
+
+        .vibe-duration {
+            top: 11px;
+            left: 9px;
+        }
+
+        .vibe-card-copy {
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+        }
+    }
+\n\n    /* =====================================================\n       SEE THE VIBE — INLINE AUTOPLAY REELS\n       First reel autoplays muted. Tap video for sound.\n    ===================================================== */\n\n    .vibe-card {\n        display: block;\n        border: 1px solid #d1d5db;\n        color: #ffffff;\n        text-align: left;\n    }\n\n    .vibe-card-video {\n        position: absolute;\n        inset: 0;\n        z-index: 0;\n        width: 100%;\n        height: 100%;\n        display: block;\n        object-fit: cover;\n        background: #000000;\n        cursor: pointer;\n        -webkit-user-select: none;\n        user-select: none;\n    }\n\n    .vibe-card::after {\n        z-index: 1;\n    }\n\n    .vibe-duration {\n        z-index: 4;\n    }\n\n    .vibe-sound-toggle {\n        position: absolute;\n        top: 11px;\n        right: 11px;\n        z-index: 5;\n        width: 36px;\n        height: 36px;\n        display: grid;\n        place-items: center;\n        padding: 0;\n        border: 1px solid rgba(255,255,255,.24);\n        border-radius: 999px;\n        background: rgba(17,24,39,.72);\n        color: #ffffff;\n        font-size: .86rem;\n        line-height: 1;\n        cursor: pointer;\n        box-shadow: 0 6px 20px rgba(0,0,0,.18);\n        backdrop-filter: blur(9px);\n        -webkit-backdrop-filter: blur(9px);\n    }\n\n    .vibe-sound-toggle:hover {\n        background: rgba(17,24,39,.90);\n    }\n\n    .vibe-card-copy {\n        z-index: 4;\n        pointer-events: none;\n    }\n\n    .vibe-card-event-link {\n        display: inline-flex;\n        align-items: center;\n        justify-content: center;\n        min-height: 30px;\n        margin-top: 8px;\n        padding: 0 9px;\n        border-radius: 8px;\n        background: #fff4df;\n        color: #111827;\n        font-size: .58rem;\n        line-height: 1;\n        font-weight: 950;\n        text-decoration: none;\n        pointer-events: auto;\n    }\n\n    .vibe-card-event-link:hover {\n        background: #ffffff;\n    }\n\n    @media (max-width: 620px) {\n        .vibe-sound-toggle {\n            top: 9px;\n            right: 9px;\n            width: 33px;\n            height: 33px;\n            font-size: .8rem;\n        }\n\n        .vibe-card-event-link {\n            min-height: 29px;\n            margin-top: 7px;\n            padding: 0 8px;\n            font-size: .55rem;\n        }\n    }\n
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="page-shell">
+
+
+    <!-- =========================================
+         TOP BAR
+    ========================================== -->
+
+    <div class="topbar">
+
+
+        <a
+            href="{{ url_for(
+                'home'
+            ) }}"
+            class="brand"
+        >
+            KALXA
+        </a>
+
+
+        <div class="topbar-actions">
+
+
+            <!-- =============================
+                 PUBLIC ATTENDEE ACTION
+            ============================== -->
+
+            <a
+                href="{{ url_for(
+                    'track_ticket'
+                ) }}"
+                class="topbar-link track-link"
+            >
+                Track My Ticket
+            </a>
+
+
+            {% if session.get('ticketing_organizer_id') %}
+
+                <a
+                    href="{{ url_for(
+                        'admin_dashboard'
+                    ) }}"
+                    class="topbar-link"
+                >
+                    Organizer Dashboard
+                </a>
+
+
+                <a
+                    href="{{ url_for(
+                        'organizer_logout'
+                    ) }}"
+                    class="topbar-link"
+                >
+                    Logout
+                </a>
+
+
+            {% else %}
+
+                <a
+                    href="{{ url_for(
+                        'organizer_login'
+                    ) }}"
+                    class="topbar-link"
+                >
+                    Create Events
+                </a>
+
+
+                <a
+                    href="{{ url_for(
+                        'organizer_signup'
+                    ) }}"
+                    class="topbar-link"
+                >
+                    Get Started
+                </a>
+
+            {% endif %}
+
+
+        </div>
+
+
+    </div>
+
+
+    {% if firebase_push_configured %}
+        <section class="notification-strip" id="updates">
+            <div class="notification-heading">
+                <h3>🔔 RECEIVE NOTIFICATIONS</h3>
+            </div>
+
+            <div class="notification-form">
+                <input
+                    id="home-notification-area"
+                    type="text"
+                    placeholder="Enter Your Hometown(e.g KwaMhlanga)"
+                    autocomplete="address-level2"
+                >
+
+                <div class="notification-actions">
+                    <button
+                        type="button"
+                        id="home-enable-notifications"
+                        class="cream-button"
+                    >
+                        Enable notifications
+                    </button>
+
+                    <button
+                        type="button"
+                        id="home-disable-notifications"
+                        class="quiet-button"
+                        hidden
+                    >
+                        Turn off
+                    </button>
+                </div>
+
+                <div
+                    id="home-notification-status"
+                    class="notification-status"
+                    aria-live="polite"
+                >
+                    Notifications are currently off.
+                </div>
+            </div>
+        </section>
+    {% endif %}
+    
+    {% if event %}
+
+
+        <!-- =====================================
+             SINGLE EVENT
+        ====================================== -->
+
+        <div class="event-detail">
+
+
+            <!-- =================================
+                 EVENT IMAGE
+            ================================== -->
+
+            {% if event.poster_image_mimetype or event.image_url %}
+
+                <div class="event-detail-image-wrap">
+
+                    <button
+                        type="button"
+                        class="event-poster-button"
+                        id="open-poster"
+                        aria-label="View full event poster"
+                    >
+
+                        <img
+                            src="{{
+        url_for(
+            'event_poster',
+            event_id=event.id
+        )
+        if event.poster_image_mimetype
+        else event.image_url
+    }}"
+                            alt="{{ event.title }} event poster"
+                            class="event-detail-image"
+                        >
+
+                        <span class="event-poster-hint">
+                            🔍 View Poster
+                        </span>
+
+                    </button>
+
+                </div>
+
+            {% endif %}
+
+
+
+            <!-- =================================
+                 EVENT CONTENT
+            ================================== -->
+
+            <div class="event-detail-content">
+
+
+                <p class="eyebrow">
+                    KALXA EVENT
+                </p>
+
+
+                <h1>
+                    {{ event.title }}
+                </h1>
+
+
+
+                <!-- =============================
+                     ORGANIZER
+                ============================== -->
+
+                {% if event.organizer_name or event.organizer %}
+
+                    <div class="organizer-card">
+
+
+                        <div>
+
+
+                            <span class="organizer-label">
+                                Hosted by
+                            </span>
+
+
+                            <div class="organizer-name">
+
+                                {% if event.organizer %}
+
+                                    {{ event.organizer.display_name }}
+
+                                {% else %}
+
+                                    {{ event.organizer_name }}
+
+                                {% endif %}
+
+                            </div>
+
+
+                        </div>
+
+
+                        {% if event.organizer_phone %}
+
+                            <a
+                                href="tel:{{ event.organizer_phone }}"
+                                class="organizer-phone"
+                            >
+                                {{ event.organizer_phone }}
+                            </a>
+
+                        {% elif event.organizer and event.organizer.phone %}
+
+                            <a
+                                href="tel:{{ event.organizer.phone }}"
+                                class="organizer-phone"
+                            >
+                                {{ event.organizer.phone }}
+                            </a>
+
+                        {% endif %}
+
+
+                    </div>
+
+                {% endif %}
+
+
+
+                {% if event.description %}
+
+                    <p class="event-description">
+                        {{ event.description }}
+                    </p>
+
+                {% endif %}
+
+
+
+                <!-- =============================
+                     EVENT INFORMATION
+                ============================== -->
+
+                <div class="event-meta-list">
+
+
+                    {% if event.event_date %}
+
+                        <div class="event-meta">
+
+                            <span>
+                                📅
+                            </span>
+
+                            <span>
+                                {{ event.event_date.strftime(
+                                    '%d %B %Y'
+                                ) }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+
+                    {% if event.event_time %}
+
+                        <div class="event-meta">
+
+                            <span>
+                                🕒
+                            </span>
+
+                            <span>
+                                {{ event.event_time.strftime(
+                                    '%H:%M'
+                                ) }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+
+                    {% if event.venue %}
+
+                        <div class="event-meta">
+
+                            <span>
+                                📍
+                            </span>
+
+                            <span>
+                                {{ event.venue }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+
+                <!-- =============================
+                     TICKET INFORMATION
+                ============================== -->
+
+                <div class="ticket-box">
+
+
+                    <span class="ticket-label">
+                        Ticket Options
+                    </span>
+
+
+                    {% if event.active_ticket_types %}
+
+                        <div style="display:grid;gap:10px;margin:14px 0 18px;">
+
+                            {% for ticket_type in event.active_ticket_types %}
+
+                                <div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);">
+
+                                    <div>
+                                        <strong>{{ ticket_type.name }}</strong>
+                                        {% if ticket_type.active_sale_phases and not ticket_type.current_sale_phase %}
+                                            {% if ticket_type.next_sale_phase %}
+                                                <small style="display:block;color:#facc15;">Sales phase has not started yet</small>
+                                            {% else %}
+                                                <small style="display:block;color:#fca5a5;">No sales phase is currently active</small>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {% if ticket_type.capacity is not none %}
+                                            <div class="ticket-availability" style="margin-top:3px;">
+                                                {% if ticket_type.is_sold_out %}
+                                                    SOLD OUT
+                                                {% else %}
+                                                    {{ ticket_type.remaining_quantity }} remaining
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <strong style="text-align:right;">
+                                        {% if ticket_type.current_sale_phase %}
+                                            {% if ticket_type.current_price == 0 %}
+                                                FREE
+                                            {% else %}
+                                                R{{ "%.2f"|format(ticket_type.current_price) }}
+                                            {% endif %}
+                                            <small style="display:block;color:#facc15;font-weight:700;margin-top:2px;">{{ ticket_type.current_sale_phase.name }}</small>
+                                        {% elif ticket_type.active_sale_phases and ticket_type.next_sale_phase %}
+                                            <span style="font-size:.78rem;color:#facc15;">UPCOMING</span>
+                                        {% elif ticket_type.active_sale_phases %}
+                                            <span style="font-size:.78rem;color:#fca5a5;">NOT ON SALE</span>
+                                        {% elif ticket_type.price == 0 %}
+                                            FREE
+                                        {% else %}
+                                            R{{ "%.2f"|format(ticket_type.price) }}
+                                        {% endif %}
+                                    </strong>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="ticket-price">
+
+                            {% if event.ticket_price == 0 %}
+                                FREE
+                            {% else %}
+                                R{{ "%.2f"|format(event.ticket_price) }}
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if not event.active_ticket_types %}
+
+                        {% if event.ticket_capacity is not none %}
+
+                            {% if event.is_sold_out %}
+
+                                <p class="ticket-availability sold-out">
+                                    SOLD OUT
+                                </p>
+
+                            {% elif event.remaining_tickets <= 10 %}
+
+                                <p class="ticket-availability low">
+                                    Only {{ event.remaining_tickets }}
+                                    ticket(s) remaining
+                                </p>
+
+                            {% else %}
+
+                                <p class="ticket-availability">
+                                    {{ event.remaining_tickets }}
+                                    ticket(s) remaining
+                                </p>
+
+                            {% endif %}
+
+                        {% else %}
+
+                            <p class="ticket-availability">
+                                Tickets available
+                            </p>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    {% if event.is_sold_out %}
+
+                        <button
+                            class="button disabled"
+                            disabled
+                        >
+                            SOLD OUT
+                        </button>
+
+
+                    {% elif not event.sales_open %}
+
+                        <button
+                            class="button disabled"
+                            disabled
+                        >
+                            Ticket Sales Paused
+                        </button>
+
+                        <div class="sales-note">
+                            This event is published, but ticket sales
+                            are not open yet.
+                        </div>
+
+
+                    {% else %}
+
+                        <a
+                            href="{{ url_for(
+                                'reserve_ticket',
+                                event_id=event.id
+                            ) }}"
+                            class="button"
+                        >
+                            Buy Ticket
+                        </a>
+
+                        <div class="sales-note">
+                            Secure payment by Paystack.
+                            Kalxa adds no ticket commission.
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+    {% else %}
+
+
+        <!-- =====================================
+             PREMIUM EVENT DISCOVERY HOME
+        ====================================== -->
+
+        <div class="kalxa-discovery" id="discover">
+
+
+
+            
+
+            {% if reels %}
+            <!-- =========================================
+                 SEE THE VIBE — EVENT REELS
+            ========================================== -->
+            <section class="vibe-section" aria-labelledby="vibe-title">
+                <div class="vibe-heading">
+                    <div class="vibe-heading-copy">
+                        <span class="vibe-kicker">EVENT REELS</span>
+                        <h2 id="vibe-title">🎬 See the Vibe</h2>
+                    </div>
+                    <span class="vibe-heading-note">Tap video for sound</span>
+                </div>
+
+                <div class="vibe-rail" aria-label="Event reels">
+                    {% for reel in reels %}
+                        {% if reel.event %}
+                            <article
+                                class="vibe-card"
+                                data-vibe-reel
+                                data-reel-id="{{ reel.id }}"
+                                data-reel-index="{{ loop.index0 }}"
+                            >
+                                <video
+                                    class="vibe-card-video"
+                                    playsinline
+                                    muted
+                                    loop
+                                    preload="metadata"
+                                    controlslist="nodownload noremoteplayback"
+                                    disablepictureinpicture
+                                    oncontextmenu="return false;"
+                                    {% if reel.thumbnail_url %}
+                                        poster="{{ reel.thumbnail_url }}"
+                                    {% endif %}
+                                    aria-label="{{ reel.event.title }} event reel"
+                                >
+                                    <source src="{{ reel.video_url }}">
+                                </video>
+
+                                {% if reel.duration_seconds %}
+                                    <span class="vibe-duration">
+                                        {{ '%.0f'|format(reel.duration_seconds) }}s
+                                    </span>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="vibe-sound-toggle"
+                                    aria-label="Turn sound on"
+                                >
+                                    🔇
+                                </button>
+
+                                <div class="vibe-card-copy">
+                                    <strong>{{ reel.event.title }}</strong>
+                                    <small>
+                                        {% if reel.event.event_date %}
+                                            {{ reel.event.event_date.strftime('%d %b') }}
+                                        {% endif %}
+                                        {% if reel.event.venue %}
+                                            {% if reel.event.event_date %} · {% endif %}{{ reel.event.venue }}
+                                        {% endif %}
+                                    </small>
+
+                                    <a
+                                        href="{{ url_for('event_page', event_id=reel.event.id) }}"
+                                        class="vibe-card-event-link"
+                                    >
+                                        View event →
+                                    </a>
+                                </div>
+                            </article>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if featured_events %}
+            <section class="discovery-section featured-shell" aria-labelledby="featured-title">
+                <div class="section-heading">
+                    <div>
+                    
+                        <h2 id="featured-title">⭐</h2>
+                    </div>
+                    <span class="section-note">Swipe posters</span>
+                </div>
+
+                <div class="featured-event-stack">
+                    {% for featured in featured_events %}
+                        {% set item = featured.event %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_price is not none %}
+                                {% if ns.price is none or tt.current_price < ns.price %}
+                                    {% set ns.price = tt.current_price %}
+                                {% endif %}
+                                {% if ns.phase is none and tt.current_sale_phase %}
+                                    {% set ns.phase = tt.current_sale_phase.name %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <article class="featured-hero-card event-searchable"
+                            data-title="{{ item.title|lower }}"
+                            data-venue="{{ (item.venue or '')|lower }}"
+                            data-organizer="{{ ((item.organizer.display_name if item.organizer else item.organizer_name) or '')|lower }}"
+                            data-date="{{ item.event_date.strftime('%Y-%m-%d') if item.event_date else '' }}"
+                            data-time="{{ item.event_time.strftime('%H:%M:%S') if item.event_time else '00:00:00' }}"
+                            data-earlybird="{{ 'true' if ns.phase and 'early' in ns.phase|lower else 'false' }}"
+                            data-sellingfast="{{ 'true' if item.ticket_capacity is not none and item.remaining_tickets <= 20 else 'false' }}"
+                        >
+                            <div class="featured-media" data-featured-carousel>
+                                <div class="featured-track" data-featured-track>
+                                    {% if featured.images %}
+                                        {% for image in featured.images %}
+                                        <div class="featured-slide" data-featured-slide>
+                                            <img
+                                                src="{{ url_for('featured_listing_image', event_id=item.id, image_id=image.id) }}"
+                                                alt="{{ item.title }} poster {{ loop.index }}"
+                                                loading="{{ 'eager' if loop.first else 'lazy' }}"
+                                            >
+                                        </div>
+                                        {% endfor %}
+                                    {% elif item.poster_image_mimetype or item.image_url %}
+                                        <div class="featured-slide" data-featured-slide>
+                                            <img
+                                                src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}"
+                                                alt="{{ item.title }}"
+                                                loading="eager"
+                                            >
+                                        </div>
+                                    {% else %}
+                                        <div class="featured-slide poster-fallback"><span>KALXA</span></div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="poster-gradient"></div>
+                                <div class="featured-badge">⭐ </div>
+                                <div class="live-state event-countdown" data-countdown>UPCOMING</div>
+
+                                {% if featured.images|length > 1 %}
+                                <div class="featured-dots" data-featured-dots>
+                                    {% for image in featured.images %}
+                                    <button type="button" class="featured-dot {% if loop.first %}active{% endif %}" data-featured-dot="{{ loop.index0 }}" aria-label="Poster {{ loop.index }}"></button>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <div class="featured-overlay-copy">
+                                    <h3>{{ item.title }}</h3>
+                                    <div class="featured-meta-line">
+                                        {% if item.event_date %}<span>{{ item.event_date.strftime('%d %b')|upper }}</span>{% endif %}
+                                        {% if item.event_time %}<span>· {{ item.event_time.strftime('%H:%M') }}</span>{% endif %}
+                                        {% if item.venue %}<span>· {{ item.venue }}</span>{% endif %}
+                                    </div>
+                                    <div class="featured-price-line">
+                                        {% if ns.phase %}<span class="phase-pill">{{ ns.phase }}</span>{% endif %}
+                                        {% if item.is_sold_out %}
+                                            <strong>SOLD OUT</strong>
+                                        {% elif ns.price is not none %}
+                                            <strong>{% if ns.price == 0 %}FREE{% else %}R{{ '%.2f'|format(ns.price) }}{% endif %}</strong>
+                                        {% elif item.ticket_price == 0 %}
+                                            <strong>FREE</strong>
+                                        {% else %}
+                                            <strong>R{{ '%.2f'|format(item.ticket_price) }}</strong>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="featured-cta-row">
+                                <a href="{{ url_for('event_page', event_id=item.id) }}" class="featured-view">View event</a>
+                                {% if not item.is_sold_out and item.sales_open %}
+                                <a href="{{ url_for('reserve_ticket', event_id=item.id) }}" class="featured-buy">Get tickets →</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <section class="discovery-hero">
+                <div class="search-shell">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="event-search"
+                        placeholder="Search events, venues or organizers"
+                        autocomplete="off"
+                        aria-label="Search events"
+                    >
+                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
+                </div>
+
+                <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                    <button type="button" class="filter-chip active" data-filter="all">All</button>
+                    <button type="button" class="filter-chip" data-filter="today">Today</button>
+                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
+                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
+                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
+                </div>
+            </section>
+
+            {% if events %}
+            <section class="discovery-section" id="soon-section">
+                <div class="section-heading">
+                    <div>
+                        
+                        <h2>🔥 Later On</h2>
+                    </div>
+                    <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
+                </div>
+
+                <div class="event-rail">
+                    {% for item in events[:8] %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_price is not none %}
+                                {% if ns.price is none or tt.current_price < ns.price %}{% set ns.price = tt.current_price %}{% endif %}
+                                {% if ns.phase is none and tt.current_sale_phase %}{% set ns.phase = tt.current_sale_phase.name %}{% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('event_page', event_id=item.id) }}" class="rail-card">
+                            <div class="rail-poster">
+                                {% if item.poster_image_mimetype or item.image_url %}
+                                <img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                                {% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                                <div class="poster-gradient small"></div>
+                                <span class="mini-state event-countdown" data-date="{{ item.event_date.strftime('%Y-%m-%d') if item.event_date else '' }}" data-time="{{ item.event_time.strftime('%H:%M:%S') if item.event_time else '00:00:00' }}">UPCOMING</span>
+                            </div>
+                            <div class="rail-copy">
+                                <h3>{{ item.title }}</h3>
+                                <p>{% if item.event_date %}{{ item.event_date.strftime('%d %b') }}{% endif %}{% if item.venue %} · {{ item.venue }}{% endif %}</p>
+                                <div class="price-row">
+                                    {% if ns.phase %}<span>{{ ns.phase }}</span>{% endif %}
+                                    <strong>{% if item.is_sold_out %}SOLD OUT{% elif ns.price is not none %}{% if ns.price == 0 %}FREE{% else %}R{{ '%.0f'|format(ns.price) }}{% endif %}{% elif item.ticket_price == 0 %}FREE{% else %}R{{ '%.0f'|format(item.ticket_price) }}{% endif %}</strong>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="discovery-section earlybird-section" id="earlybird-section">
+                <div class="section-heading">
+                    <div>
+
+                        <h2>🎟 Early Bird</h2>
+                    </div>
+                </div>
+                <div class="event-rail earlybird-rail">
+                    {% set early = namespace(count=0) %}
+                    {% for item in events %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_sale_phase and 'early' in tt.current_sale_phase.name|lower %}
+                                {% if ns.price is none or tt.current_price < ns.price %}{% set ns.price = tt.current_price %}{% endif %}
+                                {% if ns.phase is none %}{% set ns.phase = tt.current_sale_phase.name %}{% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if ns.phase and early.count < 8 %}
+                            {% set early.count = early.count + 1 %}
+                            <a href="{{ url_for('event_page', event_id=item.id) }}" class="rail-card compact">
+                                <div class="rail-poster">
+                                    {% if item.poster_image_mimetype or item.image_url %}<img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">{% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                                    <span class="phase-corner">{{ ns.phase }}</span>
+                                </div>
+                                <div class="rail-copy"><h3>{{ item.title }}</h3><p>{% if item.event_date %}{{ item.event_date.strftime('%d %b') }}{% endif %}{% if item.venue %} · {{ item.venue }}{% endif %}</p><div class="price-row"><span>From</span><strong>{% if ns.price == 0 %}FREE{% else %}R{{ '%.0f'|format(ns.price) }}{% endif %}</strong></div></div>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% if early.count == 0 %}<p class="section-empty">No Early Bird phases are live right now.</p>{% endif %}
+            </section>
+
+            <section class="discovery-section" id="around-you-section">
+                <div class="section-heading">
+
+                    <span class="section-note">Current Kalxa listings</span>
+                </div>
+                <div class="event-rail">
+                    {% for item in events[:8] %}
+                        <a href="{{ url_for('event_page', event_id=item.id) }}" class="micro-card">
+                            {% if item.poster_image_mimetype or item.image_url %}<img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">{% else %}<div class="poster-fallback"><span>K</span></div>{% endif %}
+                            <div><strong>{{ item.title }}</strong><small>{% if item.venue %}{{ item.venue }}{% else %}Local event{% endif %}</small></div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="discovery-section discover-more" id="discover-grid">
+                <div class="section-heading">
+
+                    <span class="results-count" id="results-count">{{ events|length }} events</span>
+                </div>
+
+                <div class="premium-event-grid" id="premium-event-grid">
+                    {% for item in events %}
+                        {% set ns = namespace(price=none, phase=none) %}
+                        {% for tt in item.ticket_types %}
+                            {% if tt.active and tt.current_price is not none %}
+                                {% if ns.price is none or tt.current_price < ns.price %}{% set ns.price = tt.current_price %}{% endif %}
+                                {% if ns.phase is none and tt.current_sale_phase %}{% set ns.phase = tt.current_sale_phase.name %}{% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% set fast = item.ticket_capacity is not none and item.remaining_tickets <= 20 and item.remaining_tickets > 0 %}
+                        <article
+                            class="premium-event-card event-searchable"
+                            data-title="{{ item.title|lower }}"
+                            data-venue="{{ (item.venue or '')|lower }}"
+                            data-organizer="{{ ((item.organizer.display_name if item.organizer else item.organizer_name) or '')|lower }}"
+                            data-date="{{ item.event_date.strftime('%Y-%m-%d') if item.event_date else '' }}"
+                            data-time="{{ item.event_time.strftime('%H:%M:%S') if item.event_time else '00:00:00' }}"
+                            data-earlybird="{{ 'true' if ns.phase and 'early' in ns.phase|lower else 'false' }}"
+                            data-sellingfast="{{ 'true' if fast else 'false' }}"
+                        >
+                            <a href="{{ url_for('event_page', event_id=item.id) }}" class="poster-link" aria-label="View {{ item.title }}">
+                                <div class="premium-poster">
+                                    {% if item.poster_image_mimetype or item.image_url %}
+                                    <img src="{{ url_for('event_poster', event_id=item.id) if item.poster_image_mimetype else item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                                    {% else %}<div class="poster-fallback"><span>KALXA</span></div>{% endif %}
+                                    <div class="poster-gradient"></div>
+                                    <span class="card-state event-countdown" data-countdown>UPCOMING</span>
+                                    {% if fast %}<span class="scarcity-pill">{{ item.remaining_tickets }} LEFT</span>{% endif %}
+                                </div>
+                            </a>
+
+                            <div class="premium-card-copy">
+                                <a href="{{ url_for('event_page', event_id=item.id) }}" class="card-title">{{ item.title }}</a>
+                                <div class="card-meta">
+                                    {% if item.event_date %}<span>{{ item.event_date.strftime('%d %b')|upper }}</span>{% endif %}
+                                    {% if item.event_time %}<span>{{ item.event_time.strftime('%H:%M') }}</span>{% endif %}
+                                    {% if item.venue %}<span>{{ item.venue }}</span>{% endif %}
+                                </div>
+                                <div class="card-bottom">
+                                    <div>
+                                        {% if ns.phase %}<span class="phase-pill small">{{ ns.phase }}</span>{% endif %}
+                                        {% if not item.is_sold_out %}<span class="price-eyebrow">From</span>{% endif %}
+                                        <strong class="card-price">{% if item.is_sold_out %}SOLD OUT{% elif ns.price is not none %}{% if ns.price == 0 %}FREE{% else %}R{{ '%.2f'|format(ns.price) }}{% endif %}{% elif item.ticket_price == 0 %}FREE{% else %}R{{ '%.2f'|format(item.ticket_price) }}{% endif %}</strong>
+                                    </div>
+                                    {% if not item.is_sold_out and item.sales_open %}
+                                    <a href="{{ url_for('reserve_ticket', event_id=item.id) }}" class="ticket-cta">Get Tickets</a>
+                                    {% else %}
+                                    <span class="ticket-cta disabled">Unavailable</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <div class="no-results" id="no-results" hidden>
+                    <strong>No matching events</strong>
+                    <span>Try another search or filter.</span>
+                </div>
+            </section>
+            {% elif not featured_events %}
+            <div class="empty-state premium-empty">
+                <span>K</span>
+                <h2>No events yet</h2>
+                <p>New Kalxa experiences will appear here.</p>
+            </div>
+            {% endif %}
+
+
+        </div>
+
+        <nav class="mobile-bottom-nav" aria-label="Kalxa navigation">
+            <a href="{{ url_for('home') }}" class="active"><span>⌂</span><small>Home</small></a>
+            <a href="#discover"><span>⌕</span><small>Discover</small></a>
+            <a href="{{ url_for('track_ticket') }}"><span>🎟</span><small>My Tickets</small></a>
+            {% if firebase_push_configured %}<a href="#updates"><span>🔔</span><small>Updates</small></a>{% endif %}
+        </nav>
+
+
+    {% endif %}
+
+
+
+    {% if firebase_push_configured %}
+        <section
+            class="bottom-notification-control"
+            id="bottom-notification-control"
+            hidden
+        >
+            <span>🔔 Notifications enabled</span>
+            <button
+                type="button"
+                id="home-bottom-disable-notifications"
+                class="bottom-notification-off"
+            >
+                Turn off notifications
+            </button>
+        </section>
+    {% endif %}
+
+</div>
+
+
+
+{% if not event and firebase_push_configured %}
+
+    <script
+        id="home-firebase-web-config"
+        type="application/json"
+    >
+        {{ firebase_config|tojson }}
+    </script>
+
+    <script
+        id="home-firebase-vapid-key"
+        type="application/json"
+    >
+        {{ firebase_vapid_key|tojson }}
+    </script>
+
+    <script type="module">
+
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+        import {
+            getMessaging,
+            isSupported,
+            onRegistered,
+            onUnregistered,
+            register as registerMessaging,
+            unregister as unregisterMessaging
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging.js";
+
+
+        const enableButton =
+            document.getElementById(
+                "home-enable-notifications"
+            );
+
+
+        const homeAreaInput =
+            document.getElementById(
+                "home-notification-area"
+            );
+
+        const disableButton =
+            document.getElementById(
+                "home-disable-notifications"
+            );
+
+        const statusElement =
+            document.getElementById(
+                "home-notification-status"
+            );
+
+        const notificationCard =
+            document.getElementById(
+                "updates"
+            );
+
+        const bottomNotificationControl =
+            document.getElementById(
+                "bottom-notification-control"
+            );
+
+        const bottomDisableButton =
+            document.getElementById(
+                "home-bottom-disable-notifications"
+            );
+
+        let notificationHideTimer = null;
+
+        const firebaseConfig =
+            JSON.parse(
+                document.getElementById(
+                    "home-firebase-web-config"
+                ).textContent
+            );
+
+        const vapidKey =
+            JSON.parse(
+                document.getElementById(
+                    "home-firebase-vapid-key"
+                ).textContent
+            );
+
+        let currentInstallationId =
+            localStorage.getItem(
+                "kalxa_firebase_installation_id"
+            );
+
+        let messaging =
+            null;
+
+
+        const savedHomeArea =
+            localStorage.getItem(
+                "kalxa_notification_home_area"
+            );
+
+
+        if (
+            savedHomeArea
+            && homeAreaInput
+        ) {
+
+            homeAreaInput.value =
+                savedHomeArea;
+        }
+
+
+        function setStatus(
+            message,
+            type = ""
+        ) {
+            statusElement.textContent =
+                message;
+
+            statusElement.className =
+                "home-notification-status";
+
+            if (type) {
+                statusElement.classList.add(
+                    type
+                );
+            }
+        }
+
+
+        function clearNotificationHideTimer() {
+            if (notificationHideTimer) {
+                clearTimeout(notificationHideTimer);
+                notificationHideTimer = null;
+            }
+        }
+
+        function showBottomNotificationControl() {
+            if (bottomNotificationControl) {
+                bottomNotificationControl.hidden = false;
+            }
+        }
+
+        function hideBottomNotificationControl() {
+            if (bottomNotificationControl) {
+                bottomNotificationControl.hidden = true;
+            }
+        }
+
+        function hideNotificationCard() {
+            if (notificationCard) {
+                notificationCard.classList.add(
+                    "notification-card-hidden"
+                );
+            }
+            showBottomNotificationControl();
+        }
+
+        function restoreNotificationCard() {
+            clearNotificationHideTimer();
+            if (notificationCard) {
+                notificationCard.classList.remove(
+                    "confirmation-only",
+                    "notification-card-hidden"
+                );
+            }
+        }
+
+        function setEnabledUi({ showConfirmation = false } = {}) {
+            clearNotificationHideTimer();
+
+            enableButton.hidden = true;
+            disableButton.hidden = true;
+
+            setStatus(
+                "Notifications are enabled on this device.",
+                "success"
+            );
+
+            hideBottomNotificationControl();
+
+            if (showConfirmation) {
+                if (notificationCard) {
+                    notificationCard.classList.remove(
+                        "notification-card-hidden"
+                    );
+                    notificationCard.classList.add(
+                        "confirmation-only"
+                    );
+                }
+
+                notificationHideTimer = window.setTimeout(
+                    () => {
+                        hideNotificationCard();
+                    },
+                    3000
+                );
+            } else {
+                hideNotificationCard();
+            }
+        }
+
+        function setDisabledUi() {
+            restoreNotificationCard();
+            enableButton.hidden = false;
+            disableButton.hidden = true;
+            hideBottomNotificationControl();
+            setStatus(
+                "Notifications are currently off."
+            );
+        }
+
+
+        async function saveSubscription(
+            installationId
+        ) {
+
+            const response =
+                await fetch(
+                    "/notifications/subscribe-public",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                        },
+
+                        body:
+                            JSON.stringify(
+                                {
+                                    installation_id:
+                                        installationId,
+
+                                    home_area:
+                                        homeAreaInput.value.trim(),
+                                }
+                            ),
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                !response.ok
+                || !result.ok
+            ) {
+
+                throw new Error(
+                    result.error
+                    || "Unable to save notification preference."
+                );
+            }
+
+
+            currentInstallationId =
+                installationId;
+
+
+            localStorage.setItem(
+                "kalxa_firebase_installation_id",
+                installationId
+            );
+
+
+                    localStorage.setItem(
+                        "kalxa_notification_home_area",
+                        homeAreaInput.value.trim()
+                    );
+
+
+            localStorage.setItem(
+                "kalxa_notifications_enabled",
+                "true"
+            );
+
+
+            setEnabledUi({
+                showConfirmation: true,
+            });
+        }
+
+
+        async function initializeMessaging() {
+            const supported =
+                await isSupported();
+
+            if (!supported) {
+                enableButton.disabled = true;
+
+                setStatus(
+                    "Push notifications are not supported by this browser.",
+                    "error"
+                );
+
+                return false;
+            }
+
+            const firebaseApp =
+                initializeApp(
+                    firebaseConfig
+                );
+
+            messaging =
+                getMessaging(
+                    firebaseApp
+                );
+
+            onRegistered(
+                messaging,
+                async (
+                    installationId
+                ) => {
+                    try {
+                        await saveSubscription(
+                            installationId
+                        );
+                    } catch (error) {
+                        console.error(
+                            error
+                        );
+
+                        setStatus(
+                            error.message,
+                            "error"
+                        );
+                    }
+                }
+            );
+
+            onUnregistered(
+                messaging,
+                async (
+                    installationId
+                ) => {
+                    try {
+                        await fetch(
+                            "/notifications/unsubscribe-public",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            installation_id:
+                                                installationId,
+                                        }
+                                    ),
+                            }
+                        );
+                    } catch (error) {
+                        console.error(
+                            error
+                        );
+                    }
+
+                    localStorage.removeItem(
+                        "kalxa_firebase_installation_id"
+                    );
+
+                    localStorage.removeItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+                    currentInstallationId =
+                        null;
+
+                    setDisabledUi();
+                }
+            );
+
+            return true;
+        }
+
+
+        enableButton.addEventListener(
+            "click",
+            async () => {
+                enableButton.disabled =
+                    true;
+
+                setStatus(
+                    "Requesting notification permission..."
+                );
+
+                try {
+
+                    const homeArea =
+                        homeAreaInput.value.trim();
+
+
+                    if (!homeArea) {
+
+                        throw new Error(
+                            "Enter your area or town before enabling notifications."
+                        );
+                    }
+
+
+                    const initialized =
+                        (
+                            messaging
+                            || await initializeMessaging()
+                        );
+
+                    if (!initialized) {
+                        return;
+                    }
+
+                    const permission =
+                        await Notification.requestPermission();
+
+                    if (
+                        permission
+                        !== "granted"
+                    ) {
+                        throw new Error(
+                            "Notification permission was not granted."
+                        );
+                    }
+
+                    const serviceWorkerRegistration =
+                        await navigator.serviceWorker.register(
+                            "/firebase-messaging-sw.js",
+                            {
+                                scope:
+                                    "/",
+                            }
+                        );
+
+                    await registerMessaging(
+                        messaging,
+                        {
+                            vapidKey:
+                                vapidKey,
+
+                            serviceWorkerRegistration:
+                                serviceWorkerRegistration,
+                        }
+                    );
+
+                    setStatus(
+                        "Finishing notification setup..."
+                    );
+
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+
+                    setStatus(
+                        error.message
+                        || "Unable to enable notifications.",
+                        "error"
+                    );
+
+                } finally {
+                    enableButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        async function turnOffNotifications() {
+            disableButton.disabled = true;
+            if (bottomDisableButton) {
+                bottomDisableButton.disabled = true;
+            }
+
+            try {
+                if (!messaging) {
+                    await initializeMessaging();
+                }
+
+                if (messaging) {
+                    await unregisterMessaging(messaging);
+                }
+
+                if (currentInstallationId) {
+                    await fetch(
+                        "/notifications/unsubscribe-public",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                installation_id: currentInstallationId,
+                            }),
+                        }
+                    );
+                }
+
+                localStorage.removeItem(
+                    "kalxa_firebase_installation_id"
+                );
+                localStorage.removeItem(
+                    "kalxa_notifications_enabled"
+                );
+
+                currentInstallationId = null;
+                setDisabledUi();
+
+            } catch (error) {
+                console.error(error);
+                restoreNotificationCard();
+                hideBottomNotificationControl();
+                setStatus(
+                    error.message || "Unable to turn notifications off.",
+                    "error"
+                );
+            } finally {
+                disableButton.disabled = false;
+                if (bottomDisableButton) {
+                    bottomDisableButton.disabled = false;
+                }
+            }
+        }
+
+        disableButton.addEventListener(
+            "click",
+            turnOffNotifications
+        );
+
+        if (bottomDisableButton) {
+            bottomDisableButton.addEventListener(
+                "click",
+                turnOffNotifications
+            );
+        }
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            async () => {
+                const enabled =
+                    localStorage.getItem(
+                        "kalxa_notifications_enabled"
+                    );
+
+                if (
+                    enabled === "true"
+                    && currentInstallationId
+                ) {
+                    setEnabledUi({
+                        showConfirmation: false,
+                    });
+                } else {
+                    setDisabledUi();
+                }
+
+                try {
+                    await initializeMessaging();
+                } catch (error) {
+                    console.error(
+                        error
+                    );
+                }
+            }
+        );
+
+    </script>
+
+{% endif %}
+
+{% if event and (event.poster_image_mimetype or event.image_url) %}
+
+    <div
+        class="poster-modal"
+        id="poster-modal"
+        aria-hidden="true"
+    >
+
+        <button
+            type="button"
+            class="poster-modal-close"
+            id="close-poster"
+            aria-label="Close event poster"
+        >
+            ×
+        </button>
+
+        <img
+            src="{{
+        url_for(
+            'event_poster',
+            event_id=event.id
+        )
+        if event.poster_image_mimetype
+        else event.image_url
+    }}"
+            alt="{{ event.title }} event poster"
+            class="poster-modal-image"
+        >
+
+    </div>
+
+
+    <script>
+
+        const openPoster =
+            document.getElementById(
+                "open-poster"
+            );
+
+        const closePoster =
+            document.getElementById(
+                "close-poster"
+            );
+
+        const posterModal =
+            document.getElementById(
+                "poster-modal"
+            );
+
+
+        function showPoster() {
+
+            if (!posterModal) {
+                return;
+            }
+
+            posterModal.classList.add(
+                "open"
+            );
+
+            posterModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            document.body.style.overflow =
+                "hidden";
+        }
+
+
+        function hidePoster() {
+
+            if (!posterModal) {
+                return;
+            }
+
+            posterModal.classList.remove(
+                "open"
+            );
+
+            posterModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.style.overflow =
+                "";
+        }
+
+
+        if (openPoster) {
+
+            openPoster.addEventListener(
+                "click",
+                showPoster
+            );
+        }
+
+
+        if (closePoster) {
+
+            closePoster.addEventListener(
+                "click",
+                hidePoster
+            );
+        }
+
+
+        if (posterModal) {
+
+            posterModal.addEventListener(
+                "click",
+                function (event) {
+
+                    if (
+                        event.target
+                        === posterModal
+                    ) {
+
+                        hidePoster();
+                    }
+                }
+            );
+        }
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key
+                    === "Escape"
+                ) {
+
+                    hidePoster();
+                }
+            }
+        );
+
+    </script>
+
+{% endif %}
+
+
+{% if not event and reels %}
+<!-- =========================================
+     SEE THE VIBE — FULL REEL VIEWER
+========================================== -->
+<div
+    class="vibe-modal"
+    id="vibe-modal"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Event reel viewer"
+>
+    <div class="vibe-modal-shell">
+        <button
+            type="button"
+            class="vibe-modal-close"
+            id="vibe-modal-close"
+            aria-label="Close reel"
+        >
+            ×
+        </button>
+
+        <video
+            class="vibe-modal-video"
+            id="vibe-modal-video"
+            playsinline
+            loop
+            preload="metadata"
+            controlslist="nodownload noremoteplayback"
+            disablepictureinpicture
+            oncontextmenu="return false;"
+        ></video>
+
+        <button
+            type="button"
+            class="vibe-modal-sound"
+            id="vibe-modal-sound"
+            aria-label="Mute reel"
+        >
+            🔊
+        </button>
+
+        <div class="vibe-modal-info">
+            <p
+                class="vibe-modal-title"
+                id="vibe-modal-title"
+            ></p>
+
+            <a
+                href="#"
+                class="vibe-modal-link"
+                id="vibe-modal-link"
+            >
+                View event →
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<div
+    class="pwa-install-card"
+    id="pwa-install-card"
+    aria-live="polite"
+>
+
+    <div
+        class="pwa-install-title"
+        id="pwa-install-title"
+    >
+        Install Kalxa
+    </div>
+
+    <p
+        class="pwa-install-copy"
+        id="pwa-install-copy"
+    >
+        Add Kalxa to your phone for faster access
+        and event notifications.
+    </p>
+
+    <div
+        class="pwa-install-actions"
+        id="pwa-install-actions"
+    >
+
+        <button
+            type="button"
+            class="pwa-install-button"
+            id="pwa-install-button"
+        >
+            Install Kalxa
+        </button>
+
+        <button
+            type="button"
+            class="pwa-install-dismiss"
+            id="pwa-install-dismiss"
+        >
+            Not now
+        </button>
+
+    </div>
+
+    <ol
+        class="pwa-ios-steps"
+        id="pwa-ios-steps"
+        hidden
+    >
+        <li>
+            Tap the Share button in Safari.
+        </li>
+
+        <li>
+            Choose “Add to Home Screen”.
+        </li>
+
+        <li>
+            Open Kalxa from your new Home Screen icon.
+        </li>
+
+        <li>
+            Then enable Kalxa notifications.
+        </li>
+    </ol>
+
+</div>
+
+
+<script>
+
+    (() => {
+
+        const card =
+            document.getElementById(
+                "pwa-install-card"
+            );
+
+        const installButton =
+            document.getElementById(
+                "pwa-install-button"
+            );
+
+        const dismissButton =
+            document.getElementById(
+                "pwa-install-dismiss"
+            );
+
+        const title =
+            document.getElementById(
+                "pwa-install-title"
+            );
+
+        const copy =
+            document.getElementById(
+                "pwa-install-copy"
+            );
+
+        const iosSteps =
+            document.getElementById(
+                "pwa-ios-steps"
+            );
+
+
+        if (
+            !card
+            ||
+            !installButton
+            ||
+            !dismissButton
+        ) {
+            return;
+        }
+
+
+        // ====================================================
+        // ALREADY INSTALLED?
+        // ====================================================
+
+        const isStandalone =
+            window.matchMedia(
+                "(display-mode: standalone)"
+            ).matches
+            ||
+            window.navigator.standalone
+            === true;
+
+
+        if (isStandalone) {
+            return;
+        }
+
+
+        const dismissed =
+            localStorage.getItem(
+                "kalxa_pwa_install_dismissed"
+            );
+
+
+        if (
+            dismissed
+            === "true"
+        ) {
+            return;
+        }
+
+
+        // ====================================================
+        // DEVICE / BROWSER
+        // ====================================================
+
+        const userAgent =
+            (
+                window.navigator.userAgent
+                || ""
+            ).toLowerCase();
+
+
+        const isIos =
+            /iphone|ipad|ipod/.test(
+                userAgent
+            );
+
+
+        const isAndroid =
+            /android/.test(
+                userAgent
+            );
+
+
+        const isEdge =
+            /edg\//.test(
+                userAgent
+            );
+
+
+        const isChrome =
+            /chrome\//.test(
+                userAgent
+            )
+            &&
+            !isEdge;
+
+
+        let deferredPrompt =
+            null;
+
+
+        // ====================================================
+        // SHOW INSTALL CARD
+        //
+        // IMPORTANT:
+        // Do NOT wait for beforeinstallprompt.
+        //
+        // The browser owns that event and may choose not to
+        // dispatch it. Kalxa should still show its own install
+        // call-to-action.
+        // ====================================================
+
+        function showCard() {
+
+            card.classList.add(
+                "show"
+            );
+        }
+
+
+        // ====================================================
+        // IOS INSTRUCTIONS
+        // ====================================================
+
+        function showIosInstructions() {
+
+            title.textContent =
+                "Add Kalxa to your iPhone";
+
+            copy.textContent =
+                (
+                    "Install Kalxa from your browser "
+                    + "before enabling push notifications."
+                );
+
+            installButton.hidden =
+                true;
+
+            iosSteps.hidden =
+                false;
+
+            showCard();
+        }
+
+
+        // ====================================================
+        // MANUAL FALLBACK
+        // ====================================================
+
+        function showManualInstallSteps() {
+
+            title.textContent =
+                "Install Kalxa";
+
+            installButton.hidden =
+                true;
+
+
+            if (isEdge) {
+
+                copy.innerHTML =
+                    (
+                        "In Edge, open <strong>⋯</strong> "
+                        + "→ <strong>Apps</strong> "
+                        + "→ <strong>Install this site as an app</strong>."
+                    );
+
+            } else if (
+                isChrome
+                &&
+                !isAndroid
+            ) {
+
+                copy.innerHTML =
+                    (
+                        "In Chrome, open <strong>⋮</strong> "
+                        + "and choose <strong>Install page as app</strong> "
+                        + "or <strong>Save and share → Install page as app</strong>."
+                    );
+
+            } else if (isAndroid) {
+
+                copy.innerHTML =
+                    (
+                        "Open your browser menu <strong>⋮</strong> "
+                        + "and choose <strong>Install app</strong> "
+                        + "or <strong>Add to Home screen</strong>."
+                    );
+
+            } else {
+
+                copy.innerHTML =
+                    (
+                        "Open your browser menu and choose "
+                        + "<strong>Install app</strong> or "
+                        + "<strong>Add to Home Screen</strong>."
+                    );
+            }
+
+
+            showCard();
+        }
+
+
+        // ====================================================
+        // CAPTURE NATIVE INSTALL PROMPT WHEN AVAILABLE
+        // ====================================================
+
+        window.addEventListener(
+            "beforeinstallprompt",
+            (event) => {
+
+                event.preventDefault();
+
+                deferredPrompt =
+                    event;
+
+                installButton.hidden =
+                    false;
+
+                installButton.textContent =
+                    "Install Kalxa";
+
+                showCard();
+            }
+        );
+
+
+        // ====================================================
+        // ALWAYS SHOW KALXA CTA
+        // ====================================================
+
+        window.setTimeout(
+            () => {
+
+                if (isIos) {
+
+                    showIosInstructions();
+
+                } else {
+
+                    showCard();
+                }
+            },
+            700
+        );
+
+
+        // ====================================================
+        // INSTALL BUTTON
+        // ====================================================
+
+        installButton.addEventListener(
+            "click",
+            async () => {
+
+                if (
+                    deferredPrompt
+                ) {
+
+                    deferredPrompt.prompt();
+
+
+                    try {
+
+                        const choice =
+                            await deferredPrompt.userChoice;
+
+                        console.log(
+                            "[Kalxa PWA] Install choice:",
+                            choice.outcome
+                        );
+
+                    } finally {
+
+                        deferredPrompt =
+                            null;
+                    }
+
+
+                    return;
+                }
+
+
+                // Browser did not provide a native prompt.
+                // Show manual steps instead of doing nothing.
+                showManualInstallSteps();
+            }
+        );
+
+
+        // ====================================================
+        // DISMISS
+        // ====================================================
+
+        dismissButton.addEventListener(
+            "click",
+            () => {
+
+                localStorage.setItem(
+                    "kalxa_pwa_install_dismissed",
+                    "true"
+                );
+
+                card.classList.remove(
+                    "show"
+                );
+            }
+        );
+
+
+        // ====================================================
+        // INSTALL COMPLETE
+        // ====================================================
+
+        window.addEventListener(
+            "appinstalled",
+            () => {
+
+                localStorage.removeItem(
+                    "kalxa_pwa_install_dismissed"
+                );
+
+                card.classList.remove(
+                    "show"
+                );
+
+                console.log(
+                    "[Kalxa PWA] Installed successfully."
+                );
+            }
+        );
+
+    })();
+
+</script>
+
+
+
+<script>
+
+    // ========================================================
+    // KALXA PWA SERVICE WORKER REGISTRATION
+    // ========================================================
+    //
+    // Register on every public attendee page, not only after
+    // the attendee enables notifications.
+    //
+    // This allows Chrome / Edge to detect the page as an
+    // installable PWA before notification permission is used.
+    // ========================================================
+
+    if (
+        "serviceWorker"
+        in navigator
+    ) {
+
+        window.addEventListener(
+            "load",
+            async () => {
+
+                try {
+
+                    const registration =
+                        await navigator.serviceWorker.register(
+                            "/firebase-messaging-sw.js",
+                            {
+                                scope:
+                                    "/",
+                            }
+                        );
+
+
+                    // Explicitly ask the browser to check for
+                    // the newly deployed worker.
+                    await registration.update();
+
+
+                    console.log(
+                        "[Kalxa PWA] Service worker registered.",
+                        registration.scope
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "[Kalxa PWA] Service worker registration failed.",
+                        error
+                    );
+                }
+            }
+        );
+    }
+
+</script>
+
+
+
+<script>
+document.querySelectorAll(
+    "[data-featured-carousel]"
+).forEach((carousel) => {
+
+    const track =
+        carousel.querySelector(
+            "[data-featured-track]"
+        );
+
+    const slides = Array.from(
+        carousel.querySelectorAll(
+            "[data-featured-slide]"
+        )
+    );
+
+    const dots = Array.from(
+        carousel.querySelectorAll(
+            "[data-featured-dot]"
+        )
+    );
+
+    if (!track || slides.length < 2) {
+        return;
+    }
+
+    const updateDots = () => {
+
+        const width =
+            track.clientWidth
+            || 1;
+
+        const index = Math.max(
+            0,
+            Math.min(
+                slides.length - 1,
+                Math.round(
+                    track.scrollLeft
+                    / width
+                )
+            )
+        );
+
+        dots.forEach(
+            (dot, dotIndex) => {
+                dot.classList.toggle(
+                    "active",
+                    dotIndex === index
+                );
+            }
+        );
+    };
+
+    let ticking = false;
+
+    track.addEventListener(
+        "scroll",
+        () => {
+
+            if (ticking) {
+                return;
+            }
+
+            ticking = true;
+
+            requestAnimationFrame(
+                () => {
+                    updateDots();
+                    ticking = false;
+                }
+            );
+        },
+        { passive: true }
+    );
+
+    dots.forEach(
+        (dot, index) => {
+
+            dot.addEventListener(
+                "click",
+                () => {
+
+                    track.scrollTo({
+                        left:
+                            track.clientWidth
+                            * index,
+                        behavior:
+                            "smooth"
+                    });
+
+                }
+            );
+
+        }
+    );
+
+});
+</script>
+
+
+<script>
+(() => {
+    const search = document.getElementById('event-search');
+    const clear = document.getElementById('clear-search');
+    const chips = Array.from(document.querySelectorAll('[data-filter]'));
+    const resultCount = document.getElementById('results-count');
+    const noResults = document.getElementById('no-results');
+    let activeFilter = 'all';
+
+    const saDate = (date, time='00:00:00') =>
+        date ? new Date(`${date}T${time}+02:00`) : null;
+
+    const now = () => new Date();
+
+    function southAfricaTodayString() {
+        const parts = new Intl.DateTimeFormat(
+            'en-CA',
+            {
+                timeZone: 'Africa/Johannesburg',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }
+        ).formatToParts(new Date());
+
+        const values = {};
+        parts.forEach((part) => {
+            if (part.type !== 'literal') {
+                values[part.type] = part.value;
+            }
+        });
+
+        return `${values.year}-${values.month}-${values.day}`;
+    }
+
+    const todaySA = southAfricaTodayString();
+
+    function isExpiredDate(dateString) {
+        return Boolean(
+            dateString
+            && dateString < todaySA
+        );
+    }
+
+    /* ========================================================
+       REMOVE EXPIRED EVENTS FROM THE MAIN PAGE
+       --------------------------------------------------------
+       The event stays visible for its entire event date.
+       It disappears when the Johannesburg calendar moves
+       to the following day.
+    ======================================================== */
+
+    const expiredEventHrefs = new Set();
+
+    document.querySelectorAll(
+        '#premium-event-grid .premium-event-card[data-date]'
+    ).forEach((card) => {
+        if (!isExpiredDate(card.dataset.date)) {
+            return;
+        }
+
+        const link = card.querySelector('.poster-link');
+        const href = link?.getAttribute('href');
+
+        if (href) {
+            expiredEventHrefs.add(href);
+        }
+
+        card.remove();
+    });
+
+    document.querySelectorAll(
+        '.featured-hero-card[data-date]'
+    ).forEach((card) => {
+        if (isExpiredDate(card.dataset.date)) {
+            card.remove();
+        }
+    });
+
+    if (expiredEventHrefs.size) {
+        document.querySelectorAll(
+            'a.rail-card, a.micro-card'
+        ).forEach((card) => {
+            const href = card.getAttribute('href');
+            if (expiredEventHrefs.has(href)) {
+                card.remove();
+            }
+        });
+    }
+
+    const featuredShell = document.querySelector('.featured-shell');
+    if (
+        featuredShell
+        && !featuredShell.querySelector('.featured-hero-card')
+    ) {
+        featuredShell.hidden = true;
+    }
+
+    [
+        document.getElementById('soon-section'),
+        document.getElementById('earlybird-section'),
+        document.getElementById('around-you-section')
+    ].forEach((section) => {
+        if (!section) {
+            return;
+        }
+
+        const rail = section.querySelector('.event-rail');
+        if (
+            rail
+            && !rail.querySelector('.rail-card, .micro-card')
+        ) {
+            section.hidden = true;
+        }
+    });
+
+    const cards = Array.from(
+        document.querySelectorAll(
+            '#premium-event-grid .event-searchable'
+        )
+    );
+
+    const isSameSADay = (a, b) => {
+        const fmt = new Intl.DateTimeFormat(
+            'en-ZA',
+            {
+                timeZone: 'Africa/Johannesburg',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }
+        );
+        return fmt.format(a) === fmt.format(b);
+    };
+
+    const isThisWeekend = (d) => {
+        if (!d) return false;
+
+        const n = now();
+        const saNow = new Date(
+            n.toLocaleString(
+                'en-US',
+                { timeZone: 'Africa/Johannesburg' }
+            )
+        );
+
+        const day = saNow.getDay();
+        const daysToSat = (6 - day + 7) % 7;
+        const sat = new Date(saNow);
+        sat.setHours(0, 0, 0, 0);
+        sat.setDate(saNow.getDate() + daysToSat);
+
+        const mon = new Date(sat);
+        mon.setDate(sat.getDate() + 2);
+
+        return d >= sat && d < mon;
+    };
+
+    function matchesFilter(card) {
+        const d = saDate(
+            card.dataset.date,
+            card.dataset.time
+        );
+
+        if (activeFilter === 'today') {
+            return d && isSameSADay(d, now());
+        }
+
+        if (activeFilter === 'weekend') {
+            return isThisWeekend(d);
+        }
+
+        if (activeFilter === 'earlybird') {
+            return card.dataset.earlybird === 'true';
+        }
+
+        if (activeFilter === 'sellingfast') {
+            return card.dataset.sellingfast === 'true';
+        }
+
+        return true;
+    }
+
+    function applyFilters() {
+        const q = (
+            search?.value || ''
+        ).trim().toLowerCase();
+
+        let shown = 0;
+
+        cards.forEach((card) => {
+            const haystack = `${card.dataset.title || ''} ${card.dataset.venue || ''} ${card.dataset.organizer || ''}`;
+
+            const visible =
+                (!q || haystack.includes(q))
+                && matchesFilter(card);
+
+            card.hidden = !visible;
+
+            if (visible) {
+                shown += 1;
+            }
+        });
+
+        if (resultCount) {
+            resultCount.textContent = `${shown} event${shown === 1 ? '' : 's'}`;
+        }
+
+        if (noResults) {
+            noResults.hidden = shown !== 0;
+        }
+
+        if (clear) {
+            clear.hidden = !q;
+        }
+    }
+
+    search?.addEventListener(
+        'input',
+        applyFilters
+    );
+
+    clear?.addEventListener(
+        'click',
+        () => {
+            search.value = '';
+            search.focus();
+            applyFilters();
+        }
+    );
+
+    document.getElementById('focus-search')?.addEventListener(
+        'click',
+        () => search?.focus()
+    );
+
+    chips.forEach((chip) => {
+        chip.addEventListener(
+            'click',
+            () => {
+                activeFilter = chip.dataset.filter;
+
+                chips.forEach((c) => {
+                    c.classList.toggle(
+                        'active',
+                        c === chip
+                    );
+                });
+
+                applyFilters();
+
+                document.getElementById(
+                    'discover-grid'
+                )?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        );
+    });
+
+    document.querySelectorAll(
+        '[data-scroll-target]'
+    ).forEach((btn) => {
+        btn.addEventListener(
+            'click',
+            () => document.getElementById(
+                btn.dataset.scrollTarget
+            )?.scrollIntoView({
+                behavior: 'smooth'
+            })
+        );
+    });
+
+    function updateCountdown(el) {
+        const card = el.closest('[data-date]');
+        const date = el.dataset.date || card?.dataset.date;
+        const time = el.dataset.time || card?.dataset.time || '00:00:00';
+        const start = saDate(date, time);
+
+        if (!start) {
+            return;
+        }
+
+        const diff = start - now();
+        const hours = diff / 3600000;
+        const days = Math.ceil(diff / 86400000);
+
+        if (diff <= 0 && diff > -6 * 3600000) {
+            el.textContent = '🔴 HAPPENING NOW';
+        } else if (diff <= -6 * 3600000) {
+            el.textContent = 'TODAY';
+        } else if (hours <= 8) {
+            el.textContent = '🔥 TONIGHT';
+        } else if (days === 1) {
+            el.textContent = 'TOMORROW';
+        } else if (days > 1 && days <= 7) {
+            el.textContent = `${days} DAYS TO GO`;
+        } else {
+            el.textContent = new Intl.DateTimeFormat(
+                'en-ZA',
+                {
+                    day: '2-digit',
+                    month: 'short',
+                    timeZone: 'Africa/Johannesburg'
+                }
+            ).format(start).toUpperCase();
+        }
+    }
+
+    document.querySelectorAll(
+        '.event-countdown'
+    ).forEach(updateCountdown);
+
+    setInterval(
+        () => document.querySelectorAll(
+            '.event-countdown'
+        ).forEach(updateCountdown),
+        60000
+    );
+
+    applyFilters();
+})();
+</script>
+
+<script>
+(() => {
+    const reelCards = Array.from(
+        document.querySelectorAll('[data-vibe-reel]')
+    );
+
+    const reelVideos = reelCards
+        .map((card) => card.querySelector('.vibe-card-video'))
+        .filter(Boolean);
+
+    if (!reelVideos.length) {
+        return;
+    }
+
+    const modal = document.getElementById('vibe-modal');
+    const modalVideo = document.getElementById('vibe-modal-video');
+    const modalClose = document.getElementById('vibe-modal-close');
+    const modalSound = document.getElementById('vibe-modal-sound');
+    const modalTitle = document.getElementById('vibe-modal-title');
+    const modalLink = document.getElementById('vibe-modal-link');
+
+    let activeVideo = null;
+    let lastTrigger = null;
+    let currentModalReelId = null;
+    let modalHalfTracked = false;
+
+    /* ========================================================
+       ANONYMOUS REEL ANALYTICS
+    ======================================================== */
+
+    function getKalxaReelSessionId() {
+        const storageKey = 'kalxa_reel_analytics_session';
+        let sessionId = sessionStorage.getItem(storageKey);
+
+        if (!sessionId) {
+            if (
+                window.crypto
+                && typeof window.crypto.randomUUID === 'function'
+            ) {
+                sessionId = window.crypto.randomUUID();
+            } else {
+                sessionId = (
+                    Date.now().toString(36)
+                    + '-'
+                    + Math.random().toString(36).slice(2)
+                );
+            }
+
+            sessionStorage.setItem(storageKey, sessionId);
+        }
+
+        return sessionId;
+    }
+
+    const kalxaReelSessionId = getKalxaReelSessionId();
+
+    function trackReelAnalytics(reelId, eventType) {
+        const numericReelId = Number(reelId);
+
+        if (
+            !Number.isInteger(numericReelId)
+            || numericReelId <= 0
+            || !eventType
+        ) {
+            return;
+        }
+
+        fetch(
+            '/analytics/reels/track',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                keepalive: true,
+                body: JSON.stringify({
+                    reel_id: numericReelId,
+                    event_type: eventType,
+                    session_id: kalxaReelSessionId
+                })
+            }
+        ).catch(() => {
+            /* Analytics must never break the attendee experience. */
+        });
+    }
+
+    function cardForVideo(video) {
+        return video?.closest('[data-vibe-reel]');
+    }
+
+    function soundButtonFor(video) {
+        return cardForVideo(video)?.querySelector('.vibe-sound-toggle');
+    }
+
+    function setMuted(video, muted) {
+        video.muted = muted;
+        const button = soundButtonFor(video);
+
+        if (button) {
+            button.textContent = muted ? '🔇' : '🔊';
+            button.setAttribute(
+                'aria-label',
+                muted ? 'Turn sound on' : 'Mute video'
+            );
+        }
+    }
+
+    function pauseAllInlineReels() {
+        reelVideos.forEach((video) => {
+            video.pause();
+            setMuted(video, true);
+        });
+        activeVideo = null;
+    }
+
+    function pauseOtherReels(video) {
+        reelVideos.forEach((otherVideo) => {
+            if (otherVideo !== video) {
+                otherVideo.pause();
+                setMuted(otherVideo, true);
+            }
+        });
+    }
+
+    function playMuted(video) {
+        if (!video || modal?.classList.contains('open')) {
+            return;
+        }
+
+        pauseOtherReels(video);
+        setMuted(video, true);
+        activeVideo = video;
+        video.play().catch(() => {});
+    }
+
+    function openReel(card) {
+        if (!card || !modal || !modalVideo) {
+            return;
+        }
+
+        const inlineVideo = card.querySelector('.vibe-card-video');
+        const source = inlineVideo?.querySelector('source');
+        const videoUrl = source?.src || source?.getAttribute('src');
+        const reelId = card.dataset.reelId;
+
+        if (!videoUrl) {
+            return;
+        }
+
+        lastTrigger = card;
+        currentModalReelId = reelId;
+        modalHalfTracked = false;
+
+        trackReelAnalytics(reelId, 'open');
+        pauseAllInlineReels();
+
+        modalVideo.pause();
+        modalVideo.src = videoUrl;
+        modalVideo.currentTime = 0;
+
+        const poster = inlineVideo.getAttribute('poster');
+        if (poster) {
+            modalVideo.poster = poster;
+        } else {
+            modalVideo.removeAttribute('poster');
+        }
+
+        modalVideo.muted = false;
+
+        if (modalSound) {
+            modalSound.textContent = '🔊';
+            modalSound.setAttribute('aria-label', 'Mute reel');
+        }
+
+        if (modalTitle) {
+            modalTitle.textContent =
+                card.querySelector('.vibe-card-copy strong')
+                    ?.textContent
+                    ?.trim()
+                || 'Kalxa Event';
+        }
+
+        if (modalLink) {
+            const eventLink = card.querySelector('.vibe-card-event-link');
+            modalLink.href = eventLink?.href || '#';
+            modalLink.dataset.reelId = reelId || '';
+        }
+
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+
+        modalVideo.play().catch(() => {
+            modalVideo.muted = true;
+
+            if (modalSound) {
+                modalSound.textContent = '🔇';
+                modalSound.setAttribute('aria-label', 'Turn sound on');
+            }
+
+            modalVideo.play().catch(() => {});
+        });
+    }
+
+    function closeReel() {
+        if (!modal || !modalVideo) {
+            return;
+        }
+
+        modalVideo.pause();
+        modalVideo.removeAttribute('src');
+        modalVideo.removeAttribute('poster');
+        modalVideo.load();
+
+        currentModalReelId = null;
+        modalHalfTracked = false;
+
+        if (modalLink) {
+            modalLink.removeAttribute('data-reel-id');
+        }
+
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+
+        if (lastTrigger) {
+            lastTrigger.focus?.({ preventScroll: true });
+        }
+
+        const firstVisibleVideo = reelVideos.find((video) => {
+            const rect = video.getBoundingClientRect();
+            return (
+                rect.bottom > 0
+                && rect.top < window.innerHeight
+                && rect.right > 0
+                && rect.left < window.innerWidth
+            );
+        });
+
+        if (firstVisibleVideo) {
+            playMuted(firstVisibleVideo);
+        }
+    }
+
+    /* Count a reel impression once it is at least 60% visible. */
+    const reelImpressionObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting || entry.intersectionRatio < 0.60) {
+                    return;
+                }
+
+                trackReelAnalytics(
+                    entry.target.dataset.reelId,
+                    'impression'
+                );
+
+                reelImpressionObserver.unobserve(entry.target);
+            });
+        },
+        { threshold: [0, 0.60, 1] }
+    );
+
+    reelCards.forEach((card) => {
+        reelImpressionObserver.observe(card);
+    });
+
+    reelCards.forEach((card) => {
+        const video = card.querySelector('.vibe-card-video');
+        const soundButton = card.querySelector('.vibe-sound-toggle');
+        const eventLink = card.querySelector('.vibe-card-event-link');
+        const reelId = card.dataset.reelId;
+
+        if (video) {
+            setMuted(video, true);
+
+            video.addEventListener('play', () => {
+                trackReelAnalytics(reelId, 'play');
+            });
+
+            video.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                openReel(card);
+            });
+
+            video.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+            });
+        }
+
+        card.addEventListener('click', (event) => {
+            if (
+                event.target.closest('.vibe-sound-toggle')
+                || event.target.closest('.vibe-card-event-link')
+            ) {
+                return;
+            }
+
+            openReel(card);
+        });
+
+        soundButton?.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!video) {
+                return;
+            }
+
+            if (video.paused) {
+                pauseOtherReels(video);
+                activeVideo = video;
+                video.play().catch(() => {});
+            }
+
+            setMuted(video, !video.muted);
+        });
+
+        eventLink?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            trackReelAnalytics(reelId, 'view_event');
+        });
+    });
+
+    modalVideo?.addEventListener('play', () => {
+        if (currentModalReelId) {
+            trackReelAnalytics(currentModalReelId, 'play');
+        }
+    });
+
+    modalVideo?.addEventListener('timeupdate', () => {
+        if (
+            modalHalfTracked
+            || !currentModalReelId
+            || !modalVideo.duration
+            || !Number.isFinite(modalVideo.duration)
+        ) {
+            return;
+        }
+
+        if ((modalVideo.currentTime / modalVideo.duration) >= 0.50) {
+            modalHalfTracked = true;
+            trackReelAnalytics(currentModalReelId, 'half_watched');
+        }
+    });
+
+    modalVideo?.addEventListener('ended', () => {
+        if (currentModalReelId) {
+            trackReelAnalytics(currentModalReelId, 'completed');
+        }
+    });
+
+    modalLink?.addEventListener('click', () => {
+        const reelId = modalLink.dataset.reelId || currentModalReelId;
+        if (reelId) {
+            trackReelAnalytics(reelId, 'view_event');
+        }
+    });
+
+    modalClose?.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeReel();
+    });
+
+    modalSound?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!modalVideo) {
+            return;
+        }
+
+        modalVideo.muted = !modalVideo.muted;
+        modalSound.textContent = modalVideo.muted ? '🔇' : '🔊';
+        modalSound.setAttribute(
+            'aria-label',
+            modalVideo.muted ? 'Turn sound on' : 'Mute reel'
+        );
+
+        if (modalVideo.paused) {
+            modalVideo.play().catch(() => {});
+        }
+    });
+
+    modal?.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeReel();
+        }
+    });
+
+    modalVideo?.addEventListener('click', () => {
+        if (modalVideo.paused) {
+            modalVideo.play().catch(() => {});
+        } else {
+            modalVideo.pause();
+        }
+    });
+
+    modalVideo?.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal?.classList.contains('open')) {
+            closeReel();
+        }
+    });
+
+    const firstVideo = reelVideos[0];
+    playMuted(firstVideo);
+
+    const playbackObserver = new IntersectionObserver(
+        (entries) => {
+            if (modal?.classList.contains('open')) {
+                return;
+            }
+
+            const visibleEntries = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+            const bestEntry = visibleEntries[0];
+
+            if (
+                bestEntry
+                && bestEntry.intersectionRatio >= 0.65
+                && bestEntry.target !== activeVideo
+            ) {
+                playMuted(bestEntry.target);
+            }
+
+            entries.forEach((entry) => {
+                if (
+                    (!entry.isIntersecting || entry.intersectionRatio < 0.25)
+                    && entry.target === activeVideo
+                ) {
+                    entry.target.pause();
+                    setMuted(entry.target, true);
+                    activeVideo = null;
+                }
+            });
+        },
+        { threshold: [0, 0.25, 0.65, 1] }
+    );
+
+    reelVideos.forEach((video) => {
+        playbackObserver.observe(video);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            pauseAllInlineReels();
+            modalVideo?.pause();
+        } else if (modal?.classList.contains('open')) {
+            modalVideo?.play().catch(() => {});
+        } else if (firstVideo) {
+            playMuted(firstVideo);
+        }
+    });
+})();
+</script>
+
+</body>
+
+</html>
