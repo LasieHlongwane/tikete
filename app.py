@@ -133,7 +133,7 @@ cloudinary.config(
 
 
 EVENT_REEL_MAX_DURATION_SECONDS = 30
-EVENT_REEL_MAX_FILE_BYTES = 30 * 1024 * 1024
+EVENT_REEL_MAX_FILE_BYTES = 80 * 1024 * 1024
 
 EVENT_REEL_ALLOWED_EXTENSIONS = {
     "mp4",
@@ -10077,7 +10077,7 @@ def admin_event_reel(
             flash(
                 (
                     "The reel is too large. "
-                    "Maximum size is 30 MB."
+                    "Maximum size is 80 MB."
                 ),
                 "error",
             )
