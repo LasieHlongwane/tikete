@@ -930,6 +930,13 @@ class TicketEvent(db.Model):
         nullable=True,
         index=True,
     )
+    
+    reel = db.relationship(
+        "EventReel",
+        back_populates="event",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     notification_location_display = db.Column(
         db.String(500),
@@ -3430,4 +3437,117 @@ class KalxaBridgeTokenUse(db.Model):
             "<KalxaBridgeTokenUse "
             f"bridge_id={self.bridge_id} "
             f"organizer={self.kalxa_organizer_id}>"
+        )
+        
+        
+        
+        
+        
+# ============================================================
+# EVENT REEL
+# ============================================================
+
+class EventReel(db.Model):
+
+    __tablename__ = "event_reels"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    cloudinary_public_id = db.Column(
+        db.String(500),
+        nullable=False,
+        unique=True,
+    )
+
+    video_url = db.Column(
+        db.String(1200),
+        nullable=False,
+    )
+
+    thumbnail_url = db.Column(
+        db.String(1200),
+        nullable=True,
+    )
+
+    duration_seconds = db.Column(
+        db.Float,
+        nullable=False,
+    )
+
+    width = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    height = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    file_bytes = db.Column(
+        db.BigInteger,
+        nullable=True,
+    )
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    event = db.relationship(
+        "TicketEvent",
+        back_populates="reel",
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+    )
+
+    def __repr__(self):
+
+        return (
+            "<EventReel "
+            f"id={self.id} "
+            f"event_id={self.event_id} "
+            f"organizer_id={self.organizer_id}>"
         )
