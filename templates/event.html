@@ -2633,6 +2633,114 @@
             color: #166534 !important;
             font-weight: 900 !important;
         }
+
+
+        /* =====================================================
+           NOTIFICATION SUCCESS / AUTO-HIDE FLOW
+        ===================================================== */
+
+        #updates.notification-strip {
+            transition: opacity .28s ease, transform .28s ease, max-height .32s ease, margin .32s ease, padding .32s ease, border-width .32s ease;
+        }
+
+        #updates .notification-heading h3 {
+            margin: 0 !important;
+            color: #374151 !important;
+            font-size: 11px !important;
+            line-height: 1.2 !important;
+            font-weight: 950 !important;
+            letter-spacing: .06em !important;
+            text-align: center !important;
+        }
+
+        #updates.notification-strip.confirmation-only {
+            display: grid !important;
+            place-items: center !important;
+            min-height: 58px !important;
+            max-width: 680px !important;
+            padding: 14px !important;
+        }
+
+        #updates.notification-strip.confirmation-only .notification-heading,
+        #updates.notification-strip.confirmation-only #home-notification-area,
+        #updates.notification-strip.confirmation-only .notification-actions {
+            display: none !important;
+        }
+
+        #updates.notification-strip.confirmation-only .notification-form {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        #updates.notification-strip.confirmation-only .notification-status {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #166534 !important;
+            font-size: 13px !important;
+            line-height: 1.35 !important;
+            font-weight: 950 !important;
+            text-align: center !important;
+        }
+
+        #updates.notification-strip.notification-card-hidden {
+            opacity: 0 !important;
+            transform: translateY(-8px) !important;
+            max-height: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-width: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .bottom-notification-control {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 34px auto 10px;
+            padding: 12px 14px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            font-size: 11px;
+            font-weight: 750;
+        }
+
+        .bottom-notification-control[hidden] {
+            display: none !important;
+        }
+
+        .bottom-notification-off {
+            min-height: 34px;
+            padding: 7px 11px;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .bottom-notification-off:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        @media (max-width: 560px) {
+            .bottom-notification-control {
+                flex-direction: column;
+                gap: 7px;
+                margin-top: 26px;
+                padding-bottom: 78px;
+            }
+        }
 </style>
 
 </head>
@@ -2740,7 +2848,7 @@
                 <input
                     id="home-notification-area"
                     type="text"
-                    placeholder=" Enter Your Hometown(e.g KwaMhlanga) "
+                    placeholder="Enter Your Hometown(e.g KwaMhlanga)"
                     autocomplete="address-level2"
                 >
 
@@ -3296,8 +3404,11 @@
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
-                 
-                    <button type="button" class="text-button" data-scroll-target="discover-grid">Swipe →</button>
+                    <div>
+                        
+                        <h2>🔥 Later On</h2>
+                    </div>
+                    <button type="button" class="text-button" data-scroll-target="discover-grid">See all →</button>
                 </div>
 
                 <div class="event-rail">
@@ -3364,7 +3475,10 @@
 
             <section class="discovery-section" id="around-you-section">
                 <div class="section-heading">
-                 
+                    <div>
+                        <span class="section-kicker">LOCAL DISCOVERY</span>
+                        <h2>📍 Around You</h2>
+                    </div>
                     <span class="section-note">Current Kalxa listings</span>
                 </div>
                 <div class="event-rail">
@@ -3379,7 +3493,10 @@
 
             <section class="discovery-section discover-more" id="discover-grid">
                 <div class="section-heading">
-            
+                    <div>
+                        <span class="section-kicker">EXPLORE EVERYTHING</span>
+                        <h2>Discover More</h2>
+                    </div>
                     <span class="results-count" id="results-count">{{ events|length }} events</span>
                 </div>
 
@@ -3466,6 +3583,24 @@
     {% endif %}
 
 
+
+    {% if firebase_push_configured %}
+        <section
+            class="bottom-notification-control"
+            id="bottom-notification-control"
+            hidden
+        >
+            <span>🔔 Notifications enabled</span>
+            <button
+                type="button"
+                id="home-bottom-disable-notifications"
+                class="bottom-notification-off"
+            >
+                Turn off notifications
+            </button>
+        </section>
+    {% endif %}
+
 </div>
 
 
@@ -3522,6 +3657,23 @@
             document.getElementById(
                 "home-notification-status"
             );
+
+        const notificationCard =
+            document.getElementById(
+                "updates"
+            );
+
+        const bottomNotificationControl =
+            document.getElementById(
+                "bottom-notification-control"
+            );
+
+        const bottomDisableButton =
+            document.getElementById(
+                "home-bottom-disable-notifications"
+            );
+
+        let notificationHideTimer = null;
 
         const firebaseConfig =
             JSON.parse(
@@ -3580,19 +3732,83 @@
         }
 
 
-        function setEnabledUi() {
+        function clearNotificationHideTimer() {
+            if (notificationHideTimer) {
+                clearTimeout(notificationHideTimer);
+                notificationHideTimer = null;
+            }
+        }
+
+        function showBottomNotificationControl() {
+            if (bottomNotificationControl) {
+                bottomNotificationControl.hidden = false;
+            }
+        }
+
+        function hideBottomNotificationControl() {
+            if (bottomNotificationControl) {
+                bottomNotificationControl.hidden = true;
+            }
+        }
+
+        function hideNotificationCard() {
+            if (notificationCard) {
+                notificationCard.classList.add(
+                    "notification-card-hidden"
+                );
+            }
+            showBottomNotificationControl();
+        }
+
+        function restoreNotificationCard() {
+            clearNotificationHideTimer();
+            if (notificationCard) {
+                notificationCard.classList.remove(
+                    "confirmation-only",
+                    "notification-card-hidden"
+                );
+            }
+        }
+
+        function setEnabledUi({ showConfirmation = false } = {}) {
+            clearNotificationHideTimer();
+
             enableButton.hidden = true;
-            disableButton.hidden = false;
+            disableButton.hidden = true;
+
             setStatus(
                 "Notifications are enabled on this device.",
                 "success"
             );
+
+            hideBottomNotificationControl();
+
+            if (showConfirmation) {
+                if (notificationCard) {
+                    notificationCard.classList.remove(
+                        "notification-card-hidden"
+                    );
+                    notificationCard.classList.add(
+                        "confirmation-only"
+                    );
+                }
+
+                notificationHideTimer = window.setTimeout(
+                    () => {
+                        hideNotificationCard();
+                    },
+                    3000
+                );
+            } else {
+                hideNotificationCard();
+            }
         }
 
-
         function setDisabledUi() {
+            restoreNotificationCard();
             enableButton.hidden = false;
             disableButton.hidden = true;
+            hideBottomNotificationControl();
             setStatus(
                 "Notifications are currently off."
             );
@@ -3667,7 +3883,9 @@
             );
 
 
-            setEnabledUi();
+            setEnabledUi({
+                showConfirmation: true,
+            });
         }
 
 
@@ -3855,73 +4073,73 @@
         );
 
 
-        disableButton.addEventListener(
-            "click",
-            async () => {
-                disableButton.disabled =
-                    true;
+        async function turnOffNotifications() {
+            disableButton.disabled = true;
+            if (bottomDisableButton) {
+                bottomDisableButton.disabled = true;
+            }
 
-                try {
-                    if (!messaging) {
-                        await initializeMessaging();
-                    }
+            try {
+                if (!messaging) {
+                    await initializeMessaging();
+                }
 
-                    if (messaging) {
-                        await unregisterMessaging(
-                            messaging
-                        );
-                    }
+                if (messaging) {
+                    await unregisterMessaging(messaging);
+                }
 
-                    if (currentInstallationId) {
-                        await fetch(
-                            "/notifications/unsubscribe-public",
-                            {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type":
-                                        "application/json",
-                                },
-                                body:
-                                    JSON.stringify(
-                                        {
-                                            installation_id:
-                                                currentInstallationId,
-                                        }
-                                    ),
-                            }
-                        );
-                    }
-
-                    localStorage.removeItem(
-                        "kalxa_firebase_installation_id"
+                if (currentInstallationId) {
+                    await fetch(
+                        "/notifications/unsubscribe-public",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                installation_id: currentInstallationId,
+                            }),
+                        }
                     );
+                }
 
-                    localStorage.removeItem(
-                        "kalxa_notifications_enabled"
-                    );
+                localStorage.removeItem(
+                    "kalxa_firebase_installation_id"
+                );
+                localStorage.removeItem(
+                    "kalxa_notifications_enabled"
+                );
 
-                    currentInstallationId =
-                        null;
+                currentInstallationId = null;
+                setDisabledUi();
 
-                    setDisabledUi();
-
-                } catch (error) {
-                    console.error(
-                        error
-                    );
-
-                    setStatus(
-                        error.message
-                        || "Unable to turn notifications off.",
-                        "error"
-                    );
-
-                } finally {
-                    disableButton.disabled =
-                        false;
+            } catch (error) {
+                console.error(error);
+                restoreNotificationCard();
+                hideBottomNotificationControl();
+                setStatus(
+                    error.message || "Unable to turn notifications off.",
+                    "error"
+                );
+            } finally {
+                disableButton.disabled = false;
+                if (bottomDisableButton) {
+                    bottomDisableButton.disabled = false;
                 }
             }
+        }
+
+        disableButton.addEventListener(
+            "click",
+            turnOffNotifications
         );
+
+        if (bottomDisableButton) {
+            bottomDisableButton.addEventListener(
+                "click",
+                turnOffNotifications
+            );
+        }
 
 
         document.addEventListener(
@@ -3936,7 +4154,9 @@
                     enabled === "true"
                     && currentInstallationId
                 ) {
-                    setEnabledUi();
+                    setEnabledUi({
+                        showConfirmation: false,
+                    });
                 } else {
                     setDisabledUi();
                 }
