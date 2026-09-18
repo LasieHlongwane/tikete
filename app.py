@@ -10451,7 +10451,217 @@ def admin_delete_event_reel(
             event_id=event.id,
         )
     )   
- 
+
+
+# ============================================================
+# PUBLIC EVENT REEL ANALYTICS
+# ============================================================
+
+REEL_ANALYTICS_EVENT_TYPES = {
+    "impression",
+    "play",
+    "open",
+    "half_watched",
+    "completed",
+    "view_event",
+}
+
+
+@app.route(
+    "/analytics/reels/track",
+    methods=["POST"],
+)
+def track_event_reel():
+
+    payload = (
+        request.get_json(
+            silent=True,
+        )
+        or {}
+    )
+
+
+    # ========================================================
+    # INPUT
+    # ========================================================
+
+    reel_id = payload.get(
+        "reel_id"
+    )
+
+    event_type = (
+        str(
+            payload.get(
+                "event_type",
+                "",
+            )
+        )
+        .strip()
+        .lower()
+    )
+
+    anonymous_session_id = (
+        str(
+            payload.get(
+                "session_id",
+                "",
+            )
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # BASIC VALIDATION
+    # ========================================================
+
+    if not isinstance(
+        reel_id,
+        int,
+    ):
+        return {
+            "ok": False,
+            "error": "Invalid reel.",
+        }, 400
+
+
+    if (
+        event_type
+        not in REEL_ANALYTICS_EVENT_TYPES
+    ):
+        return {
+            "ok": False,
+            "error": "Invalid analytics event.",
+        }, 400
+
+
+    if (
+        not anonymous_session_id
+        or len(
+            anonymous_session_id
+        ) > 80
+    ):
+        return {
+            "ok": False,
+            "error": "Invalid analytics session.",
+        }, 400
+
+
+    # ========================================================
+    # FIND PUBLIC REEL
+    # ========================================================
+
+    reel = (
+        EventReel.query
+        .filter_by(
+            id=reel_id,
+            active=True,
+        )
+        .first()
+    )
+
+
+    if (
+        not reel
+        or not reel.event
+    ):
+        return {
+            "ok": False,
+        }, 404
+
+
+    event = reel.event
+
+
+    # ========================================================
+    # VERIFY EVENT IS PUBLIC
+    # ========================================================
+
+    today_sa = (
+        datetime.now(
+            ZoneInfo(
+                "Africa/Johannesburg"
+            )
+        )
+        .date()
+    )
+
+
+    if (
+        not event.active
+        or event.status != "published"
+        or event.organizer_deleted
+        or (
+            event.event_date
+            and event.event_date
+            < today_sa
+        )
+    ):
+        return {
+            "ok": False,
+        }, 404
+
+
+    # ========================================================
+    # RECORD ANONYMOUS ANALYTICS
+    # ========================================================
+
+    analytics_event = (
+        EventReelAnalytics(
+            reel_id=reel.id,
+            event_id=event.id,
+            organizer_id=reel.organizer_id,
+            event_type=event_type,
+            anonymous_session_id=(
+                anonymous_session_id
+            ),
+        )
+    )
+
+
+    try:
+
+        db.session.add(
+            analytics_event
+        )
+
+        db.session.commit()
+
+
+    except IntegrityError:
+
+        # Same session already generated this exact
+        # analytics event for this reel.
+        #
+        # Treat duplicate tracking as successful.
+        db.session.rollback()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Event Reel Analytics] "
+                "tracking failed "
+                "reel_id=%s "
+                "event_type=%s "
+                "error=%s"
+            ),
+            reel.id,
+            event_type,
+            error,
+        )
+
+        return {
+            "ok": False,
+        }, 500
+
+
+    return {
+        "ok": True,
+    }
 # ============================================================
 # ORGANIZER SUBSCRIPTION
 # ============================================================
