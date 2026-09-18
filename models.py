@@ -3551,3 +3551,96 @@ class EventReel(db.Model):
             f"event_id={self.event_id} "
             f"organizer_id={self.organizer_id}>"
         )
+
+# ============================================================
+# EVENT REEL ANALYTICS
+# ============================================================
+
+class EventReelAnalytics(db.Model):
+
+    __tablename__ = "event_reel_analytics"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    reel_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "event_reels.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_events.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    # impression
+    # play
+    # open
+    # half_watched
+    # completed
+    # view_event
+    event_type = db.Column(
+        db.String(40),
+        nullable=False,
+        index=True,
+    )
+
+    # Anonymous browser/session identifier.
+    #
+    # This does NOT identify the attendee by name,
+    # email address or phone number.
+    anonymous_session_id = db.Column(
+        db.String(80),
+        nullable=False,
+        index=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    reel = db.relationship(
+        "EventReel",
+    )
+
+    event = db.relationship(
+        "TicketEvent",
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "reel_id",
+            "anonymous_session_id",
+            "event_type",
+            name="uq_reel_analytics_session_event",
+        ),
+    )
