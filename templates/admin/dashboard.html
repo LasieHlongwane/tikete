@@ -12,11 +12,11 @@
 
     <meta
         name="theme-color"
-        content="#0b0c0e"
+        content="#111827"
     >
 
     <title>
-        Organizer Dashboard | Kalxa 
+        Organizer Dashboard | Kalxa
     </title>
 
     <link
@@ -26,7 +26,6 @@
             filename='css/style.css'
         ) }}"
     >
-
 
     <style>
 
@@ -43,14 +42,10 @@
         }
 
         body {
-
             margin: 0;
 
-            background:
-                #f6f7f9;
-
-            color:
-                #111827;
+            background: #f6f7f9;
+            color: #111827;
 
             font-family:
                 Inter,
@@ -62,14 +57,12 @@
                 Arial,
                 sans-serif;
 
-            font-size:
-                15px;
+            font-size: 15px;
+            line-height: 1.55;
 
-            line-height:
-                1.55;
+            -webkit-font-smoothing: antialiased;
 
-            -webkit-font-smoothing:
-                antialiased;
+            overflow-x: hidden;
         }
 
         a {
@@ -82,1947 +75,45 @@
             font: inherit;
         }
 
-
-        /* =====================================================
-           PAGE SHELL
-        ===================================================== */
-
-        .admin-shell {
-
-            width:
-                min(
-                    1180px,
-                    calc(100% - 32px)
-                );
-
-            margin:
-                0 auto;
-
-            padding:
-                22px 0 60px;
-        }
-
-
-        /* =====================================================
-           TOP NAV
-        ===================================================== */
-
-        .admin-nav {
-
-            position:
-                sticky;
-
-            top:
-                14px;
-
-            z-index:
-                20;
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                18px;
-
-            margin-bottom:
-                28px;
-
-            padding:
-                14px 16px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    0.94
-                );
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                16px;
-
-            box-shadow:
-                0 10px 30px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.06
-                );
-
-            backdrop-filter:
-                blur(16px);
-        }
-
-        .brand-block {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                12px;
-
-            min-width:
-                0;
-        }
-
-        
-       
-
-
-        .brand-mark {
-
-            width:
-                38px;
-
-            height:
-                38px;
-
-            display:
-                grid;
-
-            place-items:
-                center;
-
-            flex:
-                0 0 auto;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border-radius:
-                11px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.03em;
-        }
-
-        .brand-copy {
-            min-width: 0;
-        }
-
-        .brand-title {
-
-            display:
-                block;
-
-            color:
-                #111827;
-
-            font-size:
-                13px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                0.03em;
-        }
-
-        .brand-subtitle {
-
-            display:
-                block;
-
-            overflow:
-                hidden;
-
-            color:
-                #64748b;
-
-            font-size:
-                12px;
-
-            text-overflow:
-                ellipsis;
-
-            white-space:
-                nowrap;
-        }
-
-        .admin-nav-actions {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                8px;
-
-            flex-wrap:
-                wrap;
-
-            justify-content:
-                flex-end;
-        }
-
-        .admin-nav-link {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                38px;
-
-            padding:
-                9px 12px;
-
-            color:
-                #334155;
-
-            border-radius:
-                10px;
-
-            text-decoration:
-                none;
-
-            font-size:
-                13px;
-
-            font-weight:
-                750;
-
-            transition:
-                background 0.15s ease,
-                color 0.15s ease;
-        }
-
-        .admin-nav-link:hover {
-
-            background:
-                #f1f5f9;
-
-            color:
-                #111827;
-        }
-
-        .admin-nav-link.logout {
-
-            color:
-                #991b1b;
-        }
-
-
-        /* =====================================================
-           FLASH
-        ===================================================== */
-
-        .flash-wrapper {
-
-            display:
-                grid;
-
-            gap:
-                10px;
-
-            margin-bottom:
-                20px;
-        }
-
-        .alert {
-
-            padding:
-                13px 15px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #dbe3ec;
-
-            border-radius:
-                12px;
-
-            color:
-                #334155;
-
-            font-size:
-                13px;
-
-            font-weight:
-                650;
-
-            box-shadow:
-                0 5px 18px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.04
-                );
-        }
-
-        .alert[data-category="success"] {
-
-            border-color:
-                #bbf7d0;
-
-            background:
-                #f0fdf4;
-
-            color:
-                #166534;
-        }
-
-        .alert[data-category="error"] {
-
-            border-color:
-                #fecaca;
-
-            background:
-                #fef2f2;
-
-            color:
-                #991b1b;
-        }
-
-
-        /* =====================================================
-           HERO HEADER
-        ===================================================== */
-
-        .admin-header {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                minmax(0, 1fr)
-                auto;
-
-            gap:
-                24px;
-
-            align-items:
-                center;
-
-            margin-bottom:
-                22px;
-
-            padding:
-                30px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #0b0c0e 0%,
-                    #18181b 100%
-                );
-
-            color:
-                #ffffff;
-
-            border-radius:
-                22px;
-
-            box-shadow:
-                0 18px 42px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.14
-                );
-        }
-
-        .section-kicker {
-
-            display:
-                inline-block;
-
-            margin-bottom:
-                8px;
-
-            color:
-                #94a3b8;
-
-            font-size:
-                10px;
-
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.13em;
-
-            text-transform:
-                uppercase;
-        }
-
-        .admin-header .section-kicker {
-            color: #cbd5e1;
-        }
-
-        .admin-header h1 {
-
-            margin:
-                0 0 10px;
-
-            color:
-                #ffffff;
-
-            font-size:
-                clamp(
-                    30px,
-                    5vw,
-                    44px
-                );
-
-            line-height:
-                1.05;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.045em;
-        }
-
-        .admin-header p {
-
-            max-width:
-                640px;
-
-            margin:
-                0;
-
-            color:
-                #cbd5e1;
-
-            font-size:
-                14px;
-        }
-
-
-        /* =====================================================
-           BUTTONS
-        ===================================================== */
-
-        .button {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                44px;
-
-            padding:
-                11px 16px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111111;
-
-            border-radius:
-                11px;
-
-            text-decoration:
-                none;
-
-            font-size:
-                13px;
-
-            font-weight:
-                850;
-
-            cursor:
-                pointer;
-
-            transition:
-                transform 0.15s ease,
-                box-shadow 0.15s ease,
-                background 0.15s ease;
-        }
-
-        .button:hover {
-
-            background:
-                #27272a;
-
-            transform:
-                translateY(-1px);
-
-            box-shadow:
-                0 8px 20px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.1
-                );
-        }
-
-        .button-light {
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border-color:
-                #ffffff;
-        }
-
-        .button-light:hover {
-
-            background:
-                #f8fafc;
-        }
-
-        .button-secondary {
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border-color:
-                #dbe3ec;
-        }
-
-        .button-secondary:hover {
-
-            background:
-                #f8fafc;
-        }
-
-        .button-full {
-            width: 100%;
-        }
-
-
-        /* =====================================================
-           ACCOUNT + METRICS
-        ===================================================== */
-
-        .overview-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                minmax(260px, 0.82fr)
-                minmax(0, 2.18fr);
-
-            gap:
-                18px;
-
-            margin-bottom:
-                22px;
-        }
-
-        .account-card,
-        .admin-section {
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                18px;
-
-            box-shadow:
-                0 8px 28px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.045
-                );
-        }
-
-        .account-card {
-
-            padding:
-                20px;
-        }
-
-        .account-name {
-
-            margin:
-                0 0 16px;
-
-            font-size:
-                22px;
-
-            line-height:
-                1.15;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.035em;
-        }
-
-        .account-meta {
-
-            display:
-                grid;
-
-            gap:
-                10px;
-        }
-
-        .account-meta-row {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            justify-content:
-                space-between;
-
-            gap:
-                14px;
-
-            padding-top:
-                10px;
-
-            border-top:
-                1px solid #eef2f7;
-        }
-
-        .account-meta-label {
-
-            color:
-                #94a3b8;
-
-            font-size:
-                11px;
-
-            font-weight:
-                700;
-        }
-
-        .account-meta-value {
-
-            min-width:
-                0;
-
-            color:
-                #334155;
-
-            font-size:
-                12px;
-
-            font-weight:
-                750;
-
-            text-align:
-                right;
-
-            overflow-wrap:
-                anywhere;
-        }
-
-        .subscription-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            padding:
-                6px 9px;
-
-            border-radius:
-                999px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                0.04em;
-
-            text-transform:
-                uppercase;
-        }
-
-        .subscription-badge.active {
-
-            background:
-                #dcfce7;
-
-            color:
-                #166534;
-
-            border:
-                1px solid #bbf7d0;
-        }
-
-        .subscription-badge.inactive,
-        .subscription-badge.expired {
-
-            background:
-                #fff7ed;
-
-            color:
-                #9a3412;
-
-            border:
-                1px solid #fed7aa;
-        }
-
-        .subscription-badge.suspended {
-
-            background:
-                #fef2f2;
-
-            color:
-                #991b1b;
-
-            border:
-                1px solid #fecaca;
-        }
-
-        .metrics {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    4,
-                    minmax(0, 1fr)
-                );
-
-            gap:
-                12px;
-        }
-
-        .metric {
-
-            min-width:
-                0;
-
-            padding:
-                18px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius:
-                16px;
-
-            box-shadow:
-                0 6px 22px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.04
-                );
-        }
-
-        .metric-label {
-
-            display:
-                block;
-
-            color:
-                #64748b;
-
-            font-size:
-                11px;
-
-            font-weight:
-                800;
-        }
-
-        .metric strong {
-
-            display:
-                block;
-
-            margin:
-                7px 0 3px;
-
-            color:
-                #111827;
-
-            font-size:
-                30px;
-
-            line-height:
-                1;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.04em;
-        }
-
-        .metric small {
-
-            color:
-                #94a3b8;
-
-            font-size:
-                11px;
-        }
-
-
-        /* =====================================================
-           SUBSCRIPTION NOTICE
-        ===================================================== */
-
-        .subscription-card {
-
-            margin-bottom:
-                22px;
-
-            padding:
-                22px;
-
-            border-radius:
-                18px;
-
-            box-shadow:
-                0 8px 28px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.04
-                );
-        }
-
-        .subscription-card.active {
-
-            background:
-                #f0fdf4;
-
-            border:
-                1px solid #bbf7d0;
-        }
-
-        .subscription-card.restricted {
-
-            background:
-                #fff7ed;
-
-            border:
-                1px solid #fed7aa;
-        }
-
-        .subscription-card.suspended {
-
-            background:
-                #fef2f2;
-
-            border:
-                1px solid #fecaca;
-        }
-
-        .subscription-card-row {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            justify-content:
-                space-between;
-
-            gap:
-                18px;
-        }
-
-        .subscription-card h3 {
-
-            margin:
-                0 0 6px;
-
-            color:
-                #111827;
-
-            font-size:
-                18px;
-
-            font-weight:
-                900;
-        }
-
-        .subscription-card p {
-
-            margin:
-                0;
-
-            color:
-                #64748b;
-
-            font-size:
-                13px;
-        }
-
-
-        /* =====================================================
-           DISCOVERY CONNECTION
-        ===================================================== */
-
-        .discovery-card {
-
-            margin-bottom:
-                22px;
-
-            padding:
-                18px 20px;
-
-            background:
-                #fffdf5;
-
-            border:
-                1px solid #f0e6bd;
-
-            border-radius:
-                16px;
-        }
-
-        .discovery-row {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                18px;
-        }
-
-        .discovery-card h3 {
-
-            margin:
-                0 0 4px;
-
-            font-size:
-                15px;
-        }
-
-        .discovery-card p {
-
-            margin:
-                0;
-
-            color:
-                #78716c;
-
-            font-size:
-                12px;
-        }
-
-        .discovery-badge {
-
-            flex:
-                0 0 auto;
-
-            padding:
-                8px 10px;
-
-            background:
-                #fff8dc;
-
-            color:
-                #854d0e;
-
-            border:
-                1px solid #facc15;
-
-            border-radius:
-                999px;
-
-            font-size:
-                11px;
-
-            font-weight:
-                850;
-        }
-
-
-        /* =====================================================
-           SECTIONS
-        ===================================================== */
-
-        .admin-section {
-
-            margin-bottom:
-                22px;
-
-            padding:
-                24px;
-        }
-
-        .admin-section-header {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            justify-content:
-                space-between;
-
-            gap:
-                18px;
-
-            margin-bottom:
-                22px;
-        }
-
-        .admin-section h2 {
-
-            margin:
-                0 0 6px;
-
-            font-size:
-                23px;
-
-            line-height:
-                1.15;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.035em;
-        }
-
-        .admin-section h3 {
-
-            margin:
-                0;
-
-            color:
-                #111827;
-
-            font-size:
-                16px;
-
-            font-weight:
-                850;
-        }
-
         .muted {
-
-            color:
-                #64748b;
+            color: #64748b;
         }
-
-        .admin-section p.muted {
-
-            margin:
-                0;
-
-            font-size:
-                13px;
-        }
-
-        .admin-count-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-width:
-                34px;
-
-            height:
-                34px;
-
-            padding:
-                0 11px;
-
-            background:
-                #f1f5f9;
-
-            color:
-                #334155;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                999px;
-
-            font-size:
-                12px;
-
-            font-weight:
-                850;
-        }
-
-
-        /* =====================================================
-           FORM
-        ===================================================== */
-
-        .form-stack {
-
-            display:
-                grid;
-
-            gap:
-                20px;
-        }
-
-        .form-panel {
-
-            padding:
-                20px;
-
-            background:
-                #fafafa;
-
-            border:
-                1px solid #eceff3;
-
-            border-radius:
-                15px;
-        }
-
-        .form-panel-header {
-
-            margin-bottom:
-                18px;
-        }
-
-        .form-panel-header h3 {
-
-            margin:
-                0 0 4px;
-        }
-
-        .form-panel-header p {
-
-            margin:
-                0;
-
-            color:
-                #64748b;
-
-            font-size:
-                12px;
-        }
-
-        .form-group {
-
-            display:
-                grid;
-
-            gap:
-                7px;
-        }
-
-        .form-group label {
-
-            color:
-                #334155;
-
-            font-size:
-                12px;
-
-            font-weight:
-                800;
-        }
-
-        .form-group input,
-        .form-group textarea {
-
-            width:
-                100%;
-
-            padding:
-                12px 13px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                1px solid #d7dee7;
-
-            border-radius:
-                10px;
-
-            outline:
-                none;
-
-            transition:
-                border-color 0.15s ease,
-                box-shadow 0.15s ease;
-        }
-
-        .form-group input {
-
-            min-height:
-                46px;
-        }
-
-        .form-group textarea {
-
-            resize:
-                vertical;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-
-            border-color:
-                #111827;
-
-            box-shadow:
-                0 0 0 3px
-                rgba(
-                    17,
-                    24,
-                    39,
-                    0.06
-                );
-        }
-
-        .form-group small {
-
-            color:
-                #94a3b8;
-
-            font-size:
-                11px;
-        }
-
-        .admin-form-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(0, 1fr)
-                );
-
-            gap:
-                16px;
-        }
-
-        .input-prefix {
-
-            display:
-                flex;
-
-            align-items:
-                stretch;
-        }
-
-        .input-prefix span {
-
-            display:
-                grid;
-
-            place-items:
-                center;
-
-            min-width:
-                42px;
-
-            background:
-                #f1f5f9;
-
-            color:
-                #475569;
-
-            border:
-                1px solid #d7dee7;
-
-            border-right:
-                0;
-
-            border-radius:
-                10px 0 0 10px;
-
-            font-weight:
-                850;
-        }
-
-        .input-prefix input {
-
-            border-radius:
-                0 10px 10px 0;
-        }
-
-        .payment-note {
-
-            display:
-                flex;
-
-            gap:
-                10px;
-
-            align-items:
-                flex-start;
-
-            margin-bottom:
-                18px;
-
-            padding:
-                12px 14px;
-
-            background:
-                #fffdf5;
-
-            border:
-                1px solid #f1e6bb;
-
-            border-radius:
-                11px;
-
-            color:
-                #78674c;
-
-            font-size:
-                12px;
-        }
-
-
-        /* =====================================================
-           EVENT LIST
-        ===================================================== */
-
-        .admin-event-list {
-
-            display:
-                grid;
-
-            gap:
-                12px;
-        }
-
-        .admin-event-row {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                92px
-                minmax(0, 1fr)
-                auto;
-
-            gap:
-                16px;
-
-            align-items:
-                center;
-
-            padding:
-                14px;
-
-            background:
-                #fbfcfd;
-
-            border:
-                1px solid #e8edf2;
-
-            border-radius:
-                14px;
-        }
-
-        .admin-event-image {
-
-            width:
-                92px;
-
-            height:
-                92px;
-
-            overflow:
-                hidden;
-
-            background:
-                #f1f5f9;
-
-            border-radius:
-                11px;
-        }
-
-        .admin-event-image img {
-
-            width:
-                100%;
-
-            height:
-                100%;
-
-            display:
-                block;
-
-            object-fit:
-                cover;
-        }
-
-        .admin-event-info {
-
-            min-width:
-                0;
-        }
-
-        .admin-event-topline {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                10px;
-
-            flex-wrap:
-                wrap;
-
-            margin-bottom:
-                8px;
-        }
-
-        .admin-event-title {
-
-            color:
-                #111827;
-
-            font-size:
-                16px;
-
-            font-weight:
-                900;
-        }
-
-        .admin-price-badge {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            padding:
-                4px 8px;
-
-            background:
-                #eef2ff;
-
-            color:
-                #3730a3;
-
-            border-radius:
-                999px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                850;
-        }
-
-        .event-meta-line {
-
-            margin-top:
-                4px;
-
-            color:
-                #64748b;
-
-            font-size:
-                12px;
-        }
-
-        .event-stats-line {
-
-            display:
-                flex;
-
-            gap:
-                12px;
-
-            flex-wrap:
-                wrap;
-
-            margin-top:
-                8px;
-
-            color:
-                #475569;
-
-            font-size:
-                11px;
-
-            font-weight:
-                750;
-        }
-
-        .admin-event-actions {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                8px;
-
-            flex-wrap:
-                wrap;
-
-            justify-content:
-                flex-end;
-        }
-
-
-        .delete-event-form {
-
-            margin: 0;
-        }
-
-
-        .button-danger {
-
-            background:
-                #fff1f2;
-
-            color:
-                #be123c;
-
-            border:
-                1px solid #fecdd3;
-
-            cursor:
-                pointer;
-        }
-
-
-        .button-danger:hover {
-
-            background:
-                #ffe4e6;
-
-            color:
-                #9f1239;
-        }
-
-
-        /* =====================================================
-           EMPTY STATE
-        ===================================================== */
-
-        .admin-empty-state {
-
-            padding:
-                34px 20px;
-
-            background:
-                #fafafa;
-
-            border:
-                1px dashed #cbd5e1;
-
-            border-radius:
-                14px;
-
-            text-align:
-                center;
-        }
-
-        .admin-empty-icon {
-
-            width:
-                46px;
-
-            height:
-                46px;
-
-            display:
-                grid;
-
-            place-items:
-                center;
-
-            margin:
-                0 auto 12px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid #e2e8f0;
-
-            border-radius:
-                13px;
-
-            font-size:
-                20px;
-        }
-
-        .admin-empty-state h3 {
-
-            margin:
-                0 0 6px;
-        }
-
-
-        /* =====================================================
-           CHECK-IN CARD
-        ===================================================== */
-
-        .admin-checkin-card {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                24px;
-
-            background:
-                #C0C0C0;
-
-            color:
-                #ffffff;
-
-            border-color:
-                #111111;
-        }
-
-        .admin-checkin-card h2 {
-            color: #ffffff;
-        }
-
-        .admin-checkin-card .section-kicker {
-            color: #cbd5e1;
-        }
-
-        .admin-checkin-card .muted {
-            color: #cbd5e1;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
-
-        @media (
-            max-width: 960px
-        ) {
-
-            .overview-grid {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-            .metrics {
-
-                grid-template-columns:
-                    repeat(
-                        2,
-                        minmax(0, 1fr)
-                    );
-            }
-
-        }
-
-
-        @media (
-            max-width: 760px
-        ) {
-
-            .admin-shell {
-
-                width:
-                    min(
-                        100% - 22px,
-                        1180px
-                    );
-
-                padding-top:
-                    12px;
-            }
-
-            .admin-nav {
-
-                position:
-                    static;
-
-                align-items:
-                    flex-start;
-
-                flex-direction:
-                    column;
-            }
-
-            .admin-nav-actions {
-
-                width:
-                    100%;
-
-                justify-content:
-                    flex-start;
-            }
-
-            .admin-header {
-
-                grid-template-columns:
-                    1fr;
-
-                padding:
-                    24px 20px;
-            }
-
-            .admin-header .button {
-
-                width:
-                    100%;
-            }
-
-            .admin-form-grid {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-            .admin-event-row {
-
-                grid-template-columns:
-                    72px
-                    minmax(0, 1fr);
-            }
-
-            .admin-event-image {
-
-                width:
-                    72px;
-
-                height:
-                    72px;
-            }
-
-            .admin-event-actions {
-
-                grid-column:
-                    1 / -1;
-
-                justify-content:
-                    stretch;
-            }
-
-            .admin-event-actions .button {
-
-                flex:
-                    1;
-            }
-
-
-            .delete-event-form {
-
-                display:
-                    flex;
-
-                flex:
-                    1;
-            }
-
-
-            .delete-event-form .button {
-
-                width:
-                    100%;
-            }
-
-            .admin-checkin-card {
-
-                align-items:
-                    stretch;
-
-                flex-direction:
-                    column;
-            }
-
-            .admin-checkin-card .button {
-
-                width:
-                    100%;
-            }
-
-            .subscription-card-row {
-
-                flex-direction:
-                    column;
-            }
-
-        }
-
-
-        @media (
-            max-width: 520px
-        ) {
-
-            .metrics {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-            .admin-section {
-
-                padding:
-                    18px;
-            }
-
-            .form-panel {
-
-                padding:
-                    16px;
-            }
-
-            .admin-event-row {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-            .admin-event-image {
-
-                width:
-                    100%;
-
-                height:
-                    180px;
-            }
-
-        }
-
-    
-        /* =====================================================
-           CREATE EVENT NAV ACTION
-        ===================================================== */
-
-        .create-event-nav {
-
-            background:
-                #fff4df;
-
-            color:
-                #0b0c0e !important;
-
-            border-color:
-                #fff4df;
-
-            font-weight:
-                850;
-        }
-
-
-        .create-event-nav:hover {
-
-            background:
-                #ffffff;
-
-            color:
-                #0b0c0e !important;
-        }
-
 
 
 
         /* =====================================================
-           ORGANIZER SIDEBAR NAVIGATION
+           MAIN PAGE
         ===================================================== */
-
-        body {
-            overflow-x: hidden;
-        }
 
         .admin-shell {
             width: auto;
             max-width: none;
-            margin: 0 22px 0 270px;
-            padding: 22px 0 60px;
+
+            margin:
+                0
+                22px
+                0
+                270px;
+
+            padding:
+                24px
+                0
+                60px;
         }
+
+
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
 
         .admin-nav {
             position: fixed;
+
             top: 0;
             left: 0;
             bottom: 0;
+
             z-index: 40;
 
             width: 248px;
@@ -2030,44 +121,119 @@
 
             display: flex;
             flex-direction: column;
-            align-items: stretch;
-            justify-content: flex-start;
+
             gap: 18px;
 
-            margin: 0;
-            padding: 20px 14px;
+            padding:
+                20px
+                14px;
 
             background: #111827;
-            border: 0;
-            border-right: 1px solid rgba(255,255,255,.08);
-            border-radius: 0;
-            box-shadow: 12px 0 36px rgba(15,23,42,.12);
+
+            border-right:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.08
+                );
+
+            box-shadow:
+                12px
+                0
+                36px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.10
+                );
 
             overflow-y: auto;
-            backdrop-filter: none;
         }
 
-        .admin-nav .brand-block {
-            width: 100%;
-            padding: 2px 4px 17px;
-            border-bottom: 1px solid rgba(255,255,255,.10);
+
+
+        /* =====================================================
+           SIDEBAR BRAND
+        ===================================================== */
+
+        .brand-block {
+            display: flex;
+
+            align-items: center;
+
+            gap: 11px;
+
+            padding:
+                2px
+                4px
+                17px;
+
+            border-bottom:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.10
+                );
         }
 
-        .admin-nav .brand-mark {
+        .brand-mark {
             width: 40px;
             height: 40px;
+
+            display: grid;
+            place-items: center;
+
+            flex: 0 0 auto;
+
             background: #fff4df;
             color: #111827;
+
             border-radius: 12px;
+
+            font-size: 15px;
+            font-weight: 950;
         }
 
-        .admin-nav .brand-title {
+        .brand-copy {
+            min-width: 0;
+        }
+
+        .brand-title {
+            display: block;
+
             color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 950;
+
+            letter-spacing: 0.06em;
         }
 
-        .admin-nav .brand-subtitle {
+        .brand-subtitle {
+            display: block;
+
+            margin-top: 2px;
+
+            overflow: hidden;
+
             color: #94a3b8;
+
+            font-size: 11px;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
+
+
+
+        /* =====================================================
+           SIDEBAR LINKS
+        ===================================================== */
 
         .admin-nav-actions {
             width: 100%;
@@ -2075,74 +241,142 @@
 
             display: flex;
             flex-direction: column;
-            align-items: stretch;
-            justify-content: flex-start;
-            gap: 6px;
 
-            flex-wrap: nowrap;
+            gap: 5px;
         }
 
         .admin-nav-link {
             width: 100%;
+
             min-height: 42px;
 
             display: flex;
+
             align-items: center;
             justify-content: flex-start;
 
-            padding: 10px 12px;
+            padding:
+                10px
+                12px;
 
             color: #cbd5e1;
-            border: 1px solid transparent;
+
+            border:
+                1px solid
+                transparent;
+
             border-radius: 10px;
+
+            text-decoration: none;
 
             font-size: 13px;
             font-weight: 750;
+
             white-space: nowrap;
+
+            transition:
+                background .15s ease,
+                color .15s ease,
+                border-color .15s ease;
         }
 
         .admin-nav-link:hover {
-            background: rgba(255,255,255,.07);
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .07
+                );
+
             color: #ffffff;
-            border-color: rgba(255,255,255,.08);
+
+            border-color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .08
+                );
         }
 
-        .admin-nav-link:first-child {
+        .admin-nav-link.dashboard-active {
             background: #fff4df;
             color: #111827;
+
             border-color: #fff4df;
+
             font-weight: 900;
         }
 
         .admin-nav-link.create-event-nav {
-            background: #ffffff;
-            color: #111827 !important;
-            border-color: #ffffff;
-            font-weight: 900;
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .08
+                );
+
+            color: #ffffff;
+
+            border-color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .10
+                );
+
+            font-weight: 850;
         }
 
         .admin-nav-link.create-event-nav:hover {
-            background: #fff4df;
-            border-color: #fff4df;
-            color: #111827 !important;
+            background: #ffffff;
+            color: #111827;
+            border-color: #ffffff;
         }
 
         .admin-nav-link.logout {
             margin-top: auto;
+
             color: #fecaca;
-            border-color: rgba(254,202,202,.12);
+
+            border-color:
+                rgba(
+                    254,
+                    202,
+                    202,
+                    .12
+                );
         }
 
         .admin-nav-link.logout:hover {
-            background: rgba(127,29,29,.35);
+            background:
+                rgba(
+                    127,
+                    29,
+                    29,
+                    .35
+                );
+
             color: #ffffff;
         }
 
+
+
+        /* =====================================================
+           MOBILE SIDEBAR
+        ===================================================== */
+
         .mobile-admin-menu {
             display: none;
+
             position: fixed;
+
             right: 14px;
             bottom: 14px;
+
             z-index: 60;
 
             width: 50px;
@@ -2150,15 +384,26 @@
 
             place-items: center;
 
-            border: 0;
-            border-radius: 14px;
-
             background: #111827;
             color: #ffffff;
 
-            box-shadow: 0 12px 34px rgba(15,23,42,.26);
+            border: 0;
+            border-radius: 14px;
+
+            box-shadow:
+                0
+                12px
+                34px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .26
+                );
+
             font-size: 21px;
             font-weight: 900;
+
             cursor: pointer;
         }
 
@@ -2166,22 +411,1118 @@
             display: none;
         }
 
+
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash-wrapper {
+            display: grid;
+
+            gap: 9px;
+
+            margin-bottom: 18px;
+        }
+
+        .alert {
+            padding:
+                12px
+                14px;
+
+            background: #ffffff;
+            color: #334155;
+
+            border:
+                1px solid
+                #dbe3ec;
+
+            border-radius: 11px;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .alert[data-category="success"] {
+            background: #f0fdf4;
+
+            border-color: #bbf7d0;
+
+            color: #166534;
+        }
+
+        .alert[data-category="error"] {
+            background: #fef2f2;
+
+            border-color: #fecaca;
+
+            color: #991b1b;
+        }
+
+
+
+        /* =====================================================
+           DASHBOARD PAGE HEADING
+        ===================================================== */
+
+        .dashboard-heading {
+            display: flex;
+
+            align-items: flex-end;
+            justify-content: space-between;
+
+            gap: 24px;
+
+            margin-bottom: 20px;
+
+            padding:
+                4px
+                2px;
+        }
+
+        .dashboard-heading-copy {
+            min-width: 0;
+        }
+
+        .dashboard-eyebrow {
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #64748b;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            letter-spacing: .13em;
+
+            text-transform: uppercase;
+        }
+
+        .dashboard-heading h1 {
+            margin:
+                0
+                0
+                5px;
+
+            color: #111827;
+
+            font-size:
+                clamp(
+                    27px,
+                    4vw,
+                    38px
+                );
+
+            line-height: 1.05;
+
+            font-weight: 950;
+
+            letter-spacing: -.04em;
+        }
+
+        .dashboard-heading p {
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 13px;
+        }
+
+
+
+        /* =====================================================
+           COMMON
+        ===================================================== */
+
+        .section-kicker {
+            display: inline-block;
+
+            margin-bottom: 6px;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: .13em;
+
+            text-transform: uppercase;
+        }
+
+
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
+
+        .button {
+            min-height: 40px;
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                9px
+                13px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border:
+                1px solid
+                #111827;
+
+            border-radius: 9px;
+
+            text-decoration: none;
+
+            font-size: 12px;
+            font-weight: 850;
+
+            cursor: pointer;
+
+            transition:
+                background .15s ease,
+                transform .15s ease,
+                border-color .15s ease;
+        }
+
+        .button:hover {
+            background: #27272a;
+
+            transform:
+                translateY(-1px);
+        }
+
+        .button-light {
+            background: #ffffff;
+            color: #111827;
+
+            border-color: #ffffff;
+        }
+
+        .button-light:hover {
+            background: #f8fafc;
+        }
+
+        .button-secondary {
+            background: #ffffff;
+            color: #374151;
+
+            border-color: #d1d5db;
+        }
+
+        .button-secondary:hover {
+            background: #f8fafc;
+            color: #111827;
+        }
+
+        .button-danger {
+            background: #fff1f2;
+            color: #be123c;
+
+            border-color: #fecdd3;
+        }
+
+        .button-danger:hover {
+            background: #ffe4e6;
+            color: #9f1239;
+
+            border-color: #fda4af;
+        }
+
+
+
+        /* =====================================================
+           SUBSCRIPTION STATUS
+        ===================================================== */
+
+        .subscription-card {
+            margin-bottom: 20px;
+
+            padding:
+                18px
+                20px;
+
+            border-radius: 15px;
+        }
+
+        .subscription-card.active {
+            background: #ecfdf5;
+
+            border:
+                1px solid
+                #bbf7d0;
+        }
+
+        .subscription-card.restricted {
+            background: #fff7ed;
+
+            border:
+                1px solid
+                #fed7aa;
+        }
+
+        .subscription-card.suspended {
+            background: #fef2f2;
+
+            border:
+                1px solid
+                #fecaca;
+        }
+
+        .subscription-card-row {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+        .subscription-card h3 {
+            margin:
+                0
+                0
+                4px;
+
+            color: #111827;
+
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .subscription-card p {
+            max-width: 720px;
+
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 12px;
+        }
+
+        .subscription-actions {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+            justify-content: flex-end;
+        }
+
+        .subscription-badge {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                5px
+                8px;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing: .05em;
+
+            text-transform: uppercase;
+        }
+
+        .subscription-badge.active {
+            background: #dcfce7;
+            color: #166534;
+
+            border:
+                1px solid
+                #bbf7d0;
+        }
+
+        .subscription-badge.inactive,
+        .subscription-badge.expired {
+            background: #fff7ed;
+            color: #9a3412;
+
+            border:
+                1px solid
+                #fed7aa;
+        }
+
+        .subscription-badge.suspended {
+            background: #fef2f2;
+            color: #991b1b;
+
+            border:
+                1px solid
+                #fecaca;
+        }
+
+
+
+        /* =====================================================
+           OVERVIEW GRID
+        ===================================================== */
+
+        .overview-grid {
+            display: grid;
+
+            grid-template-columns:
+                minmax(
+                    260px,
+                    .72fr
+                )
+                minmax(
+                    0,
+                    1.6fr
+                );
+
+            gap: 16px;
+
+            align-items: stretch;
+
+            margin-bottom: 20px;
+        }
+
+
+
+        /* =====================================================
+           ACCOUNT CARD
+        ===================================================== */
+
+        .account-card {
+            padding: 20px;
+
+            background: #e5e7eb;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 16px;
+        }
+
+        .account-name {
+            margin:
+                0
+                0
+                16px;
+
+            color: #111827;
+
+            font-size: 21px;
+            line-height: 1.12;
+
+            font-weight: 950;
+
+            letter-spacing: -.035em;
+        }
+
+        .account-meta {
+            display: grid;
+        }
+
+        .account-meta-row {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 14px;
+
+            padding:
+                10px
+                0;
+
+            border-top:
+                1px solid
+                #cbd5e1;
+        }
+
+        .account-meta-row:first-child {
+            border-top: 0;
+
+            padding-top: 0;
+        }
+
+        .account-meta-label {
+            color: #6b7280;
+
+            font-size: 10px;
+            font-weight: 750;
+        }
+
+        .account-meta-value {
+            min-width: 0;
+
+            color: #1f2937;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            text-align: right;
+
+            overflow-wrap: anywhere;
+        }
+
+
+
+        /* =====================================================
+           OVERVIEW ACTIVITY TABLE
+        ===================================================== */
+
+        .overview-table-card {
+            overflow: hidden;
+
+            background: #e5e7eb;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 16px;
+        }
+
+        .overview-table-header {
+            display: flex;
+
+            align-items: flex-end;
+            justify-content: space-between;
+
+            gap: 16px;
+
+            padding:
+                17px
+                19px
+                15px;
+
+            border-bottom:
+                1px solid
+                #cbd5e1;
+        }
+
+        .overview-table-header h2 {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 18px;
+            font-weight: 950;
+
+            letter-spacing: -.025em;
+        }
+
+        .overview-table-header p {
+            margin:
+                3px
+                0
+                0;
+
+            color: #6b7280;
+
+            font-size: 11px;
+        }
+
+        .overview-table {
+            width: 100%;
+        }
+
+        .overview-table-heading,
+        .overview-row {
+            display: grid;
+
+            grid-template-columns:
+                minmax(
+                    130px,
+                    1fr
+                )
+                100px
+                minmax(
+                    150px,
+                    1.2fr
+                );
+
+            align-items: center;
+
+            gap: 18px;
+        }
+
+        .overview-table-heading {
+            padding:
+                9px
+                19px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .32
+                );
+
+            color: #6b7280;
+
+            border-bottom:
+                1px solid
+                #d1d5db;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: .07em;
+
+            text-transform: uppercase;
+        }
+
+        .overview-row {
+            min-height: 61px;
+
+            padding:
+                11px
+                19px;
+
+            border-bottom:
+                1px solid
+                #cbd5e1;
+        }
+
+        .overview-row:last-child {
+            border-bottom: 0;
+        }
+
+        .overview-label {
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            color: #374151;
+
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .overview-icon {
+            width: 29px;
+            height: 29px;
+
+            display: grid;
+            place-items: center;
+
+            flex: 0 0 auto;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .55
+                );
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 8px;
+
+            font-size: 12px;
+        }
+
+        .overview-value {
+            color: #111827;
+
+            font-size: 22px;
+            line-height: 1;
+
+            font-weight: 950;
+
+            letter-spacing: -.035em;
+        }
+
+        .overview-description {
+            color: #6b7280;
+
+            font-size: 11px;
+            font-weight: 650;
+        }
+
+
+
+        /* =====================================================
+           DISCOVERY CARD
+        ===================================================== */
+
+        .discovery-card {
+            margin-bottom: 20px;
+
+            padding:
+                16px
+                18px;
+
+            background: #fffdf5;
+
+            border:
+                1px solid
+                #f0e6bd;
+
+            border-radius: 14px;
+        }
+
+        .discovery-row {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 18px;
+        }
+
+        .discovery-card h3 {
+            margin:
+                0
+                0
+                3px;
+
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 850;
+        }
+
+        .discovery-card p {
+            margin: 0;
+
+            color: #78716c;
+
+            font-size: 11px;
+        }
+
+        .discovery-badge {
+            flex: 0 0 auto;
+
+            padding:
+                7px
+                9px;
+
+            background: #fff8dc;
+            color: #854d0e;
+
+            border:
+                1px solid
+                #facc15;
+
+            border-radius: 999px;
+
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+
+
+        /* =====================================================
+           GENERAL ADMIN SECTION
+        ===================================================== */
+
+        .admin-section {
+            margin-bottom: 20px;
+
+            padding: 22px;
+
+            background: #e5e7eb;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 16px;
+        }
+
+        .admin-section-header {
+            display: flex;
+
+            align-items: flex-start;
+            justify-content: space-between;
+
+            gap: 18px;
+
+            margin-bottom: 18px;
+        }
+
+        .admin-section h2 {
+            margin:
+                0
+                0
+                4px;
+
+            color: #111827;
+
+            font-size: 21px;
+            line-height: 1.15;
+
+            font-weight: 950;
+
+            letter-spacing: -.035em;
+        }
+
+        .admin-section p.muted {
+            margin: 0;
+
+            color: #6b7280;
+
+            font-size: 12px;
+        }
+
+        .admin-count-badge {
+            min-width: 34px;
+            height: 34px;
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                0
+                10px;
+
+            background: #ffffff;
+            color: #374151;
+
+            border:
+                1px solid
+                #cbd5e1;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+
+
+        /* =====================================================
+           EVENT LIST
+        ===================================================== */
+
+        .admin-event-list {
+            display: grid;
+
+            gap: 10px;
+        }
+
+        .admin-event-row {
+            display: grid;
+
+            grid-template-columns:
+                88px
+                minmax(
+                    0,
+                    1fr
+                )
+                minmax(
+                    250px,
+                    auto
+                );
+
+            gap: 15px;
+
+            align-items: center;
+
+            padding: 12px;
+
+            background: #f3f4f6;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 13px;
+        }
+
+        .admin-event-image {
+            width: 88px;
+            height: 88px;
+
+            overflow: hidden;
+
+            background: #d1d5db;
+
+            border-radius: 10px;
+        }
+
+        .admin-event-image img {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+        .admin-event-info {
+            min-width: 0;
+        }
+
+        .admin-event-topline {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+
+            margin-bottom: 6px;
+        }
+
+        .admin-event-title {
+            color: #111827;
+
+            font-size: 15px;
+            line-height: 1.2;
+
+            font-weight: 950;
+        }
+
+        .admin-price-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            padding:
+                4px
+                7px;
+
+            background: #ffffff;
+            color: #374151;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+        }
+
+        .event-meta-line {
+            margin-top: 3px;
+
+            color: #6b7280;
+
+            font-size: 11px;
+        }
+
+        .event-stats-line {
+            display: flex;
+
+            gap:
+                7px
+                13px;
+
+            flex-wrap: wrap;
+
+            margin-top: 7px;
+
+            color: #475569;
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .admin-event-actions {
+            display: flex;
+
+            align-items: center;
+            justify-content: flex-end;
+
+            gap: 6px;
+
+            flex-wrap: wrap;
+        }
+
+        .admin-event-actions .button {
+            min-height: 36px;
+
+            padding:
+                7px
+                10px;
+
+            font-size: 10px;
+        }
+
+        .delete-event-form {
+            margin: 0;
+        }
+
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .admin-empty-state {
+            padding:
+                30px
+                20px;
+
+            background: #f3f4f6;
+
+            border:
+                1px dashed
+                #cbd5e1;
+
+            border-radius: 13px;
+
+            text-align: center;
+        }
+
+        .admin-empty-icon {
+            width: 46px;
+            height: 46px;
+
+            display: grid;
+            place-items: center;
+
+            margin:
+                0
+                auto
+                11px;
+
+            background: #ffffff;
+
+            border:
+                1px solid
+                #d1d5db;
+
+            border-radius: 12px;
+
+            font-size: 19px;
+        }
+
+        .admin-empty-state h3 {
+            margin:
+                0
+                0
+                5px;
+
+            color: #111827;
+
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+
+
+        /* =====================================================
+           CHECK-IN CARD
+        ===================================================== */
+
+        .admin-checkin-card {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 24px;
+
+            padding:
+                20px
+                22px;
+
+            background: #111827;
+
+            color: #ffffff;
+
+            border-color: #111827;
+        }
+
+        .admin-checkin-card .section-kicker {
+            color: #94a3b8;
+        }
+
+        .admin-checkin-card h2 {
+            color: #ffffff;
+        }
+
+        .admin-checkin-card .muted {
+            color: #cbd5e1;
+        }
+
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 1080px) {
+
+            .admin-event-row {
+                grid-template-columns:
+                    80px
+                    minmax(
+                        0,
+                        1fr
+                    );
+            }
+
+            .admin-event-image {
+                width: 80px;
+                height: 80px;
+            }
+
+            .admin-event-actions {
+                grid-column:
+                    1 / -1;
+
+                justify-content: flex-start;
+            }
+
+        }
+
+
         @media (max-width: 900px) {
 
             .admin-shell {
-                width: min(100% - 22px, 1180px);
-                margin: 0 auto;
-                padding-top: 14px;
+                width:
+                    min(
+                        100% - 22px,
+                        1180px
+                    );
+
+                margin:
+                    0 auto;
+
+                padding-top: 15px;
             }
 
             .admin-nav {
-                width: min(285px, 86vw);
-                transform: translateX(-105%);
-                transition: transform .22s ease;
+                width:
+                    min(
+                        285px,
+                        86vw
+                    );
+
+                transform:
+                    translateX(-105%);
+
+                transition:
+                    transform
+                    .22s ease;
             }
 
             .admin-nav.sidebar-open {
-                transform: translateX(0);
+                transform:
+                    translateX(0);
             }
 
             .mobile-admin-menu {
@@ -2190,53 +1531,168 @@
 
             .sidebar-overlay {
                 position: fixed;
+
                 inset: 0;
+
                 z-index: 35;
-                background: rgba(15,23,42,.40);
+
+                background:
+                    rgba(
+                        15,
+                        23,
+                        42,
+                        .40
+                    );
             }
 
             .sidebar-overlay.show {
                 display: block;
             }
+
+            .overview-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
         }
 
 
-        /* =====================================================
-           GREY DASHBOARD CARD THEME
-        ===================================================== */
+        @media (max-width: 700px) {
 
-        .account-card,
-        .admin-section,
-        .metric {
-            background: #e5e7eb;
-            border-color: #d1d5db;
+            .dashboard-heading {
+                align-items: stretch;
+
+                flex-direction: column;
+
+                gap: 12px;
+            }
+
+            .subscription-card-row {
+                align-items: stretch;
+
+                flex-direction: column;
+            }
+
+            .subscription-actions {
+                justify-content: flex-start;
+            }
+
+            .overview-table-heading {
+                display: none;
+            }
+
+            .overview-row {
+                grid-template-columns:
+                    minmax(
+                        0,
+                        1fr
+                    )
+                    auto;
+
+                gap:
+                    4px
+                    14px;
+
+                min-height: 67px;
+            }
+
+            .overview-description {
+                grid-column:
+                    1 / -1;
+
+                padding-left: 38px;
+            }
+
+            .overview-value {
+                text-align: right;
+            }
+
+            .admin-checkin-card {
+                align-items: stretch;
+
+                flex-direction: column;
+            }
+
+            .admin-checkin-card .button {
+                width: 100%;
+            }
+
+            .discovery-row {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
         }
 
-        .admin-event-row,
-        .admin-empty-state {
-            background: #f3f4f6;
-            border-color: #d1d5db;
+
+        @media (max-width: 520px) {
+
+            .admin-section {
+                padding: 16px;
+            }
+
+            .account-card {
+                padding: 17px;
+            }
+
+            .admin-event-row {
+                grid-template-columns:
+                    1fr;
+            }
+
+            .admin-event-image {
+                width: 100%;
+                height: 180px;
+            }
+
+            .admin-event-actions {
+                display: grid;
+
+                grid-template-columns:
+                    1fr
+                    1fr;
+
+                width: 100%;
+            }
+
+            .admin-event-actions .button {
+                width: 100%;
+            }
+
+            .delete-event-form {
+                display: contents;
+            }
+
+            .delete-event-form .button {
+                width: 100%;
+            }
+
+            .account-meta-row {
+                align-items: flex-start;
+
+                flex-direction: column;
+
+                gap: 4px;
+            }
+
+            .account-meta-value {
+                text-align: left;
+            }
+
         }
 
-        .admin-event-image {
-            background: #d1d5db;
+
+        @media (max-width: 380px) {
+
+            .admin-event-actions {
+                grid-template-columns:
+                    1fr;
+            }
+
         }
 
-        .account-meta-row {
-            border-top-color: #cbd5e1;
-        }
-
-        .admin-count-badge {
-            background: #d1d5db;
-            border-color: #cbd5e1;
-        }
-
-        /* Keep the special event-day card dark */
-        .admin-checkin-card {
-            background: #111111;
-            border-color: #111111;
-        }
-</style>
+    </style>
 
 </head>
 
@@ -2244,11 +1700,8 @@
 <body>
 
 
-<div class="admin-shell">
-
-
     <!-- =========================================
-         ORGANIZER NAVIGATION
+         ORGANIZER SIDEBAR
     ========================================== -->
 
     <nav class="admin-nav">
@@ -2288,22 +1741,6 @@
         </div>
 
 
-        <div class="topbar"> 
- 
- 
-          <a 
-            href="{{ url_for( 
-                'admin_dashboard'
-            ) }}" 
-            class="brand" 
-          > 
-            KALXA 
-          </a> 
-        </div>
- 
- 
-        <div class="topbar-actions">
-
 
         <div class="admin-nav-actions">
 
@@ -2312,7 +1749,7 @@
                 href="{{ url_for(
                     'admin_dashboard'
                 ) }}"
-                class="admin-nav-link"
+                class="admin-nav-link dashboard-active"
             >
                 Dashboard
             </a>
@@ -2334,11 +1771,17 @@
                 ) }}"
                 class="admin-nav-link"
             >
+
                 {% if subscription_active %}
+
                     ✓ Subscription
+
                 {% else %}
+
                     Activate Subscription
+
                 {% endif %}
+
             </a>
 
 
@@ -2407,6 +1850,12 @@
 
     </nav>
 
+
+
+    <!-- =========================================
+         MOBILE MENU
+    ========================================== -->
+
     <button
         type="button"
         class="mobile-admin-menu"
@@ -2417,6 +1866,7 @@
         ☰
     </button>
 
+
     <div
         class="sidebar-overlay"
         id="sidebar-overlay"
@@ -2424,317 +1874,249 @@
 
 
 
-
     <!-- =========================================
-         FLASH MESSAGES
+         MAIN CONTENT
     ========================================== -->
 
-    {% with messages = get_flashed_messages(
-        with_categories=true
-    ) %}
+    <main class="admin-shell">
 
-        {% if messages %}
 
-            <div class="flash-wrapper">
 
-                {% for category, message in messages %}
+        <!-- =====================================
+             FLASH MESSAGES
+        ====================================== -->
 
-                    <div
-                        class="alert"
-                        data-category="{{ category }}"
-                    >
-                        {{ message }}
-                    </div>
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
 
-                {% endfor %}
+            {% if messages %}
 
-            </div>
+                <div class="flash-wrapper">
 
-        {% endif %}
+                    {% for category, message in messages %}
 
-    {% endwith %}
-
-
-
-    <!-- =========================================
-         HERO
-    ========================================== -->
-
-
-
-
-
-    <!-- =========================================
-         SUBSCRIPTION STATUS
-    ========================================== -->
-
-    {% if subscription_active %}
-
-        <section class="subscription-card active">
-
-            <div class="subscription-card-row">
-
-                <div>
-
-                    <span class="section-kicker">
-                        KALXA SUBSCRIPTION
-                    </span>
-
-                    <h3>
-                        Subscription Active
-                    </h3>
-
-                    <p>
-
-                        Your organizer account can create
-                        and publish new ticket events.
-
-                        {% if subscription_expires_at %}
-
-                            Access expires on
-                            {{ subscription_expires_at.strftime(
-                                '%d %B %Y'
-                            ) }}.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <span class="subscription-badge active">
-                    ACTIVE
-                </span>
-
-            </div>
-
-        </section>
-
-
-    {% elif subscription_status == "suspended" %}
-
-        <section class="subscription-card suspended">
-
-            <div class="subscription-card-row">
-
-                <div>
-
-                    <span class="section-kicker">
-                        KALXA SUBSCRIPTION
-                    </span>
-
-                    <h3>
-                        Organizer Account Suspended
-                    </h3>
-
-                    <p>
-
-                        New event creation is disabled.
-                        Your existing event records remain
-                        available, but Kalxa Super Admin must
-                        reactivate this organizer account.
-
-                    </p>
-
-                </div>
-
-                <span class="subscription-badge suspended">
-                    SUSPENDED
-                </span>
-
-            </div>
-
-        </section>
-
-
-    {% else %}
-
-        <section class="subscription-card restricted">
-
-            <div class="subscription-card-row">
-
-                <div>
-
-                    <span class="section-kicker">
-                        KALXA SUBSCRIPTION
-                    </span>
-
-                    <h3>
-
-                        {% if subscription_status == "expired" %}
-
-                            Subscription Expired
-
-                        {% else %}
-
-                            Subscription Inactive
-
-                        {% endif %}
-
-                    </h3>
-
-                    <p>
-
-                        You can still view your dashboard,
-                        existing events, orders and check-in
-                        records, but you cannot create new
-                        ticket events until your Kalxa
-                        subscription is activated.
-
-                        {% if subscription_expires_at %}
-
-                            Previous access ended on
-                            {{ subscription_expires_at.strftime(
-                                '%d %B %Y'
-                            ) }}.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">
-
-                    <span
-                        class="subscription-badge
-                        {{ subscription_status }}"
-                    >
-                        {{ subscription_status|upper }}
-                    </span>
-
-                    <a
-                        href="{{ url_for(
-                            'admin_subscription'
-                        ) }}"
-                        class="button button-light"
-                    >
-                        Activate Subscription
-                    </a>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    {% endif %}
-
-
-
-    <!-- =========================================
-         OVERVIEW
-    ========================================== -->
-
-    <div class="overview-grid">
-
-
-        {% if organizer %}
-
-            <section class="account-card">
-
-
-                <span class="section-kicker">
-                    ORGANIZER ACCOUNT
-                </span>
-
-
-                <h2 class="account-name">
-                    {{ organizer.display_name }}
-                </h2>
-
-
-                <div class="account-meta">
-
-
-                    <div class="account-meta-row">
-
-                        <span class="account-meta-label">
-                            Organizer ID
-                        </span>
-
-                        <span class="account-meta-value">
-                            #{{ organizer.id }}
-                        </span>
-
-                    </div>
-
-
-                    <div class="account-meta-row">
-
-                        <span class="account-meta-label">
-                            Email
-                        </span>
-
-                        <span class="account-meta-value">
-                            {{ organizer.email }}
-                        </span>
-
-                    </div>
-
-
-                    {% if organizer.phone %}
-
-                        <div class="account-meta-row">
-
-                            <span class="account-meta-label">
-                                Phone
-                            </span>
-
-                            <span class="account-meta-value">
-                                {{ organizer.phone }}
-                            </span>
-
+                        <div
+                            class="alert"
+                            data-category="{{ category }}"
+                        >
+                            {{ message }}
                         </div>
 
-                    {% endif %}
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
 
 
-                    <div class="account-meta-row">
 
-                        <span class="account-meta-label">
-                            Subscription
+        <!-- =====================================
+             PAGE HEADING
+        ====================================== -->
+
+        <header class="dashboard-heading">
+
+            <div class="dashboard-heading-copy">
+
+                <span class="dashboard-eyebrow">
+                    ORGANIZER CONTROL CENTRE
+                </span>
+
+                <h1>
+                    Dashboard
+                </h1>
+
+                <p>
+                    Manage events, ticket sales, attendees
+                    and event-day operations.
+                </p>
+
+            </div>
+
+
+            {% if subscription_active %}
+
+                <a
+                    href="{{ url_for(
+                        'admin_new_event'
+                    ) }}"
+                    class="button"
+                >
+                    + Create Event
+                </a>
+
+            {% endif %}
+
+        </header>
+
+
+
+        <!-- =====================================
+             SUBSCRIPTION STATUS
+        ====================================== -->
+
+        {% if subscription_active %}
+
+            <section class="subscription-card active">
+
+
+                <div class="subscription-card-row">
+
+
+                    <div>
+
+                        <span class="section-kicker">
+                            KALXA SUBSCRIPTION
                         </span>
 
-                        <span class="account-meta-value">
+                        <h3>
+                            Subscription Active
+                        </h3>
 
-                            <span
-                                class="subscription-badge
-                                {% if subscription_active %}
-                                    active
-                                {% else %}
-                                    {{ subscription_status }}
-                                {% endif %}"
-                            >
-                                {% if subscription_active %}
-                                    ACTIVE
-                                {% else %}
-                                    {{ subscription_status|upper }}
-                                {% endif %}
-                            </span>
+                        <p>
 
-                        </span>
+                            Your organizer account can create
+                            and publish ticket events.
 
-                    </div>
+                            {% if subscription_expires_at %}
 
-
-                    {% if subscription_expires_at %}
-
-                        <div class="account-meta-row">
-
-                            <span class="account-meta-label">
-                                Subscription Expires
-                            </span>
-
-                            <span class="account-meta-value">
+                                Access expires on
                                 {{ subscription_expires_at.strftime(
                                     '%d %B %Y'
-                                ) }}
-                            </span>
+                                ) }}.
 
-                        </div>
+                            {% endif %}
 
-                    {% endif %}
+                        </p>
+
+                    </div>
+
+
+                    <span class="subscription-badge active">
+                        ACTIVE
+                    </span>
+
+
+                </div>
+
+
+            </section>
+
+
+        {% elif subscription_status == "suspended" %}
+
+            <section class="subscription-card suspended">
+
+
+                <div class="subscription-card-row">
+
+
+                    <div>
+
+                        <span class="section-kicker">
+                            KALXA SUBSCRIPTION
+                        </span>
+
+                        <h3>
+                            Organizer Account Suspended
+                        </h3>
+
+                        <p>
+                            New event creation is disabled.
+                            Existing event records remain available,
+                            but Kalxa Super Admin must reactivate
+                            this organizer account.
+                        </p>
+
+                    </div>
+
+
+                    <span class="subscription-badge suspended">
+                        SUSPENDED
+                    </span>
+
+
+                </div>
+
+
+            </section>
+
+
+        {% else %}
+
+            <section class="subscription-card restricted">
+
+
+                <div class="subscription-card-row">
+
+
+                    <div>
+
+                        <span class="section-kicker">
+                            KALXA SUBSCRIPTION
+                        </span>
+
+
+                        <h3>
+
+                            {% if subscription_status == "expired" %}
+
+                                Subscription Expired
+
+                            {% else %}
+
+                                Subscription Inactive
+
+                            {% endif %}
+
+                        </h3>
+
+
+                        <p>
+
+                            You can still view your dashboard,
+                            existing events, orders and check-in
+                            records, but you cannot create new
+                            ticket events until your Kalxa
+                            subscription is activated.
+
+                            {% if subscription_expires_at %}
+
+                                Previous access ended on
+                                {{ subscription_expires_at.strftime(
+                                    '%d %B %Y'
+                                ) }}.
+
+                            {% endif %}
+
+                        </p>
+
+                    </div>
+
+
+                    <div class="subscription-actions">
+
+                        <span
+                            class="subscription-badge
+                            {{ subscription_status }}"
+                        >
+                            {{ subscription_status|upper }}
+                        </span>
+
+
+                        <a
+                            href="{{ url_for(
+                                'admin_subscription'
+                            ) }}"
+                            class="button button-light"
+                        >
+                            Activate Subscription
+                        </a>
+
+                    </div>
 
 
                 </div>
@@ -2746,302 +2128,550 @@
 
 
 
-        <div class="metrics">
+        <!-- =====================================
+             ACCOUNT + OVERVIEW
+        ====================================== -->
+
+        <div class="overview-grid">
 
 
-            <div class="metric">
 
-                <span class="metric-label">
-                    Events
-                </span>
+            <!-- =================================
+                 ORGANIZER ACCOUNT
+            ================================== -->
 
-                <strong>
-                    {{ events|length }}
-                </strong>
+            {% if organizer %}
 
-                <small>
-                    Created events
-                </small>
-
-            </div>
+                <section class="account-card">
 
 
-            <div class="metric">
-
-                <span class="metric-label">
-                    Total Orders
-                </span>
-
-                <strong>
-                    {{ total_orders }}
-                </strong>
-
-                <small>
-                    Ticket orders
-                </small>
-
-            </div>
+                    <span class="section-kicker">
+                        ORGANIZER ACCOUNT
+                    </span>
 
 
-            <div class="metric">
-
-                <span class="metric-label">
-                    Paid Orders
-                </span>
-
-                <strong>
-                    {{ paid_orders }}
-                </strong>
-
-                <small>
-                    Confirmed payments
-                </small>
-
-            </div>
+                    <h2 class="account-name">
+                        {{ organizer.display_name }}
+                    </h2>
 
 
-            <div class="metric">
+                    <div class="account-meta">
 
-                <span class="metric-label">
-                    Checked In
-                </span>
 
-                <strong>
-                    {{ checked_in }}
-                </strong>
+                        <div class="account-meta-row">
 
-                <small>
-                    Tickets used
-                </small>
+                            <span class="account-meta-label">
+                                Organizer ID
+                            </span>
 
-            </div>
+                            <span class="account-meta-value">
+                                #{{ organizer.id }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="account-meta-row">
+
+                            <span class="account-meta-label">
+                                Email
+                            </span>
+
+                            <span class="account-meta-value">
+                                {{ organizer.email }}
+                            </span>
+
+                        </div>
+
+
+                        {% if organizer.phone %}
+
+                            <div class="account-meta-row">
+
+                                <span class="account-meta-label">
+                                    Phone
+                                </span>
+
+                                <span class="account-meta-value">
+                                    {{ organizer.phone }}
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <div class="account-meta-row">
+
+                            <span class="account-meta-label">
+                                Subscription
+                            </span>
+
+                            <span class="account-meta-value">
+
+                                <span
+                                    class="subscription-badge
+                                    {% if subscription_active %}
+                                        active
+                                    {% else %}
+                                        {{ subscription_status }}
+                                    {% endif %}"
+                                >
+
+                                    {% if subscription_active %}
+
+                                        ACTIVE
+
+                                    {% else %}
+
+                                        {{ subscription_status|upper }}
+
+                                    {% endif %}
+
+                                </span>
+
+                            </span>
+
+                        </div>
+
+
+                        {% if subscription_expires_at %}
+
+                            <div class="account-meta-row">
+
+                                <span class="account-meta-label">
+                                    Expires
+                                </span>
+
+                                <span class="account-meta-value">
+
+                                    {{ subscription_expires_at.strftime(
+                                        '%d %B %Y'
+                                    ) }}
+
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                </section>
+
+            {% endif %}
+
+
+
+            <!-- =================================
+                 ACTIVITY TABLE
+            ================================== -->
+
+            <section class="overview-table-card">
+
+
+                <div class="overview-table-header">
+
+                    <div>
+
+                        <span class="section-kicker">
+                            OVERVIEW
+                        </span>
+
+                        <h2>
+                            Account Activity
+                        </h2>
+
+                        <p>
+                            Current organizer ticketing activity.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="overview-table">
+
+
+                    <div
+                        class="overview-table-heading"
+                        aria-hidden="true"
+                    >
+
+                        <span>
+                            Metric
+                        </span>
+
+                        <span>
+                            Total
+                        </span>
+
+                        <span>
+                            Description
+                        </span>
+
+                    </div>
+
+
+
+                    <!-- EVENTS -->
+
+                    <div class="overview-row">
+
+                        <div class="overview-label">
+
+                            <span class="overview-icon">
+                                🎟
+                            </span>
+
+                            <span>
+                                Events
+                            </span>
+
+                        </div>
+
+                        <div class="overview-value">
+                            {{ events|length }}
+                        </div>
+
+                        <div class="overview-description">
+                            Created events
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- TOTAL ORDERS -->
+
+                    <div class="overview-row">
+
+                        <div class="overview-label">
+
+                            <span class="overview-icon">
+                                🧾
+                            </span>
+
+                            <span>
+                                Total Orders
+                            </span>
+
+                        </div>
+
+                        <div class="overview-value">
+                            {{ total_orders }}
+                        </div>
+
+                        <div class="overview-description">
+                            Ticket orders
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- PAID ORDERS -->
+
+                    <div class="overview-row">
+
+                        <div class="overview-label">
+
+                            <span class="overview-icon">
+                                ✓
+                            </span>
+
+                            <span>
+                                Paid Orders
+                            </span>
+
+                        </div>
+
+                        <div class="overview-value">
+                            {{ paid_orders }}
+                        </div>
+
+                        <div class="overview-description">
+                            Confirmed payments
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- CHECKED IN -->
+
+                    <div class="overview-row">
+
+                        <div class="overview-label">
+
+                            <span class="overview-icon">
+                                ↳
+                            </span>
+
+                            <span>
+                                Checked In
+                            </span>
+
+                        </div>
+
+                        <div class="overview-value">
+                            {{ checked_in }}
+                        </div>
+
+                        <div class="overview-description">
+                            Tickets used
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
 
 
         </div>
 
 
-    </div>
+
+        <!-- =====================================
+             OPTIONAL DISCOVERY CONNECTION
+        ====================================== -->
+
+        {% if active_content_item_id %}
+
+            <section class="discovery-card">
+
+
+                <div class="discovery-row">
+
+
+                    <div>
+
+                        <span class="section-kicker">
+                            KALXA DISCOVERY
+                        </span>
+
+                        <h3>
+                            Discovery listing connected
+                        </h3>
+
+                        <p>
+                            This session includes optional context
+                            from Kalxa Discovery. Your Ticketing
+                            account still owns the event.
+                        </p>
+
+                    </div>
+
+
+                    <span class="discovery-badge">
+                        Listing #{{ active_content_item_id }}
+                    </span>
+
+
+                </div>
+
+
+            </section>
+
+        {% endif %}
 
 
 
-    <!-- =========================================
-         OPTIONAL DISCOVERY CONNECTION
-    ========================================== -->
+        <!-- =====================================
+             EVENT LIST
+        ====================================== -->
 
-    {% if active_content_item_id %}
-
-        <section class="discovery-card">
+        <section class="admin-section">
 
 
-            <div class="discovery-row">
+            <div class="admin-section-header">
 
 
                 <div>
 
                     <span class="section-kicker">
-                        KALXA DISCOVERY
+                        YOUR EVENTS
                     </span>
 
-                    <h3>
-                        Discovery listing connected
-                    </h3>
+                    <h2>
+                        Ticket Events
+                    </h2>
 
-                    <p>
-
-                        This session includes optional context
-                        from Kalxa Discovery. Your Ticketing
-                        account still owns the event.
-
+                    <p class="muted">
+                        Manage events owned by this organizer account.
                     </p>
 
                 </div>
 
 
-                <span class="discovery-badge">
-                    Listing #{{ active_content_item_id }}
+                <span class="admin-count-badge">
+                    {{ events|length }}
                 </span>
 
 
             </div>
 
 
-        </section>
 
-    {% endif %}
-
+            {% if events %}
 
 
-
-    <!-- =========================================
-         ORGANIZER EVENT LIST
-    ========================================== -->
-
-    <section class="admin-section">
+                <div class="admin-event-list">
 
 
-        <div class="admin-section-header">
+                    {% for event in events %}
 
 
-            <div>
-
-                <span class="section-kicker">
-                    YOUR EVENTS
-                </span>
-
-                <h2>
-                    Ticket Events
-                </h2>
-
-                <p class="muted">
-
-                    Manage the events owned by this
-                    organizer account.
-
-                </p>
-
-            </div>
-
-
-            <span class="admin-count-badge">
-                {{ events|length }}
-            </span>
-
-
-        </div>
+                        <article class="admin-event-row">
 
 
 
-        {% if events %}
+                            <!-- EVENT IMAGE -->
 
+                            {% if event.poster_image_mimetype or event.image_url %}
 
-            <div class="admin-event-list">
+                                <div class="admin-event-image">
 
+                                    <img
+                                        src="{{
+                                            url_for(
+                                                'event_poster',
+                                                event_id=event.id
+                                            )
+                                            if event.poster_image_mimetype
+                                            else event.image_url
+                                        }}"
+                                        alt="{{ event.title }}"
+                                        loading="lazy"
+                                    >
 
-                {% for event in events %}
-
-
-                    <article class="admin-event-row">
-
-
-                        {% if event.poster_image_mimetype or event.image_url %}
-
-                            <div class="admin-event-image">
-
-                                <img
-                                    src="{{
-        url_for(
-            'event_poster',
-            event_id=event.id
-        )
-        if event.poster_image_mimetype
-        else event.image_url
-    }}"
-                                    alt="{{ event.title }}"
-                                    loading="lazy"
-                                >
-
-                            </div>
-
-                        {% else %}
-
-                            <div class="admin-event-image"></div>
-
-                        {% endif %}
-
-
-
-                        <div class="admin-event-info">
-
-
-                            <div class="admin-event-topline">
-
-
-                                <strong class="admin-event-title">
-                                    {{ event.title }}
-                                </strong>
-
-
-                                <span class="admin-price-badge">
-
-                                    {% if event.ticket_price == 0 %}
-
-                                        FREE
-
-                                    {% else %}
-
-                                        R{{ "%.2f"|format(
-                                            event.ticket_price
-                                        ) }}
-
-                                    {% endif %}
-
-                                </span>
-
-
-                            </div>
-
-
-
-                            {% if event.venue %}
-
-                                <div class="event-meta-line">
-                                    📍 {{ event.venue }}
                                 </div>
+
+                            {% else %}
+
+                                <div class="admin-event-image"></div>
 
                             {% endif %}
 
 
 
-                            {% if event.event_date %}
+                            <!-- EVENT INFO -->
 
-                                <div class="event-meta-line">
-
-                                    📅
-
-                                    {{ event.event_date.strftime(
-                                        '%d %B %Y'
-                                    ) }}
-
-                                    {% if event.event_time %}
-
-                                        ·
-
-                                        {{ event.event_time.strftime(
-                                            '%H:%M'
-                                        ) }}
-
-                                    {% endif %}
-
-                                </div>
-
-                            {% endif %}
+                            <div class="admin-event-info">
 
 
-
-                            <div class="event-stats-line">
-
-                                <span>
-                                    Sold:
-                                    {{ event.paid_ticket_count }}
-                                </span>
+                                <div class="admin-event-topline">
 
 
-                                {% if event.ticket_capacity %}
+                                    <strong class="admin-event-title">
+                                        {{ event.title }}
+                                    </strong>
 
-                                    <span>
-                                        Capacity:
-                                        {{ event.ticket_capacity }}
+
+                                    <span class="admin-price-badge">
+
+                                        {% if event.ticket_price == 0 %}
+
+                                            FREE
+
+                                        {% else %}
+
+                                            R{{ "%.2f"|format(
+                                                event.ticket_price
+                                            ) }}
+
+                                        {% endif %}
+
                                     </span>
+
+
+                                </div>
+
+
+
+                                {% if event.venue %}
+
+                                    <div class="event-meta-line">
+                                        📍 {{ event.venue }}
+                                    </div>
 
                                 {% endif %}
 
 
-                                {% if event.remaining_tickets is not none %}
+
+                                {% if event.event_date %}
+
+                                    <div class="event-meta-line">
+
+                                        📅
+
+                                        {{ event.event_date.strftime(
+                                            '%d %B %Y'
+                                        ) }}
+
+                                        {% if event.event_time %}
+
+                                            ·
+
+                                            {{ event.event_time.strftime(
+                                                '%H:%M'
+                                            ) }}
+
+                                        {% endif %}
+
+                                    </div>
+
+                                {% endif %}
+
+
+
+                                <div class="event-stats-line">
+
 
                                     <span>
-                                        Remaining:
-                                        {{ event.remaining_tickets }}
+                                        Sold:
+                                        {{ event.paid_ticket_count }}
                                     </span>
+
+
+                                    {% if event.ticket_capacity %}
+
+                                        <span>
+                                            Capacity:
+                                            {{ event.ticket_capacity }}
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    {% if event.remaining_tickets is not none %}
+
+                                        <span>
+                                            Remaining:
+                                            {{ event.remaining_tickets }}
+                                        </span>
+
+                                    {% endif %}
+
+
+                                </div>
+
+
+
+                                {% if event.kalxa_content_item_id %}
+
+                                    <div class="event-meta-line">
+
+                                        Linked to Kalxa Discovery
+                                        #{{ event.kalxa_content_item_id }}
+
+                                    </div>
 
                                 {% endif %}
 
@@ -3050,238 +2680,320 @@
 
 
 
-                            {% if event.kalxa_content_item_id %}
+                            <!-- EVENT ACTIONS -->
 
-                                <div class="event-meta-line">
+                            <div class="admin-event-actions">
 
-                                    Linked to Kalxa Discovery
-                                    #{{ event.kalxa_content_item_id }}
-
-                                </div>
-
-                            {% endif %}
-
-
-                        </div>
-
-
-
-                        <div class="admin-event-actions">
-
-
-                            <a
-                                href="{{ url_for(
-                                    'admin_event_control',
-                                    event_id=event.id
-                                ) }}"
-                                class="button"
-                            >
-                                Control Centre
-                            </a>
-
-
-                            {% if not event.is_closed %}
 
                                 <a
                                     href="{{ url_for(
-                                        'admin_edit_event',
+                                        'admin_event_control',
+                                        event_id=event.id
+                                    ) }}"
+                                    class="button"
+                                >
+                                    Control Centre
+                                </a>
+
+
+                                {% if not event.is_closed %}
+
+                                    <a
+                                        href="{{ url_for(
+                                            'admin_edit_event',
+                                            event_id=event.id
+                                        ) }}"
+                                        class="button button-secondary"
+                                    >
+                                        Edit
+                                    </a>
+
+                                {% endif %}
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_orders',
                                         event_id=event.id
                                     ) }}"
                                     class="button button-secondary"
                                 >
-                                    Edit Event
+                                    Tickets
                                 </a>
 
-                            {% endif %}
 
-
-                            <a
-                                href="{{ url_for(
-                                    'admin_orders',
-                                    event_id=event.id
-                                ) }}"
-                                class="button button-secondary"
-                            >
-                                Manage Tickets
-                            </a>
-
-
-                            <a
-                                href="{{ url_for(
-                                    'event_page',
-                                    event_id=event.id
-                                ) }}"
-                                class="button button-secondary"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                View Public Page
-                            </a>
-
-
-                            <form
-                                method="POST"
-                                action="{{ url_for(
-                                    'admin_delete_event',
-                                    event_id=event.id
-                                ) }}"
-                                class="delete-event-form"
-                                onsubmit="return confirm(
-                                    'Delete this event from your dashboard? '
-                                    + 'Ticket and order history will be kept.'
-                                );"
-                            >
-                                <button
-                                    type="submit"
-                                    class="button button-danger"
+                                <a
+                                    href="{{ url_for(
+                                        'event_page',
+                                        event_id=event.id
+                                    ) }}"
+                                    class="button button-secondary"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                 >
-                                    Delete Event
-                                </button>
-                            </form>
+                                    Public Page
+                                </a>
 
 
-                        </div>
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'admin_delete_event',
+                                        event_id=event.id
+                                    ) }}"
+                                    class="delete-event-form"
+                                    onsubmit="return confirm(
+                                        'Delete this event from your dashboard? '
+                                        + 'Ticket and order history will be kept.'
+                                    );"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="button button-danger"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </form>
 
 
-                    </article>
+                            </div>
 
 
-                {% endfor %}
+                        </article>
 
 
-            </div>
+                    {% endfor %}
 
 
-        {% else %}
-
-
-            <div class="admin-empty-state">
-
-
-                <div class="admin-empty-icon">
-                    🎟
                 </div>
 
 
-                <h3>
-                    No ticket events yet
-                </h3>
+            {% else %}
+
+
+                <div class="admin-empty-state">
+
+
+                    <div class="admin-empty-icon">
+                        🎟
+                    </div>
+
+
+                    <h3>
+                        No ticket events yet
+                    </h3>
+
+
+                    <p class="muted">
+
+                        {% if subscription_active %}
+
+                            Create your first event.
+                            It will appear here after it is saved.
+
+                        {% else %}
+
+                            Your events will appear here once your
+                            subscription is active and you create one.
+
+                        {% endif %}
+
+                    </p>
+
+
+                </div>
+
+
+            {% endif %}
+
+
+        </section>
+
+
+
+        <!-- =====================================
+             CHECK-IN
+        ====================================== -->
+
+        <section class="admin-section admin-checkin-card">
+
+
+            <div>
+
+
+                <span class="section-kicker">
+                    EVENT ENTRY
+                </span>
+
+
+                <h2>
+                    Door Check-In
+                </h2>
 
 
                 <p class="muted">
-
-                    {% if subscription_active %}
-
-                        Create your first event above.
-                        It will appear here as soon as it is saved.
-
-                    {% else %}
-
-                        Your events will appear here once your
-                        subscription is active and you create one.
-
-                    {% endif %}
-
+                    Validate attendee QR tickets at the entrance
+                    and prevent duplicate entry.
                 </p>
 
 
             </div>
 
 
-        {% endif %}
+            <a
+                href="{{ url_for(
+                    'admin_checkin'
+                ) }}"
+                class="button button-light"
+            >
+                🎟 Scan Tickets
+            </a>
 
 
-    </section>
+        </section>
+
+
+    </main>
 
 
 
     <!-- =========================================
-         CHECK-IN
+         SIDEBAR SCRIPT
     ========================================== -->
 
-    <section class="admin-section admin-checkin-card">
+    <script>
+
+        (() => {
+
+            const sidebar =
+                document.querySelector(
+                    ".admin-nav"
+                );
+
+            const toggle =
+                document.getElementById(
+                    "mobile-admin-menu"
+                );
+
+            const overlay =
+                document.getElementById(
+                    "sidebar-overlay"
+                );
 
 
-        <div>
-
-
-            <span class="section-kicker">
-                EVENT ENTRY
-            </span>
-
-
-
-            <p class="muted">
-
-                Validate attendee QR tickets at the entrance
-                and prevent duplicate entry.
-
-            </p>
-
-
-        </div>
-
-
-        <a
-            href="{{ url_for(
-                'admin_checkin'
-            ) }}"
-            class="button button-light"
-        >
-            🎟 Scan Tickets
-        </a>
-
-
-    </section>
-
-
-</div>
-
-
-
-
-<script>
-    (() => {
-
-        const sidebar = document.querySelector('.admin-nav');
-        const toggle = document.getElementById('mobile-admin-menu');
-        const overlay = document.getElementById('sidebar-overlay');
-
-        if (!sidebar || !toggle || !overlay) {
-            return;
-        }
-
-        function setOpen(open) {
-            sidebar.classList.toggle('sidebar-open', open);
-            overlay.classList.toggle('show', open);
-            toggle.textContent = open ? '×' : '☰';
-            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        }
-
-        toggle.addEventListener('click', () => {
-            setOpen(!sidebar.classList.contains('sidebar-open'));
-        });
-
-        overlay.addEventListener('click', () => {
-            setOpen(false);
-        });
-
-        sidebar.querySelectorAll('a').forEach((link) => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth <= 900) {
-                    setOpen(false);
-                }
-            });
-        });
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 900) {
-                setOpen(false);
+            if (
+                !sidebar
+                || !toggle
+                || !overlay
+            ) {
+                return;
             }
-        });
 
-    })();
-</script>
+
+            function setOpen(
+                open
+            ) {
+
+                sidebar.classList.toggle(
+                    "sidebar-open",
+                    open
+                );
+
+                overlay.classList.toggle(
+                    "show",
+                    open
+                );
+
+                toggle.textContent =
+                    open
+                    ? "×"
+                    : "☰";
+
+                toggle.setAttribute(
+                    "aria-expanded",
+                    open
+                    ? "true"
+                    : "false"
+                );
+            }
+
+
+            toggle.addEventListener(
+                "click",
+                () => {
+
+                    setOpen(
+                        !sidebar.classList.contains(
+                            "sidebar-open"
+                        )
+                    );
+
+                }
+            );
+
+
+            overlay.addEventListener(
+                "click",
+                () => {
+
+                    setOpen(
+                        false
+                    );
+
+                }
+            );
+
+
+            sidebar.querySelectorAll(
+                "a"
+            ).forEach(
+                (link) => {
+
+                    link.addEventListener(
+                        "click",
+                        () => {
+
+                            if (
+                                window.innerWidth
+                                <= 900
+                            ) {
+
+                                setOpen(
+                                    false
+                                );
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+            window.addEventListener(
+                "resize",
+                () => {
+
+                    if (
+                        window.innerWidth
+                        > 900
+                    ) {
+
+                        setOpen(
+                            false
+                        );
+                    }
+
+                }
+            );
+
+        })();
+
+    </script>
+
+
 </body>
 
 </html>
