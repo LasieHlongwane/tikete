@@ -172,7 +172,13 @@
             border-top: 1px solid #e5e7eb;
         }
 
+        /* =====================================================
+           VIDEO PREVIEW
+        ===================================================== */
+
         .video-frame {
+            position: relative;
+
             width: min(100%, 300px);
 
             margin: 14px auto;
@@ -195,6 +201,108 @@
             aspect-ratio: 9 / 16;
 
             object-fit: cover;
+
+            cursor: pointer;
+        }
+
+        .video-sound-button {
+            position: absolute;
+
+            top: 12px;
+            right: 12px;
+
+            z-index: 5;
+
+            width: 40px;
+            height: 40px;
+
+            display: grid;
+            place-items: center;
+
+            padding: 0;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .78
+                );
+
+            color: #ffffff;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .18
+                );
+
+            border-radius: 999px;
+
+            font-size: 16px;
+
+            cursor: pointer;
+
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .video-sound-button:hover {
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .92
+                );
+        }
+
+        .video-tap-hint {
+            position: absolute;
+
+            left: 50%;
+            bottom: 14px;
+
+            z-index: 4;
+
+            transform:
+                translateX(-50%);
+
+            padding:
+                6px 10px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .72
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 10px;
+            font-weight: 800;
+
+            white-space: nowrap;
+
+            pointer-events: none;
+
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+
+            transition:
+                opacity .2s ease;
+        }
+
+        .video-frame.sound-on
+        .video-tap-hint {
+            opacity: 0;
         }
 
         .reel-meta {
@@ -215,6 +323,23 @@
 
             font-size: 12px;
             font-weight: 700;
+        }
+
+        @media (max-width: 560px) {
+
+            .reel-admin-shell {
+                width: min(100% - 20px, 760px);
+                padding-top: 20px;
+            }
+
+            .reel-admin-card {
+                padding: 18px;
+                border-radius: 16px;
+            }
+
+            .video-frame {
+                width: min(100%, 290px);
+            }
         }
 
     </style>
@@ -337,12 +462,21 @@
                     CURRENT REEL
                 </span>
 
-                <div class="video-frame">
+
+                <div
+                    class="video-frame"
+                    id="reel-preview-frame"
+                >
 
                     <video
-                        controls
+                        id="reel-preview-video"
                         playsinline
+                        muted
+                        loop
                         preload="metadata"
+                        controlslist="nodownload noremoteplayback"
+                        disablepictureinpicture
+                        oncontextmenu="return false;"
                         {% if reel.thumbnail_url %}
                             poster="{{ reel.thumbnail_url }}"
                         {% endif %}
@@ -353,7 +487,26 @@
                         >
                     </video>
 
+
+                    <button
+                        type="button"
+                        class="video-sound-button"
+                        id="reel-preview-sound"
+                        aria-label="Turn sound on"
+                    >
+                        🔇
+                    </button>
+
+
+                    <div
+                        class="video-tap-hint"
+                        id="reel-tap-hint"
+                    >
+                        Tap for sound
+                    </div>
+
                 </div>
+
 
                 <div class="reel-meta">
 
@@ -393,6 +546,187 @@
     </section>
 
 </div>
+
+
+{% if reel %}
+
+<script>
+
+    (() => {
+
+        const video =
+            document.getElementById(
+                "reel-preview-video"
+            );
+
+        const soundButton =
+            document.getElementById(
+                "reel-preview-sound"
+            );
+
+        const videoFrame =
+            document.getElementById(
+                "reel-preview-frame"
+            );
+
+
+        if (
+            !video
+            ||
+            !soundButton
+        ) {
+            return;
+        }
+
+
+        /*
+         * Always begin muted.
+         */
+        video.muted = true;
+
+
+        function updateSoundUi() {
+
+            if (video.muted) {
+
+                soundButton.textContent =
+                    "🔇";
+
+                soundButton.setAttribute(
+                    "aria-label",
+                    "Turn sound on"
+                );
+
+                videoFrame?.classList.remove(
+                    "sound-on"
+                );
+
+            } else {
+
+                soundButton.textContent =
+                    "🔊";
+
+                soundButton.setAttribute(
+                    "aria-label",
+                    "Mute video"
+                );
+
+                videoFrame?.classList.add(
+                    "sound-on"
+                );
+            }
+        }
+
+
+        async function ensurePlaying() {
+
+            if (!video.paused) {
+                return;
+            }
+
+            try {
+
+                await video.play();
+
+            } catch (error) {
+
+                /*
+                 * Some browsers may block autoplay.
+                 * The organizer can still tap the video.
+                 */
+                console.debug(
+                    "[Kalxa Reel] Preview autoplay blocked.",
+                    error
+                );
+            }
+        }
+
+
+        async function toggleSound() {
+
+            await ensurePlaying();
+
+            video.muted =
+                !video.muted;
+
+            updateSoundUi();
+        }
+
+
+        /*
+         * Clicking / tapping directly on the video
+         * changes sound.
+         */
+        video.addEventListener(
+            "click",
+            toggleSound
+        );
+
+
+        /*
+         * Sound button does the same.
+         */
+        soundButton.addEventListener(
+            "click",
+            async (event) => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                await toggleSound();
+            }
+        );
+
+
+        /*
+         * Prevent the ordinary browser context menu.
+         */
+        video.addEventListener(
+            "contextmenu",
+            (event) => {
+
+                event.preventDefault();
+            }
+        );
+
+
+        /*
+         * Start the organizer preview automatically,
+         * muted.
+         */
+        const startPreview =
+            () => {
+
+                video.muted = true;
+
+                updateSoundUi();
+
+                video.play().catch(
+                    () => {}
+                );
+            };
+
+
+        if (
+            document.readyState
+            === "loading"
+        ) {
+
+            document.addEventListener(
+                "DOMContentLoaded",
+                startPreview
+            );
+
+        } else {
+
+            startPreview();
+        }
+
+    })();
+
+</script>
+
+{% endif %}
 
 </body>
 </html>
