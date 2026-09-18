@@ -21,7 +21,8 @@ import requests
 from datetime import datetime, timedelta, date, timezone
 from decimal import Decimal, InvalidOperation, ROUND_UP
 from zoneinfo import ZoneInfo
-
+import cloudinary
+import cloudinary.uploader
 import qrcode
 import cloudinary
 import cloudinary.uploader
