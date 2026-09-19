@@ -2018,6 +2018,27 @@ def valid_restaurant_directions_url(
 
 
     return value
+
+
+
+# ============================================================
+# ORGANIZER HOME REDIRECT
+# ============================================================
+
+def organizer_home_endpoint(
+    organizer,
+):
+
+    if (
+        organizer
+        and organizer.account_type
+        == "restaurant"
+    ):
+
+        return "admin_restaurants"
+
+
+    return "admin_dashboard"
 # ============================================================
 # FEATURED LISTING HELPERS
 # ============================================================
