@@ -83,6 +83,8 @@ from models import (
     db,
     EventReel,
     EventReelAnalytics,
+    RestaurantAdvert,
+    RestaurantReel,
 )
 
 
