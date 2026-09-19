@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Manage {{ advert.business_name }} | Kalxa
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            background: #f6f7f9;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: min(100% - 28px, 900px);
+            margin: 0 auto;
+            padding: 28px 0 70px;
+        }
+
+        .back {
+            display: inline-flex;
+            margin-bottom: 18px;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 20px;
+
+            padding: 20px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 20px;
+        }
+
+        .poster {
+            overflow: hidden;
+
+            aspect-ratio: 4 / 5;
+
+            background: #e5e7eb;
+
+            border-radius: 14px;
+        }
+
+        .poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .eyebrow {
+            margin: 0 0 7px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .12em;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size:
+                clamp(
+                    26px,
+                    6vw,
+                    38px
+                );
+
+            letter-spacing: -.04em;
+        }
+
+        .headline {
+            margin: 7px 0 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .status {
+            display: inline-flex;
+
+            margin-top: 12px;
+
+            padding: 6px 9px;
+
+            border-radius: 999px;
+
+            font-size: 10px;
+            font-weight: 950;
+        }
+
+        .status-live {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-scheduled {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-paused {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .metrics {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 12px;
+
+            margin-top: 16px;
+        }
+
+        .metric {
+            padding: 13px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 12px;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            display: block;
+
+            margin-top: 5px;
+
+            color: #111827;
+
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .sections {
+            display: grid;
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .section {
+            padding: 18px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 16px;
+        }
+
+        .section h2 {
+            margin: 0 0 12px;
+
+            font-size: 14px;
+        }
+
+        .detail {
+            display: grid;
+
+            grid-template-columns:
+                130px 1fr;
+
+            gap: 7px 12px;
+
+            font-size: 12px;
+        }
+
+        .detail-label {
+            color: #64748b;
+        }
+
+        .detail-value {
+            font-weight: 750;
+            word-break: break-word;
+        }
+
+        .actions {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 9px;
+
+            margin-top: 16px;
+        }
+
+        .action,
+        .actions button {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-height: 44px;
+
+            padding: 9px 12px;
+
+            border-radius: 10px;
+
+            font: inherit;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            text-decoration: none;
+
+            cursor: pointer;
+        }
+
+        .action-primary {
+            background: #111827;
+            color: #ffffff;
+            border: 1px solid #111827;
+        }
+
+        .action-secondary {
+            background: #ffffff;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+
+        .action-warning {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+        }
+
+        .subscription-warning {
+            margin-top: 16px;
+
+            padding: 14px;
+
+            background: #fff7ed;
+            color: #9a3412;
+
+            border:
+                1px solid #fed7aa;
+
+            border-radius: 12px;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+        }
+
+        form {
+            margin: 0;
+        }
+
+        @media (max-width: 640px) {
+
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .poster {
+                max-width: 260px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .detail {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+    <a
+        href="{{ url_for(
+            'admin_restaurants'
+        ) }}"
+        class="back"
+    >
+        ← Restaurant Control Centre
+    </a>
+
+
+    <section class="hero">
+
+
+        <div class="poster">
+
+            {% if advert.poster_image_url %}
+
+                <img
+                    src="{{ advert.poster_image_url }}"
+                    alt="{{ advert.business_name }} poster"
+                >
+
+            {% endif %}
+
+        </div>
+
+
+        <div>
+
+            <p class="eyebrow">
+                RESTAURANT CAMPAIGN
+            </p>
+
+            <h1>
+                {{ advert.business_name }}
+            </h1>
+
+
+            {% if advert.headline %}
+
+                <p class="headline">
+                    {{ advert.headline }}
+                </p>
+
+            {% endif %}
+
+
+            {% if advert.campaign_status == "live" %}
+
+                <span class="status status-live">
+                    🟢 LIVE
+                </span>
+
+            {% elif advert.campaign_status == "scheduled" %}
+
+                <span class="status status-scheduled">
+                    🟡 SCHEDULED
+                </span>
+
+            {% elif advert.campaign_status == "expired" %}
+
+                <span class="status status-expired">
+                    🔴 EXPIRED
+                </span>
+
+            {% else %}
+
+                <span class="status status-paused">
+                    ⚪ PAUSED
+                </span>
+
+            {% endif %}
+
+
+            <div class="metrics">
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Start
+                    </span>
+
+                    <span class="metric-value">
+
+                        {% if advert.campaign_start_date %}
+                            {{ advert.campaign_start_date.strftime('%d %b %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        End
+                    </span>
+
+                    <span class="metric-value">
+
+                        {% if advert.campaign_end_date %}
+                            {{ advert.campaign_end_date.strftime('%d %b %Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Remaining
+                    </span>
+
+                    <span class="metric-value">
+
+                        {% if advert.days_remaining is not none %}
+                            {{ advert.days_remaining }} days
+                        {% else %}
+                            —
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    {% if not subscription_active %}
+
+        <div class="subscription-warning">
+
+            🔒 Your restaurant subscription is not active.
+
+            You can view your campaign,
+            but editing, resuming and reel publishing
+            require an active subscription.
+
+            <br><br>
+
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+            >
+                Activate Subscription →
+            </a>
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="sections">
+
+
+        <section class="section">
+
+            <h2>
+                Campaign Details
+            </h2>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Business
+                </div>
+
+                <div class="detail-value">
+                    {{ advert.business_name }}
+                </div>
+
+
+                <div class="detail-label">
+                    Headline
+                </div>
+
+                <div class="detail-value">
+                    {{ advert.headline or "—" }}
+                </div>
+
+
+                <div class="detail-label">
+                    Area
+                </div>
+
+                <div class="detail-value">
+                    {{ advert.area or "—" }}
+                </div>
+
+
+                <div class="detail-label">
+                    Address
+                </div>
+
+                <div class="detail-value">
+                    {{ advert.address or "—" }}
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="section">
+
+            <h2>
+                Customer Contact
+            </h2>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    WhatsApp
+                </div>
+
+                <div class="detail-value">
+                    {{ advert.whatsapp_number or "—" }}
+                </div>
+
+
+                <div class="detail-label">
+                    Phone
+                </div>
+
+                <div class="detail-value">
+                    {{ advert.phone_number or "—" }}
+                </div>
+
+
+                <div class="detail-label">
+                    Directions
+                </div>
+
+                <div class="detail-value">
+
+                    {% if advert.directions_url %}
+                        Configured
+                    {% else %}
+                        —
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="section">
+
+            <h2>
+                Restaurant Reel
+            </h2>
+
+
+            <div class="detail">
+
+                <div class="detail-label">
+                    Status
+                </div>
+
+                <div class="detail-value">
+
+                    {% if advert.reel and advert.reel.active %}
+                        🎬 Published
+                    {% else %}
+                        No reel published
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </div>
+
+
+    <div class="actions">
+
+
+        {% if subscription_active %}
+
+            <a
+                href="{{ url_for(
+                    'admin_edit_restaurant',
+                    advert_id=advert.id
+                ) }}"
+                class="action action-primary"
+            >
+                ✏️ Edit Advert
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'admin_restaurant_reel',
+                    advert_id=advert.id
+                ) }}"
+                class="action action-primary"
+            >
+                🎬
+                {% if advert.reel %}
+                    Manage Reel
+                {% else %}
+                    Upload Reel
+                {% endif %}
+            </a>
+
+        {% endif %}
+
+
+        <a
+            href="{{ url_for(
+                'restaurant_page',
+                advert_id=advert.id
+            ) }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="action action-secondary"
+        >
+            View Public Page →
+        </a>
+
+
+        {% if advert.active %}
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'admin_pause_restaurant',
+                    advert_id=advert.id
+                ) }}"
+            >
+
+                <button
+                    type="submit"
+                    class="action action-warning"
+                    style="width:100%;"
+                >
+                    ⏸ Pause Advert
+                </button>
+
+            </form>
+
+
+        {% elif subscription_active %}
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'admin_resume_restaurant',
+                    advert_id=advert.id
+                ) }}"
+            >
+
+                <button
+                    type="submit"
+                    class="action action-primary"
+                    style="width:100%;"
+                >
+                    ▶ Resume Advert
+                </button>
+
+            </form>
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
