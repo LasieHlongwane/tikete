@@ -13019,6 +13019,17 @@ def admin_dashboard():
         get_current_organizer()
     )
 
+    if (
+      organizer.account_type
+      == "restaurant"
+    ):
+
+      return redirect(
+        url_for(
+            "admin_restaurants"
+        )
+      )
+
 
     current_app.logger.info(
         (
