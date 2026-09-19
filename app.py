@@ -5988,6 +5988,135 @@ def superadmin_notifications():
         .all()
     )
 
+# ========================================================
+# ACTIVE RESTAURANT ADVERTS
+# ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    restaurant_adverts = (
+        RestaurantAdvert.query
+
+        .join(
+          Organizer,
+          RestaurantAdvert.organizer_id
+          == Organizer.id,
+        )
+
+        .filter(
+          RestaurantAdvert.active.is_(
+            True
+          )
+        )
+
+        .filter(
+          Organizer.active.is_(
+            True
+          )
+        )
+
+        .filter(
+          Organizer.subscription_status
+          == "active"
+        )
+
+        .filter(
+          Organizer.subscription_expires_at
+          > now
+        )
+
+        .filter(
+          or_(
+            RestaurantAdvert.starts_at.is_(
+                None
+            ),
+
+            RestaurantAdvert.starts_at
+            <= now,
+          )
+        )
+
+        .filter(
+          or_(
+            RestaurantAdvert.ends_at.is_(
+                None
+            ),
+
+            RestaurantAdvert.ends_at
+            > now,
+          )
+        )
+
+        .order_by(
+          RestaurantAdvert.created_at.desc()
+        )
+
+        .limit(50)
+
+        .all()
+    )
+
+    restaurant_audience_counts = {
+
+      advert.id:
+        len(
+            get_restaurant_push_subscriptions(
+                advert
+            )
+        )
+
+      for advert in restaurant_adverts
+    }
+
+    selected_restaurant = None
+
+
+    selected_restaurant_id = (
+      request.args.get(
+        "restaurant_id",
+        type=int,
+      )
+    )
+
+
+    if selected_restaurant_id:
+
+      selected_restaurant = (
+        RestaurantAdvert.query
+
+        .join(
+            Organizer,
+            RestaurantAdvert.organizer_id
+            == Organizer.id,
+        )
+
+        .filter(
+            RestaurantAdvert.id
+            == selected_restaurant_id
+        )
+
+        .filter(
+            RestaurantAdvert.active.is_(
+                True
+            )
+        )
+
+        .filter(
+            Organizer.subscription_status
+            == "active"
+        )
+
+        .filter(
+            Organizer.subscription_expires_at
+            > datetime.utcnow()
+        )
+
+        .first()
+      )
+
 
     campaigns = (
         PushCampaign.query
