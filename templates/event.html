@@ -3299,6 +3299,440 @@
         }
     }
 
+
+
+    /* =====================================================
+       EAT AROUND YOU — RESTAURANT REELS
+       Separate from event reels
+    ===================================================== */
+
+    .food-vibe-section {
+        margin: 0 0 30px;
+        padding-top: 2px;
+    }
+
+    .food-vibe-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 13px;
+    }
+
+    .food-vibe-kicker {
+        display: block;
+        margin-bottom: 3px;
+        color: #6b7280;
+        font-size: .58rem;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .food-vibe-heading h2 {
+        margin: 0;
+        color: #111827;
+        font-size: clamp(1.28rem, 3vw, 1.72rem);
+        line-height: 1.05;
+        font-weight: 950;
+        letter-spacing: -.035em;
+    }
+
+    .food-vibe-heading-note {
+        flex: 0 0 auto;
+        color: #6b7280;
+        font-size: .68rem;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .food-vibe-rail {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(154px, 184px);
+        gap: 11px;
+        overflow-x: auto;
+        padding: 2px 2px 10px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .food-vibe-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+    .food-vibe-card {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 9 / 16;
+        padding: 0;
+        border: 1px solid #d1d5db;
+        border-radius: 18px;
+        background: #111827;
+        color: #ffffff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .10);
+        scroll-snap-align: start;
+        cursor: pointer;
+        isolation: isolate;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .food-vibe-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 13px 30px rgba(15, 23, 42, .16);
+    }
+
+    .food-vibe-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+            linear-gradient(
+                to top,
+                rgba(3, 7, 18, .94) 0%,
+                rgba(3, 7, 18, .40) 34%,
+                rgba(3, 7, 18, .04) 67%,
+                rgba(3, 7, 18, .08) 100%
+            );
+        pointer-events: none;
+    }
+
+    .food-vibe-card-video {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        background: #000000;
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .food-vibe-duration {
+        position: absolute;
+        top: 13px;
+        left: 11px;
+        z-index: 4;
+        padding: 5px 7px;
+        border-radius: 999px;
+        background: rgba(17,24,39,.70);
+        color: #ffffff;
+        font-size: .53rem;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .03em;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .food-vibe-sound-toggle {
+        position: absolute;
+        top: 11px;
+        right: 11px;
+        z-index: 5;
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: .86rem;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0,0,0,.18);
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
+    .food-vibe-card-copy {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 4;
+        text-align: left;
+        pointer-events: none;
+    }
+
+    .food-vibe-card-copy strong {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 0;
+        color: #ffffff;
+        font-size: .82rem;
+        line-height: 1.16;
+        font-weight: 950;
+        letter-spacing: -.015em;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    .food-vibe-card-copy small {
+        display: block;
+        overflow: hidden;
+        margin-top: 5px;
+        color: rgba(255,255,255,.72);
+        font-size: .57rem;
+        line-height: 1.2;
+        font-weight: 700;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .food-vibe-card-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        margin-top: 8px;
+        padding: 0 9px;
+        border-radius: 8px;
+        background: #fff4df;
+        color: #111827;
+        font-size: .58rem;
+        line-height: 1;
+        font-weight: 950;
+        text-decoration: none;
+        pointer-events: auto;
+    }
+
+    /* =====================================================
+       RESTAURANT REEL FULLSCREEN VIEWER
+    ===================================================== */
+
+    .food-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1250;
+        display: none;
+        padding: 0;
+        background: #000000;
+    }
+
+    .food-modal.open {
+        display: block;
+    }
+
+    .food-modal-feed {
+        width: 100%;
+        height: 100dvh;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        scroll-snap-type: y mandatory;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        background: #000000;
+    }
+
+    .food-modal-feed::-webkit-scrollbar {
+        display: none;
+    }
+
+    .food-modal-slide {
+        position: relative;
+        width: 100%;
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        background: #000000;
+        isolation: isolate;
+    }
+
+    .food-modal-slide::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background:
+            linear-gradient(
+                to top,
+                rgba(0,0,0,.90) 0%,
+                rgba(0,0,0,.34) 30%,
+                rgba(0,0,0,.04) 60%,
+                rgba(0,0,0,.18) 100%
+            );
+    }
+
+    .food-modal-video {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        background: #000000;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .food-modal-close {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        right: 12px;
+        z-index: 1260;
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: 1.2rem;
+        font-weight: 900;
+        cursor: pointer;
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
+    .food-modal-sound {
+        position: absolute;
+        top: max(12px, env(safe-area-inset-top));
+        left: 12px;
+        z-index: 5;
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(17,24,39,.72);
+        color: #ffffff;
+        font-size: .95rem;
+        cursor: pointer;
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+    }
+
+    .food-modal-info {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 4;
+        padding:
+            64px
+            18px
+            max(22px, env(safe-area-inset-bottom));
+        pointer-events: none;
+    }
+
+    .food-modal-title {
+        display: block;
+        max-width: min(620px, calc(100vw - 36px));
+        margin: 0;
+        color: #ffffff;
+        font-size: clamp(1.05rem, 4vw, 1.35rem);
+        line-height: 1.12;
+        font-weight: 950;
+        letter-spacing: -.025em;
+    }
+
+    .food-modal-meta {
+        display: block;
+        max-width: min(620px, calc(100vw - 36px));
+        margin-top: 6px;
+        color: rgba(255,255,255,.72);
+        font-size: .72rem;
+        line-height: 1.35;
+        font-weight: 700;
+    }
+
+    .food-modal-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        margin-top: 11px;
+        padding: 0 13px;
+        border-radius: 10px;
+        background: #fff4df;
+        color: #111827;
+        font-size: .7rem;
+        font-weight: 950;
+        text-decoration: none;
+        pointer-events: auto;
+    }
+
+    .food-modal-swipe-cue {
+        position: absolute;
+        left: 50%;
+        bottom: max(10px, env(safe-area-inset-bottom));
+        z-index: 3;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,.58);
+        font-size: .58rem;
+        font-weight: 850;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        pointer-events: none;
+    }
+
+    .food-modal-slide:last-child .food-modal-swipe-cue {
+        display: none;
+    }
+
+    @media (max-width: 620px) {
+        .food-vibe-heading-note {
+            font-size: .60rem;
+        }
+
+        .food-vibe-rail {
+            grid-auto-columns: minmax(138px, 158px);
+            gap: 9px;
+        }
+
+        .food-vibe-card {
+            border-radius: 16px;
+        }
+
+        .food-vibe-sound-toggle {
+            top: 9px;
+            right: 9px;
+            width: 33px;
+            height: 33px;
+            font-size: .8rem;
+        }
+    }
+
+    @media (min-width: 760px) {
+        .food-modal {
+            background: rgba(3,7,18,.96);
+        }
+
+        .food-modal-feed {
+            width: min(430px, 100vw);
+            margin: 0 auto;
+            box-shadow: 0 0 80px rgba(0,0,0,.6);
+        }
+
+        .food-modal-slide {
+            width: min(430px, 100vw);
+            margin: 0 auto;
+        }
+
+        .food-modal-close {
+            right: max(
+                18px,
+                calc((100vw - min(430px, 100vw)) / 2 + 12px)
+            );
+        }
+    }
+
 </style>
 
 </head>
@@ -3903,6 +4337,110 @@
                                         class="vibe-card-event-link"
                                     >
                                         View event →
+                                    </a>
+                                </div>
+                            </article>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+
+
+            {% if restaurant_reels %}
+            <!-- =========================================
+                 EAT AROUND YOU — RESTAURANT REELS
+                 Separate from event reels
+            ========================================== -->
+            <section
+                class="food-vibe-section"
+                aria-labelledby="food-vibe-title"
+            >
+                <div class="food-vibe-heading">
+                    <div>
+                        <span class="food-vibe-kicker">
+                            RESTAURANT REELS
+                        </span>
+
+                        <h2 id="food-vibe-title">
+                            🍔 Eat Around You
+                        </h2>
+                    </div>
+
+                    <span class="food-vibe-heading-note">
+                        Tap · then swipe ↑
+                    </span>
+                </div>
+
+                <div
+                    class="food-vibe-rail"
+                    aria-label="Restaurant reels"
+                >
+                    {% for reel in restaurant_reels %}
+                        {% if reel.advert %}
+                            <article
+                                class="food-vibe-card"
+                                data-food-reel
+                                data-food-reel-id="{{ reel.id }}"
+                                data-food-reel-index="{{ loop.index0 }}"
+                            >
+                                <video
+                                    class="food-vibe-card-video"
+                                    playsinline
+                                    muted
+                                    loop
+                                    preload="metadata"
+                                    controlslist="nodownload noremoteplayback"
+                                    disablepictureinpicture
+                                    oncontextmenu="return false;"
+                                    {% if reel.thumbnail_url %}
+                                        poster="{{ reel.thumbnail_url }}"
+                                    {% elif reel.advert.poster_image_url %}
+                                        poster="{{ reel.advert.poster_image_url }}"
+                                    {% endif %}
+                                    aria-label="{{ reel.advert.business_name }} restaurant reel"
+                                >
+                                    <source src="{{ reel.video_url }}">
+                                </video>
+
+                                {% if reel.duration_seconds %}
+                                    <span class="food-vibe-duration">
+                                        {{ '%.0f'|format(reel.duration_seconds) }}s
+                                    </span>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="food-vibe-sound-toggle"
+                                    aria-label="Turn sound on"
+                                >
+                                    🔇
+                                </button>
+
+                                <div class="food-vibe-card-copy">
+                                    <strong>
+                                        {{ reel.advert.business_name }}
+                                    </strong>
+
+                                    <small>
+                                        {% if reel.advert.headline %}
+                                            {{ reel.advert.headline }}
+                                        {% elif reel.advert.area %}
+                                            📍 {{ reel.advert.area }}
+                                        {% else %}
+                                            Local restaurant
+                                        {% endif %}
+                                    </small>
+
+                                    <a
+                                        href="{{ url_for(
+                                            'restaurant_page',
+                                            advert_id=reel.advert.id
+                                        ) }}"
+                                        class="food-vibe-card-link"
+                                    >
+                                        View restaurant →
                                     </a>
                                 </div>
                             </article>
@@ -5052,6 +5590,108 @@
 </div>
 {% endif %}
 
+
+
+
+{% if not event and restaurant_reels %}
+<!-- =========================================
+     EAT AROUND YOU — VERTICAL SWIPE REEL FEED
+     Restaurant reels only
+========================================== -->
+<div
+    class="food-modal"
+    id="food-modal"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Restaurant reel viewer"
+>
+    <button
+        type="button"
+        class="food-modal-close"
+        id="food-modal-close"
+        aria-label="Close restaurant reels"
+    >
+        ×
+    </button>
+
+    <div
+        class="food-modal-feed"
+        id="food-modal-feed"
+        aria-label="Swipe through restaurant reels"
+    >
+        {% for reel in restaurant_reels %}
+            {% if reel.advert %}
+                <article
+                    class="food-modal-slide"
+                    data-food-modal-reel
+                    data-food-reel-id="{{ reel.id }}"
+                    data-food-reel-index="{{ loop.index0 }}"
+                >
+                    <video
+                        class="food-modal-video"
+                        playsinline
+                        muted
+                        loop
+                        preload="metadata"
+                        controlslist="nodownload noremoteplayback"
+                        disablepictureinpicture
+                        oncontextmenu="return false;"
+                        {% if reel.thumbnail_url %}
+                            poster="{{ reel.thumbnail_url }}"
+                        {% elif reel.advert.poster_image_url %}
+                            poster="{{ reel.advert.poster_image_url }}"
+                        {% endif %}
+                        aria-label="{{ reel.advert.business_name }} restaurant reel"
+                    >
+                        <source src="{{ reel.video_url }}">
+                    </video>
+
+                    <button
+                        type="button"
+                        class="food-modal-sound"
+                        aria-label="Turn sound on"
+                    >
+                        🔇
+                    </button>
+
+                    <div class="food-modal-info">
+                        <strong class="food-modal-title">
+                            {{ reel.advert.business_name }}
+                        </strong>
+
+                        <span class="food-modal-meta">
+                            {% if reel.advert.headline %}
+                                {{ reel.advert.headline }}
+                            {% elif reel.advert.area %}
+                                📍 {{ reel.advert.area }}
+                            {% else %}
+                                Discover this restaurant on Kalxa
+                            {% endif %}
+                        </span>
+
+                        <a
+                            href="{{ url_for(
+                                'restaurant_page',
+                                advert_id=reel.advert.id
+                            ) }}"
+                            class="food-modal-link"
+                        >
+                            View restaurant →
+                        </a>
+                    </div>
+
+                    {% if not loop.last %}
+                        <div class="food-modal-swipe-cue">
+                            Swipe up ↑
+                        </div>
+                    {% endif %}
+                </article>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <div
     class="pwa-install-card"
@@ -6623,6 +7263,809 @@ document.querySelectorAll(
             playInlineMuted(firstVideo);
         }
     });
+})();
+</script>
+
+
+
+<script>
+(() => {
+    const cards = Array.from(
+        document.querySelectorAll(
+            '[data-food-reel]'
+        )
+    );
+
+    if (!cards.length) {
+        return;
+    }
+
+    const inlineVideos = cards
+        .map(
+            (card) =>
+                card.querySelector(
+                    '.food-vibe-card-video'
+                )
+        )
+        .filter(Boolean);
+
+    const modal =
+        document.getElementById(
+            'food-modal'
+        );
+
+    const feed =
+        document.getElementById(
+            'food-modal-feed'
+        );
+
+    const closeButton =
+        document.getElementById(
+            'food-modal-close'
+        );
+
+    const slides = Array.from(
+        document.querySelectorAll(
+            '[data-food-modal-reel]'
+        )
+    );
+
+    const modalVideos = slides
+        .map(
+            (slide) =>
+                slide.querySelector(
+                    '.food-modal-video'
+                )
+        )
+        .filter(Boolean);
+
+    let activeInlineVideo = null;
+    let activeSlide = null;
+    let lastTrigger = null;
+    let feedMuted = false;
+
+    function inlineSoundButton(
+        video
+    ) {
+        return video
+            ?.closest(
+                '[data-food-reel]'
+            )
+            ?.querySelector(
+                '.food-vibe-sound-toggle'
+            );
+    }
+
+    function setInlineMuted(
+        video,
+        muted
+    ) {
+        if (!video) {
+            return;
+        }
+
+        video.muted = muted;
+
+        const button =
+            inlineSoundButton(
+                video
+            );
+
+        if (button) {
+            button.textContent =
+                muted
+                    ? '🔇'
+                    : '🔊';
+
+            button.setAttribute(
+                'aria-label',
+                muted
+                    ? 'Turn sound on'
+                    : 'Mute video'
+            );
+        }
+    }
+
+    function pauseOtherInline(
+        activeVideo
+    ) {
+        inlineVideos.forEach(
+            (video) => {
+                if (
+                    video !== activeVideo
+                ) {
+                    video.pause();
+
+                    setInlineMuted(
+                        video,
+                        true
+                    );
+                }
+            }
+        );
+    }
+
+    function pauseAllInline() {
+        inlineVideos.forEach(
+            (video) => {
+                video.pause();
+
+                setInlineMuted(
+                    video,
+                    true
+                );
+            }
+        );
+
+        activeInlineVideo =
+            null;
+    }
+
+    function playInlineMuted(
+        video
+    ) {
+        if (
+            !video
+            || modal?.classList.contains(
+                'open'
+            )
+        ) {
+            return;
+        }
+
+        pauseOtherInline(
+            video
+        );
+
+        setInlineMuted(
+            video,
+            true
+        );
+
+        activeInlineVideo =
+            video;
+
+        video.play().catch(
+            () => {}
+        );
+    }
+
+    function modalVideoFor(
+        slide
+    ) {
+        return slide?.querySelector(
+            '.food-modal-video'
+        );
+    }
+
+    function modalSoundButtonFor(
+        slide
+    ) {
+        return slide?.querySelector(
+            '.food-modal-sound'
+        );
+    }
+
+    function setModalMuted(
+        slide,
+        muted
+    ) {
+        const video =
+            modalVideoFor(
+                slide
+            );
+
+        const button =
+            modalSoundButtonFor(
+                slide
+            );
+
+        if (video) {
+            video.muted =
+                muted;
+        }
+
+        if (button) {
+            button.textContent =
+                muted
+                    ? '🔇'
+                    : '🔊';
+
+            button.setAttribute(
+                'aria-label',
+                muted
+                    ? 'Turn sound on'
+                    : 'Mute reel'
+            );
+        }
+    }
+
+    function pauseOtherModal(
+        currentSlide
+    ) {
+        slides.forEach(
+            (slide) => {
+                if (
+                    slide === currentSlide
+                ) {
+                    return;
+                }
+
+                modalVideoFor(
+                    slide
+                )?.pause();
+            }
+        );
+    }
+
+    function activateSlide(
+        slide,
+        {
+            trySound = false,
+        } = {}
+    ) {
+        if (
+            !slide
+            || !modal?.classList.contains(
+                'open'
+            )
+        ) {
+            return;
+        }
+
+        const video =
+            modalVideoFor(
+                slide
+            );
+
+        if (!video) {
+            return;
+        }
+
+        activeSlide =
+            slide;
+
+        pauseOtherModal(
+            slide
+        );
+
+        if (trySound) {
+            feedMuted =
+                false;
+        }
+
+        setModalMuted(
+            slide,
+            feedMuted
+        );
+
+        video.play().catch(
+            () => {
+                feedMuted =
+                    true;
+
+                setModalMuted(
+                    slide,
+                    true
+                );
+
+                video.play().catch(
+                    () => {}
+                );
+            }
+        );
+    }
+
+    function openFeed(
+        card
+    ) {
+        if (
+            !card
+            || !modal
+            || !feed
+        ) {
+            return;
+        }
+
+        const targetIndex =
+            Number(
+                card.dataset
+                    .foodReelIndex
+            );
+
+        const targetSlide =
+            slides.find(
+                (slide) =>
+                    Number(
+                        slide.dataset
+                            .foodReelIndex
+                    )
+                    === targetIndex
+            );
+
+        if (!targetSlide) {
+            return;
+        }
+
+        lastTrigger =
+            card;
+
+        pauseAllInline();
+
+        /*
+         * Also pause event reels while the
+         * restaurant viewer is active.
+         */
+        document
+            .querySelectorAll(
+                '.vibe-card-video'
+            )
+            .forEach(
+                (video) => {
+                    video.pause();
+                    video.muted = true;
+                }
+            );
+
+        modal.classList.add(
+            'open'
+        );
+
+        modal.setAttribute(
+            'aria-hidden',
+            'false'
+        );
+
+        document.body.style.overflow =
+            'hidden';
+
+        feedMuted =
+            false;
+
+        feed.scrollTop =
+            targetSlide.offsetTop;
+
+        requestAnimationFrame(
+            () => {
+                activateSlide(
+                    targetSlide,
+                    {
+                        trySound: true,
+                    }
+                );
+            }
+        );
+    }
+
+    function closeFeed() {
+        if (!modal) {
+            return;
+        }
+
+        modalVideos.forEach(
+            (video) => {
+                video.pause();
+                video.currentTime = 0;
+                video.muted = true;
+            }
+        );
+
+        slides.forEach(
+            (slide) => {
+                setModalMuted(
+                    slide,
+                    true
+                );
+            }
+        );
+
+        activeSlide =
+            null;
+
+        modal.classList.remove(
+            'open'
+        );
+
+        modal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+        document.body.style.overflow =
+            '';
+
+        if (lastTrigger) {
+            lastTrigger.focus?.({
+                preventScroll: true
+            });
+        }
+
+        const firstVisibleVideo =
+            inlineVideos.find(
+                (video) => {
+                    const rect =
+                        video.getBoundingClientRect();
+
+                    return (
+                        rect.bottom > 0
+                        && rect.top < window.innerHeight
+                        && rect.right > 0
+                        && rect.left < window.innerWidth
+                    );
+                }
+            );
+
+        if (firstVisibleVideo) {
+            playInlineMuted(
+                firstVisibleVideo
+            );
+        }
+    }
+
+    cards.forEach(
+        (card) => {
+            const video =
+                card.querySelector(
+                    '.food-vibe-card-video'
+                );
+
+            const soundButton =
+                card.querySelector(
+                    '.food-vibe-sound-toggle'
+                );
+
+            const restaurantLink =
+                card.querySelector(
+                    '.food-vibe-card-link'
+                );
+
+            if (video) {
+                setInlineMuted(
+                    video,
+                    true
+                );
+
+                video.addEventListener(
+                    'click',
+                    (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        openFeed(
+                            card
+                        );
+                    }
+                );
+
+                video.addEventListener(
+                    'contextmenu',
+                    (event) => {
+                        event.preventDefault();
+                    }
+                );
+            }
+
+            card.addEventListener(
+                'click',
+                (event) => {
+                    if (
+                        event.target.closest(
+                            '.food-vibe-sound-toggle'
+                        )
+                        || event.target.closest(
+                            '.food-vibe-card-link'
+                        )
+                    ) {
+                        return;
+                    }
+
+                    openFeed(
+                        card
+                    );
+                }
+            );
+
+            soundButton?.addEventListener(
+                'click',
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (!video) {
+                        return;
+                    }
+
+                    if (video.paused) {
+                        pauseOtherInline(
+                            video
+                        );
+
+                        activeInlineVideo =
+                            video;
+
+                        video.play().catch(
+                            () => {}
+                        );
+                    }
+
+                    setInlineMuted(
+                        video,
+                        !video.muted
+                    );
+                }
+            );
+
+            restaurantLink?.addEventListener(
+                'click',
+                (event) => {
+                    event.stopPropagation();
+                }
+            );
+        }
+    );
+
+    slides.forEach(
+        (slide) => {
+            const video =
+                modalVideoFor(
+                    slide
+                );
+
+            const soundButton =
+                modalSoundButtonFor(
+                    slide
+                );
+
+            if (video) {
+                video.addEventListener(
+                    'click',
+                    () => {
+                        if (video.paused) {
+                            video.play().catch(
+                                () => {}
+                            );
+                        } else {
+                            video.pause();
+                        }
+                    }
+                );
+
+                video.addEventListener(
+                    'contextmenu',
+                    (event) => {
+                        event.preventDefault();
+                    }
+                );
+            }
+
+            soundButton?.addEventListener(
+                'click',
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (!video) {
+                        return;
+                    }
+
+                    feedMuted =
+                        !video.muted;
+
+                    setModalMuted(
+                        slide,
+                        feedMuted
+                    );
+
+                    if (video.paused) {
+                        video.play().catch(
+                            () => {}
+                        );
+                    }
+                }
+            );
+        }
+    );
+
+    const modalObserver =
+        new IntersectionObserver(
+            (entries) => {
+                if (
+                    !modal?.classList.contains(
+                        'open'
+                    )
+                ) {
+                    return;
+                }
+
+                const visibleEntries =
+                    entries
+                        .filter(
+                            (entry) =>
+                                entry.isIntersecting
+                        )
+                        .sort(
+                            (a, b) =>
+                                b.intersectionRatio
+                                - a.intersectionRatio
+                        );
+
+                const bestEntry =
+                    visibleEntries[0];
+
+                if (
+                    !bestEntry
+                    || bestEntry.intersectionRatio
+                        < 0.70
+                ) {
+                    return;
+                }
+
+                if (
+                    bestEntry.target
+                    !== activeSlide
+                ) {
+                    activateSlide(
+                        bestEntry.target
+                    );
+                }
+            },
+            {
+                root:
+                    feed,
+
+                threshold: [
+                    0,
+                    0.25,
+                    0.70,
+                    1
+                ]
+            }
+        );
+
+    slides.forEach(
+        (slide) => {
+            modalObserver.observe(
+                slide
+            );
+        }
+    );
+
+    closeButton?.addEventListener(
+        'click',
+        (event) => {
+            event.preventDefault();
+
+            closeFeed();
+        }
+    );
+
+    document.addEventListener(
+        'keydown',
+        (event) => {
+            if (
+                event.key === 'Escape'
+                && modal?.classList.contains(
+                    'open'
+                )
+            ) {
+                closeFeed();
+            }
+        }
+    );
+
+    const playbackObserver =
+        new IntersectionObserver(
+            (entries) => {
+                if (
+                    modal?.classList.contains(
+                        'open'
+                    )
+                ) {
+                    return;
+                }
+
+                /*
+                 * Do not compete with the event reel
+                 * section. A restaurant reel autoplays
+                 * only when it is actually in view.
+                 */
+                const visibleEntries =
+                    entries
+                        .filter(
+                            (entry) =>
+                                entry.isIntersecting
+                        )
+                        .sort(
+                            (a, b) =>
+                                b.intersectionRatio
+                                - a.intersectionRatio
+                        );
+
+                const bestEntry =
+                    visibleEntries[0];
+
+                if (
+                    bestEntry
+                    && bestEntry.intersectionRatio
+                        >= 0.65
+                    && bestEntry.target
+                        !== activeInlineVideo
+                ) {
+                    playInlineMuted(
+                        bestEntry.target
+                    );
+                }
+
+                entries.forEach(
+                    (entry) => {
+                        if (
+                            (
+                                !entry.isIntersecting
+                                || entry.intersectionRatio < 0.25
+                            )
+                            && entry.target
+                                === activeInlineVideo
+                        ) {
+                            entry.target.pause();
+
+                            setInlineMuted(
+                                entry.target,
+                                true
+                            );
+
+                            activeInlineVideo =
+                                null;
+                        }
+                    }
+                );
+            },
+            {
+                threshold: [
+                    0,
+                    0.25,
+                    0.65,
+                    1
+                ]
+            }
+        );
+
+    inlineVideos.forEach(
+        (video) => {
+            playbackObserver.observe(
+                video
+            );
+        }
+    );
+
+    document.addEventListener(
+        'visibilitychange',
+        () => {
+            if (document.hidden) {
+                pauseAllInline();
+
+                modalVideos.forEach(
+                    (video) => {
+                        video.pause();
+                    }
+                );
+
+                return;
+            }
+
+            if (
+                modal?.classList.contains(
+                    'open'
+                )
+                && activeSlide
+            ) {
+                modalVideoFor(
+                    activeSlide
+                )?.play().catch(
+                    () => {}
+                );
+            }
+        }
+    );
 })();
 </script>
 
