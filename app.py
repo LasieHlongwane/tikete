@@ -7382,6 +7382,673 @@ def admin_create_restaurant():
         advert=
             None,
     )
+
+
+# ============================================================
+# ORGANIZER - RESTAURANT REEL
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/reel",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_restaurant_reel(
+    advert_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    reel = (
+        RestaurantReel.query
+        .filter_by(
+            advert_id=
+                advert.id,
+        )
+        .first()
+    )
+
+
+    if request.method == "POST":
+
+        # ====================================================
+        # CLOUDINARY
+        # ====================================================
+
+        if not cloudinary_reels_configured():
+
+            flash(
+                (
+                    "Restaurant Reel storage "
+                    "is not configured yet."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_restaurant_reel",
+                    advert_id=
+                        advert.id,
+                )
+            )
+
+
+        # ====================================================
+        # VIDEO
+        # ====================================================
+
+        video = (
+            request.files.get(
+                "reel_video"
+            )
+        )
+
+
+        if (
+            not video
+            or not video.filename
+        ):
+
+            flash(
+                "Choose a video to upload.",
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_restaurant_reel",
+                    advert_id=
+                        advert.id,
+                )
+            )
+
+
+        if not allowed_event_reel_filename(
+            video.filename
+        ):
+
+            flash(
+                (
+                    "Use an MP4, MOV, M4V "
+                    "or WebM video."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_restaurant_reel",
+                    advert_id=
+                        advert.id,
+                )
+            )
+
+
+        # ====================================================
+        # FILE SIZE
+        # ====================================================
+
+        video.stream.seek(
+            0,
+            os.SEEK_END,
+        )
+
+        file_size = (
+            video.stream.tell()
+        )
+
+        video.stream.seek(0)
+
+
+        if (
+            file_size
+            > EVENT_REEL_MAX_FILE_BYTES
+        ):
+
+            flash(
+                (
+                    "The reel is too large. "
+                    "Maximum size is 80 MB."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_restaurant_reel",
+                    advert_id=
+                        advert.id,
+                )
+            )
+
+
+        uploaded_public_id = None
+
+
+        try:
+
+            # =================================================
+            # CLOUDINARY VIDEO UPLOAD
+            # =================================================
+
+            upload_result = (
+                cloudinary.uploader.upload(
+                    video,
+
+                    resource_type=
+                        "video",
+
+                    folder=(
+                        "kalxa/"
+                        f"organizers/{organizer.id}/"
+                        f"restaurants/{advert.id}/"
+                        "reels"
+                    ),
+
+                    use_filename=
+                        True,
+
+                    unique_filename=
+                        True,
+
+                    overwrite=
+                        False,
+                )
+            )
+
+
+            uploaded_public_id = (
+                upload_result.get(
+                    "public_id"
+                )
+            )
+
+
+            secure_url = (
+                upload_result.get(
+                    "secure_url"
+                )
+            )
+
+
+            duration_seconds = float(
+                upload_result.get(
+                    "duration",
+                    0,
+                )
+                or 0
+            )
+
+
+            if (
+                not uploaded_public_id
+                or not secure_url
+            ):
+
+                raise RuntimeError(
+                    (
+                        "Cloudinary did not "
+                        "return the uploaded video."
+                    )
+                )
+
+
+            if (
+                duration_seconds <= 0
+            ):
+
+                raise RuntimeError(
+                    (
+                        "Kalxa could not determine "
+                        "the reel duration."
+                    )
+                )
+
+
+            # =================================================
+            # MAXIMUM 30 SECONDS
+            # =================================================
+
+            if (
+                duration_seconds
+                > EVENT_REEL_MAX_DURATION_SECONDS
+            ):
+
+                delete_cloudinary_reel(
+                    uploaded_public_id
+                )
+
+                uploaded_public_id = None
+
+
+                flash(
+                    (
+                        "Restaurant Reels must "
+                        "be 30 seconds or shorter."
+                    ),
+                    "error",
+                )
+
+
+                return redirect(
+                    url_for(
+                        "admin_restaurant_reel",
+                        advert_id=
+                            advert.id,
+                    )
+                )
+
+
+            # =================================================
+            # THUMBNAIL
+            # =================================================
+
+            thumbnail_url = (
+                cloudinary.CloudinaryVideo(
+                    uploaded_public_id
+                )
+                .build_url(
+                    resource_type=
+                        "video",
+
+                    format=
+                        "jpg",
+
+                    start_offset=
+                        "1",
+
+                    width=
+                        720,
+
+                    crop=
+                        "limit",
+
+                    secure=
+                        True,
+                )
+            )
+
+
+            old_public_id = (
+                reel.cloudinary_public_id
+                if reel
+                else None
+            )
+
+
+            # =================================================
+            # CREATE
+            # =================================================
+
+            if reel is None:
+
+                reel = (
+                    RestaurantReel(
+                        advert_id=
+                            advert.id,
+
+                        organizer_id=
+                            organizer.id,
+
+                        cloudinary_public_id=
+                            uploaded_public_id,
+
+                        video_url=
+                            secure_url,
+
+                        thumbnail_url=
+                            thumbnail_url,
+
+                        duration_seconds=
+                            duration_seconds,
+
+                        width=
+                            upload_result.get(
+                                "width"
+                            ),
+
+                        height=
+                            upload_result.get(
+                                "height"
+                            ),
+
+                        file_bytes=
+                            upload_result.get(
+                                "bytes"
+                            ),
+
+                        active=
+                            True,
+                    )
+                )
+
+
+                db.session.add(
+                    reel
+                )
+
+
+            # =================================================
+            # REPLACE
+            # =================================================
+
+            else:
+
+                reel.cloudinary_public_id = (
+                    uploaded_public_id
+                )
+
+                reel.video_url = (
+                    secure_url
+                )
+
+                reel.thumbnail_url = (
+                    thumbnail_url
+                )
+
+                reel.duration_seconds = (
+                    duration_seconds
+                )
+
+                reel.width = (
+                    upload_result.get(
+                        "width"
+                    )
+                )
+
+                reel.height = (
+                    upload_result.get(
+                        "height"
+                    )
+                )
+
+                reel.file_bytes = (
+                    upload_result.get(
+                        "bytes"
+                    )
+                )
+
+                reel.active = True
+
+
+            db.session.commit()
+
+
+            # =================================================
+            # REMOVE REPLACED CLOUDINARY VIDEO
+            # =================================================
+
+            if (
+                old_public_id
+                and old_public_id
+                != uploaded_public_id
+            ):
+
+                try:
+
+                    delete_cloudinary_reel(
+                        old_public_id
+                    )
+
+                except Exception:
+
+                    current_app.logger.exception(
+                        (
+                            "[Restaurant Reel] "
+                            "Old Cloudinary video "
+                            "could not be removed."
+                        )
+                    )
+
+
+            flash(
+                (
+                    "Restaurant Reel published "
+                    "successfully."
+                ),
+                "success",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_restaurant_reel",
+                    advert_id=
+                        advert.id,
+                )
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            if uploaded_public_id:
+
+                try:
+
+                    delete_cloudinary_reel(
+                        uploaded_public_id
+                    )
+
+                except Exception:
+
+                    current_app.logger.exception(
+                        (
+                            "[Restaurant Reel] "
+                            "Failed cleanup after "
+                            "upload error."
+                        )
+                    )
+
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Reel] "
+                    "Upload failed "
+                    "advert_id=%s "
+                    "organizer_id=%s "
+                    "error=%s"
+                ),
+                advert.id,
+                organizer.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Kalxa could not upload this "
+                    "restaurant reel. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_restaurant_reel",
+                    advert_id=
+                        advert.id,
+                )
+            )
+
+
+    return render_template(
+        "admin/restaurant_reel.html",
+
+        organizer=
+            organizer,
+
+        advert=
+            advert,
+
+        reel=
+            reel,
+    )
+
+# ============================================================
+# ORGANIZER - DELETE RESTAURANT REEL
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/reel/delete",
+    methods=[
+        "POST",
+    ],
+)
+def admin_delete_restaurant_reel(
+    advert_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    reel = (
+        RestaurantReel.query
+        .filter_by(
+            advert_id=
+                advert.id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    public_id = (
+        reel.cloudinary_public_id
+    )
+
+
+    try:
+
+        db.session.delete(
+            reel
+        )
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Reel] "
+                "Delete failed "
+                "advert_id=%s "
+                "organizer_id=%s "
+                "error=%s"
+            ),
+            advert.id,
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Restaurant Reel could "
+                "not be removed."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_restaurant_reel",
+                advert_id=
+                    advert.id,
+            )
+        )
+
+
+    if public_id:
+
+        try:
+
+            delete_cloudinary_reel(
+                public_id
+            )
+
+        except Exception:
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Reel] "
+                    "Database reel was removed, "
+                    "but Cloudinary cleanup failed."
+                )
+            )
+
+
+    flash(
+        "Restaurant Reel removed.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_restaurant_reel",
+            advert_id=
+                advert.id,
+        )
+    )
 # ============================================================
 # PUBLIC ATTENDEE - ENABLE PUSH FROM HOME PAGE
 # ============================================================
