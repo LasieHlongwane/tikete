@@ -2039,6 +2039,47 @@ def organizer_home_endpoint(
 
 
     return "admin_dashboard"
+
+
+
+def require_restaurant_organizer():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if (
+        not organizer
+        or organizer.account_type
+        != "restaurant"
+    ):
+
+        flash(
+            (
+                "This area is for "
+                "restaurant advertisers."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    return None
+
 # ============================================================
 # FEATURED LISTING HELPERS
 # ============================================================
