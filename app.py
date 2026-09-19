@@ -6862,6 +6862,8 @@ def home():
 
         reels=
             reels,
+        restaurant_reels=
+            restaurant_reels,
 
         firebase_config=
             FIREBASE_WEB_CONFIG,
