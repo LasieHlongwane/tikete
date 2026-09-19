@@ -1919,6 +1919,105 @@ def send_push_campaign(
     return campaign
 
 
+
+# ============================================================
+# RESTAURANT ADVERT HELPERS
+# ============================================================
+
+def build_restaurant_whatsapp_url(
+    phone_number,
+):
+
+    if not phone_number:
+        return None
+
+
+    digits = "".join(
+        character
+        for character in str(
+            phone_number
+        )
+        if character.isdigit()
+    )
+
+
+    if not digits:
+        return None
+
+
+    # South African local format:
+    # 0791234567 -> 27791234567
+    if digits.startswith("0"):
+
+        digits = (
+            "27"
+            + digits[1:]
+        )
+
+
+    return (
+        f"https://wa.me/{digits}"
+    )
+
+
+
+def build_restaurant_phone_url(
+    phone_number,
+):
+
+    if not phone_number:
+        return None
+
+
+    cleaned = "".join(
+        character
+        for character in str(
+            phone_number
+        )
+        if (
+            character.isdigit()
+            or character == "+"
+        )
+    )
+
+
+    if not cleaned:
+        return None
+
+
+    return (
+        f"tel:{cleaned}"
+    )
+
+
+
+def valid_restaurant_directions_url(
+    value,
+):
+
+    if not value:
+        return None
+
+
+    value = (
+        str(value)
+        .strip()
+    )
+
+
+    if not (
+        value.startswith(
+            "https://"
+        )
+        or value.startswith(
+            "http://"
+        )
+    ):
+
+        return None
+
+
+    return value
 # ============================================================
 # FEATURED LISTING HELPERS
 # ============================================================
