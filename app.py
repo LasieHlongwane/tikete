@@ -7668,12 +7668,29 @@ def admin_restaurants():
     )
 def admin_create_restaurant():
 
+ 
     auth = (
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
+
+
+    # ========================================================
+    # RESTAURANT SUBSCRIPTION REQUIRED
+    # ========================================================
+
+    subscription_auth = (
+        require_restaurant_subscription()
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
 
 
     organizer = (
