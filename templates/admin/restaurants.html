@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Restaurant Advertising | Kalxa
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: min(100% - 28px, 900px);
+            margin: 0 auto;
+            padding: 28px 0 70px;
+        }
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size:
+                clamp(26px, 6vw, 38px);
+
+            letter-spacing: -.04em;
+        }
+
+        .subtitle {
+            margin: 6px 0 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 44px;
+
+            padding: 10px 14px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border-radius: 10px;
+
+            font-size: 12px;
+            font-weight: 900;
+
+            text-decoration: none;
+        }
+
+        .back {
+            display: inline-flex;
+
+            margin-bottom: 18px;
+
+            color: #6b7280;
+
+            font-size: 12px;
+            font-weight: 800;
+
+            text-decoration: none;
+        }
+
+        .grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        min(100%, 280px),
+                        1fr
+                    )
+                );
+
+            gap: 14px;
+        }
+
+        .card {
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 17px;
+        }
+
+        .poster {
+            aspect-ratio: 4 / 5;
+
+            background: #e5e7eb;
+        }
+
+        .poster img {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+        .copy {
+            padding: 15px;
+        }
+
+        .copy h2 {
+            margin: 0;
+
+            font-size: 17px;
+        }
+
+        .copy p {
+            margin: 6px 0 0;
+
+            color: #6b7280;
+
+            font-size: 12px;
+        }
+
+        .status {
+            display: inline-flex;
+
+            margin-top: 10px;
+
+            padding: 5px 8px;
+
+            background: #dcfce7;
+            color: #166534;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .empty {
+            padding: 30px;
+
+            background: #ffffff;
+
+            border: 1px dashed #d1d5db;
+            border-radius: 14px;
+
+            color: #6b7280;
+
+            text-align: center;
+        }
+
+        @media (max-width: 560px) {
+
+            .top {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+    <a
+        href="{{ url_for('admin_dashboard') }}"
+        class="back"
+    >
+        ← Organizer Dashboard
+    </a>
+
+
+    <div class="top">
+
+        <div>
+
+            <h1>
+                🍔 Restaurant Advertising
+            </h1>
+
+            <p class="subtitle">
+                Manage restaurant promotions
+                and reel campaigns.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for(
+                'admin_create_restaurant'
+            ) }}"
+            class="button"
+        >
+            + Create Restaurant Advert
+        </a>
+
+    </div>
+
+
+    {% with messages =
+        get_flashed_messages(
+            with_categories=true
+        )
+    %}
+
+        {% for category, message in messages %}
+
+            <p>
+                {{ message }}
+            </p>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    {% if adverts %}
+
+        <div class="grid">
+
+            {% for advert in adverts %}
+
+                <article class="card">
+
+                    <div class="poster">
+
+                        {% if advert.poster_image_url %}
+
+                            <img
+                                src="{{ advert.poster_image_url }}"
+                                alt="{{ advert.business_name }} advert"
+                            >
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="copy">
+
+                        <h2>
+                            {{ advert.business_name }}
+                        </h2>
+
+
+                        {% if advert.headline %}
+
+                            <p>
+                                {{ advert.headline }}
+                            </p>
+
+                        {% endif %}
+
+
+                        {% if advert.area %}
+
+                            <p>
+                                📍 {{ advert.area }}
+                            </p>
+
+                        {% endif %}
+
+
+                        {% if advert.active %}
+
+                            <span class="status">
+                                Active
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="empty">
+
+            No restaurant adverts yet.
+
+            <br><br>
+
+            Create your first restaurant
+            promotion.
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
