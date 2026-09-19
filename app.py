@@ -5865,6 +5865,89 @@ def superadmin_dashboard():
         .all()
     )
 
+    # ========================================================
+# RESTAURANT ADVERTS READY FOR PUSH
+# ========================================================
+
+    promoted_restaurant_ids = (
+
+      db.session.query(
+        PushCampaign.restaurant_advert_id
+      )
+
+      .filter(
+        PushCampaign.restaurant_advert_id.isnot(
+            None
+        )
+      )
+
+      .filter(
+        PushCampaign.status.in_(
+            [
+                "completed",
+                "partial",
+            ]
+        )
+      )
+
+      .distinct()
+
+      .subquery()
+    )
+
+
+    notification_ready_restaurants = (
+
+      RestaurantAdvert.query
+
+      .join(
+        Organizer,
+        RestaurantAdvert.organizer_id
+        == Organizer.id,
+      )
+
+      .filter(
+        RestaurantAdvert.active.is_(
+            True
+        )
+      )
+
+      .filter(
+        Organizer.subscription_status
+        == "active"
+      )
+
+      .filter(
+        Organizer.subscription_expires_at
+        > now
+      )
+
+      .filter(
+        ~RestaurantAdvert.id.in_(
+            db.select(
+                promoted_restaurant_ids
+                .c
+                .restaurant_advert_id
+            )
+        )
+      )
+
+      .order_by(
+        RestaurantAdvert.created_at.desc()
+      )
+
+      .limit(20)
+
+      .all()
+    )
+
+
+    notification_ready_restaurant_count = (
+      len(
+        notification_ready_restaurants
+      )
+    )
+
 
     notification_ready_count = (
         len(
@@ -5888,6 +5971,12 @@ def superadmin_dashboard():
 
         active_subscriptions=
             active_subscriptions,
+
+        notification_ready_restaurants=
+            notification_ready_restaurants,
+
+        notification_ready_restaurant_count=
+            notification_ready_restaurant_count,
 
         suspended_organizers=
             suspended_organizers,
