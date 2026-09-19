@@ -11,20 +11,15 @@
     >
 
     <title>
-        Restaurant Advertising | Kalxa
+        Restaurant Control Centre | Kalxa
     </title>
 
 
     <style>
 
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
         * {
             box-sizing: border-box;
         }
-
 
         body {
             margin: 0;
@@ -38,61 +33,52 @@
                 BlinkMacSystemFont,
                 "Segoe UI",
                 sans-serif;
-
-            -webkit-font-smoothing: antialiased;
         }
-
-
-        /* =====================================================
-           PAGE
-        ===================================================== */
 
         .page {
-            width: min(
-                100% - 28px,
-                900px
-            );
-
+            width: min(100% - 28px, 1000px);
             margin: 0 auto;
-
-            padding:
-                28px 0 70px;
+            padding: 26px 0 70px;
         }
 
-
-        /* =====================================================
-           BACK LINK
-        ===================================================== */
-
-        .back {
-            display: inline-flex;
-
+        .nav {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            gap: 12px;
 
-            margin-bottom: 18px;
+            margin-bottom: 20px;
+        }
 
-            color: #6b7280;
+        .brand {
+            color: #111827;
 
             font-size: 12px;
+            font-weight: 950;
+
+            text-decoration: none;
+
+            letter-spacing: .06em;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: #64748b;
+
+            font-size: 11px;
             font-weight: 800;
 
             text-decoration: none;
         }
 
-
-        .back:hover {
-            color: #111827;
-        }
-
-
-        /* =====================================================
-           TOP
-        ===================================================== */
-
         .top {
             display: flex;
 
-            align-items: center;
+            align-items: flex-end;
             justify-content: space-between;
 
             gap: 16px;
@@ -100,45 +86,47 @@
             margin-bottom: 18px;
         }
 
+        .eyebrow {
+            margin: 0 0 6px;
+
+            color: #64748b;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            letter-spacing: .13em;
+        }
 
         h1 {
             margin: 0;
 
             font-size:
                 clamp(
-                    26px,
+                    28px,
                     6vw,
-                    38px
+                    40px
                 );
 
-            line-height: 1.05;
+            line-height: 1;
 
-            letter-spacing: -.04em;
+            letter-spacing: -.045em;
         }
 
-
         .subtitle {
-            margin: 6px 0 0;
+            margin: 8px 0 0;
 
-            color: #6b7280;
+            color: #64748b;
 
             font-size: 13px;
 
             line-height: 1.5;
         }
 
-
-        /* =====================================================
-           BUTTONS
-        ===================================================== */
-
         .button {
             display: inline-flex;
 
             align-items: center;
             justify-content: center;
-
-            gap: 6px;
 
             min-height: 44px;
 
@@ -147,72 +135,45 @@
             background: #111827;
             color: #ffffff;
 
-            border:
-                1px solid #111827;
-
             border-radius: 10px;
 
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
 
             text-decoration: none;
-
-            cursor: pointer;
-
-            transition:
-                transform .15s ease,
-                background .15s ease;
         }
 
+        .subscription {
+            margin-bottom: 16px;
 
-        .button:hover {
-            transform:
-                translateY(-1px);
-        }
-
-
-        /* =====================================================
-           SUBSCRIPTION STATUS
-        ===================================================== */
-
-        .subscription-panel {
-            margin-bottom: 20px;
-
-            padding: 16px;
+            padding: 15px;
 
             border-radius: 14px;
         }
 
-
-        .subscription-panel-active {
+        .subscription-active {
             background: #f0fdf4;
+            color: #166534;
 
             border:
                 1px solid #bbf7d0;
-
-            color: #166534;
         }
 
-
-        .subscription-panel-locked {
+        .subscription-locked {
             background: #fff7ed;
+            color: #9a3412;
 
             border:
                 1px solid #fed7aa;
-
-            color: #9a3412;
         }
 
+        .subscription strong {
+            display: block;
 
-        .subscription-title {
-            margin: 0;
-
-            font-size: 13px;
-            font-weight: 950;
+            font-size: 12px;
         }
 
-
-        .subscription-copy {
+        .subscription p {
             margin: 5px 0 0;
 
             font-size: 11px;
@@ -220,98 +181,97 @@
             line-height: 1.5;
         }
 
-
-        .subscription-meta {
-            margin-top: 6px;
-
-            font-size: 10px;
-            font-weight: 750;
-        }
-
-
-        .subscription-price {
-            margin-top: 10px;
-
-            font-size: 12px;
-            font-weight: 900;
-        }
-
-
-        .subscription-action {
-            display: inline-flex;
-
-            align-items: center;
-            justify-content: center;
-
-            min-height: 40px;
-
-            margin-top: 12px;
-
-            padding: 8px 14px;
-
-            background: #111827;
-            color: #ffffff;
-
-            border-radius: 9px;
-
-            font-size: 11px;
-            font-weight: 900;
-
-            text-decoration: none;
-        }
-
-
-        /* =====================================================
-           FLASH MESSAGES
-        ===================================================== */
-
-        .flash-stack {
+        .metrics {
             display: grid;
 
-            gap: 8px;
+            grid-template-columns:
+                repeat(
+                    5,
+                    minmax(0, 1fr)
+                );
 
-            margin-bottom: 18px;
+            gap: 10px;
+
+            margin-bottom: 22px;
         }
 
-
-        .flash {
-            padding: 12px 14px;
+        .metric {
+            padding: 14px;
 
             background: #ffffff;
 
             border:
-                1px solid #d1d5db;
+                1px solid #e5e7eb;
 
-            border-radius: 11px;
-
-            color: #374151;
-
-            font-size: 12px;
-            font-weight: 750;
+            border-radius: 13px;
         }
 
+        .metric-label {
+            color: #64748b;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            display: block;
+
+            margin-top: 5px;
+
+            color: #111827;
+
+            font-size: 22px;
+            font-weight: 950;
+        }
+
+        .section-header {
+            margin-bottom: 12px;
+        }
+
+        .section-header h2 {
+            margin: 0;
+
+            font-size: 16px;
+        }
+
+        .section-header p {
+            margin: 5px 0 0;
+
+            color: #64748b;
+
+            font-size: 11px;
+        }
+
+        .flash-stack {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .flash {
+            padding: 12px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            font-size: 11px;
+        }
 
         .flash-success {
             background: #f0fdf4;
-
-            border-color: #bbf7d0;
-
             color: #166534;
         }
 
-
         .flash-error {
             background: #fef2f2;
-
-            border-color: #fecaca;
-
             color: #991b1b;
         }
-
-
-        /* =====================================================
-           GRID
-        ===================================================== */
 
         .grid {
             display: grid;
@@ -320,10 +280,7 @@
                 repeat(
                     auto-fit,
                     minmax(
-                        min(
-                            100%,
-                            280px
-                        ),
+                        min(100%, 290px),
                         1fr
                     )
                 );
@@ -331,16 +288,8 @@
             gap: 14px;
         }
 
-
-        /* =====================================================
-           RESTAURANT CARD
-        ===================================================== */
-
         .card {
             overflow: hidden;
-
-            display: flex;
-            flex-direction: column;
 
             background: #ffffff;
 
@@ -348,66 +297,56 @@
                 1px solid #e5e7eb;
 
             border-radius: 17px;
-
-            box-shadow:
-                0 8px 24px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    .05
-                );
         }
-
-
-        /* =====================================================
-           POSTER
-        ===================================================== */
 
         .poster {
             position: relative;
 
             aspect-ratio: 4 / 5;
 
-            overflow: hidden;
-
             background: #e5e7eb;
         }
-
 
         .poster img {
             width: 100%;
             height: 100%;
 
-            display: block;
-
             object-fit: cover;
         }
 
+        .campaign-badge {
+            position: absolute;
 
-        .poster-placeholder {
-            width: 100%;
-            height: 100%;
+            top: 10px;
+            left: 10px;
 
-            display: flex;
+            padding: 6px 9px;
 
-            align-items: center;
-            justify-content: center;
+            border-radius: 999px;
 
-            flex-direction: column;
-
-            gap: 7px;
-
-            color: #9ca3af;
-
-            font-size: 12px;
-            font-weight: 800;
+            font-size: 9px;
+            font-weight: 950;
         }
 
+        .badge-live {
+            background: #dcfce7;
+            color: #166534;
+        }
 
-        /* =====================================================
-           REEL BADGE
-        ===================================================== */
+        .badge-scheduled {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-paused {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
 
         .reel-badge {
             position: absolute;
@@ -415,330 +354,172 @@
             top: 10px;
             right: 10px;
 
-            display: inline-flex;
+            padding: 6px 8px;
 
-            align-items: center;
-
-            gap: 4px;
-
-            padding:
-                6px 8px;
-
-            background:
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .84
-                );
-
+            background: rgba(17, 24, 39, .86);
             color: #ffffff;
 
             border-radius: 999px;
 
             font-size: 9px;
             font-weight: 900;
-
-            backdrop-filter:
-                blur(8px);
-
-            -webkit-backdrop-filter:
-                blur(8px);
         }
 
-
-        /* =====================================================
-           CONTENT
-        ===================================================== */
-
         .copy {
-            display: flex;
-
-            flex-direction: column;
-
-            flex: 1;
-
             padding: 15px;
         }
 
-
-        .copy h2 {
+        .copy h3 {
             margin: 0;
+
+            font-size: 17px;
+        }
+
+        .copy p {
+            margin: 5px 0 0;
+
+            color: #64748b;
+
+            font-size: 11px;
+
+            line-height: 1.4;
+        }
+
+        .schedule {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 7px;
+
+            margin-top: 13px;
+        }
+
+        .schedule-item {
+            padding: 9px;
+
+            background: #f8fafc;
+
+            border-radius: 9px;
+        }
+
+        .schedule-label {
+            color: #94a3b8;
+
+            font-size: 8px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .schedule-value {
+            display: block;
+
+            margin-top: 3px;
 
             color: #111827;
 
-            font-size: 17px;
-            font-weight: 950;
-
-            line-height: 1.2;
+            font-size: 10px;
+            font-weight: 850;
         }
 
+        .remaining {
+            margin-top: 8px;
 
-        .copy p {
-            margin: 6px 0 0;
+            color: #475569;
 
-            color: #6b7280;
-
-            font-size: 12px;
-
-            line-height: 1.45;
+            font-size: 10px;
+            font-weight: 800;
         }
 
-
-        /* =====================================================
-           STATUS
-        ===================================================== */
-
-        .status-row {
-            display: flex;
-
-            align-items: center;
-            flex-wrap: wrap;
-
-            gap: 6px;
-
-            margin-top: 10px;
-        }
-
-
-        .status {
-            display: inline-flex;
-
-            padding: 5px 8px;
-
-            background: #dcfce7;
-            color: #166534;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-        }
-
-
-        .status-inactive {
-            background: #f3f4f6;
-
-            color: #6b7280;
-        }
-
-
-        .reel-status {
-            display: inline-flex;
-
-            padding: 5px 8px;
-
-            background: #eff6ff;
-            color: #1d4ed8;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-        }
-
-
-        .locked-status {
-            display: inline-flex;
-
-            padding: 5px 8px;
-
-            background: #fff7ed;
-            color: #9a3412;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-        }
-
-
-        /* =====================================================
-           ACTIONS
-        ===================================================== */
-
-        .card-actions {
+        .actions {
             display: grid;
+            gap: 7px;
 
-            gap: 8px;
-
-            margin-top: auto;
-
-            padding-top: 16px;
+            margin-top: 14px;
         }
 
-
-        .card-action {
+        .action {
             display: flex;
 
             align-items: center;
             justify-content: center;
 
-            gap: 6px;
+            min-height: 40px;
 
-            min-height: 42px;
-
-            padding: 9px 12px;
+            padding: 8px 10px;
 
             border-radius: 9px;
 
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 900;
 
             text-decoration: none;
-
-            transition:
-                transform .15s ease,
-                background .15s ease,
-                border-color .15s ease;
         }
 
-
-        .card-action:hover {
-            transform:
-                translateY(-1px);
+        .action-primary {
+            background: #111827;
+            color: #ffffff;
         }
 
-
-        .public-action {
+        .action-secondary {
             background: #ffffff;
-
             color: #111827;
 
             border:
                 1px solid #d1d5db;
         }
 
-
-        .public-action:hover {
-            background: #f9fafb;
-
-            border-color: #9ca3af;
-        }
-
-
-        .reel-action {
-            background: #111827;
-
-            color: #ffffff;
-
-            border:
-                1px solid #111827;
-        }
-
-
-        .reel-action:hover {
-            background: #000000;
-        }
-
-
-        .locked-action {
-            background: #fff7ed;
-
-            color: #9a3412;
-
-            border:
-                1px solid #fed7aa;
-        }
-
-
-        .locked-action:hover {
-            background: #ffedd5;
-        }
-
-
-        /* =====================================================
-           EMPTY STATE
-        ===================================================== */
-
         .empty {
-            padding: 36px 24px;
+            padding: 36px 22px;
 
             background: #ffffff;
 
             border:
-                1px dashed #d1d5db;
+                1px dashed #cbd5e1;
 
             border-radius: 14px;
 
-            color: #6b7280;
-
             text-align: center;
 
-            font-size: 13px;
+            color: #64748b;
 
-            line-height: 1.6;
+            font-size: 12px;
         }
 
+        @media (max-width: 760px) {
 
-        .empty-icon {
-            display: block;
+            .metrics {
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
 
-            margin-bottom: 10px;
-
-            font-size: 30px;
         }
-
-
-        .empty strong {
-            display: block;
-
-            margin-bottom: 4px;
-
-            color: #111827;
-
-            font-size: 15px;
-        }
-
-
-        .empty .button {
-            margin-top: 16px;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
 
         @media (max-width: 560px) {
 
-            .page {
-                width:
-                    min(
-                        100% - 20px,
-                        900px
-                    );
-
-                padding-top: 20px;
-            }
-
-
             .top {
                 align-items: stretch;
-
                 flex-direction: column;
             }
-
 
             .top > .button {
                 width: 100%;
             }
 
-
-            .grid {
+            .metrics {
                 grid-template-columns:
-                    1fr;
-            }
-
-
-            .card {
-                border-radius: 15px;
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
             }
 
         }
@@ -747,41 +528,54 @@
 
 </head>
 
-
 <body>
-
 
 <div class="page">
 
 
-    <!-- =========================================
-         BACK
-    ========================================== -->
+    <div class="nav">
 
-    <a
-        href="{{ url_for('admin_dashboard') }}"
-        class="back"
-    >
-        ← Organizer Dashboard
-    </a>
+        <a
+            href="{{ url_for('home') }}"
+            class="brand"
+        >
+            KALXA RESTAURANT
+        </a>
 
 
+        <div class="nav-actions">
 
-    <!-- =========================================
-         HEADER
-    ========================================== -->
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="nav-link"
+            >
+                Subscription
+            </a>
+
+        </div>
+
+    </div>
+
 
     <div class="top">
 
         <div>
 
+            <p class="eyebrow">
+                RESTAURANT CONTROL CENTRE
+            </p>
+
             <h1>
-                🍔 Restaurant Advertising
+                🍔 Your Campaigns
             </h1>
 
             <p class="subtitle">
-                Manage restaurant promotions,
-                public adverts and restaurant reels.
+
+                Schedule, manage and control
+                how your restaurant appears on Kalxa.
+
             </p>
 
         </div>
@@ -795,7 +589,7 @@
                 ) }}"
                 class="button"
             >
-                + Create Restaurant Advert
+                + Create Campaign
             </a>
 
         {% else %}
@@ -814,11 +608,6 @@
     </div>
 
 
-
-    <!-- =========================================
-         FLASH MESSAGES
-    ========================================== -->
-
     {% with messages =
         get_flashed_messages(
             with_categories=true
@@ -834,7 +623,6 @@
                     <div
                         class="
                             flash
-
                             {% if category == 'success' %}
                                 flash-success
                             {% elif category == 'error' %}
@@ -854,128 +642,157 @@
     {% endwith %}
 
 
-
-    <!-- =========================================
-         SUBSCRIPTION STATUS
-    ========================================== -->
-
     {% if subscription_active %}
 
         <div
             class="
-                subscription-panel
-                subscription-panel-active
+                subscription
+                subscription-active
             "
         >
 
-            <p class="subscription-title">
-                ✅ Restaurant advertising subscription active
+            <strong>
+                ✅ Restaurant advertising active
+            </strong>
+
+            <p>
+
+                Your subscription is active
+
+                {% if subscription_expires_at %}
+
+                    until
+                    {{ subscription_expires_at.strftime('%d %B %Y') }}.
+
+                {% endif %}
+
             </p>
-
-
-            <p class="subscription-copy">
-                You can create restaurant adverts
-                and publish restaurant reels.
-            </p>
-
-
-            {% if subscription_expires_at %}
-
-                <div class="subscription-meta">
-
-                    Active until
-                    {{ subscription_expires_at.strftime('%d %B %Y') }}
-
-                </div>
-
-            {% endif %}
 
         </div>
-
 
     {% else %}
 
         <div
             class="
-                subscription-panel
-                subscription-panel-locked
+                subscription
+                subscription-locked
             "
         >
 
-            <p class="subscription-title">
-                🔒 Restaurant advertising is locked
+            <strong>
+                🔒 Restaurant advertising locked
+            </strong>
+
+            <p>
+                Activate your subscription to
+                create, edit and publish campaigns.
             </p>
 
+            <p>
 
-            <p class="subscription-copy">
-
-                Activate your Kalxa subscription
-                before creating restaurant adverts
-                or publishing restaurant reels.
-
-            </p>
-
-
-            {% if subscription_plan_name %}
-
-                <div class="subscription-meta">
-                    {{ subscription_plan_name }}
-                </div>
-
-            {% endif %}
-
-
-            {% if subscription_price %}
-
-                <div class="subscription-price">
-
-                    R{{ '%.2f'|format(subscription_price|float) }}
-
-                </div>
-
-            {% endif %}
-
-
-            {% if pending_subscription_payment %}
-
-                <p class="subscription-copy">
-
-                    You already have a pending
-                    subscription payment.
-
-                </p>
-
-            {% endif %}
-
-
-            <a
-                href="{{ url_for(
-                    'admin_subscription'
-                ) }}"
-                class="subscription-action"
-            >
-
-                {% if pending_subscription_payment %}
-
-                    Continue Subscription →
-
-                {% else %}
-
+                <a
+                    href="{{ url_for(
+                        'admin_subscription'
+                    ) }}"
+                >
                     Activate Subscription →
+                </a>
 
-                {% endif %}
-
-            </a>
+            </p>
 
         </div>
 
     {% endif %}
 
 
-
     <!-- =========================================
-         RESTAURANT ADVERTS
+         METRICS
     ========================================== -->
+
+    <div class="metrics">
+
+
+        <div class="metric">
+
+            <span class="metric-label">
+                Live
+            </span>
+
+            <span class="metric-value">
+                {{ live_adverts }}
+            </span>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span class="metric-label">
+                Scheduled
+            </span>
+
+            <span class="metric-value">
+                {{ scheduled_adverts }}
+            </span>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span class="metric-label">
+                Paused
+            </span>
+
+            <span class="metric-value">
+                {{ paused_adverts }}
+            </span>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span class="metric-label">
+                Expired
+            </span>
+
+            <span class="metric-value">
+                {{ expired_adverts }}
+            </span>
+
+        </div>
+
+
+        <div class="metric">
+
+            <span class="metric-label">
+                Live Reels
+            </span>
+
+            <span class="metric-value">
+                {{ live_reels }}
+            </span>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="section-header">
+
+        <h2>
+            Restaurant Campaigns
+        </h2>
+
+        <p>
+            Control campaign dates,
+            restaurant details and reels.
+        </p>
+
+    </div>
+
 
     {% if adverts %}
 
@@ -986,10 +803,6 @@
 
                 <article class="card">
 
-
-                    <!-- =============================
-                         POSTER
-                    ============================== -->
 
                     <div class="poster">
 
@@ -1002,28 +815,60 @@
                                 loading="lazy"
                             >
 
-                        {% else %}
-
-                            <div class="poster-placeholder">
-
-                                <span>
-                                    🍔
-                                </span>
-
-                                <span>
-                                    No poster
-                                </span>
-
-                            </div>
-
                         {% endif %}
 
+
+                        {% if advert.campaign_status == "live" %}
+
+                            <span
+                                class="
+                                    campaign-badge
+                                    badge-live
+                                "
+                            >
+                                🟢 LIVE
+                            </span>
+
+                        {% elif advert.campaign_status == "scheduled" %}
+
+                            <span
+                                class="
+                                    campaign-badge
+                                    badge-scheduled
+                                "
+                            >
+                                🟡 SCHEDULED
+                            </span>
+
+                        {% elif advert.campaign_status == "expired" %}
+
+                            <span
+                                class="
+                                    campaign-badge
+                                    badge-expired
+                                "
+                            >
+                                🔴 EXPIRED
+                            </span>
+
+                        {% else %}
+
+                            <span
+                                class="
+                                    campaign-badge
+                                    badge-paused
+                                "
+                            >
+                                ⚪ PAUSED
+                            </span>
+
+                        {% endif %}
 
 
                         {% if advert.reel %}
 
                             <span class="reel-badge">
-                                🎬 Reel Live
+                                🎬 REEL
                             </span>
 
                         {% endif %}
@@ -1032,18 +877,11 @@
                     </div>
 
 
-
-                    <!-- =============================
-                         CONTENT
-                    ============================== -->
-
                     <div class="copy">
 
-
-                        <h2>
+                        <h3>
                             {{ advert.business_name }}
-                        </h2>
-
+                        </h3>
 
 
                         {% if advert.headline %}
@@ -1055,7 +893,6 @@
                         {% endif %}
 
 
-
                         {% if advert.area %}
 
                             <p>
@@ -1065,66 +902,97 @@
                         {% endif %}
 
 
-
-                        <!-- =============================
-                             STATUS
-                        ============================== -->
-
-                        <div class="status-row">
+                        <div class="schedule">
 
 
-                            {% if advert.active %}
+                            <div class="schedule-item">
 
-                                <span class="status">
-                                    Active
+                                <span class="schedule-label">
+                                    Start
                                 </span>
 
-                            {% else %}
+                                <span class="schedule-value">
 
-                                <span
-                                    class="
-                                        status
-                                        status-inactive
-                                    "
-                                >
-                                    Inactive
+                                    {% if advert.campaign_start_date %}
+                                        {{ advert.campaign_start_date.strftime('%d %b %Y') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+
                                 </span>
 
-                            {% endif %}
+                            </div>
 
 
+                            <div class="schedule-item">
 
-                            {% if advert.reel %}
-
-                                <span class="reel-status">
-                                    🎬 Reel Published
+                                <span class="schedule-label">
+                                    End
                                 </span>
 
-                            {% endif %}
+                                <span class="schedule-value">
 
+                                    {% if advert.campaign_end_date %}
+                                        {{ advert.campaign_end_date.strftime('%d %b %Y') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
 
-
-                            {% if not subscription_active %}
-
-                                <span class="locked-status">
-                                    🔒 Subscription Required
                                 </span>
 
-                            {% endif %}
+                            </div>
 
 
                         </div>
 
 
+                        {% if advert.campaign_status == "live" %}
 
-                        <!-- =============================
-                             ACTIONS
-                        ============================== -->
+                            <div class="remaining">
 
-                        <div class="card-actions">
+                                {{ advert.days_remaining }}
+                                day{% if advert.days_remaining != 1 %}s{% endif %}
+                                remaining
+
+                            </div>
+
+                        {% elif advert.campaign_status == "scheduled" %}
+
+                            <div class="remaining">
+
+                                Campaign will automatically
+                                go live on its start date.
+
+                            </div>
+
+                        {% elif advert.campaign_status == "expired" %}
+
+                            <div class="remaining">
+
+                                Campaign has ended.
+                                Edit its schedule to reuse it.
+
+                            </div>
+
+                        {% endif %}
 
 
-                            <!-- PUBLIC RESTAURANT PAGE -->
+                        <div class="actions">
+
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_manage_restaurant',
+                                    advert_id=advert.id
+                                ) }}"
+                                class="
+                                    action
+                                    action-primary
+                                "
+                            >
+                                Manage Campaign
+                            </a>
+
 
                             <a
                                 href="{{ url_for(
@@ -1134,63 +1002,15 @@
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="
-                                    card-action
-                                    public-action
+                                    action
+                                    action-secondary
                                 "
                             >
-                                View Public Advert →
+                                View Public Page →
                             </a>
 
 
-
-                            <!-- RESTAURANT REEL -->
-
-                            {% if subscription_active %}
-
-                                <a
-                                    href="{{ url_for(
-                                        'admin_restaurant_reel',
-                                        advert_id=advert.id
-                                    ) }}"
-                                    class="
-                                        card-action
-                                        reel-action
-                                    "
-                                >
-
-                                    🎬
-
-                                    {% if advert.reel %}
-
-                                        Manage Reel
-
-                                    {% else %}
-
-                                        Upload Reel
-
-                                    {% endif %}
-
-                                </a>
-
-                            {% else %}
-
-                                <a
-                                    href="{{ url_for(
-                                        'admin_subscription'
-                                    ) }}"
-                                    class="
-                                        card-action
-                                        locked-action
-                                    "
-                                >
-                                    🔒 Renew Subscription
-                                </a>
-
-                            {% endif %}
-
-
                         </div>
-
 
                     </div>
 
@@ -1198,37 +1018,27 @@
 
             {% endfor %}
 
-
         </div>
 
 
     {% else %}
 
 
-        <!-- =========================================
-             EMPTY STATE
-        ========================================== -->
-
         <div class="empty">
 
-            <span class="empty-icon">
-                🍔
-            </span>
+            <strong>
+                No restaurant campaigns yet.
+            </strong>
 
+            <br><br>
 
             {% if subscription_active %}
 
-                <strong>
-                    No restaurant adverts yet
-                </strong>
+                Create your first campaign,
+                choose how long it should run,
+                then add a restaurant reel.
 
-                Create your first restaurant promotion,
-                add its poster and contact information,
-                then publish a restaurant reel.
-
-
-                <br>
-
+                <br><br>
 
                 <a
                     href="{{ url_for(
@@ -1236,23 +1046,15 @@
                     ) }}"
                     class="button"
                 >
-                    + Create Restaurant Advert
+                    + Create First Campaign
                 </a>
-
 
             {% else %}
 
-                <strong>
-                    Restaurant advertising is locked
-                </strong>
+                Activate your subscription
+                before creating your first campaign.
 
-                Activate your subscription before
-                creating your first restaurant advert
-                or uploading restaurant reels.
-
-
-                <br>
-
+                <br><br>
 
                 <a
                     href="{{ url_for(
@@ -1260,21 +1062,10 @@
                     ) }}"
                     class="button"
                 >
-
-                    {% if pending_subscription_payment %}
-
-                        Continue Subscription
-
-                    {% else %}
-
-                        🔒 Activate Subscription
-
-                    {% endif %}
-
+                    Activate Subscription
                 </a>
 
             {% endif %}
-
 
         </div>
 
@@ -1283,7 +1074,6 @@
 
 
 </div>
-
 
 </body>
 
