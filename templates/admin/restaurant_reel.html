@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Restaurant Reel | Kalxa
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: min(100% - 28px, 760px);
+            margin: 0 auto;
+            padding: 28px 0 70px;
+        }
+
+        .back {
+            display: inline-flex;
+            margin-bottom: 18px;
+            color: #4b5563;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .card {
+            padding: 24px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            box-shadow: 0 12px 36px rgba(15,23,42,.07);
+        }
+
+        .kicker {
+            display: block;
+            margin-bottom: 7px;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .11em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(26px, 6vw, 38px);
+            line-height: 1.05;
+            letter-spacing: -.04em;
+        }
+
+        .business-name {
+            margin: 9px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .rules {
+            display: grid;
+            gap: 8px;
+            margin: 22px 0;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 13px;
+            color: #4b5563;
+            font-size: 12px;
+        }
+
+        .upload-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .upload-label {
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .upload-input {
+            width: 100%;
+            padding: 13px;
+            background: #f8fafc;
+            border: 1px solid #d1d5db;
+            border-radius: 11px;
+        }
+
+        .button {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            background: #111827;
+            color: #ffffff;
+            border: 1px solid #111827;
+            border-radius: 11px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button-secondary {
+            background: #ffffff;
+            color: #111827;
+            border-color: #d1d5db;
+        }
+
+        .button-danger {
+            background: #ffffff;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        .current {
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .video-frame {
+            position: relative;
+            width: min(100%, 300px);
+            margin: 14px auto;
+            overflow: hidden;
+            background: #000000;
+            border-radius: 17px;
+            box-shadow: 0 12px 32px rgba(15,23,42,.16);
+        }
+
+        .video-frame video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .sound-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 5;
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            background: rgba(17,24,39,.78);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 999px;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .meta {
+            color: #6b7280;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .actions {
+            display: grid;
+            gap: 9px;
+            margin-top: 16px;
+        }
+
+        .flash {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 560px) {
+            .page {
+                width: min(100% - 20px, 760px);
+                padding-top: 20px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 16px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+    <a
+        href="{{ url_for('admin_restaurants') }}"
+        class="back"
+    >
+        ← Restaurant Advertising
+    </a>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="flash">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="card">
+
+        <span class="kicker">
+            RESTAURANT MARKETING
+        </span>
+
+        <h1>
+            🍔 Restaurant Reel
+        </h1>
+
+        <p class="business-name">
+            {{ advert.business_name }}
+        </p>
+
+        <div class="rules">
+            <strong>
+                Show customers the food, atmosphere or experience.
+            </strong>
+
+            <span>
+                Maximum video duration: 30 seconds
+            </span>
+
+            <span>
+                Maximum file size: 80 MB
+            </span>
+
+            <span>
+                Vertical 9:16 video is recommended.
+            </span>
+
+            <span>
+                Restaurant reels appear in the separate
+                “Eat Around You” section.
+            </span>
+        </div>
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="upload-form"
+        >
+            <label
+                for="reel-video"
+                class="upload-label"
+            >
+                {% if reel %}
+                    Replace Restaurant Reel
+                {% else %}
+                    Upload Restaurant Reel
+                {% endif %}
+            </label>
+
+            <input
+                id="reel-video"
+                class="upload-input"
+                type="file"
+                name="reel_video"
+                accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
+                required
+            >
+
+            <button
+                type="submit"
+                class="button"
+            >
+                {% if reel %}
+                    Replace Reel
+                {% else %}
+                    Publish Reel
+                {% endif %}
+            </button>
+        </form>
+
+        {% if reel %}
+            <div class="current">
+
+                <span class="kicker">
+                    CURRENT REEL
+                </span>
+
+                <div
+                    class="video-frame"
+                    id="restaurant-reel-preview-frame"
+                >
+                    <video
+                        id="restaurant-reel-preview-video"
+                        playsinline
+                        muted
+                        loop
+                        preload="metadata"
+                        controlslist="nodownload noremoteplayback"
+                        disablepictureinpicture
+                        oncontextmenu="return false;"
+                        {% if reel.thumbnail_url %}
+                            poster="{{ reel.thumbnail_url }}"
+                        {% elif advert.poster_image_url %}
+                            poster="{{ advert.poster_image_url }}"
+                        {% endif %}
+                    >
+                        <source src="{{ reel.video_url }}">
+                    </video>
+
+                    <button
+                        type="button"
+                        class="sound-button"
+                        id="restaurant-reel-preview-sound"
+                        aria-label="Turn sound on"
+                    >
+                        🔇
+                    </button>
+                </div>
+
+                <div class="meta">
+                    {{ "%.1f"|format(reel.duration_seconds) }} seconds
+                </div>
+
+                <div class="actions">
+
+                    <a
+                        href="{{ url_for(
+                            'restaurant_page',
+                            advert_id=advert.id
+                        ) }}"
+                        class="button button-secondary"
+                        target="_blank"
+                    >
+                        View Public Restaurant Page →
+                    </a>
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_delete_restaurant_reel',
+                            advert_id=advert.id
+                        ) }}"
+                        onsubmit="return confirm(
+                            'Remove this restaurant reel?'
+                        );"
+                    >
+                        <button
+                            type="submit"
+                            class="button button-danger"
+                            style="width:100%;"
+                        >
+                            Remove Reel
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% if reel %}
+<script>
+(() => {
+    const video =
+        document.getElementById(
+            'restaurant-reel-preview-video'
+        );
+
+    const button =
+        document.getElementById(
+            'restaurant-reel-preview-sound'
+        );
+
+    if (!video || !button) {
+        return;
+    }
+
+    video.muted = true;
+
+    function updateUi() {
+        button.textContent =
+            video.muted
+                ? '🔇'
+                : '🔊';
+
+        button.setAttribute(
+            'aria-label',
+            video.muted
+                ? 'Turn sound on'
+                : 'Mute video'
+        );
+    }
+
+    async function toggleSound() {
+        if (video.paused) {
+            try {
+                await video.play();
+            } catch (_) {}
+        }
+
+        video.muted =
+            !video.muted;
+
+        updateUi();
+    }
+
+    video.addEventListener(
+        'click',
+        toggleSound
+    );
+
+    button.addEventListener(
+        'click',
+        async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            await toggleSound();
+        }
+    );
+
+    updateUi();
+
+    video.play().catch(
+        () => {}
+    );
+})();
+</script>
+{% endif %}
+
+</body>
+</html>
