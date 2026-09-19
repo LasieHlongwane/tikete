@@ -6322,6 +6322,9 @@ def superadmin_send_notification():
 
     campaign = PushCampaign(
 
+        campaign_type=
+            "event",
+
         event_id=
             event.id,
 
