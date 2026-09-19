@@ -2020,9 +2020,8 @@ def valid_restaurant_directions_url(
     return value
 
 
-
 # ============================================================
-# ORGANIZER HOME REDIRECT
+# ORGANIZER HOME ENDPOINT
 # ============================================================
 
 def organizer_home_endpoint(
@@ -2039,9 +2038,7 @@ def organizer_home_endpoint(
 
 
     return "admin_dashboard"
-
-
-
+    
 def require_restaurant_organizer():
 
     auth = (
