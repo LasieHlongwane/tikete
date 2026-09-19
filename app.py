@@ -2508,9 +2508,33 @@ def send_push_campaign(
 
             data={
                 "campaign_id":
+                  str(
+                    campaign.id
+                  ),
+
+                "campaign_type":
+                  str(
+                    campaign.campaign_type
+                    or "event"
+                  ),
+
+                "event_id":
+                  (
                     str(
-                        campaign.id
-                    ),
+                      campaign.event_id
+                    )
+                    if campaign.event_id
+                    else ""
+                  ),
+
+                "restaurant_advert_id":
+                  (
+                    str(
+                     campaign.restaurant_advert_id
+                    )
+                    if campaign.restaurant_advert_id
+                    else ""
+                  ),
             },
 
             webpush=
