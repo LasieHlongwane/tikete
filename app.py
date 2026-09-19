@@ -6864,6 +6864,389 @@ def admin_restaurants():
         adverts=
             adverts,
     )
+
+
+
+@app.route(
+    "/admin/restaurants/new",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def admin_create_restaurant():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if request.method == "POST":
+
+        business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+        )
+
+        headline = (
+            request.form.get(
+                "headline",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        description = (
+            request.form.get(
+                "description",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        area = (
+            request.form.get(
+                "area",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        address = (
+            request.form.get(
+                "address",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        whatsapp_number = (
+            request.form.get(
+                "whatsapp_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        phone_number = (
+            request.form.get(
+                "phone_number",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+        directions_url = (
+            request.form.get(
+                "directions_url",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        if not business_name:
+
+            flash(
+                "Business name is required.",
+                "error",
+            )
+
+            return render_template(
+                "admin/restaurant_form.html",
+
+                organizer=
+                    organizer,
+
+                advert=
+                    None,
+            )
+
+
+        poster = (
+            request.files.get(
+                "poster"
+            )
+        )
+
+
+        if (
+            not poster
+            or not poster.filename
+        ):
+
+            flash(
+                "Upload a restaurant poster.",
+                "error",
+            )
+
+            return render_template(
+                "admin/restaurant_form.html",
+
+                organizer=
+                    organizer,
+
+                advert=
+                    None,
+            )
+
+
+        if not allowed_restaurant_poster_filename(
+            poster.filename
+        ):
+
+            flash(
+                (
+                    "Use a JPG, JPEG, PNG "
+                    "or WebP poster."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/restaurant_form.html",
+
+                organizer=
+                    organizer,
+
+                advert=
+                    None,
+            )
+
+
+        poster.stream.seek(
+            0,
+            os.SEEK_END,
+        )
+
+        file_size = (
+            poster.stream.tell()
+        )
+
+        poster.stream.seek(0)
+
+
+        if (
+            file_size
+            > RESTAURANT_POSTER_MAX_FILE_BYTES
+        ):
+
+            flash(
+                (
+                    "The poster is too large. "
+                    "Maximum size is 8 MB."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "admin/restaurant_form.html",
+
+                organizer=
+                    organizer,
+
+                advert=
+                    None,
+            )
+
+
+        uploaded_public_id = None
+
+
+        try:
+
+            upload_result = (
+                cloudinary.uploader.upload(
+                    poster,
+
+                    resource_type=
+                        "image",
+
+                    folder=(
+                        "kalxa/"
+                        f"organizers/{organizer.id}/"
+                        "restaurants/posters"
+                    ),
+
+                    use_filename=
+                        True,
+
+                    unique_filename=
+                        True,
+
+                    overwrite=
+                        False,
+                )
+            )
+
+
+            uploaded_public_id = (
+                upload_result.get(
+                    "public_id"
+                )
+            )
+
+            secure_url = (
+                upload_result.get(
+                    "secure_url"
+                )
+            )
+
+
+            if (
+                not uploaded_public_id
+                or not secure_url
+            ):
+
+                raise RuntimeError(
+                    (
+                        "Cloudinary did not "
+                        "return the uploaded poster."
+                    )
+                )
+
+
+            advert = (
+                RestaurantAdvert(
+                    organizer_id=
+                        organizer.id,
+
+                    business_name=
+                        business_name,
+
+                    headline=
+                        headline,
+
+                    description=
+                        description,
+
+                    area=
+                        area,
+
+                    address=
+                        address,
+
+                    directions_url=
+                        directions_url,
+
+                    whatsapp_number=
+                        whatsapp_number,
+
+                    phone_number=
+                        phone_number,
+
+                    poster_image_url=
+                        secure_url,
+
+                    poster_cloudinary_public_id=
+                        uploaded_public_id,
+
+                    active=
+                        True,
+                )
+            )
+
+
+            db.session.add(
+                advert
+            )
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            if uploaded_public_id:
+
+                try:
+
+                    cloudinary.uploader.destroy(
+                        uploaded_public_id,
+                        resource_type=
+                            "image",
+                    )
+
+                except Exception:
+
+                    current_app.logger.exception(
+                        (
+                            "[Restaurant Advert] "
+                            "Unable to remove failed "
+                            "poster upload."
+                        )
+                    )
+
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Advert] "
+                    "Create failed "
+                    "organizer_id=%s error=%s"
+                ),
+                organizer.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Restaurant advert could "
+                    "not be created."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_create_restaurant"
+                )
+            )
+
+
+        flash(
+            "Restaurant advert created.",
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_restaurants"
+            )
+        )
+
+
+    return render_template(
+        "admin/restaurant_form.html",
+
+        organizer=
+            organizer,
+
+        advert=
+            None,
+    )
 # ============================================================
 # PUBLIC ATTENDEE - ENABLE PUSH FROM HOME PAGE
 # ============================================================
