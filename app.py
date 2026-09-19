@@ -2080,6 +2080,36 @@ def require_restaurant_organizer():
 
     return None
 
+
+def require_event_organizer():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if (
+        not organizer
+        or organizer.account_type
+        != "event"
+    ):
+
+        return redirect(
+            url_for(
+                "admin_restaurants"
+            )
+        )
+
+
+    return None
 # ============================================================
 # FEATURED LISTING HELPERS
 # ============================================================
