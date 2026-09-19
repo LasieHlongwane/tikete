@@ -665,14 +665,29 @@
         </div>
 
 
-        <a
-            href="{{ url_for(
-                'admin_create_restaurant'
-            ) }}"
-            class="button"
-        >
-            + Create Restaurant Advert
-        </a>
+        {% if subscription_active %}
+
+         <a
+          href="{{ url_for(
+            'admin_create_restaurant'
+          ) }}"
+          class="button"
+         >
+          + Create Restaurant Advert
+         </a>
+
+        {% else %}
+
+         <a
+          href="{{ url_for(
+            'admin_subscription'
+          ) }}"
+          class="button"
+         >
+          🔒 Activate Subscription
+         </a>
+
+        {% endif %}
 
     </div>
 
