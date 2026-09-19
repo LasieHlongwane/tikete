@@ -6175,6 +6175,17 @@ def superadmin_notifications():
         else 0
     )
 
+    selected_restaurant_audience_count = (
+
+      restaurant_audience_counts.get(
+        selected_restaurant.id,
+        0,
+      )
+
+      if selected_restaurant
+      else 0
+    )
+
 
     return render_template(
         "superadmin/notifications.html",
@@ -6202,6 +6213,18 @@ def superadmin_notifications():
 
         selected_local_audience_count=
             selected_local_audience_count,
+
+        restaurant_adverts=
+            restaurant_adverts,
+
+        selected_restaurant=
+            selected_restaurant,
+
+        restaurant_audience_counts=
+            restaurant_audience_counts,
+
+        selected_restaurant_audience_count=
+            selected_restaurant_audience_count,
 
         local_notification_radius_km=
             LOCAL_NOTIFICATION_RADIUS_KM,
