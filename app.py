@@ -8966,7 +8966,14 @@ def organizer_login():
         # ====================================================
 
         if not password_ok:
-
+            account_type = (
+              getattr(
+               organizer,
+               "account_type",
+               None,
+              )
+              or "event"
+            )
             flash(
                 "Invalid email or password.",
                 "error",
