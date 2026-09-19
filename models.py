@@ -122,6 +122,13 @@ class Organizer(db.Model):
         nullable=True,
     )
 
+    account_type = db.Column(
+        db.String(30),
+        nullable=False,
+        default="event",
+        index=True,
+    )
+
 
     # ========================================================
     # PAYSTACK / SETTLEMENT CONNECTION
