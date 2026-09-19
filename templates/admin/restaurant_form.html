@@ -11,8 +11,14 @@
     >
 
     <title>
-        Create Restaurant Advert | Kalxa
+        {% if advert %}
+            Edit Restaurant Advert
+        {% else %}
+            Create Restaurant Advert
+        {% endif %}
+        | Kalxa
     </title>
+
 
     <style>
 
@@ -35,21 +41,17 @@
         }
 
         .page {
-            width: min(100% - 28px, 720px);
+            width: min(100% - 28px, 760px);
             margin: 0 auto;
             padding: 28px 0 70px;
         }
 
         .back {
             display: inline-flex;
-
             margin-bottom: 18px;
-
             color: #6b7280;
-
             font-size: 12px;
             font-weight: 800;
-
             text-decoration: none;
         }
 
@@ -66,7 +68,11 @@
             margin: 0;
 
             font-size:
-                clamp(26px, 6vw, 38px);
+                clamp(
+                    26px,
+                    6vw,
+                    38px
+                );
 
             letter-spacing: -.04em;
         }
@@ -77,11 +83,37 @@
             color: #6b7280;
 
             font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .section {
+            display: grid;
+            gap: 14px;
+
+            padding-top: 20px;
+            margin-top: 4px;
+
+            border-top:
+                1px solid #e5e7eb;
+        }
+
+        .section:first-of-type {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .section-title {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 13px;
+            font-weight: 950;
         }
 
         form {
             display: grid;
-            gap: 16px;
+            gap: 18px;
         }
 
         label {
@@ -93,20 +125,30 @@
         }
 
         input,
-        textarea {
+        textarea,
+        select {
             width: 100%;
 
             padding: 12px 13px;
 
             background: #f8fafc;
-
             color: #111827;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 10px;
 
             font: inherit;
             font-size: 13px;
+
+            outline: none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #111827;
         }
 
         textarea {
@@ -114,11 +156,73 @@
             resize: vertical;
         }
 
+        .two-column {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 12px;
+        }
+
         .help {
             color: #9ca3af;
 
             font-size: 10px;
             font-weight: 600;
+
+            line-height: 1.45;
+        }
+
+        .subscription-note {
+            padding: 13px;
+
+            background: #f0fdf4;
+            color: #166534;
+
+            border:
+                1px solid #bbf7d0;
+
+            border-radius: 11px;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+        }
+
+        .current-poster {
+            overflow: hidden;
+
+            max-width: 240px;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 12px;
+        }
+
+        .current-poster img {
+            width: 100%;
+            display: block;
+        }
+
+        .schedule-preview {
+            padding: 12px 13px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 11px;
+
+            color: #475569;
+
+            font-size: 11px;
+            line-height: 1.5;
         }
 
         .button {
@@ -131,10 +235,23 @@
             border-radius: 11px;
 
             font: inherit;
+
             font-size: 13px;
             font-weight: 900;
 
             cursor: pointer;
+        }
+
+        @media (max-width: 560px) {
+
+            .card {
+                padding: 20px 16px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
         }
 
     </style>
@@ -146,25 +263,76 @@
 <div class="page">
 
     <a
-        href="{{ url_for(
+        href="{%
+            if advert
+        %}{{ url_for(
+            'admin_manage_restaurant',
+            advert_id=advert.id
+        ) }}{%
+            else
+        %}{{ url_for(
             'admin_restaurants'
-        ) }}"
+        ) }}{%
+            endif
+        %}"
         class="back"
     >
-        ← Restaurant Advertising
+        ←
+        {% if advert %}
+            Manage Advert
+        {% else %}
+            Restaurant Control Centre
+        {% endif %}
     </a>
 
 
     <section class="card">
 
         <h1>
-            Create Restaurant Advert
+
+            {% if advert %}
+                Edit Restaurant Advert
+            {% else %}
+                Create Restaurant Advert
+            {% endif %}
+
         </h1>
 
+
         <p class="intro">
-            Create the public promotion page
-            customers will reach from your reel.
+
+            {% if advert %}
+
+                Update your campaign details,
+                schedule and restaurant information.
+
+            {% else %}
+
+                Create a restaurant campaign and
+                choose how long it should appear
+                on Kalxa.
+
+            {% endif %}
+
         </p>
+
+
+        {% if organizer.subscription_expires_at %}
+
+            <div class="subscription-note">
+
+                ✅ Your subscription is active until
+
+                <strong>
+                    {{ organizer.subscription_expires_at.strftime('%d %B %Y') }}
+                </strong>.
+
+                Your campaign cannot run beyond
+                this date.
+
+            </div>
+
+        {% endif %}
 
 
         <form
@@ -172,145 +340,450 @@
             enctype="multipart/form-data"
         >
 
-            <label>
 
-                Business Name
+            <!-- =====================================
+                 CAMPAIGN SCHEDULE
+            ====================================== -->
 
-                <input
-                    type="text"
-                    name="business_name"
-                    required
-                    maxlength="180"
-                    placeholder="e.g. Mpho's Grill"
+            <div class="section">
+
+                <p class="section-title">
+                    📅 Campaign Schedule
+                </p>
+
+
+                <div class="two-column">
+
+                    <label>
+
+                        Start Date
+
+                        <input
+                            id="start-date"
+                            type="date"
+                            name="start_date"
+
+                            value="{{
+                                request.form.get(
+                                    'start_date',
+                                    (
+                                        advert.campaign_start_date.isoformat()
+                                        if advert and advert.campaign_start_date
+                                        else today_iso
+                                    )
+                                )
+                            }}"
+
+                            {% if not advert %}
+                                min="{{ today_iso }}"
+                            {% endif %}
+
+                            {% if subscription_end_iso %}
+                                max="{{ subscription_end_iso }}"
+                            {% endif %}
+
+                            required
+                        >
+
+                    </label>
+
+
+                    {% set selected_duration =
+                        request.form.get(
+                            'duration_choice',
+                            'custom' if advert else '14'
+                        )
+                    %}
+
+
+                    <label>
+
+                        How long should it run?
+
+                        <select
+                            id="duration-choice"
+                            name="duration_choice"
+                            required
+                        >
+
+                            <option
+                                value="7"
+                                {% if selected_duration == '7' %}
+                                    selected
+                                {% endif %}
+                            >
+                                7 Days
+                            </option>
+
+                            <option
+                                value="14"
+                                {% if selected_duration == '14' %}
+                                    selected
+                                {% endif %}
+                            >
+                                14 Days
+                            </option>
+
+                            <option
+                                value="30"
+                                {% if selected_duration == '30' %}
+                                    selected
+                                {% endif %}
+                            >
+                                30 Days
+                            </option>
+
+                            <option
+                                value="custom"
+                                {% if selected_duration == 'custom' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Custom End Date
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+
+                <label
+                    id="custom-end-wrapper"
                 >
 
-            </label>
+                    Custom End Date
+
+                    <input
+                        id="custom-end-date"
+                        type="date"
+                        name="custom_end_date"
+
+                        value="{{
+                            request.form.get(
+                                'custom_end_date',
+                                (
+                                    advert.campaign_end_date.isoformat()
+                                    if advert and advert.campaign_end_date
+                                    else ''
+                                )
+                            )
+                        }}"
+
+                        {% if subscription_end_iso %}
+                            max="{{ subscription_end_iso }}"
+                        {% endif %}
+                    >
+
+                </label>
 
 
-            <label>
-
-                Promotion Headline
-
-                <input
-                    type="text"
-                    name="headline"
-                    maxlength="220"
-                    placeholder="e.g. Weekend Combo Special"
+                <div
+                    id="schedule-preview"
+                    class="schedule-preview"
                 >
-
-            </label>
-
-
-            <label>
-
-                Description
-
-                <textarea
-                    name="description"
-                    placeholder="Tell customers what makes this restaurant or promotion worth visiting."
-                ></textarea>
-
-            </label>
+                    Choose your campaign schedule.
+                </div>
 
 
-            <label>
-
-                Restaurant Poster
-
-                <input
-                    type="file"
-                    name="poster"
-                    accept="image/jpeg,image/png,image/webp"
-                    required
-                >
-
-                <span class="help">
-                    JPG, PNG or WebP.
-                    Maximum 8 MB.
-                </span>
-
-            </label>
+            </div>
 
 
-            <label>
+            <!-- =====================================
+                 BUSINESS
+            ====================================== -->
 
-                Area
+            <div class="section">
 
-                <input
-                    type="text"
-                    name="area"
-                    maxlength="150"
-                    placeholder="e.g. KwaMhlanga"
-                >
-
-            </label>
+                <p class="section-title">
+                    🍔 Business Details
+                </p>
 
 
-            <label>
+                <label>
 
-                Address
+                    Business Name
 
-                <input
-                    type="text"
-                    name="address"
-                    maxlength="300"
-                    placeholder="Restaurant street or location"
-                >
+                    <input
+                        type="text"
+                        name="business_name"
 
-            </label>
+                        value="{{
+                            request.form.get(
+                                'business_name',
+                                advert.business_name if advert else (
+                                    organizer.business_name or ''
+                                )
+                            )
+                        }}"
 
+                        required
+                        maxlength="180"
 
-            <label>
+                        placeholder="e.g. Mpho's Grill"
+                    >
 
-                WhatsApp Number
-
-                <input
-                    type="tel"
-                    name="whatsapp_number"
-                    maxlength="50"
-                    placeholder="e.g. 0791234567"
-                >
-
-            </label>
+                </label>
 
 
-            <label>
+                <label>
 
-                Phone Number
+                    Promotion Headline
 
-                <input
-                    type="tel"
-                    name="phone_number"
-                    maxlength="50"
-                    placeholder="Restaurant contact number"
-                >
+                    <input
+                        type="text"
+                        name="headline"
 
-            </label>
+                        value="{{
+                            request.form.get(
+                                'headline',
+                                advert.headline if advert else ''
+                            )
+                        }}"
+
+                        maxlength="220"
+
+                        placeholder="e.g. Weekend Combo Special"
+                    >
+
+                </label>
 
 
-            <label>
+                <label>
 
-                Directions Link
+                    Description
 
-                <input
-                    type="url"
-                    name="directions_url"
-                    placeholder="Google Maps directions link"
-                >
+                    <textarea
+                        name="description"
+                        placeholder="Tell customers what makes this restaurant or promotion worth visiting."
+                    >{{ request.form.get(
+                        'description',
+                        advert.description if advert else ''
+                    ) }}</textarea>
 
-                <span class="help">
-                    Paste the restaurant's
-                    Google Maps location link.
-                </span>
+                </label>
 
-            </label>
+            </div>
+
+
+            <!-- =====================================
+                 POSTER
+            ====================================== -->
+
+            <div class="section">
+
+                <p class="section-title">
+                    🖼️ Campaign Poster
+                </p>
+
+
+                {% if advert and advert.poster_image_url %}
+
+                    <div class="current-poster">
+
+                        <img
+                            src="{{ advert.poster_image_url }}"
+                            alt="{{ advert.business_name }} poster"
+                        >
+
+                    </div>
+
+                {% endif %}
+
+
+                <label>
+
+                    {% if advert %}
+                        Replace Poster
+                    {% else %}
+                        Restaurant Poster
+                    {% endif %}
+
+                    <input
+                        type="file"
+                        name="poster"
+                        accept="image/jpeg,image/png,image/webp"
+
+                        {% if not advert %}
+                            required
+                        {% endif %}
+                    >
+
+                    <span class="help">
+
+                        JPG, PNG or WebP.
+                        Maximum 8 MB.
+
+                        {% if advert %}
+                            Leave empty to keep the current poster.
+                        {% endif %}
+
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <!-- =====================================
+                 LOCATION
+            ====================================== -->
+
+            <div class="section">
+
+                <p class="section-title">
+                    📍 Location
+                </p>
+
+
+                <label>
+
+                    Area
+
+                    <input
+                        type="text"
+                        name="area"
+
+                        value="{{
+                            request.form.get(
+                                'area',
+                                advert.area if advert else ''
+                            )
+                        }}"
+
+                        maxlength="150"
+
+                        placeholder="e.g. KwaMhlanga"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Address
+
+                    <input
+                        type="text"
+                        name="address"
+
+                        value="{{
+                            request.form.get(
+                                'address',
+                                advert.address if advert else ''
+                            )
+                        }}"
+
+                        maxlength="300"
+
+                        placeholder="Restaurant street or location"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Directions Link
+
+                    <input
+                        type="url"
+                        name="directions_url"
+
+                        value="{{
+                            request.form.get(
+                                'directions_url',
+                                advert.directions_url if advert else ''
+                            )
+                        }}"
+
+                        placeholder="Google Maps directions link"
+                    >
+
+                    <span class="help">
+                        Paste the restaurant's Google Maps location link.
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <!-- =====================================
+                 CONTACT
+            ====================================== -->
+
+            <div class="section">
+
+                <p class="section-title">
+                    ☎ Customer Contact
+                </p>
+
+
+                <div class="two-column">
+
+                    <label>
+
+                        WhatsApp Number
+
+                        <input
+                            type="tel"
+                            name="whatsapp_number"
+
+                            value="{{
+                                request.form.get(
+                                    'whatsapp_number',
+                                    advert.whatsapp_number if advert else ''
+                                )
+                            }}"
+
+                            maxlength="50"
+
+                            placeholder="e.g. 0791234567"
+                        >
+
+                    </label>
+
+
+                    <label>
+
+                        Phone Number
+
+                        <input
+                            type="tel"
+                            name="phone_number"
+
+                            value="{{
+                                request.form.get(
+                                    'phone_number',
+                                    advert.phone_number if advert else ''
+                                )
+                            }}"
+
+                            maxlength="50"
+
+                            placeholder="Restaurant contact number"
+                        >
+
+                    </label>
+
+                </div>
+
+            </div>
 
 
             <button
                 type="submit"
                 class="button"
             >
-                Create Restaurant Advert
+
+                {% if advert %}
+                    Save Changes
+                {% else %}
+                    Create Restaurant Campaign
+                {% endif %}
+
             </button>
 
         </form>
@@ -319,5 +792,193 @@
 
 </div>
 
+
+<script>
+
+(function () {
+
+    const durationChoice =
+        document.getElementById(
+            "duration-choice"
+        );
+
+    const startDate =
+        document.getElementById(
+            "start-date"
+        );
+
+    const customWrapper =
+        document.getElementById(
+            "custom-end-wrapper"
+        );
+
+    const customEndDate =
+        document.getElementById(
+            "custom-end-date"
+        );
+
+    const preview =
+        document.getElementById(
+            "schedule-preview"
+        );
+
+
+    function parseDate(value) {
+
+        if (!value) {
+            return null;
+        }
+
+        const parts =
+            value.split("-");
+
+        if (parts.length !== 3) {
+            return null;
+        }
+
+        return new Date(
+            Date.UTC(
+                Number(parts[0]),
+                Number(parts[1]) - 1,
+                Number(parts[2])
+            )
+        );
+    }
+
+
+    function formatDate(date) {
+
+        if (!date) {
+            return "";
+        }
+
+        return date.toLocaleDateString(
+            undefined,
+            {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                timeZone: "UTC"
+            }
+        );
+    }
+
+
+    function updateSchedule() {
+
+        const choice =
+            durationChoice.value;
+
+        const start =
+            parseDate(
+                startDate.value
+            );
+
+
+        customWrapper.style.display =
+            choice === "custom"
+                ? "grid"
+                : "none";
+
+
+        customEndDate.required =
+            choice === "custom";
+
+
+        if (!start) {
+
+            preview.textContent =
+                "Choose your campaign start date.";
+
+            return;
+        }
+
+
+        if (choice === "custom") {
+
+            const end =
+                parseDate(
+                    customEndDate.value
+                );
+
+
+            if (!end) {
+
+                preview.textContent =
+                    "Choose your custom campaign end date.";
+
+                return;
+            }
+
+
+            preview.textContent =
+                "Campaign: "
+                + formatDate(start)
+                + " → "
+                + formatDate(end);
+
+            return;
+        }
+
+
+        const days =
+            Number(choice);
+
+
+        if (!days) {
+
+            preview.textContent =
+                "Choose your campaign duration.";
+
+            return;
+        }
+
+
+        const finalDay =
+            new Date(
+                start.getTime()
+                + (
+                    (days - 1)
+                    * 86400000
+                )
+            );
+
+
+        preview.textContent =
+            "Campaign: "
+            + formatDate(start)
+            + " → "
+            + formatDate(finalDay)
+            + " ("
+            + days
+            + " days)";
+    }
+
+
+    durationChoice.addEventListener(
+        "change",
+        updateSchedule
+    );
+
+
+    startDate.addEventListener(
+        "change",
+        updateSchedule
+    );
+
+
+    customEndDate.addEventListener(
+        "change",
+        updateSchedule
+    );
+
+
+    updateSchedule();
+
+})();
+
+</script>
+
 </body>
+
 </html>
