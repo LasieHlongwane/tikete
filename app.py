@@ -3960,6 +3960,12 @@ def execute_event_boost_reminder(
 
     campaign = PushCampaign(
 
+        campaign_type=
+            "event",
+
+        restaurant_advert_id=
+            None,
+
         event_id=
             event.id,
 
