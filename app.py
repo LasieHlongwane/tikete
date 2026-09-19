@@ -7559,7 +7559,6 @@ def admin_restaurants():
 
 
     if auth:
-
         return auth
 
 
@@ -7666,21 +7665,36 @@ def admin_restaurants():
         subscription_price=
             KALXA_SUBSCRIPTION_PRICE,
     )
+
+
+# ============================================================
+# ADMIN - CREATE RESTAURANT ADVERT
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/new",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
 def admin_create_restaurant():
 
- 
+    # ========================================================
+    # ORGANIZER AUTH
+    # ========================================================
+
     auth = (
         require_ticketing_organizer()
     )
 
 
     if auth:
-
         return auth
 
 
     # ========================================================
-    # RESTAURANT SUBSCRIPTION REQUIRED
+    # ACTIVE RESTAURANT SUBSCRIPTION REQUIRED
     # ========================================================
 
     subscription_auth = (
@@ -7689,7 +7703,6 @@ def admin_create_restaurant():
 
 
     if subscription_auth:
-
         return subscription_auth
 
 
@@ -7697,6 +7710,10 @@ def admin_create_restaurant():
         get_current_organizer()
     )
 
+
+    # ========================================================
+    # POST - CREATE ADVERT
+    # ========================================================
 
     if request.method == "POST":
 
@@ -7708,6 +7725,7 @@ def admin_create_restaurant():
             .strip()
         )
 
+
         headline = (
             request.form.get(
                 "headline",
@@ -7716,6 +7734,7 @@ def admin_create_restaurant():
             .strip()
             or None
         )
+
 
         description = (
             request.form.get(
@@ -7726,6 +7745,7 @@ def admin_create_restaurant():
             or None
         )
 
+
         area = (
             request.form.get(
                 "area",
@@ -7734,6 +7754,7 @@ def admin_create_restaurant():
             .strip()
             or None
         )
+
 
         address = (
             request.form.get(
@@ -7744,6 +7765,7 @@ def admin_create_restaurant():
             or None
         )
 
+
         whatsapp_number = (
             request.form.get(
                 "whatsapp_number",
@@ -7752,6 +7774,7 @@ def admin_create_restaurant():
             .strip()
             or None
         )
+
 
         phone_number = (
             request.form.get(
@@ -7764,13 +7787,18 @@ def admin_create_restaurant():
 
 
         directions_url = (
-          valid_restaurant_directions_url(
-            request.form.get(
-              "directions_url",
-              "",
+            valid_restaurant_directions_url(
+                request.form.get(
+                    "directions_url",
+                    "",
+                )
             )
-          )
         )
+
+
+        # ====================================================
+        # BUSINESS NAME
+        # ====================================================
 
         if not business_name:
 
@@ -7789,6 +7817,10 @@ def admin_create_restaurant():
                     None,
             )
 
+
+        # ====================================================
+        # POSTER
+        # ====================================================
 
         poster = (
             request.files.get(
@@ -7841,14 +7873,20 @@ def admin_create_restaurant():
             )
 
 
+        # ====================================================
+        # FILE SIZE
+        # ====================================================
+
         poster.stream.seek(
             0,
             os.SEEK_END,
         )
 
+
         file_size = (
             poster.stream.tell()
         )
+
 
         poster.stream.seek(0)
 
@@ -7879,6 +7917,10 @@ def admin_create_restaurant():
 
         uploaded_public_id = None
 
+
+        # ====================================================
+        # UPLOAD + CREATE
+        # ====================================================
 
         try:
 
@@ -7912,6 +7954,7 @@ def admin_create_restaurant():
                     "public_id"
                 )
             )
+
 
             secure_url = (
                 upload_result.get(
@@ -7978,6 +8021,7 @@ def admin_create_restaurant():
                 advert
             )
 
+
             db.session.commit()
 
 
@@ -7992,6 +8036,7 @@ def admin_create_restaurant():
 
                     cloudinary.uploader.destroy(
                         uploaded_public_id,
+
                         resource_type=
                             "image",
                     )
@@ -8011,7 +8056,8 @@ def admin_create_restaurant():
                 (
                     "[Restaurant Advert] "
                     "Create failed "
-                    "organizer_id=%s error=%s"
+                    "organizer_id=%s "
+                    "error=%s"
                 ),
                 organizer.id,
                 error,
@@ -8047,6 +8093,10 @@ def admin_create_restaurant():
         )
 
 
+    # ========================================================
+    # GET
+    # ========================================================
+
     return render_template(
         "admin/restaurant_form.html",
 
@@ -8073,6 +8123,9 @@ def admin_restaurant_reel(
     advert_id,
 ):
 
+    # ========================================================
+    # ORGANIZER AUTH
+    # ========================================================
 
     auth = (
         require_ticketing_organizer()
@@ -8080,9 +8133,12 @@ def admin_restaurant_reel(
 
 
     if auth:
-
         return auth
 
+
+    # ========================================================
+    # ACTIVE RESTAURANT SUBSCRIPTION REQUIRED
+    # ========================================================
 
     subscription_auth = (
         require_restaurant_subscription()
@@ -8090,7 +8146,6 @@ def admin_restaurant_reel(
 
 
     if subscription_auth:
-
         return subscription_auth
 
 
@@ -8098,6 +8153,10 @@ def admin_restaurant_reel(
         get_current_organizer()
     )
 
+
+    # ========================================================
+    # OWNERSHIP
+    # ========================================================
 
     advert = (
         RestaurantAdvert.query
@@ -8117,10 +8176,17 @@ def admin_restaurant_reel(
         .filter_by(
             advert_id=
                 advert.id,
+
+            organizer_id=
+                organizer.id,
         )
         .first()
     )
 
+
+    # ========================================================
+    # POST - UPLOAD / REPLACE
+    # ========================================================
 
     if request.method == "POST":
 
@@ -8141,6 +8207,7 @@ def admin_restaurant_reel(
             return redirect(
                 url_for(
                     "admin_restaurant_reel",
+
                     advert_id=
                         advert.id,
                 )
@@ -8171,6 +8238,7 @@ def admin_restaurant_reel(
             return redirect(
                 url_for(
                     "admin_restaurant_reel",
+
                     advert_id=
                         advert.id,
                 )
@@ -8192,6 +8260,7 @@ def admin_restaurant_reel(
             return redirect(
                 url_for(
                     "admin_restaurant_reel",
+
                     advert_id=
                         advert.id,
                 )
@@ -8207,9 +8276,11 @@ def admin_restaurant_reel(
             os.SEEK_END,
         )
 
+
         file_size = (
             video.stream.tell()
         )
+
 
         video.stream.seek(0)
 
@@ -8230,6 +8301,7 @@ def admin_restaurant_reel(
             return redirect(
                 url_for(
                     "admin_restaurant_reel",
+
                     advert_id=
                         advert.id,
                 )
@@ -8285,12 +8357,14 @@ def admin_restaurant_reel(
             )
 
 
-            duration_seconds = float(
-                upload_result.get(
-                    "duration",
-                    0,
+            duration_seconds = (
+                float(
+                    upload_result.get(
+                        "duration",
+                        0,
+                    )
+                    or 0
                 )
-                or 0
             )
 
 
@@ -8308,7 +8382,8 @@ def admin_restaurant_reel(
 
 
             if (
-                duration_seconds <= 0
+                duration_seconds
+                <= 0
             ):
 
                 raise RuntimeError(
@@ -8332,6 +8407,7 @@ def admin_restaurant_reel(
                     uploaded_public_id
                 )
 
+
                 uploaded_public_id = None
 
 
@@ -8347,6 +8423,7 @@ def admin_restaurant_reel(
                 return redirect(
                     url_for(
                         "admin_restaurant_reel",
+
                         advert_id=
                             advert.id,
                     )
@@ -8391,7 +8468,7 @@ def admin_restaurant_reel(
 
 
             # =================================================
-            # CREATE
+            # CREATE REEL
             # =================================================
 
             if reel is None:
@@ -8443,7 +8520,7 @@ def admin_restaurant_reel(
 
 
             # =================================================
-            # REPLACE
+            # REPLACE REEL
             # =================================================
 
             else:
@@ -8452,17 +8529,21 @@ def admin_restaurant_reel(
                     uploaded_public_id
                 )
 
+
                 reel.video_url = (
                     secure_url
                 )
+
 
                 reel.thumbnail_url = (
                     thumbnail_url
                 )
 
+
                 reel.duration_seconds = (
                     duration_seconds
                 )
+
 
                 reel.width = (
                     upload_result.get(
@@ -8470,17 +8551,20 @@ def admin_restaurant_reel(
                     )
                 )
 
+
                 reel.height = (
                     upload_result.get(
                         "height"
                     )
                 )
 
+
                 reel.file_bytes = (
                     upload_result.get(
                         "bytes"
                     )
                 )
+
 
                 reel.active = True
 
@@ -8489,7 +8573,7 @@ def admin_restaurant_reel(
 
 
             # =================================================
-            # REMOVE REPLACED CLOUDINARY VIDEO
+            # REMOVE OLD CLOUDINARY VIDEO
             # =================================================
 
             if (
@@ -8503,6 +8587,7 @@ def admin_restaurant_reel(
                     delete_cloudinary_reel(
                         old_public_id
                     )
+
 
                 except Exception:
 
@@ -8527,6 +8612,7 @@ def admin_restaurant_reel(
             return redirect(
                 url_for(
                     "admin_restaurant_reel",
+
                     advert_id=
                         advert.id,
                 )
@@ -8545,6 +8631,7 @@ def admin_restaurant_reel(
                     delete_cloudinary_reel(
                         uploaded_public_id
                     )
+
 
                 except Exception:
 
@@ -8584,11 +8671,16 @@ def admin_restaurant_reel(
             return redirect(
                 url_for(
                     "admin_restaurant_reel",
+
                     advert_id=
                         advert.id,
                 )
             )
 
+
+    # ========================================================
+    # GET
+    # ========================================================
 
     return render_template(
         "admin/restaurant_reel.html",
@@ -8602,6 +8694,7 @@ def admin_restaurant_reel(
         reel=
             reel,
     )
+
 
 # ============================================================
 # ORGANIZER - DELETE RESTAURANT REEL
@@ -8617,15 +8710,22 @@ def admin_delete_restaurant_reel(
     advert_id,
 ):
 
+    # ========================================================
+    # ORGANIZER AUTH
+    # ========================================================
+
     auth = (
         require_ticketing_organizer()
     )
 
 
     if auth:
-
         return auth
 
+
+    # ========================================================
+    # ACTIVE RESTAURANT SUBSCRIPTION REQUIRED
+    # ========================================================
 
     subscription_auth = (
         require_restaurant_subscription()
@@ -8633,7 +8733,6 @@ def admin_delete_restaurant_reel(
 
 
     if subscription_auth:
-
         return subscription_auth
 
 
@@ -8641,6 +8740,10 @@ def admin_delete_restaurant_reel(
         get_current_organizer()
     )
 
+
+    # ========================================================
+    # OWNERSHIP
+    # ========================================================
 
     advert = (
         RestaurantAdvert.query
@@ -8673,11 +8776,16 @@ def admin_delete_restaurant_reel(
     )
 
 
+    # ========================================================
+    # DELETE DATABASE RECORD
+    # ========================================================
+
     try:
 
         db.session.delete(
             reel
         )
+
 
         db.session.commit()
 
@@ -8690,7 +8798,8 @@ def admin_delete_restaurant_reel(
         current_app.logger.exception(
             (
                 "[Restaurant Reel Delete] "
-                "Failed organizer_id=%s "
+                "Failed "
+                "organizer_id=%s "
                 "advert_id=%s "
                 "error=%s"
             ),
@@ -8712,11 +8821,16 @@ def admin_delete_restaurant_reel(
         return redirect(
             url_for(
                 "admin_restaurant_reel",
+
                 advert_id=
                     advert.id,
             )
         )
 
+
+    # ========================================================
+    # DELETE CLOUDINARY VIDEO
+    # ========================================================
 
     if public_id:
 
@@ -8732,44 +8846,19 @@ def admin_delete_restaurant_reel(
             current_app.logger.warning(
                 (
                     "[Restaurant Reel Delete] "
-                    "Cloudinary cleanup failed "
-                    "public_id=%s error=%s"
+                    "Database reel was removed, "
+                    "but Cloudinary cleanup failed "
+                    "public_id=%s "
+                    "error=%s"
                 ),
                 public_id,
                 error,
             )
 
 
-    flash(
-        "Restaurant reel removed.",
-        "success",
-    )
-
-
-    return redirect(
-        url_for(
-            "admin_restaurants"
-        )
-    )
-
-    if public_id:
-
-        try:
-
-            delete_cloudinary_reel(
-                public_id
-            )
-
-        except Exception:
-
-            current_app.logger.exception(
-                (
-                    "[Restaurant Reel] "
-                    "Database reel was removed, "
-                    "but Cloudinary cleanup failed."
-                )
-            )
-
+    # ========================================================
+    # SUCCESS
+    # ========================================================
 
     flash(
         "Restaurant Reel removed.",
@@ -8779,9 +8868,7 @@ def admin_delete_restaurant_reel(
 
     return redirect(
         url_for(
-            "admin_restaurant_reel",
-            advert_id=
-                advert.id,
+            "admin_restaurants"
         )
     )
 # ============================================================
