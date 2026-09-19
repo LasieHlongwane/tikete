@@ -6045,27 +6045,106 @@ document.querySelectorAll(
         }
     });
 
-    modalVideo?.addEventListener('timeupdate', () => {
+    /* ========================================================
+   WATCH PROGRESS / COMPLETION ANALYTICS
+======================================================== */
+
+    let modalCompletedTracked = false;
+
+
+    modalVideo?.addEventListener(
+      'timeupdate',
+      () => {
+
         if (
-            modalHalfTracked
-            || !currentModalReelId
+            !currentModalReelId
             || !modalVideo.duration
-            || !Number.isFinite(modalVideo.duration)
+            || !Number.isFinite(
+                modalVideo.duration
+            )
         ) {
             return;
         }
 
-        if ((modalVideo.currentTime / modalVideo.duration) >= 0.50) {
-            modalHalfTracked = true;
-            trackReelAnalytics(currentModalReelId, 'half_watched');
-        }
-    });
 
-    modalVideo?.addEventListener('ended', () => {
-        if (currentModalReelId) {
-            trackReelAnalytics(currentModalReelId, 'completed');
+        const duration =
+            modalVideo.duration;
+
+        const currentTime =
+            modalVideo.currentTime;
+
+        const progress =
+            currentTime
+            / duration;
+
+
+        /* ================================================
+           50% WATCHED
+        ================================================ */
+
+        if (
+            !modalHalfTracked
+            && progress >= 0.50
+        ) {
+
+            modalHalfTracked =
+                true;
+
+
+            trackReelAnalytics(
+                currentModalReelId,
+                'half_watched'
+            );
         }
-    });
+
+
+        /* ================================================
+           COMPLETED
+           
+           Do not rely on the browser "ended" event,
+           because Kalxa reels use loop.
+
+           Count completion when the attendee reaches
+           the final 2% of the reel OR within the final
+           0.30 seconds.
+
+           Works for reels of any duration:
+           5 sec
+           11 sec
+           20 sec
+           30 sec
+        ================================================ */
+
+        const secondsRemaining =
+            duration
+            - currentTime;
+
+
+        const reachedEnd =
+            (
+                progress >= 0.98
+                ||
+                secondsRemaining <= 0.30
+            );
+
+
+        if (
+            !modalCompletedTracked
+            && reachedEnd
+        ) {
+
+            modalCompletedTracked =
+                true;
+
+
+            trackReelAnalytics(
+                currentModalReelId,
+                'completed'
+            );
+        }
+      }
+    );
+
 
     modalLink?.addEventListener('click', () => {
         const reelId = modalLink.dataset.reelId || currentModalReelId;
