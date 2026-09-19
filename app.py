@@ -8036,6 +8036,9 @@ def admin_restaurants():
 # ============================================================
 # ADMIN - CREATE RESTAURANT ADVERT
 # ============================================================
+# ============================================================
+# ADMIN - CREATE RESTAURANT ADVERT
+# ============================================================
 
 @app.route(
     "/admin/restaurants/new",
@@ -8046,10 +8049,6 @@ def admin_restaurants():
 )
 def admin_create_restaurant():
 
-    # ========================================================
-    # ORGANIZER AUTH
-    # ========================================================
-
     auth = (
         require_ticketing_organizer()
     )
@@ -8058,10 +8057,6 @@ def admin_create_restaurant():
     if auth:
         return auth
 
-
-    # ========================================================
-    # ACTIVE RESTAURANT SUBSCRIPTION REQUIRED
-    # ========================================================
 
     subscription_auth = (
         require_restaurant_subscription()
@@ -8077,9 +8072,21 @@ def admin_create_restaurant():
     )
 
 
-    # ========================================================
-    # POST - CREATE ADVERT
-    # ========================================================
+    today_iso = (
+        datetime.utcnow()
+        .date()
+        .isoformat()
+    )
+
+
+    subscription_end_iso = (
+        organizer.subscription_expires_at
+        .date()
+        .isoformat()
+        if organizer.subscription_expires_at
+        else ""
+    )
+
 
     if request.method == "POST":
 
@@ -8162,16 +8169,13 @@ def admin_create_restaurant():
         )
 
 
-        # ====================================================
-        # BUSINESS NAME
-        # ====================================================
-
         if not business_name:
 
             flash(
                 "Business name is required.",
                 "error",
             )
+
 
             return render_template(
                 "admin/restaurant_form.html",
@@ -8181,6 +8185,53 @@ def admin_create_restaurant():
 
                 advert=
                     None,
+
+                today_iso=
+                    today_iso,
+
+                subscription_end_iso=
+                    subscription_end_iso,
+            )
+
+
+        # ====================================================
+        # CAMPAIGN SCHEDULE
+        # ====================================================
+
+        (
+            starts_at,
+            ends_at,
+            schedule_error,
+        ) = (
+            build_restaurant_campaign_schedule(
+                request.form,
+                organizer,
+            )
+        )
+
+
+        if schedule_error:
+
+            flash(
+                schedule_error,
+                "error",
+            )
+
+
+            return render_template(
+                "admin/restaurant_form.html",
+
+                organizer=
+                    organizer,
+
+                advert=
+                    None,
+
+                today_iso=
+                    today_iso,
+
+                subscription_end_iso=
+                    subscription_end_iso,
             )
 
 
@@ -8205,6 +8256,7 @@ def admin_create_restaurant():
                 "error",
             )
 
+
             return render_template(
                 "admin/restaurant_form.html",
 
@@ -8213,6 +8265,12 @@ def admin_create_restaurant():
 
                 advert=
                     None,
+
+                today_iso=
+                    today_iso,
+
+                subscription_end_iso=
+                    subscription_end_iso,
             )
 
 
@@ -8228,6 +8286,7 @@ def admin_create_restaurant():
                 "error",
             )
 
+
             return render_template(
                 "admin/restaurant_form.html",
 
@@ -8236,12 +8295,14 @@ def admin_create_restaurant():
 
                 advert=
                     None,
+
+                today_iso=
+                    today_iso,
+
+                subscription_end_iso=
+                    subscription_end_iso,
             )
 
-
-        # ====================================================
-        # FILE SIZE
-        # ====================================================
 
         poster.stream.seek(
             0,
@@ -8270,6 +8331,7 @@ def admin_create_restaurant():
                 "error",
             )
 
+
             return render_template(
                 "admin/restaurant_form.html",
 
@@ -8278,15 +8340,17 @@ def admin_create_restaurant():
 
                 advert=
                     None,
+
+                today_iso=
+                    today_iso,
+
+                subscription_end_iso=
+                    subscription_end_iso,
             )
 
 
         uploaded_public_id = None
 
-
-        # ====================================================
-        # UPLOAD + CREATE
-        # ====================================================
 
         try:
 
@@ -8342,44 +8406,49 @@ def admin_create_restaurant():
                 )
 
 
-            advert = (
-                RestaurantAdvert(
-                    organizer_id=
-                        organizer.id,
+            advert = RestaurantAdvert(
 
-                    business_name=
-                        business_name,
+                organizer_id=
+                    organizer.id,
 
-                    headline=
-                        headline,
+                business_name=
+                    business_name,
 
-                    description=
-                        description,
+                headline=
+                    headline,
 
-                    area=
-                        area,
+                description=
+                    description,
 
-                    address=
-                        address,
+                area=
+                    area,
 
-                    directions_url=
-                        directions_url,
+                address=
+                    address,
 
-                    whatsapp_number=
-                        whatsapp_number,
+                directions_url=
+                    directions_url,
 
-                    phone_number=
-                        phone_number,
+                whatsapp_number=
+                    whatsapp_number,
 
-                    poster_image_url=
-                        secure_url,
+                phone_number=
+                    phone_number,
 
-                    poster_cloudinary_public_id=
-                        uploaded_public_id,
+                poster_image_url=
+                    secure_url,
 
-                    active=
-                        True,
-                )
+                poster_cloudinary_public_id=
+                    uploaded_public_id,
+
+                starts_at=
+                    starts_at,
+
+                ends_at=
+                    ends_at,
+
+                active=
+                    True,
             )
 
 
@@ -8402,10 +8471,10 @@ def admin_create_restaurant():
 
                     cloudinary.uploader.destroy(
                         uploaded_public_id,
-
                         resource_type=
                             "image",
                     )
+
 
                 except Exception:
 
@@ -8422,8 +8491,7 @@ def admin_create_restaurant():
                 (
                     "[Restaurant Advert] "
                     "Create failed "
-                    "organizer_id=%s "
-                    "error=%s"
+                    "organizer_id=%s error=%s"
                 ),
                 organizer.id,
                 error,
@@ -8447,21 +8515,22 @@ def admin_create_restaurant():
 
 
         flash(
-            "Restaurant advert created.",
+            (
+                "Restaurant campaign created "
+                "successfully."
+            ),
             "success",
         )
 
 
         return redirect(
             url_for(
-                "admin_restaurants"
+                "admin_manage_restaurant",
+                advert_id=
+                    advert.id,
             )
         )
 
-
-    # ========================================================
-    # GET
-    # ========================================================
 
     return render_template(
         "admin/restaurant_form.html",
@@ -8471,8 +8540,13 @@ def admin_create_restaurant():
 
         advert=
             None,
-    )
 
+        today_iso=
+            today_iso,
+
+        subscription_end_iso=
+            subscription_end_iso,
+    )
 
 # ============================================================
 # ORGANIZER - RESTAURANT REEL
