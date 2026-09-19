@@ -1758,6 +1758,364 @@ FIREBASE_VAPID_KEY = (
 )
 
 
+# ============================================================
+# RESTAURANT PUSH - AUTOMATIC COPY
+# ============================================================
+
+def restaurant_notification_copy(
+    advert,
+):
+
+    title = (
+        "🍔 New around you"
+    )
+
+
+    if advert.headline:
+
+        body = (
+            f"{advert.business_name}: "
+            f"{advert.headline}"
+        )
+
+    else:
+
+        body = (
+            f"{advert.business_name} "
+            "just added something new on Kalxa."
+        )
+
+
+    if advert.area:
+
+        body = (
+            f"{body} · {advert.area}"
+        )
+
+
+    return (
+        title[:120],
+        body[:500],
+    )
+
+# ============================================================
+# AUTOMATIC RESTAURANT PUSH
+# ============================================================
+
+def send_automatic_restaurant_push(
+    advert,
+):
+
+    if not advert:
+
+        return None
+
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    # ========================================================
+    # RESTAURANT MUST STILL HAVE AN ACTIVE SUBSCRIPTION
+    # ========================================================
+
+    if (
+        not organizer
+        or not organizer.is_subscription_active
+    ):
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because subscription "
+                "is inactive "
+                "advert_id=%s"
+            ),
+            advert.id,
+        )
+
+        return None
+
+
+    # ========================================================
+    # ADVERT MUST BE ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        return None
+
+
+    # ========================================================
+    # FIREBASE REQUIRED
+    # ========================================================
+
+    if not firebase_admin_configured():
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Auto Push] "
+                "Firebase Admin is not configured "
+                "advert_id=%s"
+            ),
+            advert.id,
+        )
+
+        return None
+
+
+    # ========================================================
+    # AREA REQUIRED
+    # ========================================================
+
+    if not advert.area:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because advert has no area "
+                "advert_id=%s"
+            ),
+            advert.id,
+        )
+
+        return None
+
+
+    # ========================================================
+    # PREVENT ACCIDENTAL DUPLICATE AUTO PUSH
+    # ========================================================
+
+    existing_campaign = (
+        PushCampaign.query
+        .filter_by(
+            restaurant_advert_id=
+                advert.id,
+
+            campaign_type=
+                "restaurant",
+
+            created_by=
+                "restaurant_auto",
+        )
+        .filter(
+            PushCampaign.status.in_(
+                [
+                    "draft",
+                    "processing",
+                    "completed",
+                    "partial",
+                ]
+            )
+        )
+        .order_by(
+            PushCampaign.created_at.desc()
+        )
+        .first()
+    )
+
+
+    if existing_campaign:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Already created "
+                "advert_id=%s campaign_id=%s"
+            ),
+            advert.id,
+            existing_campaign.id,
+        )
+
+        return existing_campaign
+
+
+    # ========================================================
+    # AUDIENCE
+    # ========================================================
+
+    subscriptions = (
+        get_restaurant_push_subscriptions(
+            advert
+        )
+    )
+
+
+    if not subscriptions:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "No matching subscribers "
+                "advert_id=%s area=%s"
+            ),
+            advert.id,
+            advert.area,
+        )
+
+        return None
+
+
+    # ========================================================
+    # COPY
+    # ========================================================
+
+    (
+        title,
+        body,
+    ) = (
+        restaurant_notification_copy(
+            advert
+        )
+    )
+
+
+    # ========================================================
+    # CAMPAIGN
+    # ========================================================
+
+    campaign = PushCampaign(
+
+        campaign_type=
+            "restaurant",
+
+        restaurant_advert_id=
+            advert.id,
+
+        event_id=
+            None,
+
+        title=
+            title,
+
+        body=
+            body,
+
+        target_url=
+            url_for(
+                "restaurant_page",
+
+                advert_id=
+                    advert.id,
+
+                _external=
+                    True,
+            ),
+
+        target_mode=
+            "area",
+
+        target_area=
+            advert.area,
+
+        target_latitude=
+            None,
+
+        target_longitude=
+            None,
+
+        radius_km=
+            None,
+
+        status=
+            "draft",
+
+        recipient_count=
+            len(
+                subscriptions
+            ),
+
+        created_by=
+            "restaurant_auto",
+    )
+
+
+    db.session.add(
+        campaign
+    )
+
+    db.session.commit()
+
+
+    # ========================================================
+    # SEND
+    # ========================================================
+
+    try:
+
+        send_push_campaign(
+            campaign,
+            subscriptions,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        campaign = (
+            db.session.get(
+                PushCampaign,
+                campaign.id,
+            )
+        )
+
+
+        if campaign:
+
+            campaign.status = (
+                "failed"
+            )
+
+
+            try:
+
+                db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Auto Push] "
+                "Firebase send failed "
+                "advert_id=%s "
+                "campaign_id=%s "
+                "error=%s"
+            ),
+            advert.id,
+            campaign.id
+            if campaign
+            else None,
+            error,
+        )
+
+
+        return campaign
+
+
+    current_app.logger.info(
+        (
+            "[Restaurant Auto Push] "
+            "Finished "
+            "advert_id=%s "
+            "campaign_id=%s "
+            "success=%s "
+            "failed=%s"
+        ),
+        advert.id,
+        campaign.id,
+        campaign.success_count,
+        campaign.failure_count,
+    )
+
+
+    return campaign
+
 def firebase_web_push_configured():
 
     required_values = (
