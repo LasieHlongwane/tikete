@@ -212,6 +212,307 @@ EVENT_BOOST_PLANS = {
 
 
 # ============================================================
+# RESTAURANT CAMPAIGN SCHEDULING
+# ============================================================
+
+RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
+    "7": 7,
+    "14": 14,
+    "30": 30,
+}
+
+
+def parse_restaurant_campaign_date(
+    value,
+):
+
+    value = (
+        str(
+            value
+            or ""
+        )
+        .strip()
+    )
+
+
+    if not value:
+
+        return None
+
+
+    try:
+
+        return (
+            datetime.strptime(
+                value,
+                "%Y-%m-%d",
+            )
+            .date()
+        )
+
+
+    except ValueError:
+
+        return None
+
+
+def build_restaurant_campaign_schedule(
+    form,
+    organizer,
+    existing_advert=None,
+):
+
+    today = (
+        datetime.utcnow()
+        .date()
+    )
+
+
+    # ========================================================
+    # START DATE
+    # ========================================================
+
+    start_date_raw = (
+        form.get(
+            "start_date",
+            "",
+        )
+        .strip()
+    )
+
+
+    start_date = (
+        parse_restaurant_campaign_date(
+            start_date_raw
+        )
+    )
+
+
+    if not start_date:
+
+        start_date = today
+
+
+    # New campaigns cannot begin in the past.
+    if (
+        existing_advert is None
+        and start_date < today
+    ):
+
+        return (
+            None,
+            None,
+            (
+                "Campaign start date cannot "
+                "be in the past."
+            ),
+        )
+
+
+    starts_at = (
+        datetime.combine(
+            start_date,
+            datetime.min.time(),
+        )
+    )
+
+
+    # ========================================================
+    # DURATION
+    # ========================================================
+
+    duration_choice = (
+        form.get(
+            "duration_choice",
+            "14",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    requested_last_visible_date = None
+
+
+    if (
+        duration_choice
+        in RESTAURANT_CAMPAIGN_DURATION_OPTIONS
+    ):
+
+        duration_days = (
+            RESTAURANT_CAMPAIGN_DURATION_OPTIONS[
+                duration_choice
+            ]
+        )
+
+
+        ends_at = (
+            starts_at
+            + timedelta(
+                days=duration_days
+            )
+        )
+
+
+        requested_last_visible_date = (
+            (
+                ends_at
+                - timedelta(
+                    microseconds=1
+                )
+            )
+            .date()
+        )
+
+
+    elif (
+        duration_choice
+        == "custom"
+    ):
+
+        custom_end_date = (
+            parse_restaurant_campaign_date(
+                form.get(
+                    "custom_end_date",
+                    "",
+                )
+            )
+        )
+
+
+        if not custom_end_date:
+
+            return (
+                None,
+                None,
+                (
+                    "Choose the campaign "
+                    "end date."
+                ),
+            )
+
+
+        if (
+            custom_end_date
+            < start_date
+        ):
+
+            return (
+                None,
+                None,
+                (
+                    "Campaign end date cannot "
+                    "be before the start date."
+                ),
+            )
+
+
+        requested_last_visible_date = (
+            custom_end_date
+        )
+
+
+        # Exclusive end.
+        ends_at = (
+            datetime.combine(
+                (
+                    custom_end_date
+                    + timedelta(
+                        days=1
+                    )
+                ),
+                datetime.min.time(),
+            )
+        )
+
+
+    else:
+
+        return (
+            None,
+            None,
+            "Choose a valid campaign duration.",
+        )
+
+
+    # ========================================================
+    # SUBSCRIPTION LIMIT
+    # ========================================================
+
+    subscription_expires_at = (
+        organizer.subscription_expires_at
+    )
+
+
+    if not subscription_expires_at:
+
+        return (
+            None,
+            None,
+            (
+                "Your subscription does not "
+                "have an expiry date. "
+                "Please contact Kalxa."
+            ),
+        )
+
+
+    if (
+        starts_at
+        >= subscription_expires_at
+    ):
+
+        return (
+            None,
+            None,
+            (
+                "Your campaign cannot start "
+                "after your subscription expires."
+            ),
+        )
+
+
+    subscription_last_date = (
+        subscription_expires_at.date()
+    )
+
+
+    if (
+        requested_last_visible_date
+        > subscription_last_date
+    ):
+
+        return (
+            None,
+            None,
+            (
+                "This campaign would run beyond "
+                "your current subscription. "
+                "Your subscription expires on "
+                f"{subscription_expires_at.strftime('%d %B %Y')}."
+            ),
+        )
+
+
+    # If the campaign finishes on the same calendar date
+    # that the subscription expires, stop it at the exact
+    # subscription expiry time.
+    if (
+        ends_at
+        > subscription_expires_at
+    ):
+
+        ends_at = (
+            subscription_expires_at
+        )
+
+
+    return (
+        starts_at,
+        ends_at,
+        None,
+    )
+# ============================================================
 # RESTAURANT ADVERTISING
 # ============================================================
 
