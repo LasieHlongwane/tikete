@@ -18,6 +18,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import requests
+import smtplib
+
+from email.message import EmailMessage
 from datetime import datetime, timedelta, date, timezone
 from decimal import Decimal, InvalidOperation, ROUND_UP
 from zoneinfo import ZoneInfo
@@ -866,6 +869,59 @@ def finalize_paystack_ticket_order(
 
 
     return order
+
+
+# ============================================================
+# PASSWORD RESET EMAIL
+# ============================================================
+
+SMTP_HOST = (
+    os.environ.get(
+        "SMTP_HOST",
+        "",
+    )
+    .strip()
+)
+
+
+SMTP_PORT = int(
+    os.environ.get(
+        "SMTP_PORT",
+        "587",
+    )
+)
+
+
+SMTP_USERNAME = (
+    os.environ.get(
+        "SMTP_USERNAME",
+        "",
+    )
+    .strip()
+)
+
+
+SMTP_PASSWORD = (
+    os.environ.get(
+        "SMTP_PASSWORD",
+        "",
+    )
+    .strip()
+)
+
+
+SMTP_FROM_EMAIL = (
+    os.environ.get(
+        "SMTP_FROM_EMAIL",
+        SMTP_USERNAME,
+    )
+    .strip()
+)
+
+
+PASSWORD_RESET_MAX_AGE_SECONDS = (
+    60 * 60
+)
 
 
 def finalize_paystack_subscription_payment(
@@ -5801,6 +5857,277 @@ def superadmin_organizer_detail(
 
 
 # ============================================================
+# ORGANIZER PASSWORD RESET HELPERS
+# ============================================================
+
+ORGANIZER_PASSWORD_RESET_SALT = (
+    "kalxa-organizer-password-reset"
+)
+
+
+def get_password_reset_serializer():
+
+    return URLSafeTimedSerializer(
+        current_app.secret_key
+    )
+
+
+
+def create_organizer_password_reset_token(
+    organizer,
+):
+
+    serializer = (
+        get_password_reset_serializer()
+    )
+
+
+    return serializer.dumps(
+        {
+            "organizer_id":
+                organizer.id,
+
+            "email":
+                organizer.email,
+        },
+        salt=
+            ORGANIZER_PASSWORD_RESET_SALT,
+    )
+
+
+
+def verify_organizer_password_reset_token(
+    token,
+):
+
+    serializer = (
+        get_password_reset_serializer()
+    )
+
+
+    try:
+
+        payload = (
+            serializer.loads(
+                token,
+
+                salt=
+                    ORGANIZER_PASSWORD_RESET_SALT,
+
+                max_age=
+                    PASSWORD_RESET_MAX_AGE_SECONDS,
+            )
+        )
+
+
+    except SignatureExpired:
+
+        return (
+            None,
+            "expired",
+        )
+
+
+    except BadSignature:
+
+        return (
+            None,
+            "invalid",
+        )
+
+
+    if not isinstance(
+        payload,
+        dict,
+    ):
+
+        return (
+            None,
+            "invalid",
+        )
+
+
+    organizer_id = (
+        payload.get(
+            "organizer_id"
+        )
+    )
+
+
+    email = (
+        payload.get(
+            "email"
+        )
+    )
+
+
+    if (
+        not organizer_id
+        or not email
+    ):
+
+        return (
+            None,
+            "invalid",
+        )
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+
+        return (
+            None,
+            "invalid",
+        )
+
+
+    if (
+        normalize_email(
+            organizer.email
+        )
+        !=
+        normalize_email(
+            email
+        )
+    ):
+
+        return (
+            None,
+            "invalid",
+        )
+
+
+    return (
+        organizer,
+        None,
+    )
+
+# ============================================================
+# SEND PASSWORD RESET EMAIL
+# ============================================================
+
+def send_organizer_password_reset_email(
+    organizer,
+    reset_url,
+):
+
+    if (
+        not SMTP_HOST
+        or not SMTP_FROM_EMAIL
+    ):
+
+        raise RuntimeError(
+            (
+                "Password reset email "
+                "is not configured."
+            )
+        )
+
+
+    message = EmailMessage()
+
+
+    message[
+        "Subject"
+    ] = (
+        "Reset your Kalxa password"
+    )
+
+
+    message[
+        "From"
+    ] = SMTP_FROM_EMAIL
+
+
+    message[
+        "To"
+    ] = organizer.email
+
+
+    message.set_content(
+        (
+            f"Hi {organizer.name},\n\n"
+
+            "We received a request to reset "
+            "your Kalxa password.\n\n"
+
+            "Use the link below to choose "
+            "a new password:\n\n"
+
+            f"{reset_url}\n\n"
+
+            "This link expires in 1 hour.\n\n"
+
+            "If you did not request a password "
+            "reset, you can ignore this email.\n\n"
+
+            "Kalxa"
+        )
+    )
+
+
+    if SMTP_PORT == 465:
+
+        with smtplib.SMTP_SSL(
+            SMTP_HOST,
+            SMTP_PORT,
+            timeout=20,
+        ) as server:
+
+            if (
+                SMTP_USERNAME
+                and SMTP_PASSWORD
+            ):
+
+                server.login(
+                    SMTP_USERNAME,
+                    SMTP_PASSWORD,
+                )
+
+
+            server.send_message(
+                message
+            )
+
+
+    else:
+
+        with smtplib.SMTP(
+            SMTP_HOST,
+            SMTP_PORT,
+            timeout=20,
+        ) as server:
+
+            server.ehlo()
+
+            server.starttls()
+
+            server.ehlo()
+
+
+            if (
+                SMTP_USERNAME
+                and SMTP_PASSWORD
+            ):
+
+                server.login(
+                    SMTP_USERNAME,
+                    SMTP_PASSWORD,
+                )
+
+
+            server.send_message(
+                message
+            )
+
+# ============================================================
 # SUPER ADMIN - CONFIRM SUBSCRIPTION PAYMENT
 # ============================================================
 
@@ -9152,6 +9479,376 @@ def organizer_login():
     )
 
 
+
+
+# ============================================================
+# ORGANIZER - FORGOT PASSWORD
+# ============================================================
+
+@app.route(
+    "/organizer/forgot-password",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def organizer_forgot_password():
+
+    if request.method == "POST":
+
+        email = (
+            normalize_email(
+                request.form.get(
+                    "email",
+                    "",
+                )
+            )
+        )
+
+
+        if not email:
+
+            flash(
+                "Enter your email address.",
+                "error",
+            )
+
+
+            return render_template(
+                "organizer/forgot_password.html"
+            )
+
+
+        organizer = (
+            Organizer.query
+            .filter_by(
+                email=email
+            )
+            .first()
+        )
+
+
+        # ====================================================
+        # IMPORTANT:
+        #
+        # We intentionally give the same public response
+        # whether the email exists or not.
+        #
+        # This prevents account/email enumeration.
+        # ====================================================
+
+        if organizer:
+
+            try:
+
+                token = (
+                    create_organizer_password_reset_token(
+                        organizer
+                    )
+                )
+
+
+                reset_url = (
+                    url_for(
+                        "organizer_reset_password",
+
+                        token=
+                            token,
+
+                        _external=
+                            True,
+                    )
+                )
+
+
+                send_organizer_password_reset_email(
+                    organizer,
+                    reset_url,
+                )
+
+
+                current_app.logger.info(
+                    (
+                        "[Password Reset] "
+                        "Reset email sent "
+                        "organizer_id=%s"
+                    ),
+                    organizer.id,
+                )
+
+
+            except Exception as error:
+
+                current_app.logger.exception(
+                    (
+                        "[Password Reset] "
+                        "Unable to send reset email "
+                        "organizer_id=%s "
+                        "error=%s"
+                    ),
+                    organizer.id,
+                    error,
+                )
+
+
+        flash(
+            (
+                "If an account exists for that "
+                "email address, a password-reset "
+                "link has been sent."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "organizer_forgot_password"
+            )
+        )
+
+
+    return render_template(
+        "organizer/forgot_password.html"
+    )
+
+
+# ============================================================
+# ORGANIZER - RESET PASSWORD
+# ============================================================
+
+@app.route(
+    "/organizer/reset-password/<token>",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def organizer_reset_password(
+    token,
+):
+
+    organizer, token_error = (
+        verify_organizer_password_reset_token(
+            token
+        )
+    )
+
+
+    # ========================================================
+    # INVALID / EXPIRED TOKEN
+    # ========================================================
+
+    if not organizer:
+
+        if (
+            token_error
+            == "expired"
+        ):
+
+            flash(
+                (
+                    "That password-reset link "
+                    "has expired. "
+                    "Request a new one."
+                ),
+                "error",
+            )
+
+        else:
+
+            flash(
+                (
+                    "That password-reset link "
+                    "is invalid. "
+                    "Request a new one."
+                ),
+                "error",
+            )
+
+
+        return redirect(
+            url_for(
+                "organizer_forgot_password"
+            )
+        )
+
+
+    # ========================================================
+    # SET NEW PASSWORD
+    # ========================================================
+
+    if request.method == "POST":
+
+        password = (
+            request.form.get(
+                "password",
+                "",
+            )
+        )
+
+
+        password_confirm = (
+            request.form.get(
+                "password_confirm",
+                "",
+            )
+        )
+
+
+        if (
+            not password
+            or not password_confirm
+        ):
+
+            flash(
+                (
+                    "Enter and confirm "
+                    "your new password."
+                ),
+                "error",
+            )
+
+
+            return render_template(
+                "organizer/reset_password.html",
+
+                token=
+                    token,
+
+                organizer=
+                    organizer,
+            )
+
+
+        if (
+            len(
+                password
+            )
+            < 8
+        ):
+
+            flash(
+                (
+                    "Password must be at least "
+                    "8 characters."
+                ),
+                "error",
+            )
+
+
+            return render_template(
+                "organizer/reset_password.html",
+
+                token=
+                    token,
+
+                organizer=
+                    organizer,
+            )
+
+
+        if (
+            password
+            != password_confirm
+        ):
+
+            flash(
+                "Passwords do not match.",
+                "error",
+            )
+
+
+            return render_template(
+                "organizer/reset_password.html",
+
+                token=
+                    token,
+
+                organizer=
+                    organizer,
+            )
+
+
+        try:
+
+            organizer.set_password(
+                password
+            )
+
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Password Reset] "
+                    "Unable to reset password "
+                    "organizer_id=%s "
+                    "error=%s"
+                ),
+                organizer.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Your password could not "
+                    "be updated. Please try again."
+                ),
+                "error",
+            )
+
+
+            return render_template(
+                "organizer/reset_password.html",
+
+                token=
+                    token,
+
+                organizer=
+                    organizer,
+            )
+
+
+        # ====================================================
+        # REMOVE EXISTING LOGIN SESSION
+        # ====================================================
+
+        session.clear()
+
+
+        flash(
+            (
+                "Your password has been updated. "
+                "You can now sign in."
+            ),
+            "success",
+        )
+
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    return render_template(
+        "organizer/reset_password.html",
+
+        token=
+            token,
+
+        organizer=
+            organizer,
+    )
 # ============================================================
 # ORGANIZER LOGOUT
 # ============================================================
