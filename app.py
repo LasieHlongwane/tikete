@@ -8484,6 +8484,9 @@ def notification_unsubscribe_public():
 # ============================================================
 # ORGANIZER SIGNUP
 # ============================================================
+# ============================================================
+# ORGANIZER SIGNUP
+# ============================================================
 
 @app.route(
     "/organizer/signup",
@@ -8494,23 +8497,68 @@ def notification_unsubscribe_public():
 )
 def organizer_signup():
 
+    # ========================================================
+    # ALREADY LOGGED IN
+    # ========================================================
+
     existing_organizer = (
-     get_current_organizer()
+        get_current_organizer()
     )
 
 
     if existing_organizer:
 
-     return redirect(
-        url_for(
-            organizer_home_endpoint(
-                existing_organizer
+        return redirect(
+            url_for(
+                organizer_home_endpoint(
+                    existing_organizer
+                )
             )
         )
-     )
 
+
+    # ========================================================
+    # CREATE ACCOUNT
+    # ========================================================
 
     if request.method == "POST":
+
+        # ====================================================
+        # ACCOUNT TYPE
+        # ====================================================
+
+        account_type = (
+            request.form.get(
+                "account_type",
+                "",
+            )
+            .strip()
+            .lower()
+        )
+
+
+        if account_type not in {
+            "event",
+            "restaurant",
+        }:
+
+            flash(
+                (
+                    "Choose whether you are "
+                    "creating an Event or "
+                    "Restaurant account."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "organizer/signup.html"
+            )
+
+
+        # ====================================================
+        # NAME
+        # ====================================================
 
         name = (
             request.form.get(
@@ -8520,6 +8568,10 @@ def organizer_signup():
             .strip()
         )
 
+
+        # ====================================================
+        # BUSINESS / BRAND NAME
+        # ====================================================
 
         business_name = (
             request.form.get(
@@ -8531,13 +8583,23 @@ def organizer_signup():
         )
 
 
-        email = normalize_email(
-            request.form.get(
-                "email",
-                "",
+        # ====================================================
+        # EMAIL
+        # ====================================================
+
+        email = (
+            normalize_email(
+                request.form.get(
+                    "email",
+                    "",
+                )
             )
         )
 
+
+        # ====================================================
+        # PHONE
+        # ====================================================
 
         phone = (
             request.form.get(
@@ -8547,46 +8609,31 @@ def organizer_signup():
             .strip()
             or None
         )
-        account_type = (
-            request.form.get(
-              "account_type",
-              ""
-            )
-            .strip()
-            .lower()
-        )
 
-        if account_type not in {
-          "event",
-          "restaurant",
-        }:
 
-          flash(
-            "Choose an account type.",
-            "error",
-          )
-
-          return render_template(
-            "organizer/signup.html"
-          )
-
+        # ====================================================
+        # PASSWORD
+        # ====================================================
 
         password = (
             request.form.get(
                 "password",
-                ""
+                "",
             )
         )
-        
 
 
         password_confirm = (
             request.form.get(
                 "password_confirm",
-                ""
+                "",
             )
         )
 
+
+        # ====================================================
+        # REQUIRED FIELDS
+        # ====================================================
 
         if (
             not name
@@ -8606,6 +8653,10 @@ def organizer_signup():
                 "organizer/signup.html"
             )
 
+
+        # ====================================================
+        # PASSWORD LENGTH
+        # ====================================================
 
         if (
             len(
@@ -8627,6 +8678,10 @@ def organizer_signup():
             )
 
 
+        # ====================================================
+        # PASSWORD CONFIRMATION
+        # ====================================================
+
         if (
             password
             != password_confirm
@@ -8642,6 +8697,10 @@ def organizer_signup():
             )
 
 
+        # ====================================================
+        # EXISTING EMAIL
+        # ====================================================
+
         existing = (
             Organizer.query
             .filter_by(
@@ -8655,8 +8714,8 @@ def organizer_signup():
 
             flash(
                 (
-                    "An organizer account already "
-                    "exists with that email."
+                    "An account already exists "
+                    "with that email."
                 ),
                 "error",
             )
@@ -8668,22 +8727,30 @@ def organizer_signup():
             )
 
 
-        organizer = Organizer(
+        # ====================================================
+        # CREATE ORGANIZER
+        # ====================================================
 
-            name=
-                name,
+        organizer = (
+            Organizer(
+                name=
+                    name,
 
-            business_name=
-                business_name,
+                business_name=
+                    business_name,
 
-            email=
-                email,
+                email=
+                    email,
 
-            phone=
-                phone,
+                phone=
+                    phone,
 
-            active=
-                True,
+                account_type=
+                    account_type,
+
+                active=
+                    True,
+            )
         )
 
 
@@ -8691,6 +8758,10 @@ def organizer_signup():
             password
         )
 
+
+        # ====================================================
+        # SAVE
+        # ====================================================
 
         try:
 
@@ -8710,9 +8781,12 @@ def organizer_signup():
                 (
                     "[Organizer Signup] "
                     "Unable to create organizer "
-                    "email=%s error=%s"
+                    "email=%s "
+                    "account_type=%s "
+                    "error=%s"
                 ),
                 email,
+                account_type,
                 error,
             )
 
@@ -8730,16 +8804,37 @@ def organizer_signup():
             )
 
 
+        # ====================================================
+        # SUCCESS
+        # ====================================================
+
         session.clear()
 
 
-        flash(
-            (
-                "Organizer account created successfully. "
-                "Please sign in."
-            ),
-            "success",
-        )
+        if (
+            account_type
+            == "restaurant"
+        ):
+
+            flash(
+                (
+                    "Restaurant advertiser account "
+                    "created successfully. "
+                    "Please sign in."
+                ),
+                "success",
+            )
+
+        else:
+
+            flash(
+                (
+                    "Event organizer account "
+                    "created successfully. "
+                    "Please sign in."
+                ),
+                "success",
+            )
 
 
         return redirect(
@@ -8749,10 +8844,13 @@ def organizer_signup():
         )
 
 
+    # ========================================================
+    # GET
+    # ========================================================
+
     return render_template(
         "organizer/signup.html"
     )
-
 
 # ============================================================
 # ORGANIZER LOGIN
