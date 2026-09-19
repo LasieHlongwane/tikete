@@ -9133,6 +9133,264 @@ def admin_edit_restaurant(
         subscription_end_iso=
             subscription_end_iso,
     )
+
+
+# ============================================================
+# ADMIN - PAUSE RESTAURANT ADVERT
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/pause",
+    methods=[
+        "POST",
+    ],
+)
+def admin_pause_restaurant(
+    advert_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=
+                advert_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    advert.active = False
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Pause] "
+                "Failed advert_id=%s error=%s"
+            ),
+            advert.id,
+            error,
+        )
+
+
+        flash(
+            "Restaurant advert could not be paused.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+
+                advert_id=
+                    advert.id,
+            )
+        )
+
+
+    flash(
+        "Restaurant advert paused.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+
+            advert_id=
+                advert.id,
+        )
+    )
+
+
+# ============================================================
+# ADMIN - RESUME RESTAURANT ADVERT
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/resume",
+    methods=[
+        "POST",
+    ],
+)
+def admin_resume_restaurant(
+    advert_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+        return auth
+
+
+    subscription_auth = (
+        require_restaurant_subscription()
+    )
+
+
+    if subscription_auth:
+        return subscription_auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=
+                advert_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.ends_at
+        and advert.ends_at <= now
+    ):
+
+        flash(
+            (
+                "This campaign has expired. "
+                "Edit the campaign schedule "
+                "before resuming it."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+
+                advert_id=
+                    advert.id,
+            )
+        )
+
+
+    if (
+        organizer.subscription_expires_at
+        and advert.ends_at
+        and advert.ends_at
+        > organizer.subscription_expires_at
+    ):
+
+        flash(
+            (
+                "The campaign extends beyond "
+                "your current subscription. "
+                "Edit its schedule first."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+
+                advert_id=
+                    advert.id,
+            )
+        )
+
+
+    advert.active = True
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Resume] "
+                "Failed advert_id=%s error=%s"
+            ),
+            advert.id,
+            error,
+        )
+
+
+        flash(
+            "Restaurant advert could not be resumed.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+
+                advert_id=
+                    advert.id,
+            )
+        )
+
+
+    flash(
+        "Restaurant advert resumed.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+
+            advert_id=
+                advert.id,
+        )
+    )
 # ============================================================
 # ORGANIZER - RESTAURANT REEL
 # ============================================================
