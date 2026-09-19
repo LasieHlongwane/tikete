@@ -8073,12 +8073,25 @@ def admin_restaurant_reel(
     advert_id,
 ):
 
+
     auth = (
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
+
+
+    subscription_auth = (
+        require_restaurant_subscription()
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
 
 
     organizer = (
@@ -8089,7 +8102,9 @@ def admin_restaurant_reel(
     advert = (
         RestaurantAdvert.query
         .filter_by(
-            id=advert_id,
+            id=
+                advert_id,
+
             organizer_id=
                 organizer.id,
         )
