@@ -209,6 +209,46 @@ EVENT_BOOST_PLANS = {
 
 
 # ============================================================
+# RESTAURANT ADVERTISING
+# ============================================================
+
+RESTAURANT_POSTER_MAX_FILE_BYTES = (
+    8 * 1024 * 1024
+)
+
+RESTAURANT_POSTER_ALLOWED_EXTENSIONS = {
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+}
+
+
+
+def allowed_restaurant_poster_filename(
+    filename,
+):
+
+    if (
+        not filename
+        or "." not in filename
+    ):
+        return False
+
+    extension = (
+        filename
+        .rsplit(
+            ".",
+            1,
+        )[1]
+        .lower()
+    )
+
+    return (
+        extension
+        in RESTAURANT_POSTER_ALLOWED_EXTENSIONS
+    )
+# ============================================================
 # KALXA FEATURED LISTING
 # ============================================================
 
@@ -6778,6 +6818,52 @@ def featured_listing_image(
     return response
 
 
+# ============================================================
+# ORGANIZER - RESTAURANT ADVERTS
+# ============================================================
+
+@app.route(
+    "/admin/restaurants"
+)
+def admin_restaurants():
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    adverts = (
+        RestaurantAdvert.query
+        .filter_by(
+            organizer_id=
+                organizer.id,
+        )
+        .order_by(
+            RestaurantAdvert
+            .created_at
+            .desc()
+        )
+        .all()
+    )
+
+
+    return render_template(
+        "admin/restaurants.html",
+
+        organizer=
+            organizer,
+
+        adverts=
+            adverts,
+    )
 # ============================================================
 # PUBLIC ATTENDEE - ENABLE PUSH FROM HOME PAGE
 # ============================================================
