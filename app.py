@@ -7544,6 +7544,9 @@ def featured_listing_image(
 # ============================================================
 # ORGANIZER - RESTAURANT ADVERTS
 # ============================================================
+# ============================================================
+# ADMIN - RESTAURANTS
+# ============================================================
 
 @app.route(
     "/admin/restaurants"
@@ -7554,7 +7557,9 @@ def admin_restaurants():
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
 
 
@@ -7563,18 +7568,74 @@ def admin_restaurants():
     )
 
 
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNTS ONLY
+    # ========================================================
+
+    if (
+        account_type
+        != "restaurant"
+    ):
+
+        flash(
+            (
+                "Restaurant advertising is only "
+                "available to restaurant accounts."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT ADVERTS
+    # ========================================================
+
     adverts = (
         RestaurantAdvert.query
         .filter_by(
             organizer_id=
-                organizer.id,
+                organizer.id
         )
         .order_by(
-            RestaurantAdvert
-            .created_at
-            .desc()
+            RestaurantAdvert.created_at.desc()
         )
         .all()
+    )
+
+
+    # ========================================================
+    # PENDING SUBSCRIPTION PAYMENT
+    # ========================================================
+
+    pending_subscription_payment = (
+        SubscriptionPayment.query
+        .filter_by(
+            organizer_id=
+                organizer.id,
+
+            payment_status=
+                "pending",
+        )
+        .order_by(
+            SubscriptionPayment.created_at.desc()
+        )
+        .first()
     )
 
 
@@ -7586,17 +7647,25 @@ def admin_restaurants():
 
         adverts=
             adverts,
+
+        subscription_active=
+            organizer.is_subscription_active,
+
+        subscription_status=
+            organizer.effective_subscription_status,
+
+        subscription_expires_at=
+            organizer.subscription_expires_at,
+
+        pending_subscription_payment=
+            pending_subscription_payment,
+
+        subscription_plan_name=
+            KALXA_SUBSCRIPTION_PLAN_NAME,
+
+        subscription_price=
+            KALXA_SUBSCRIPTION_PRICE,
     )
-
-
-
-@app.route(
-    "/admin/restaurants/new",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
 def admin_create_restaurant():
 
     auth = (
