@@ -8548,6 +8548,83 @@ def admin_create_restaurant():
             subscription_end_iso,
     )
 
+
+# ============================================================
+# ADMIN - MANAGE RESTAURANT ADVERT
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/manage"
+)
+def admin_manage_restaurant(
+    advert_id,
+):
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if (
+        account_type
+        != "restaurant"
+    ):
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=
+                advert_id,
+
+            organizer_id=
+                organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    return render_template(
+        "admin/restaurant_manage.html",
+
+        organizer=
+            organizer,
+
+        advert=
+            advert,
+
+        subscription_active=
+            organizer.is_subscription_active,
+
+        subscription_expires_at=
+            organizer.subscription_expires_at,
+    )
+
 # ============================================================
 # ORGANIZER - RESTAURANT REEL
 # ============================================================
