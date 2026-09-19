@@ -6813,6 +6813,40 @@ def home():
         .all()
     )
 
+        restaurant_reels = (
+          RestaurantReel.query
+
+          .join(
+            RestaurantAdvert,
+            RestaurantReel.advert_id
+            == RestaurantAdvert.id,
+          )
+
+          .filter(
+            RestaurantReel.active.is_(True),
+
+            RestaurantAdvert.active.is_(True),
+
+            or_(
+              RestaurantAdvert.starts_at.is_(None),
+              RestaurantAdvert.starts_at <= now,
+            ),
+
+            or_(
+              RestaurantAdvert.ends_at.is_(None),
+              RestaurantAdvert.ends_at > now,
+            ),
+          )
+
+          .order_by(
+             RestaurantReel.created_at.desc()
+          )
+
+          .limit(12)
+
+          .all()
+        )
+
 
     return render_template(
         "event.html",
