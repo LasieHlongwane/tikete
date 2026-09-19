@@ -8691,9 +8691,11 @@ def organizer_signup():
     ],
 )
 def organizer_login():
+    existing_organizer = (
+     get_current_organizer():
+    )
 
-    if get_current_organizer():
-
+    if existing_organizer:
         return redirect(
             url_for(
                 organizer_home_endpoint(
