@@ -8621,8 +8621,20 @@ def admin_delete_restaurant_reel(
         require_ticketing_organizer()
     )
 
+
     if auth:
+
         return auth
+
+
+    subscription_auth = (
+        require_restaurant_subscription()
+    )
+
+
+    if subscription_auth:
+
+        return subscription_auth
 
 
     organizer = (
@@ -8633,7 +8645,8 @@ def admin_delete_restaurant_reel(
     advert = (
         RestaurantAdvert.query
         .filter_by(
-            id=advert_id,
+            id=
+                advert_id,
 
             organizer_id=
                 organizer.id,
@@ -8676,22 +8689,21 @@ def admin_delete_restaurant_reel(
 
         current_app.logger.exception(
             (
-                "[Restaurant Reel] "
-                "Delete failed "
+                "[Restaurant Reel Delete] "
+                "Failed organizer_id=%s "
                 "advert_id=%s "
-                "organizer_id=%s "
                 "error=%s"
             ),
-            advert.id,
             organizer.id,
+            advert.id,
             error,
         )
 
 
         flash(
             (
-                "Restaurant Reel could "
-                "not be removed."
+                "Unable to remove the "
+                "restaurant reel."
             ),
             "error",
         )
@@ -8705,6 +8717,40 @@ def admin_delete_restaurant_reel(
             )
         )
 
+
+    if public_id:
+
+        try:
+
+            delete_cloudinary_reel(
+                public_id
+            )
+
+
+        except Exception as error:
+
+            current_app.logger.warning(
+                (
+                    "[Restaurant Reel Delete] "
+                    "Cloudinary cleanup failed "
+                    "public_id=%s error=%s"
+                ),
+                public_id,
+                error,
+            )
+
+
+    flash(
+        "Restaurant reel removed.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_restaurants"
+        )
+    )
 
     if public_id:
 
