@@ -4360,11 +4360,11 @@
                 <div class="food-vibe-heading">
                     <div>
                         <span class="food-vibe-kicker">
-                            RESTAURANT REELS
+                            REELS
                         </span>
 
                         <h2 id="food-vibe-title">
-                            🍔 Eat Around You
+                            LIFESTYLE
                         </h2>
                     </div>
 
@@ -4555,28 +4555,7 @@
             </section>
             {% endif %}
 
-            <section class="discovery-hero">
-                <div class="search-shell">
-                    <span aria-hidden="true">⌕</span>
-                    <input
-                        type="search"
-                        id="event-search"
-                        placeholder="Search events, venues or organizers"
-                        autocomplete="off"
-                        aria-label="Search events"
-                    >
-                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
-                </div>
-
-                <div class="filter-chips" id="event-filters" aria-label="Event filters">
-                    <button type="button" class="filter-chip active" data-filter="all">All</button>
-                    <button type="button" class="filter-chip" data-filter="today">Today</button>
-                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
-                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
-                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
-                </div>
-            </section>
-
+           
             {% if events %}
             <section class="discovery-section" id="soon-section">
                 <div class="section-heading">
@@ -4726,10 +4705,7 @@
                     {% endfor %}
                 </div>
 
-                <div class="no-results" id="no-results" hidden>
-                    <strong>No matching events</strong>
-                    <span>Try another search or filter.</span>
-                </div>
+                
             </section>
             {% elif not featured_events %}
             <div class="empty-state premium-empty">
@@ -4738,6 +4714,29 @@
                 <p>New Kalxa experiences will appear here.</p>
             </div>
             {% endif %}
+
+            <section class="discovery-hero">
+                <div class="search-shell">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="event-search"
+                        placeholder="Search events, venues or organizers"
+                        autocomplete="off"
+                        aria-label="Search events"
+                    >
+                    <button type="button" id="clear-search" aria-label="Clear search" hidden>×</button>
+                </div>
+
+                <div class="filter-chips" id="event-filters" aria-label="Event filters">
+                    <button type="button" class="filter-chip active" data-filter="all">All</button>
+                    <button type="button" class="filter-chip" data-filter="today">Today</button>
+                    <button type="button" class="filter-chip" data-filter="weekend">This Weekend</button>
+                    <button type="button" class="filter-chip" data-filter="earlybird">Early Bird</button>
+                    <button type="button" class="filter-chip" data-filter="sellingfast">Selling Fast</button>
+                </div>
+            </section>
+
 
 
         </div>
