@@ -9950,7 +9950,6 @@ def organizer_admin_redirect():
 # ============================================================
 # ORGANIZER EVENT REEL
 # ============================================================
-
 @app.route(
     "/admin/events/<int:event_id>/reel",
     methods=[
@@ -9992,6 +9991,10 @@ def admin_event_reel(
         .first()
     )
 
+
+    # ========================================================
+    # UPLOAD / REPLACE REEL
+    # ========================================================
 
     if request.method == "POST":
 
@@ -10337,11 +10340,102 @@ def admin_event_reel(
             )
 
 
+    # ========================================================
+    # REEL ANALYTICS
+    # ========================================================
+
+    reel_analytics = {
+        "impressions": 0,
+        "plays": 0,
+        "opens": 0,
+        "half_watched": 0,
+        "completed": 0,
+        "view_event": 0,
+    }
+
+
+    if reel:
+
+        analytics_rows = (
+            db.session.query(
+                EventReelAnalytics.event_type,
+                db.func.count(
+                    EventReelAnalytics.id
+                ),
+            )
+            .filter(
+                EventReelAnalytics.reel_id
+                == reel.id,
+
+                EventReelAnalytics.organizer_id
+                == organizer.id,
+
+                EventReelAnalytics.event_id
+                == event.id,
+            )
+            .group_by(
+                EventReelAnalytics.event_type
+            )
+            .all()
+        )
+
+
+        analytics_counts = {
+            event_type: count
+            for event_type, count
+            in analytics_rows
+        }
+
+
+        reel_analytics = {
+            "impressions":
+                analytics_counts.get(
+                    "impression",
+                    0,
+                ),
+
+            "plays":
+                analytics_counts.get(
+                    "play",
+                    0,
+                ),
+
+            "opens":
+                analytics_counts.get(
+                    "open",
+                    0,
+                ),
+
+            "half_watched":
+                analytics_counts.get(
+                    "half_watched",
+                    0,
+                ),
+
+            "completed":
+                analytics_counts.get(
+                    "completed",
+                    0,
+                ),
+
+            "view_event":
+                analytics_counts.get(
+                    "view_event",
+                    0,
+                ),
+        }
+
+
+    # ========================================================
+    # TEMPLATE
+    # ========================================================
+
     return render_template(
         "admin/event_reel.html",
         organizer=organizer,
         event=event,
         reel=reel,
+        reel_analytics=reel_analytics,
     )
    
 @app.route(
