@@ -7848,6 +7848,9 @@ def featured_listing_image(
 # ============================================================
 # ADMIN - RESTAURANTS
 # ============================================================
+# ============================================================
+# ADMIN - RESTAURANT CONTROL CENTRE
+# ============================================================
 
 @app.route(
     "/admin/restaurants"
@@ -7895,6 +7898,7 @@ def admin_restaurants():
             "error",
         )
 
+
         return redirect(
             url_for(
                 "admin_dashboard"
@@ -7903,7 +7907,7 @@ def admin_restaurants():
 
 
     # ========================================================
-    # RESTAURANT ADVERTS
+    # ADVERTS
     # ========================================================
 
     adverts = (
@@ -7920,7 +7924,55 @@ def admin_restaurants():
 
 
     # ========================================================
-    # PENDING SUBSCRIPTION PAYMENT
+    # DASHBOARD METRICS
+    # ========================================================
+
+    live_adverts = sum(
+        1
+        for advert in adverts
+        if advert.campaign_status
+        == "live"
+    )
+
+
+    scheduled_adverts = sum(
+        1
+        for advert in adverts
+        if advert.campaign_status
+        == "scheduled"
+    )
+
+
+    expired_adverts = sum(
+        1
+        for advert in adverts
+        if advert.campaign_status
+        == "expired"
+    )
+
+
+    paused_adverts = sum(
+        1
+        for advert in adverts
+        if advert.campaign_status
+        == "paused"
+    )
+
+
+    live_reels = sum(
+        1
+        for advert in adverts
+        if (
+            advert.reel
+            and advert.reel.active
+            and advert.campaign_status
+            == "live"
+        )
+    )
+
+
+    # ========================================================
+    # PENDING SUBSCRIPTION
     # ========================================================
 
     pending_subscription_payment = (
@@ -7948,6 +8000,21 @@ def admin_restaurants():
         adverts=
             adverts,
 
+        live_adverts=
+            live_adverts,
+
+        scheduled_adverts=
+            scheduled_adverts,
+
+        expired_adverts=
+            expired_adverts,
+
+        paused_adverts=
+            paused_adverts,
+
+        live_reels=
+            live_reels,
+
         subscription_active=
             organizer.is_subscription_active,
 
@@ -7966,8 +8033,6 @@ def admin_restaurants():
         subscription_price=
             KALXA_SUBSCRIPTION_PRICE,
     )
-
-
 # ============================================================
 # ADMIN - CREATE RESTAURANT ADVERT
 # ============================================================
