@@ -1976,6 +1976,83 @@ def send_push_campaign(
 
 
 
+    # ============================================================
+# REQUIRE ACTIVE RESTAURANT SUBSCRIPTION
+# ============================================================
+
+def require_restaurant_subscription():
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if not organizer:
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    # --------------------------------------------------------
+    # Only restaurant accounts should enter restaurant tools.
+    # --------------------------------------------------------
+
+    if (
+        account_type
+        != "restaurant"
+    ):
+
+        flash(
+            (
+                "Restaurant advertising is only "
+                "available to restaurant accounts."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    # --------------------------------------------------------
+    # Subscription required.
+    # --------------------------------------------------------
+
+    if not organizer.is_subscription_active:
+
+        flash(
+            (
+                "Activate your Kalxa subscription "
+                "before creating restaurant adverts "
+                "or publishing restaurant reels."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_subscription"
+            )
+        )
+
+
+    return None
 # ============================================================
 # RESTAURANT ADVERT HELPERS
 # ============================================================
