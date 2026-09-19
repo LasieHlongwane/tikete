@@ -7960,6 +7960,528 @@ def superadmin_suspend_organizer(
     )
 
 
+
+
+# ============================================================
+# SUPER ADMIN - SEND RESTAURANT PUSH
+# ============================================================
+
+@app.route(
+    "/superadmin/notifications/restaurants/send",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_send_restaurant_notification():
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+        return auth
+
+
+    if not firebase_admin_configured():
+
+        flash(
+            (
+                "Server-side Firebase sending "
+                "is not configured."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications"
+            )
+        )
+
+
+    restaurant_id = (
+        request.form.get(
+            "restaurant_id",
+            type=int,
+        )
+    )
+
+
+    title = (
+        request.form.get(
+            "title",
+            "",
+        )
+        .strip()
+    )
+
+
+    body = (
+        request.form.get(
+            "body",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not restaurant_id:
+
+        flash(
+            "Choose a restaurant advert.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications"
+            )
+        )
+
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=
+                restaurant_id,
+        )
+        .first()
+    )
+
+
+    if not advert:
+
+        flash(
+            "Restaurant advert was not found.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications"
+            )
+        )
+
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    # ========================================================
+    # PAID SUBSCRIPTION REQUIRED
+    # ========================================================
+
+    if (
+        not organizer
+        or not organizer.is_subscription_active
+    ):
+
+        flash(
+            (
+                "This restaurant's subscription "
+                "has expired or is inactive."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if not advert.active:
+
+        flash(
+            (
+                "This restaurant advert "
+                "is currently paused."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.ends_at
+        and advert.ends_at <= now
+    ):
+
+        flash(
+            (
+                "This restaurant campaign "
+                "has already expired."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if not title:
+
+        flash(
+            "Notification title is required.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if not body:
+
+        flash(
+            "Notification message is required.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if len(title) > 120:
+
+        flash(
+            (
+                "Notification title must be "
+                "120 characters or fewer."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if len(body) > 500:
+
+        flash(
+            (
+                "Notification message must be "
+                "500 characters or fewer."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if not advert.area:
+
+        flash(
+            (
+                "This restaurant does not have "
+                "an area configured."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    subscriptions = (
+        get_restaurant_push_subscriptions(
+            advert
+        )
+    )
+
+
+    if not subscriptions:
+
+        flash(
+            (
+                "No active notification "
+                f"subscribers were found in {advert.area}."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    campaign = PushCampaign(
+
+        campaign_type=
+            "restaurant",
+
+        event_id=
+            None,
+
+        restaurant_advert_id=
+            advert.id,
+
+        title=
+            title,
+
+        body=
+            body,
+
+        target_url=
+            url_for(
+                "restaurant_page",
+
+                advert_id=
+                    advert.id,
+
+                _external=
+                    True,
+            ),
+
+        target_mode=
+            "area",
+
+        target_area=
+            advert.area,
+
+        target_latitude=
+            None,
+
+        target_longitude=
+            None,
+
+        radius_km=
+            None,
+
+        status=
+            "draft",
+
+        recipient_count=
+            len(
+                subscriptions
+            ),
+
+        created_by=
+            "superadmin",
+    )
+
+
+    try:
+
+        db.session.add(
+            campaign
+        )
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Push] "
+                "Campaign creation failed "
+                "advert_id=%s error=%s"
+            ),
+            advert.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Restaurant notification "
+                "campaign could not be created."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    try:
+
+        send_push_campaign(
+            campaign,
+            subscriptions,
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        campaign = (
+            db.session.get(
+                PushCampaign,
+                campaign.id,
+            )
+        )
+
+
+        if campaign:
+
+            campaign.status = (
+                "failed"
+            )
+
+
+            try:
+
+                db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Push] "
+                "Send failed "
+                "campaign_id=%s "
+                "advert_id=%s "
+                "error=%s"
+            ),
+            campaign.id
+            if campaign
+            else None,
+            advert.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Firebase could not send the "
+                "restaurant notification."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=
+                    advert.id,
+            )
+        )
+
+
+    if campaign.failure_count:
+
+        flash(
+            (
+                "Restaurant notification finished. "
+                f"{campaign.success_count} sent, "
+                f"{campaign.failure_count} failed."
+            ),
+            "success",
+        )
+
+
+    else:
+
+        flash(
+            (
+                "Restaurant notification sent "
+                f"successfully to "
+                f"{campaign.success_count} "
+                "subscriber(s)."
+            ),
+            "success",
+        )
+
+
+    return redirect(
+        url_for(
+            "superadmin_notifications",
+
+            restaurant_id=
+                advert.id,
+        )
+    )
 # ============================================================
 # SUPER ADMIN - REACTIVATE ORGANIZER
 # ============================================================
