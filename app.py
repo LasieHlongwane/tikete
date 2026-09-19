@@ -6692,6 +6692,9 @@ def superadmin_reactivate_organizer(
 # ============================================================
 # HOME
 # ============================================================
+# ============================================================
+# HOME
+# ============================================================
 
 @app.route("/")
 def home():
@@ -6700,6 +6703,10 @@ def home():
         date.today()
     )
 
+
+    # ========================================================
+    # EVENTS
+    # ========================================================
 
     events = (
         TicketEvent.query
@@ -6724,129 +6731,211 @@ def home():
     )
 
 
-    now = datetime.utcnow()
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # FEATURED EVENTS
+    # ========================================================
 
     active_featured_listings = (
         FeaturedListing.query
+
         .join(
             TicketEvent,
+
             FeaturedListing.event_id
             == TicketEvent.id,
         )
+
         .filter(
             FeaturedListing.status
             == "active",
+
             FeaturedListing.starts_at
             <= now,
+
             FeaturedListing.ends_at
             > now,
+
             TicketEvent.active.is_(True),
+
             TicketEvent.status
             == "published",
+
             TicketEvent.organizer_deleted.is_(False),
+
             TicketEvent.event_date
             >= today,
         )
+
         .order_by(
             FeaturedListing.starts_at.desc()
         )
+
         .all()
     )
 
+
     featured_by_event = {}
 
+
     for listing in active_featured_listings:
-        if listing.event_id not in featured_by_event:
+
+        if (
+            listing.event_id
+            not in featured_by_event
+        ):
+
             featured_by_event[
                 listing.event_id
             ] = listing
 
+
     featured_events = [
+
         {
-            "event": listing.event,
-            "listing": listing,
-            "images": list(
-                listing.event.featured_images
-            )[:FEATURED_IMAGE_MAX_COUNT],
+            "event":
+                listing.event,
+
+            "listing":
+                listing,
+
+            "images":
+                list(
+                    listing.event.featured_images
+                )[
+                    :FEATURED_IMAGE_MAX_COUNT
+                ],
         }
+
         for listing
         in featured_by_event.values()
     ]
 
+
     featured_event_ids = {
+
         item["event"].id
-        for item in featured_events
+
+        for item
+        in featured_events
     }
 
+
     normal_events = [
+
         event
-        for event in events
-        if event.id not in featured_event_ids
+
+        for event
+        in events
+
+        if (
+            event.id
+            not in featured_event_ids
+        )
     ]
 
 
     # ========================================================
     # EVENT REELS
     # ========================================================
-    # Only reels attached to current/future published events
-    # are shown on the public homepage.
+    #
+    # "SEE THE VIBE"
+    #
+    # Event reels remain completely separate from
+    # restaurant reels.
     # ========================================================
 
     reels = (
         EventReel.query
+
         .join(
             TicketEvent,
+
             EventReel.event_id
             == TicketEvent.id,
         )
+
         .filter(
             EventReel.active.is_(True),
+
             TicketEvent.active.is_(True),
-            TicketEvent.status == "published",
+
+            TicketEvent.status
+            == "published",
+
             TicketEvent.organizer_deleted.is_(False),
-            TicketEvent.event_date >= today,
+
+            TicketEvent.event_date
+            >= today,
         )
+
         .order_by(
             EventReel.created_at.desc()
         )
+
         .limit(12)
+
         .all()
     )
 
-        restaurant_reels = (
-          RestaurantReel.query
 
-          .join(
+    # ========================================================
+    # RESTAURANT REELS
+    # ========================================================
+    #
+    # "EAT AROUND YOU"
+    #
+    # These reels appear in their own section directly
+    # below See the Vibe.
+    # ========================================================
+
+    restaurant_reels = (
+        RestaurantReel.query
+
+        .join(
             RestaurantAdvert,
+
             RestaurantReel.advert_id
             == RestaurantAdvert.id,
-          )
+        )
 
-          .filter(
+        .filter(
             RestaurantReel.active.is_(True),
 
             RestaurantAdvert.active.is_(True),
 
             or_(
-              RestaurantAdvert.starts_at.is_(None),
-              RestaurantAdvert.starts_at <= now,
+                RestaurantAdvert.starts_at.is_(None),
+
+                RestaurantAdvert.starts_at
+                <= now,
             ),
 
             or_(
-              RestaurantAdvert.ends_at.is_(None),
-              RestaurantAdvert.ends_at > now,
+                RestaurantAdvert.ends_at.is_(None),
+
+                RestaurantAdvert.ends_at
+                > now,
             ),
-          )
-
-          .order_by(
-             RestaurantReel.created_at.desc()
-          )
-
-          .limit(12)
-
-          .all()
         )
 
+        .order_by(
+            RestaurantReel.created_at.desc()
+        )
+
+        .limit(12)
+
+        .all()
+    )
+
+
+    # ========================================================
+    # RENDER HOME
+    # ========================================================
 
     return render_template(
         "event.html",
@@ -6860,8 +6949,13 @@ def home():
         event=
             None,
 
+        # Event reels:
+        # See the Vibe
         reels=
             reels,
+
+        # Restaurant reels:
+        # Eat Around You
         restaurant_reels=
             restaurant_reels,
 
@@ -6874,8 +6968,6 @@ def home():
         firebase_push_configured=
             firebase_web_push_configured(),
     )
-
-
 # ============================================================
 # PUBLIC EVENT POSTER
 # ============================================================
