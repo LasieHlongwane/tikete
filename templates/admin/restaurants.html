@@ -14,14 +14,21 @@
         Restaurant Advertising | Kalxa
     </title>
 
+
     <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
+
         body {
             margin: 0;
+
             background: #f6f7f9;
             color: #111827;
 
@@ -31,60 +38,36 @@
                 BlinkMacSystemFont,
                 "Segoe UI",
                 sans-serif;
+
+            -webkit-font-smoothing: antialiased;
         }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
 
         .page {
-            width: min(100% - 28px, 900px);
+            width: min(
+                100% - 28px,
+                900px
+            );
+
             margin: 0 auto;
-            padding: 28px 0 70px;
+
+            padding:
+                28px 0 70px;
         }
 
-        .top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
 
-            margin-bottom: 24px;
-        }
-
-        h1 {
-            margin: 0;
-
-            font-size:
-                clamp(26px, 6vw, 38px);
-
-            letter-spacing: -.04em;
-        }
-
-        .subtitle {
-            margin: 6px 0 0;
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-        .button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            min-height: 44px;
-
-            padding: 10px 14px;
-
-            background: #111827;
-            color: #ffffff;
-
-            border-radius: 10px;
-
-            font-size: 12px;
-            font-weight: 900;
-
-            text-decoration: none;
-        }
+        /* =====================================================
+           BACK LINK
+        ===================================================== */
 
         .back {
             display: inline-flex;
+
+            align-items: center;
 
             margin-bottom: 18px;
 
@@ -96,6 +79,150 @@
             text-decoration: none;
         }
 
+
+        .back:hover {
+            color: #111827;
+        }
+
+
+        /* =====================================================
+           TOP
+        ===================================================== */
+
+        .top {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 16px;
+
+            margin-bottom: 24px;
+        }
+
+
+        h1 {
+            margin: 0;
+
+            font-size:
+                clamp(
+                    26px,
+                    6vw,
+                    38px
+                );
+
+            line-height: 1.05;
+
+            letter-spacing: -.04em;
+        }
+
+
+        .subtitle {
+            margin: 6px 0 0;
+
+            color: #6b7280;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
+
+        .button {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 6px;
+
+            min-height: 44px;
+
+            padding: 10px 14px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border:
+                1px solid #111827;
+
+            border-radius: 10px;
+
+            font-size: 12px;
+            font-weight: 900;
+
+            text-decoration: none;
+
+            cursor: pointer;
+
+            transition:
+                transform .15s ease,
+                background .15s ease;
+        }
+
+
+        .button:hover {
+            transform:
+                translateY(-1px);
+        }
+
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash-stack {
+            display: grid;
+
+            gap: 8px;
+
+            margin-bottom: 18px;
+        }
+
+
+        .flash {
+            padding: 12px 14px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 11px;
+
+            color: #374151;
+
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+
+        .flash-success {
+            background: #f0fdf4;
+
+            border-color: #bbf7d0;
+
+            color: #166534;
+        }
+
+
+        .flash-error {
+            background: #fef2f2;
+
+            border-color: #fecaca;
+
+            color: #991b1b;
+        }
+
+
+        /* =====================================================
+           GRID
+        ===================================================== */
+
         .grid {
             display: grid;
 
@@ -103,7 +230,10 @@
                 repeat(
                     auto-fit,
                     minmax(
-                        min(100%, 280px),
+                        min(
+                            100%,
+                            280px
+                        ),
                         1fr
                     )
                 );
@@ -111,20 +241,49 @@
             gap: 14px;
         }
 
+
+        /* =====================================================
+           RESTAURANT CARD
+        ===================================================== */
+
         .card {
             overflow: hidden;
 
+            display: flex;
+            flex-direction: column;
+
             background: #ffffff;
 
-            border: 1px solid #e5e7eb;
+            border:
+                1px solid #e5e7eb;
+
             border-radius: 17px;
+
+            box-shadow:
+                0 8px 24px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .05
+                );
         }
 
+
+        /* =====================================================
+           POSTER
+        ===================================================== */
+
         .poster {
+            position: relative;
+
             aspect-ratio: 4 / 5;
+
+            overflow: hidden;
 
             background: #e5e7eb;
         }
+
 
         .poster img {
             width: 100%;
@@ -135,15 +294,95 @@
             object-fit: cover;
         }
 
+
+        .poster-placeholder {
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            flex-direction: column;
+
+            gap: 7px;
+
+            color: #9ca3af;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           REEL BADGE
+        ===================================================== */
+
+        .reel-badge {
+            position: absolute;
+
+            top: 10px;
+            right: 10px;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 4px;
+
+            padding:
+                6px 8px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .84
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            backdrop-filter:
+                blur(8px);
+
+            -webkit-backdrop-filter:
+                blur(8px);
+        }
+
+
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
         .copy {
+            display: flex;
+
+            flex-direction: column;
+
+            flex: 1;
+
             padding: 15px;
         }
+
 
         .copy h2 {
             margin: 0;
 
+            color: #111827;
+
             font-size: 17px;
+            font-weight: 950;
+
+            line-height: 1.2;
         }
+
 
         .copy p {
             margin: 6px 0 0;
@@ -151,12 +390,29 @@
             color: #6b7280;
 
             font-size: 12px;
+
+            line-height: 1.45;
         }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status-row {
+            display: flex;
+
+            align-items: center;
+            flex-wrap: wrap;
+
+            gap: 6px;
+
+            margin-top: 10px;
+        }
+
 
         .status {
             display: inline-flex;
-
-            margin-top: 10px;
 
             padding: 5px 8px;
 
@@ -171,61 +427,214 @@
             text-transform: uppercase;
         }
 
-        <a
-    href="{{ url_for(
-        'restaurant_page',
-        advert_id=advert.id
-    ) }}"
-    target="_blank"
-    style="
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        min-height:40px;
-        margin-top:12px;
-        background:#111827;
-        color:#ffffff;
-        border-radius:9px;
-        text-decoration:none;
-        font-size:11px;
-        font-weight:900;
-    "
->
-    View Public Advert →
-</a>
+
+        .status-inactive {
+            background: #f3f4f6;
+
+            color: #6b7280;
+        }
+
+
+        .reel-status {
+            display: inline-flex;
+
+            padding: 5px 8px;
+
+            background: #eff6ff;
+            color: #1d4ed8;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+
+        /* =====================================================
+           ACTIONS
+        ===================================================== */
+
+        .card-actions {
+            display: grid;
+
+            gap: 8px;
+
+            margin-top: auto;
+
+            padding-top: 16px;
+        }
+
+
+        .card-action {
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 6px;
+
+            min-height: 42px;
+
+            padding: 9px 12px;
+
+            border-radius: 9px;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            text-decoration: none;
+
+            transition:
+                transform .15s ease,
+                background .15s ease,
+                border-color .15s ease;
+        }
+
+
+        .card-action:hover {
+            transform:
+                translateY(-1px);
+        }
+
+
+        .public-action {
+            background: #ffffff;
+
+            color: #111827;
+
+            border:
+                1px solid #d1d5db;
+        }
+
+
+        .public-action:hover {
+            background: #f9fafb;
+
+            border-color: #9ca3af;
+        }
+
+
+        .reel-action {
+            background: #111827;
+
+            color: #ffffff;
+
+            border:
+                1px solid #111827;
+        }
+
+
+        .reel-action:hover {
+            background: #000000;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
 
         .empty {
-            padding: 30px;
+            padding: 36px 24px;
 
             background: #ffffff;
 
-            border: 1px dashed #d1d5db;
+            border:
+                1px dashed #d1d5db;
+
             border-radius: 14px;
 
             color: #6b7280;
 
             text-align: center;
+
+            font-size: 13px;
+
+            line-height: 1.6;
         }
+
+
+        .empty-icon {
+            display: block;
+
+            margin-bottom: 10px;
+
+            font-size: 30px;
+        }
+
+
+        .empty strong {
+            display: block;
+
+            margin-bottom: 4px;
+
+            color: #111827;
+
+            font-size: 15px;
+        }
+
+
+        .empty .button {
+            margin-top: 16px;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
         @media (max-width: 560px) {
 
+            .page {
+                width:
+                    min(
+                        100% - 20px,
+                        900px
+                    );
+
+                padding-top: 20px;
+            }
+
+
             .top {
                 align-items: stretch;
+
                 flex-direction: column;
             }
 
-            .button {
+
+            .top > .button {
                 width: 100%;
             }
+
+
+            .grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .card {
+                border-radius: 15px;
+            }
+
         }
 
     </style>
 
 </head>
 
+
 <body>
 
+
 <div class="page">
+
+
+    <!-- =========================================
+         BACK
+    ========================================== -->
 
     <a
         href="{{ url_for('admin_dashboard') }}"
@@ -234,6 +643,11 @@
         ← Organizer Dashboard
     </a>
 
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
 
     <div class="top">
 
@@ -244,8 +658,8 @@
             </h1>
 
             <p class="subtitle">
-                Manage restaurant promotions
-                and reel campaigns.
+                Manage restaurant promotions,
+                public adverts and restaurant reels.
             </p>
 
         </div>
@@ -263,50 +677,118 @@
     </div>
 
 
+
+    <!-- =========================================
+         FLASH MESSAGES
+    ========================================== -->
+
     {% with messages =
         get_flashed_messages(
             with_categories=true
         )
     %}
 
-        {% for category, message in messages %}
+        {% if messages %}
 
-            <p>
-                {{ message }}
-            </p>
+            <div class="flash-stack">
 
-        {% endfor %}
+                {% for category, message in messages %}
+
+                    <div
+                        class="
+                            flash
+
+                            {% if category == 'success' %}
+                                flash-success
+                            {% elif category == 'error' %}
+                                flash-error
+                            {% endif %}
+                        "
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
 
     {% endwith %}
 
+
+
+    <!-- =========================================
+         RESTAURANT ADVERTS
+    ========================================== -->
 
     {% if adverts %}
 
         <div class="grid">
 
+
             {% for advert in adverts %}
 
                 <article class="card">
 
+
+                    <!-- =============================
+                         POSTER
+                    ============================== -->
+
                     <div class="poster">
+
 
                         {% if advert.poster_image_url %}
 
                             <img
                                 src="{{ advert.poster_image_url }}"
                                 alt="{{ advert.business_name }} advert"
+                                loading="lazy"
                             >
 
+                        {% else %}
+
+                            <div class="poster-placeholder">
+
+                                <span>
+                                    🍔
+                                </span>
+
+                                <span>
+                                    No poster
+                                </span>
+
+                            </div>
+
                         {% endif %}
+
+
+
+                        {% if advert.reel %}
+
+                            <span class="reel-badge">
+                                🎬 Reel Live
+                            </span>
+
+                        {% endif %}
+
 
                     </div>
 
 
+
+                    <!-- =============================
+                         CONTENT
+                    ============================== -->
+
                     <div class="copy">
+
 
                         <h2>
                             {{ advert.business_name }}
                         </h2>
+
 
 
                         {% if advert.headline %}
@@ -318,6 +800,7 @@
                         {% endif %}
 
 
+
                         {% if advert.area %}
 
                             <p>
@@ -327,13 +810,104 @@
                         {% endif %}
 
 
-                        {% if advert.active %}
 
-                            <span class="status">
-                                Active
-                            </span>
+                        <!-- =============================
+                             STATUS
+                        ============================== -->
 
-                        {% endif %}
+                        <div class="status-row">
+
+
+                            {% if advert.active %}
+
+                                <span class="status">
+                                    Active
+                                </span>
+
+                            {% else %}
+
+                                <span
+                                    class="
+                                        status
+                                        status-inactive
+                                    "
+                                >
+                                    Inactive
+                                </span>
+
+                            {% endif %}
+
+
+
+                            {% if advert.reel %}
+
+                                <span class="reel-status">
+                                    🎬 Reel Published
+                                </span>
+
+                            {% endif %}
+
+
+                        </div>
+
+
+
+                        <!-- =============================
+                             ACTIONS
+                        ============================== -->
+
+                        <div class="card-actions">
+
+
+                            <!-- PUBLIC RESTAURANT PAGE -->
+
+                            <a
+                                href="{{ url_for(
+                                    'restaurant_page',
+                                    advert_id=advert.id
+                                ) }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="
+                                    card-action
+                                    public-action
+                                "
+                            >
+                                View Public Advert →
+                            </a>
+
+
+
+                            <!-- RESTAURANT REEL -->
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_restaurant_reel',
+                                    advert_id=advert.id
+                                ) }}"
+                                class="
+                                    card-action
+                                    reel-action
+                                "
+                            >
+
+                                🎬
+
+                                {% if advert.reel %}
+
+                                    Manage Reel
+
+                                {% else %}
+
+                                    Upload Reel
+
+                                {% endif %}
+
+                            </a>
+
+
+                        </div>
+
 
                     </div>
 
@@ -341,24 +915,52 @@
 
             {% endfor %}
 
+
         </div>
+
 
     {% else %}
 
+
+        <!-- =========================================
+             EMPTY STATE
+        ========================================== -->
+
         <div class="empty">
 
-            No restaurant adverts yet.
+            <span class="empty-icon">
+                🍔
+            </span>
 
-            <br><br>
+            <strong>
+                No restaurant adverts yet
+            </strong>
 
-            Create your first restaurant
-            promotion.
+            Create your first restaurant promotion,
+            add its poster and contact information,
+            then publish a restaurant reel.
+
+            <br>
+
+
+            <a
+                href="{{ url_for(
+                    'admin_create_restaurant'
+                ) }}"
+                class="button"
+            >
+                + Create Restaurant Advert
+            </a>
 
         </div>
 
+
     {% endif %}
+
 
 </div>
 
+
 </body>
+
 </html>
