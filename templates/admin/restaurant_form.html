@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Create Restaurant Advert | Kalxa
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            background: #f6f7f9;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        .page {
+            width: min(100% - 28px, 720px);
+            margin: 0 auto;
+            padding: 28px 0 70px;
+        }
+
+        .back {
+            display: inline-flex;
+
+            margin-bottom: 18px;
+
+            color: #6b7280;
+
+            font-size: 12px;
+            font-weight: 800;
+
+            text-decoration: none;
+        }
+
+        .card {
+            padding: 24px;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size:
+                clamp(26px, 6vw, 38px);
+
+            letter-spacing: -.04em;
+        }
+
+        .intro {
+            margin: 8px 0 24px;
+
+            color: #6b7280;
+
+            font-size: 13px;
+        }
+
+        form {
+            display: grid;
+            gap: 16px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+
+            padding: 12px 13px;
+
+            background: #f8fafc;
+
+            color: #111827;
+
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+
+            font: inherit;
+            font-size: 13px;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .help {
+            color: #9ca3af;
+
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .button {
+            min-height: 48px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border: 0;
+            border-radius: 11px;
+
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+
+            cursor: pointer;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+    <a
+        href="{{ url_for(
+            'admin_restaurants'
+        ) }}"
+        class="back"
+    >
+        ← Restaurant Advertising
+    </a>
+
+
+    <section class="card">
+
+        <h1>
+            Create Restaurant Advert
+        </h1>
+
+        <p class="intro">
+            Create the public promotion page
+            customers will reach from your reel.
+        </p>
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            <label>
+
+                Business Name
+
+                <input
+                    type="text"
+                    name="business_name"
+                    required
+                    maxlength="180"
+                    placeholder="e.g. Mpho's Grill"
+                >
+
+            </label>
+
+
+            <label>
+
+                Promotion Headline
+
+                <input
+                    type="text"
+                    name="headline"
+                    maxlength="220"
+                    placeholder="e.g. Weekend Combo Special"
+                >
+
+            </label>
+
+
+            <label>
+
+                Description
+
+                <textarea
+                    name="description"
+                    placeholder="Tell customers what makes this restaurant or promotion worth visiting."
+                ></textarea>
+
+            </label>
+
+
+            <label>
+
+                Restaurant Poster
+
+                <input
+                    type="file"
+                    name="poster"
+                    accept="image/jpeg,image/png,image/webp"
+                    required
+                >
+
+                <span class="help">
+                    JPG, PNG or WebP.
+                    Maximum 8 MB.
+                </span>
+
+            </label>
+
+
+            <label>
+
+                Area
+
+                <input
+                    type="text"
+                    name="area"
+                    maxlength="150"
+                    placeholder="e.g. KwaMhlanga"
+                >
+
+            </label>
+
+
+            <label>
+
+                Address
+
+                <input
+                    type="text"
+                    name="address"
+                    maxlength="300"
+                    placeholder="Restaurant street or location"
+                >
+
+            </label>
+
+
+            <label>
+
+                WhatsApp Number
+
+                <input
+                    type="tel"
+                    name="whatsapp_number"
+                    maxlength="50"
+                    placeholder="e.g. 0791234567"
+                >
+
+            </label>
+
+
+            <label>
+
+                Phone Number
+
+                <input
+                    type="tel"
+                    name="phone_number"
+                    maxlength="50"
+                    placeholder="Restaurant contact number"
+                >
+
+            </label>
+
+
+            <label>
+
+                Directions Link
+
+                <input
+                    type="url"
+                    name="directions_url"
+                    placeholder="Google Maps directions link"
+                >
+
+                <span class="help">
+                    Paste the restaurant's
+                    Google Maps location link.
+                </span>
+
+            </label>
+
+
+            <button
+                type="submit"
+                class="button"
+            >
+                Create Restaurant Advert
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+</body>
+</html>
