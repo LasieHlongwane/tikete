@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
+    <title>
+        {{ advert.business_name }} | Kalxa
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+
+            background: #ffffff;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+        a {
+            color: inherit;
+        }
+
+
+        /* =====================================================
+           PAGE
+        ===================================================== */
+
+        .restaurant-page {
+            width: min(
+                100% - 28px,
+                680px
+            );
+
+            margin: 0 auto;
+
+            padding:
+                18px 0
+                110px;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
+
+        .restaurant-topbar {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 14px;
+
+            margin-bottom: 18px;
+
+            padding-bottom: 13px;
+
+            border-bottom:
+                1px solid #e5e7eb;
+        }
+
+        .kalxa-brand {
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 950;
+
+            letter-spacing:
+                .06em;
+
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: #6b7280;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           RESTAURANT CARD
+        ===================================================== */
+
+        .restaurant-card {
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 22px;
+
+            box-shadow:
+                0 12px 36px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .07
+                );
+        }
+
+
+        /* =====================================================
+           POSTER
+        ===================================================== */
+
+        .poster-shell {
+            position: relative;
+
+            width: 100%;
+
+            overflow: hidden;
+
+            background: #f3f4f6;
+        }
+
+        .poster-shell img {
+            width: 100%;
+            height: auto;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+        .restaurant-type {
+            position: absolute;
+
+            top: 13px;
+            left: 13px;
+
+            padding:
+                6px 9px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .82
+                );
+
+            color: #ffffff;
+
+            border-radius:
+                999px;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing:
+                .06em;
+
+            text-transform:
+                uppercase;
+
+            backdrop-filter:
+                blur(8px);
+
+            -webkit-backdrop-filter:
+                blur(8px);
+        }
+
+
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
+        .restaurant-content {
+            padding:
+                22px 20px 24px;
+        }
+
+        .eyebrow {
+            margin: 0 0 7px;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing:
+                .12em;
+
+            text-transform:
+                uppercase;
+        }
+
+        .restaurant-name {
+            margin: 0;
+
+            color: #111827;
+
+            font-size:
+                clamp(
+                    28px,
+                    7vw,
+                    40px
+                );
+
+            line-height: 1.02;
+
+            font-weight: 950;
+
+            letter-spacing:
+                -.045em;
+        }
+
+        .headline {
+            margin:
+                10px 0 0;
+
+            color: #374151;
+
+            font-size: 16px;
+
+            line-height: 1.35;
+
+            font-weight: 850;
+        }
+
+        .description {
+            margin:
+                18px 0 0;
+
+            color: #4b5563;
+
+            font-size: 14px;
+
+            line-height: 1.7;
+
+            white-space:
+                pre-line;
+        }
+
+
+        /* =====================================================
+           LOCATION
+        ===================================================== */
+
+        .location-box {
+            margin-top: 22px;
+
+            padding: 15px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 14px;
+        }
+
+        .location-label {
+            display: block;
+
+            margin-bottom: 5px;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing:
+                .09em;
+
+            text-transform:
+                uppercase;
+        }
+
+        .location-main {
+            color: #111827;
+
+            font-size: 13px;
+            line-height: 1.45;
+
+            font-weight: 850;
+        }
+
+        .location-area {
+            display: block;
+
+            margin-top: 3px;
+
+            color: #6b7280;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           ACTIONS
+        ===================================================== */
+
+        .actions-title {
+            margin:
+                25px 0 10px;
+
+            color: #111827;
+
+            font-size: 12px;
+            font-weight: 950;
+        }
+
+        .restaurant-actions {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap: 9px;
+        }
+
+        .restaurant-action {
+            min-height: 48px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 7px;
+
+            padding:
+                10px 12px;
+
+            border-radius:
+                11px;
+
+            font-size: 12px;
+            font-weight: 900;
+
+            text-decoration: none;
+
+            transition:
+                transform .15s ease,
+                background .15s ease;
+        }
+
+        .restaurant-action:hover {
+            transform:
+                translateY(-1px);
+        }
+
+        .action-directions {
+            background: #111827;
+
+            color: #ffffff;
+        }
+
+        .action-whatsapp {
+            background: #166534;
+
+            color: #ffffff;
+        }
+
+        .action-call {
+            grid-column:
+                1 / -1;
+
+            background: #f3f4f6;
+
+            color: #111827;
+
+            border:
+                1px solid #d1d5db;
+        }
+
+
+        /* =====================================================
+           KALXA CREDIT
+        ===================================================== */
+
+        .kalxa-credit {
+            margin-top: 22px;
+
+            color: #9ca3af;
+
+            font-size: 9px;
+
+            line-height: 1.4;
+
+            text-align: center;
+        }
+
+
+        /* =====================================================
+           MOBILE STICKY ACTION BAR
+        ===================================================== */
+
+        .mobile-action-bar {
+            display: none;
+        }
+
+
+        @media (
+            max-width: 620px
+        ) {
+
+            .restaurant-page {
+                width:
+                    min(
+                        100% - 20px,
+                        680px
+                    );
+
+                padding-bottom:
+                    105px;
+            }
+
+            .restaurant-card {
+                border-radius:
+                    18px;
+            }
+
+            .restaurant-content {
+                padding:
+                    19px 16px 20px;
+            }
+
+            .restaurant-actions {
+                grid-template-columns:
+                    1fr;
+            }
+
+            .action-call {
+                grid-column:
+                    auto;
+            }
+
+
+            /* =============================================
+               FIXED MOBILE CONVERSION BAR
+            ============================================= */
+
+            .mobile-action-bar {
+                position: fixed;
+
+                left: 10px;
+                right: 10px;
+
+                bottom:
+                    max(
+                        10px,
+                        env(
+                            safe-area-inset-bottom
+                        )
+                    );
+
+                z-index: 100;
+
+                display: grid;
+
+                grid-template-columns:
+                    repeat(
+                        3,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
+
+                gap: 6px;
+
+                padding: 7px;
+
+                background:
+                    rgba(
+                        255,
+                        255,
+                        255,
+                        .96
+                    );
+
+                border:
+                    1px solid #d1d5db;
+
+                border-radius:
+                    16px;
+
+                box-shadow:
+                    0 14px 38px
+                    rgba(
+                        15,
+                        23,
+                        42,
+                        .18
+                    );
+
+                backdrop-filter:
+                    blur(16px);
+
+                -webkit-backdrop-filter:
+                    blur(16px);
+            }
+
+            .mobile-action-bar a {
+                min-width: 0;
+
+                min-height: 45px;
+
+                display: flex;
+
+                align-items: center;
+                justify-content: center;
+
+                flex-direction: column;
+
+                gap: 2px;
+
+                color: #374151;
+
+                border-radius:
+                    10px;
+
+                font-size: 15px;
+
+                font-weight: 900;
+
+                text-decoration: none;
+            }
+
+            .mobile-action-bar small {
+                max-width: 100%;
+
+                overflow: hidden;
+
+                font-size: 8px;
+
+                white-space: nowrap;
+
+                text-overflow:
+                    ellipsis;
+            }
+
+            .mobile-action-bar
+            .mobile-whatsapp {
+                background: #166534;
+
+                color: #ffffff;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="restaurant-page">
+
+
+    <!-- =========================================
+         TOP BAR
+    ========================================== -->
+
+    <header class="restaurant-topbar">
+
+        <a
+            href="{{ url_for('home') }}"
+            class="kalxa-brand"
+        >
+            KALXA
+        </a>
+
+
+        <a
+            href="{{ url_for('home') }}"
+            class="back-link"
+        >
+            ← Discover
+        </a>
+
+    </header>
+
+
+
+    <!-- =========================================
+         RESTAURANT ADVERT
+    ========================================== -->
+
+    <article class="restaurant-card">
+
+
+        {% if advert.poster_image_url %}
+
+            <div class="poster-shell">
+
+                <img
+                    src="{{ advert.poster_image_url }}"
+                    alt="{{ advert.business_name }} restaurant advert"
+                >
+
+                <span class="restaurant-type">
+                    🍔 Restaurant
+                </span>
+
+            </div>
+
+        {% endif %}
+
+
+
+        <div class="restaurant-content">
+
+
+            <p class="eyebrow">
+                KALXA LOCAL FOOD
+            </p>
+
+
+            <h1 class="restaurant-name">
+                {{ advert.business_name }}
+            </h1>
+
+
+
+            {% if advert.headline %}
+
+                <p class="headline">
+                    {{ advert.headline }}
+                </p>
+
+            {% endif %}
+
+
+
+            {% if advert.description %}
+
+                <div class="description">
+                    {{ advert.description }}
+                </div>
+
+            {% endif %}
+
+
+
+            {% if advert.address or advert.area %}
+
+                <section class="location-box">
+
+                    <span class="location-label">
+                        📍 Location
+                    </span>
+
+
+                    {% if advert.address %}
+
+                        <div class="location-main">
+                            {{ advert.address }}
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if advert.area %}
+
+                        <span class="location-area">
+                            {{ advert.area }}
+                        </span>
+
+                    {% endif %}
+
+                </section>
+
+            {% endif %}
+
+
+
+            {% if
+                directions_url
+                or whatsapp_url
+                or phone_url
+            %}
+
+                <h2 class="actions-title">
+                    Contact & Visit
+                </h2>
+
+
+                <div class="restaurant-actions">
+
+
+                    {% if directions_url %}
+
+                        <a
+                            href="{{ directions_url }}"
+                            class="
+                                restaurant-action
+                                action-directions
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            🧭 Directions
+                        </a>
+
+                    {% endif %}
+
+
+
+                    {% if whatsapp_url %}
+
+                        <a
+                            href="{{ whatsapp_url }}"
+                            class="
+                                restaurant-action
+                                action-whatsapp
+                            "
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            💬 WhatsApp Us
+                        </a>
+
+                    {% endif %}
+
+
+
+                    {% if phone_url %}
+
+                        <a
+                            href="{{ phone_url }}"
+                            class="
+                                restaurant-action
+                                action-call
+                            "
+                        >
+                            ☎ Call
+                        </a>
+
+                    {% endif %}
+
+
+                </div>
+
+            {% endif %}
+
+
+
+            <p class="kalxa-credit">
+                Discover local places on Kalxa.
+            </p>
+
+
+        </div>
+
+    </article>
+
+
+</div>
+
+
+
+<!-- =========================================
+     MOBILE ACTION BAR
+========================================== -->
+
+{% if
+    directions_url
+    or whatsapp_url
+    or phone_url
+%}
+
+    <nav
+        class="mobile-action-bar"
+        aria-label="Restaurant actions"
+    >
+
+
+        {% if directions_url %}
+
+            <a
+                href="{{ directions_url }}"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <span>🧭</span>
+                <small>Directions</small>
+            </a>
+
+        {% endif %}
+
+
+
+        {% if whatsapp_url %}
+
+            <a
+                href="{{ whatsapp_url }}"
+                class="mobile-whatsapp"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <span>💬</span>
+                <small>WhatsApp</small>
+            </a>
+
+        {% endif %}
+
+
+
+        {% if phone_url %}
+
+            <a
+                href="{{ phone_url }}"
+            >
+                <span>☎</span>
+                <small>Call</small>
+            </a>
+
+        {% endif %}
+
+
+    </nav>
+
+{% endif %}
+
+
+</body>
+
+</html>
