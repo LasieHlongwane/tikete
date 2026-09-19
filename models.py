@@ -3551,7 +3551,8 @@ class EventReel(db.Model):
             f"event_id={self.event_id} "
             f"organizer_id={self.organizer_id}>"
         )
-
+        
+        
 # ============================================================
 # EVENT REEL ANALYTICS
 # ============================================================
@@ -3644,3 +3645,335 @@ class EventReelAnalytics(db.Model):
             name="uq_reel_analytics_session_event",
         ),
     )
+    
+# ============================================================
+# RESTAURANT ADVERT
+# ============================================================
+
+class RestaurantAdvert(db.Model):
+
+    __tablename__ = "restaurant_adverts"
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # OWNER
+    # ========================================================
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # BUSINESS DETAILS
+    # ========================================================
+
+    business_name = db.Column(
+        db.String(180),
+        nullable=False,
+        index=True,
+    )
+
+    headline = db.Column(
+        db.String(220),
+        nullable=True,
+    )
+
+    description = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    price_text = db.Column(
+        db.String(80),
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # LOCATION
+    # ========================================================
+
+    address = db.Column(
+        db.String(300),
+        nullable=True,
+    )
+
+    area = db.Column(
+        db.String(150),
+        nullable=True,
+        index=True,
+    )
+
+    directions_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # CONTACT
+    # ========================================================
+
+    whatsapp_number = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    phone_number = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # BUSINESS / PROMOTION IMAGE
+    # ========================================================
+
+    poster_image_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    poster_cloudinary_public_id = db.Column(
+        db.String(255),
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # CAMPAIGN DATES
+    # ========================================================
+
+    starts_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    ends_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    organizer = db.relationship(
+        "Organizer",
+    )
+
+    reel = db.relationship(
+        "RestaurantReel",
+        back_populates="advert",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantAdvert "
+            f"id={self.id} "
+            f"business_name={self.business_name}>"
+        )
+
+
+# ============================================================
+# RESTAURANT REEL
+# ============================================================
+
+class RestaurantReel(db.Model):
+
+    __tablename__ = "restaurant_reels"
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # RESTAURANT ADVERT
+    # ========================================================
+
+    advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # OWNER
+    # ========================================================
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # CLOUDINARY VIDEO
+    # ========================================================
+
+    cloudinary_public_id = db.Column(
+        db.String(255),
+        nullable=False,
+    )
+
+    video_url = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    thumbnail_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # VIDEO METADATA
+    # ========================================================
+
+    duration_seconds = db.Column(
+        db.Float,
+        nullable=False,
+    )
+
+    width = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    height = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    file_bytes = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    advert = db.relationship(
+        "RestaurantAdvert",
+        back_populates="reel",
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantReel "
+            f"id={self.id} "
+            f"advert_id={self.advert_id}>"
+        )
