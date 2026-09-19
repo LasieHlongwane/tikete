@@ -8696,7 +8696,9 @@ def organizer_login():
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                organizer_home_endpoint(
+                    organizer
+                )
             )
         )
 
