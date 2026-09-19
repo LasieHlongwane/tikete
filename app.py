@@ -8852,6 +8852,7 @@ def organizer_signup():
         "organizer/signup.html"
     )
 
+
 # ============================================================
 # ORGANIZER LOGIN
 # ============================================================
@@ -8864,26 +8865,39 @@ def organizer_signup():
     ],
 )
 def organizer_login():
+
+    # ========================================================
+    # ALREADY LOGGED IN
+    # ========================================================
+
     existing_organizer = (
-     get_current_organizer():
+        get_current_organizer()
     )
 
+
     if existing_organizer:
+
         return redirect(
             url_for(
                 organizer_home_endpoint(
-                    organizer
+                    existing_organizer
                 )
             )
         )
 
 
+    # ========================================================
+    # LOGIN
+    # ========================================================
+
     if request.method == "POST":
 
-        email = normalize_email(
-            request.form.get(
-                "email",
-                "",
+        email = (
+            normalize_email(
+                request.form.get(
+                    "email",
+                    "",
+                )
             )
         )
 
@@ -8891,10 +8905,14 @@ def organizer_login():
         password = (
             request.form.get(
                 "password",
-                ""
+                "",
             )
         )
 
+
+        # ====================================================
+        # FIND ORGANIZER
+        # ====================================================
 
         organizer = (
             Organizer.query
@@ -8904,6 +8922,10 @@ def organizer_login():
             .first()
         )
 
+
+        # ====================================================
+        # VERIFY PASSWORD
+        # ====================================================
 
         password_ok = (
             organizer is not None
@@ -8917,7 +8939,10 @@ def organizer_login():
         current_app.logger.info(
             (
                 "[Organizer Login] attempt "
-                "email=%s found=%s active=%s "
+                "email=%s "
+                "found=%s "
+                "active=%s "
+                "account_type=%s "
                 "password_ok=%s"
             ),
             email,
@@ -8927,9 +8952,18 @@ def organizer_login():
                 if organizer
                 else None
             ),
+            (
+                organizer.account_type
+                if organizer
+                else None
+            ),
             password_ok,
         )
 
+
+        # ====================================================
+        # INVALID LOGIN
+        # ====================================================
 
         if not password_ok:
 
@@ -8938,10 +8972,15 @@ def organizer_login():
                 "error",
             )
 
+
             return render_template(
                 "organizer/login.html"
             )
 
+
+        # ====================================================
+        # PRESERVE EXISTING KALXA BRIDGE SESSION VALUES
+        # ====================================================
 
         pending_kalxa_organizer_id = (
             session.get(
@@ -8957,6 +8996,10 @@ def organizer_login():
         )
 
 
+        # ====================================================
+        # START CLEAN ORGANIZER SESSION
+        # ====================================================
+
         session.clear()
 
 
@@ -8971,14 +9014,21 @@ def organizer_login():
         current_app.logger.info(
             (
                 "[Organizer Login] authenticated "
-                "organizer_id=%s session_key=%s"
+                "organizer_id=%s "
+                "account_type=%s "
+                "session_key=%s"
             ),
             organizer.id,
+            organizer.account_type,
             session.get(
                 ORGANIZER_SESSION_KEY
             ),
         )
 
+
+        # ====================================================
+        # RESTORE BRIDGE SESSION VALUES
+        # ====================================================
 
         if pending_kalxa_organizer_id:
 
@@ -8998,6 +9048,10 @@ def organizer_login():
             )
 
 
+        # ====================================================
+        # CONNECT DISCOVERY ORGANIZER WHEN NEEDED
+        # ====================================================
+
         if (
             pending_kalxa_organizer_id
             and organizer.kalxa_discovery_organizer_id
@@ -9016,31 +9070,70 @@ def organizer_login():
                 db.session.commit()
 
 
-            except Exception:
+            except Exception as error:
 
                 db.session.rollback()
 
 
-        flash(
-            (
-                "Welcome back to "
-                "Kalxa Ticketing."
-            ),
-            "success",
-        )
+                current_app.logger.exception(
+                    (
+                        "[Organizer Login] "
+                        "Unable to connect discovery "
+                        "organizer_id=%s error=%s"
+                    ),
+                    organizer.id,
+                    error,
+                )
 
+
+        # ====================================================
+        # SUCCESS MESSAGE
+        # ====================================================
+
+        if (
+            organizer.account_type
+            == "restaurant"
+        ):
+
+            flash(
+                (
+                    "Welcome back to your "
+                    "Kalxa Restaurant dashboard."
+                ),
+                "success",
+            )
+
+        else:
+
+            flash(
+                (
+                    "Welcome back to your "
+                    "Kalxa Event dashboard."
+                ),
+                "success",
+            )
+
+
+        # ====================================================
+        # ACCOUNT-TYPE REDIRECT
+        # ====================================================
 
         return redirect(
             url_for(
-                "admin_dashboard"
+                organizer_home_endpoint(
+                    organizer
+                )
             )
         )
 
 
+    # ========================================================
+    # GET
+    # ========================================================
+
     return render_template(
         "organizer/login.html"
     )
-
 
 # ============================================================
 # ORGANIZER LOGOUT
