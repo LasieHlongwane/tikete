@@ -8451,6 +8451,28 @@ def organizer_signup():
             .strip()
             or None
         )
+        account_type = (
+            request.form.get(
+              "account_type",
+              ""
+            )
+            .strip()
+            .lower()
+        )
+
+        if account_type not in {
+          "event",
+          "restaurant",
+        }:
+
+          flash(
+            "Choose an account type.",
+            "error",
+          )
+
+          return render_template(
+            "organizer/signup.html"
+          )
 
 
         password = (
@@ -8459,6 +8481,7 @@ def organizer_signup():
                 ""
             )
         )
+        
 
 
         password_confirm = (
