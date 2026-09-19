@@ -97,7 +97,7 @@
 
             gap: 16px;
 
-            margin-bottom: 24px;
+            margin-bottom: 18px;
         }
 
 
@@ -168,6 +168,96 @@
         .button:hover {
             transform:
                 translateY(-1px);
+        }
+
+
+        /* =====================================================
+           SUBSCRIPTION STATUS
+        ===================================================== */
+
+        .subscription-panel {
+            margin-bottom: 20px;
+
+            padding: 16px;
+
+            border-radius: 14px;
+        }
+
+
+        .subscription-panel-active {
+            background: #f0fdf4;
+
+            border:
+                1px solid #bbf7d0;
+
+            color: #166534;
+        }
+
+
+        .subscription-panel-locked {
+            background: #fff7ed;
+
+            border:
+                1px solid #fed7aa;
+
+            color: #9a3412;
+        }
+
+
+        .subscription-title {
+            margin: 0;
+
+            font-size: 13px;
+            font-weight: 950;
+        }
+
+
+        .subscription-copy {
+            margin: 5px 0 0;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+        }
+
+
+        .subscription-meta {
+            margin-top: 6px;
+
+            font-size: 10px;
+            font-weight: 750;
+        }
+
+
+        .subscription-price {
+            margin-top: 10px;
+
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+
+        .subscription-action {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-height: 40px;
+
+            margin-top: 12px;
+
+            padding: 8px 14px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border-radius: 9px;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            text-decoration: none;
         }
 
 
@@ -452,6 +542,23 @@
         }
 
 
+        .locked-status {
+            display: inline-flex;
+
+            padding: 5px 8px;
+
+            background: #fff7ed;
+            color: #9a3412;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+
         /* =====================================================
            ACTIONS
         ===================================================== */
@@ -528,6 +635,21 @@
 
         .reel-action:hover {
             background: #000000;
+        }
+
+
+        .locked-action {
+            background: #fff7ed;
+
+            color: #9a3412;
+
+            border:
+                1px solid #fed7aa;
+        }
+
+
+        .locked-action:hover {
+            background: #ffedd5;
         }
 
 
@@ -667,25 +789,25 @@
 
         {% if subscription_active %}
 
-         <a
-          href="{{ url_for(
-            'admin_create_restaurant'
-          ) }}"
-          class="button"
-         >
-          + Create Restaurant Advert
-         </a>
+            <a
+                href="{{ url_for(
+                    'admin_create_restaurant'
+                ) }}"
+                class="button"
+            >
+                + Create Restaurant Advert
+            </a>
 
         {% else %}
 
-         <a
-          href="{{ url_for(
-            'admin_subscription'
-          ) }}"
-          class="button"
-         >
-          🔒 Activate Subscription
-         </a>
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="button"
+            >
+                🔒 Activate Subscription
+            </a>
 
         {% endif %}
 
@@ -730,6 +852,124 @@
         {% endif %}
 
     {% endwith %}
+
+
+
+    <!-- =========================================
+         SUBSCRIPTION STATUS
+    ========================================== -->
+
+    {% if subscription_active %}
+
+        <div
+            class="
+                subscription-panel
+                subscription-panel-active
+            "
+        >
+
+            <p class="subscription-title">
+                ✅ Restaurant advertising subscription active
+            </p>
+
+
+            <p class="subscription-copy">
+                You can create restaurant adverts
+                and publish restaurant reels.
+            </p>
+
+
+            {% if subscription_expires_at %}
+
+                <div class="subscription-meta">
+
+                    Active until
+                    {{ subscription_expires_at.strftime('%d %B %Y') }}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+    {% else %}
+
+        <div
+            class="
+                subscription-panel
+                subscription-panel-locked
+            "
+        >
+
+            <p class="subscription-title">
+                🔒 Restaurant advertising is locked
+            </p>
+
+
+            <p class="subscription-copy">
+
+                Activate your Kalxa subscription
+                before creating restaurant adverts
+                or publishing restaurant reels.
+
+            </p>
+
+
+            {% if subscription_plan_name %}
+
+                <div class="subscription-meta">
+                    {{ subscription_plan_name }}
+                </div>
+
+            {% endif %}
+
+
+            {% if subscription_price %}
+
+                <div class="subscription-price">
+
+                    R{{ '%.2f'|format(subscription_price|float) }}
+
+                </div>
+
+            {% endif %}
+
+
+            {% if pending_subscription_payment %}
+
+                <p class="subscription-copy">
+
+                    You already have a pending
+                    subscription payment.
+
+                </p>
+
+            {% endif %}
+
+
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="subscription-action"
+            >
+
+                {% if pending_subscription_payment %}
+
+                    Continue Subscription →
+
+                {% else %}
+
+                    Activate Subscription →
+
+                {% endif %}
+
+            </a>
+
+        </div>
+
+    {% endif %}
 
 
 
@@ -863,6 +1103,16 @@
                             {% endif %}
 
 
+
+                            {% if not subscription_active %}
+
+                                <span class="locked-status">
+                                    🔒 Subscription Required
+                                </span>
+
+                            {% endif %}
+
+
                         </div>
 
 
@@ -895,30 +1145,48 @@
 
                             <!-- RESTAURANT REEL -->
 
-                            <a
-                                href="{{ url_for(
-                                    'admin_restaurant_reel',
-                                    advert_id=advert.id
-                                ) }}"
-                                class="
-                                    card-action
-                                    reel-action
-                                "
-                            >
+                            {% if subscription_active %}
 
-                                🎬
+                                <a
+                                    href="{{ url_for(
+                                        'admin_restaurant_reel',
+                                        advert_id=advert.id
+                                    ) }}"
+                                    class="
+                                        card-action
+                                        reel-action
+                                    "
+                                >
 
-                                {% if advert.reel %}
+                                    🎬
 
-                                    Manage Reel
+                                    {% if advert.reel %}
 
-                                {% else %}
+                                        Manage Reel
 
-                                    Upload Reel
+                                    {% else %}
 
-                                {% endif %}
+                                        Upload Reel
 
-                            </a>
+                                    {% endif %}
+
+                                </a>
+
+                            {% else %}
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_subscription'
+                                    ) }}"
+                                    class="
+                                        card-action
+                                        locked-action
+                                    "
+                                >
+                                    🔒 Renew Subscription
+                                </a>
+
+                            {% endif %}
 
 
                         </div>
@@ -947,25 +1215,66 @@
                 🍔
             </span>
 
-            <strong>
-                No restaurant adverts yet
-            </strong>
 
-            Create your first restaurant promotion,
-            add its poster and contact information,
-            then publish a restaurant reel.
+            {% if subscription_active %}
 
-            <br>
+                <strong>
+                    No restaurant adverts yet
+                </strong>
+
+                Create your first restaurant promotion,
+                add its poster and contact information,
+                then publish a restaurant reel.
 
 
-            <a
-                href="{{ url_for(
-                    'admin_create_restaurant'
-                ) }}"
-                class="button"
-            >
-                + Create Restaurant Advert
-            </a>
+                <br>
+
+
+                <a
+                    href="{{ url_for(
+                        'admin_create_restaurant'
+                    ) }}"
+                    class="button"
+                >
+                    + Create Restaurant Advert
+                </a>
+
+
+            {% else %}
+
+                <strong>
+                    Restaurant advertising is locked
+                </strong>
+
+                Activate your subscription before
+                creating your first restaurant advert
+                or uploading restaurant reels.
+
+
+                <br>
+
+
+                <a
+                    href="{{ url_for(
+                        'admin_subscription'
+                    ) }}"
+                    class="button"
+                >
+
+                    {% if pending_subscription_payment %}
+
+                        Continue Subscription
+
+                    {% else %}
+
+                        🔒 Activate Subscription
+
+                    {% endif %}
+
+                </a>
+
+            {% endif %}
+
 
         </div>
 
