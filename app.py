@@ -8106,6 +8106,92 @@ def event_page(
 
 
 # ============================================================
+# PUBLIC RESTAURANT ADVERT PAGE
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>"
+)
+def restaurant_page(
+    advert_id,
+):
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # CAMPAIGN DATE SAFETY
+    #
+    # These currently allow permanent restaurant adverts
+    # because starts_at / ends_at may be NULL.
+    # ========================================================
+
+    if (
+        advert.starts_at
+        and advert.starts_at > now
+    ):
+
+        abort(404)
+
+
+    if (
+        advert.ends_at
+        and advert.ends_at <= now
+    ):
+
+        abort(404)
+
+
+    whatsapp_url = (
+        build_restaurant_whatsapp_url(
+            advert.whatsapp_number
+        )
+    )
+
+
+    phone_url = (
+        build_restaurant_phone_url(
+            advert.phone_number
+        )
+    )
+
+
+    directions_url = (
+        valid_restaurant_directions_url(
+            advert.directions_url
+        )
+    )
+
+
+    return render_template(
+        "restaurant.html",
+
+        advert=
+            advert,
+
+        whatsapp_url=
+            whatsapp_url,
+
+        phone_url=
+            phone_url,
+
+        directions_url=
+            directions_url,
+    )
+
+# ============================================================
 # RESERVE TICKET
 # ============================================================
 
