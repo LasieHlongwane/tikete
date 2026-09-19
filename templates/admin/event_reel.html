@@ -708,9 +708,9 @@
 
 
                 {% set analytics = reel_analytics|default({}) %}
-                {% set impressions = analytics.get('impression', 0) %}
-                {% set plays = analytics.get('play', 0) %}
-                {% set opens = analytics.get('open', 0) %}
+                {% set impressions = analytics.get('impressions', analytics.get('impression', 0)) %}
+                {% set plays = analytics.get('plays', analytics.get('play', 0)) %}
+                {% set opens = analytics.get('opens', analytics.get('open', 0)) %}
                 {% set half_watched = analytics.get('half_watched', 0) %}
                 {% set completed = analytics.get('completed', 0) %}
                 {% set view_event = analytics.get('view_event', 0) %}
@@ -729,7 +729,7 @@
                             </h2>
 
                             <p>
-                                Anonymous engagement with this reel.
+                                Anonymous engagement with this reel, including full-screen swipe views.
                             </p>
                         </div>
 
