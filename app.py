@@ -7052,15 +7052,15 @@ def admin_create_restaurant():
             or None
         )
 
-        directions_url = (
-            request.form.get(
-                "directions_url",
-                "",
-            )
-            .strip()
-            or None
-        )
 
+        directions_url = (
+          valid_restaurant_directions_url(
+            request.form.get(
+              "directions_url",
+              "",
+            )
+          )
+        )
 
         if not business_name:
 
