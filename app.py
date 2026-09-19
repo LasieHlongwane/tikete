@@ -8856,6 +8856,9 @@ def organizer_signup():
 # ============================================================
 # ORGANIZER LOGIN
 # ============================================================
+# ============================================================
+# ORGANIZER LOGIN
+# ============================================================
 
 @app.route(
     "/organizer/login",
@@ -8924,6 +8927,23 @@ def organizer_login():
 
 
         # ====================================================
+        # SAFE ACCOUNT TYPE
+        #
+        # Existing deployments/accounts that do not yet expose
+        # account_type are treated as event accounts.
+        # ====================================================
+
+        account_type = (
+            getattr(
+                organizer,
+                "account_type",
+                None,
+            )
+            or "event"
+        )
+
+
+        # ====================================================
         # VERIFY PASSWORD
         # ====================================================
 
@@ -8952,11 +8972,7 @@ def organizer_login():
                 if organizer
                 else None
             ),
-            (
-                organizer.account_type
-                if organizer
-                else None
-            ),
+            account_type,
             password_ok,
         )
 
@@ -8966,14 +8982,7 @@ def organizer_login():
         # ====================================================
 
         if not password_ok:
-            account_type = (
-              getattr(
-               organizer,
-               "account_type",
-               None,
-              )
-              or "event"
-            )
+
             flash(
                 "Invalid email or password.",
                 "error",
@@ -9026,7 +9035,7 @@ def organizer_login():
                 "session_key=%s"
             ),
             organizer.id,
-            organizer.account_type,
+            account_type,
             session.get(
                 ORGANIZER_SESSION_KEY
             ),
@@ -9098,7 +9107,7 @@ def organizer_login():
         # ====================================================
 
         if (
-            organizer.account_type
+            account_type
             == "restaurant"
         ):
 
@@ -9141,6 +9150,7 @@ def organizer_login():
     return render_template(
         "organizer/login.html"
     )
+
 
 # ============================================================
 # ORGANIZER LOGOUT
