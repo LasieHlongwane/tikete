@@ -9403,6 +9403,10 @@ def admin_create_restaurant():
         )
 
 
+        # ====================================================
+        # BUSINESS NAME REQUIRED
+        # ====================================================
+
         if not business_name:
 
             flash(
@@ -9538,6 +9542,10 @@ def admin_create_restaurant():
             )
 
 
+        # ====================================================
+        # POSTER FILE SIZE
+        # ====================================================
+
         poster.stream.seek(
             0,
             os.SEEK_END,
@@ -9587,6 +9595,10 @@ def admin_create_restaurant():
 
 
         try:
+
+            # =================================================
+            # CLOUDINARY POSTER UPLOAD
+            # =================================================
 
             upload_result = (
                 cloudinary.uploader.upload(
@@ -9639,6 +9651,10 @@ def admin_create_restaurant():
                     )
                 )
 
+
+            # =================================================
+            # CREATE RESTAURANT ADVERT
+            # =================================================
 
             advert = RestaurantAdvert(
 
@@ -9705,6 +9721,7 @@ def admin_create_restaurant():
 
                     cloudinary.uploader.destroy(
                         uploaded_public_id,
+
                         resource_type=
                             "image",
                     )
@@ -9725,7 +9742,8 @@ def admin_create_restaurant():
                 (
                     "[Restaurant Advert] "
                     "Create failed "
-                    "organizer_id=%s error=%s"
+                    "organizer_id=%s "
+                    "error=%s"
                 ),
                 organizer.id,
                 error,
@@ -9748,6 +9766,64 @@ def admin_create_restaurant():
             )
 
 
+        # ====================================================
+        # AUTOMATIC RESTAURANT PUSH
+        # ====================================================
+        #
+        # Important:
+        #
+        # The advert has already been safely committed.
+        #
+        # Push notification failure must NEVER delete or
+        # roll back the restaurant advert.
+        #
+        # ====================================================
+
+        if organizer.is_subscription_active:
+
+            try:
+
+                send_automatic_restaurant_push(
+                    advert
+                )
+
+
+            except Exception as error:
+
+                current_app.logger.exception(
+                    (
+                        "[Restaurant Advert] "
+                        "Advert created but automatic "
+                        "push notification failed "
+                        "advert_id=%s "
+                        "organizer_id=%s "
+                        "error=%s"
+                    ),
+                    advert.id,
+                    organizer.id,
+                    error,
+                )
+
+
+        else:
+
+            current_app.logger.info(
+                (
+                    "[Restaurant Advert] "
+                    "Automatic push skipped because "
+                    "subscription is inactive "
+                    "advert_id=%s "
+                    "organizer_id=%s"
+                ),
+                advert.id,
+                organizer.id,
+            )
+
+
+        # ====================================================
+        # SUCCESS
+        # ====================================================
+
         flash(
             (
                 "Restaurant campaign created "
@@ -9760,11 +9836,16 @@ def admin_create_restaurant():
         return redirect(
             url_for(
                 "admin_manage_restaurant",
+
                 advert_id=
                     advert.id,
             )
         )
 
+
+    # ========================================================
+    # GET
+    # ========================================================
 
     return render_template(
         "admin/restaurant_form.html",
