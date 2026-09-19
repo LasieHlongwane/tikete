@@ -8426,13 +8426,20 @@ def notification_unsubscribe_public():
 )
 def organizer_signup():
 
-    if get_current_organizer():
+    existing_organizer = (
+     get_current_organizer()
+    )
 
-        return redirect(
-            url_for(
-                "admin_dashboard"
+
+    if existing_organizer:
+
+     return redirect(
+        url_for(
+            organizer_home_endpoint(
+                existing_organizer
             )
         )
+     )
 
 
     if request.method == "POST":
