@@ -3157,17 +3157,47 @@ class EventBoostReminder(db.Model):
 # status:
 # draft / processing / completed / partial / failed
 # ============================================================
+# ============================================================
+# PUSH NOTIFICATION CAMPAIGN
+# ============================================================
 
 class PushCampaign(db.Model):
 
     __tablename__ = "push_campaigns"
 
 
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
+
+    # ========================================================
+    # CAMPAIGN TYPE
+    # ========================================================
+    #
+    # Supported:
+    #
+    # event
+    # restaurant
+    #
+    # ========================================================
+
+    campaign_type = db.Column(
+        db.String(30),
+        nullable=False,
+        default="event",
+        index=True,
+    )
+
+
+    # ========================================================
+    # EVENT
+    # ========================================================
 
     event_id = db.Column(
         db.Integer,
@@ -3179,6 +3209,25 @@ class PushCampaign(db.Model):
         index=True,
     )
 
+
+    # ========================================================
+    # RESTAURANT ADVERT
+    # ========================================================
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # MESSAGE
+    # ========================================================
 
     title = db.Column(
         db.String(120),
@@ -3194,6 +3243,11 @@ class PushCampaign(db.Model):
         db.String(1000),
         nullable=True,
     )
+
+
+    # ========================================================
+    # TARGETING
+    # ========================================================
 
     target_mode = db.Column(
         db.String(30),
@@ -3218,10 +3272,17 @@ class PushCampaign(db.Model):
     )
 
     radius_km = db.Column(
-        db.Numeric(6, 2),
+        db.Numeric(
+            6,
+            2,
+        ),
         nullable=True,
     )
 
+
+    # ========================================================
+    # STATUS
+    # ========================================================
 
     status = db.Column(
         db.String(30),
@@ -3230,6 +3291,10 @@ class PushCampaign(db.Model):
         index=True,
     )
 
+
+    # ========================================================
+    # DELIVERY COUNTS
+    # ========================================================
 
     recipient_count = db.Column(
         db.Integer,
@@ -3250,12 +3315,20 @@ class PushCampaign(db.Model):
     )
 
 
+    # ========================================================
+    # AUDIT
+    # ========================================================
+
     created_by = db.Column(
         db.String(100),
         nullable=False,
         default="superadmin",
     )
 
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
 
     created_at = db.Column(
         db.DateTime,
@@ -3271,8 +3344,17 @@ class PushCampaign(db.Model):
     )
 
 
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
     event = db.relationship(
         "TicketEvent",
+        lazy=True,
+    )
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
         lazy=True,
     )
 
@@ -3289,10 +3371,10 @@ class PushCampaign(db.Model):
         return (
             "<PushCampaign "
             f"id={self.id} "
+            f"type={self.campaign_type} "
             f"status={self.status} "
             f"recipients={self.recipient_count}>"
         )
-
 
 # ============================================================
 # PUSH NOTIFICATION DELIVERY
