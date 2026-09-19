@@ -16,8 +16,9 @@
     >
 
     <title>
-        Create Organizer Account | Kalxa Ticketing
+        Create Business Account | Kalxa
     </title>
+
 
     <link
         rel="stylesheet"
@@ -30,13 +31,16 @@
 
     <style>
 
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
         * {
             box-sizing: border-box;
         }
 
 
         body {
-
             margin: 0;
 
             min-height: 100vh;
@@ -44,16 +48,12 @@
             display: flex;
 
             align-items: center;
-
             justify-content: center;
 
             padding: 24px 16px;
 
-            background:
-                #ffffff;
-
-            color:
-                #111827;
+            background: #ffffff;
+            color: #111827;
 
             font-family:
                 Inter,
@@ -64,57 +64,56 @@
                 Helvetica,
                 Arial,
                 sans-serif;
+
+            -webkit-font-smoothing:
+                antialiased;
         }
 
+
+        /* =====================================================
+           SHELL
+        ===================================================== */
 
         .auth-shell {
+            width: 100%;
 
-            width:
-                100%;
-
-            max-width:
-                520px;
+            max-width: 560px;
         }
 
+
+        /* =====================================================
+           BRAND
+        ===================================================== */
 
         .auth-brand {
+            display: inline-block;
 
-            display:
-                inline-block;
+            margin-bottom: 22px;
 
-            margin-bottom:
-                22px;
+            color: #111111;
 
-            color:
-                #111111;
+            font-size: 15px;
+            font-weight: 950;
 
-            font-size:
-                15px;
+            letter-spacing: -.02em;
 
-            font-weight:
-                900;
-
-            letter-spacing:
-                -0.02em;
-
-            text-decoration:
-                none;
+            text-decoration: none;
         }
 
 
+        /* =====================================================
+           CARD
+        ===================================================== */
+
         .auth-card {
+            padding: 28px;
 
-            padding:
-                28px;
-
-            background:
-                #ffffff;
+            background: #ffffff;
 
             border:
                 1px solid #e5e7eb;
 
-            border-radius:
-                22px;
+            border-radius: 22px;
 
             box-shadow:
                 0 14px 40px
@@ -122,40 +121,33 @@
                     15,
                     23,
                     42,
-                    0.07
+                    .07
                 );
         }
 
 
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
         .eyebrow {
+            margin: 0 0 8px;
 
-            margin:
-                0 0 8px;
+            color: #64748b;
 
-            color:
-                #64748b;
+            font-size: 11px;
+            font-weight: 850;
 
-            font-size:
-                11px;
+            letter-spacing: .14em;
 
-            font-weight:
-                850;
-
-            letter-spacing:
-                0.14em;
-
-            text-transform:
-                uppercase;
+            text-transform: uppercase;
         }
 
 
         h1 {
+            margin: 0 0 10px;
 
-            margin:
-                0 0 10px;
-
-            color:
-                #111827;
+            color: #111827;
 
             font-size:
                 clamp(
@@ -164,139 +156,129 @@
                     42px
                 );
 
-            line-height:
-                1.05;
+            line-height: 1.05;
 
-            font-weight:
-                900;
+            font-weight: 950;
 
-            letter-spacing:
-                -0.045em;
+            letter-spacing: -.045em;
         }
 
 
         .intro {
+            margin: 0 0 24px;
 
-            margin:
-                0 0 24px;
+            color: #64748b;
 
-            color:
-                #64748b;
+            font-size: 14px;
 
-            font-size:
-                14px;
-
-            line-height:
-                1.7;
+            line-height: 1.7;
         }
 
 
+        /* =====================================================
+           FLASH
+        ===================================================== */
+
         .flash-wrapper {
+            display: grid;
 
-            display:
-                grid;
+            gap: 10px;
 
-            gap:
-                10px;
-
-            margin-bottom:
-                18px;
+            margin-bottom: 18px;
         }
 
 
         .alert {
-
-            padding:
-                12px 14px;
+            padding: 12px 14px;
 
             border:
                 1px solid #e2e8f0;
 
-            border-radius:
-                12px;
+            border-radius: 12px;
 
-            background:
-                #f8fafc;
+            background: #f8fafc;
 
-            color:
-                #334155;
+            color: #334155;
 
-            font-size:
-                13px;
-
-            font-weight:
-                650;
+            font-size: 13px;
+            font-weight: 650;
         }
 
 
+        .alert[data-category="success"] {
+            background: #f0fdf4;
+
+            border-color: #bbf7d0;
+
+            color: #166534;
+        }
+
+
+        .alert[data-category="error"] {
+            background: #fef2f2;
+
+            border-color: #fecaca;
+
+            color: #991b1b;
+        }
+
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
         .form-stack {
+            display: grid;
 
-            display:
-                grid;
-
-            gap:
-                16px;
+            gap: 17px;
         }
 
 
         .form-group {
+            display: grid;
 
-            display:
-                grid;
-
-            gap:
-                7px;
+            gap: 7px;
         }
 
 
-        label {
+        label,
+        .field-label {
+            color: #334155;
 
-            color:
-                #334155;
-
-            font-size:
-                13px;
-
-            font-weight:
-                800;
+            font-size: 13px;
+            font-weight: 800;
         }
 
 
-        input {
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"] {
+            width: 100%;
 
-            width:
-                100%;
+            min-height: 48px;
 
-            min-height:
-                48px;
+            padding: 12px 13px;
 
-            padding:
-                12px 13px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
+            background: #ffffff;
+            color: #111827;
 
             border:
                 1px solid #cbd5e1;
 
-            border-radius:
-                11px;
+            border-radius: 11px;
 
-            font:
-                inherit;
+            font: inherit;
 
-            outline:
-                none;
+            outline: none;
         }
 
 
-        input:focus {
-
-            border-color:
-                #111827;
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        input[type="password"]:focus {
+            border-color: #111827;
 
             box-shadow:
                 0 0 0 3px
@@ -304,146 +286,291 @@
                     17,
                     24,
                     39,
-                    0.07
+                    .07
                 );
         }
 
 
         .helper {
+            color: #94a3b8;
 
-            color:
-                #94a3b8;
+            font-size: 11px;
 
-            font-size:
-                11px;
+            line-height: 1.45;
         }
 
 
+        /* =====================================================
+           ACCOUNT TYPE
+        ===================================================== */
+
+        .account-type-section {
+            display: grid;
+
+            gap: 9px;
+
+            padding-bottom: 2px;
+        }
+
+
+        .account-type-title {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 10px;
+        }
+
+
+        .required-label {
+            color: #94a3b8;
+
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+
+        .account-type-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap: 10px;
+        }
+
+
+        .account-type-card {
+            position: relative;
+
+            min-width: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 6px;
+
+            min-height: 150px;
+
+            padding: 17px 16px;
+
+            background: #f8fafc;
+
+            border:
+                2px solid #e5e7eb;
+
+            border-radius: 15px;
+
+            cursor: pointer;
+
+            transition:
+                border-color .16s ease,
+                background .16s ease,
+                transform .16s ease,
+                box-shadow .16s ease;
+        }
+
+
+        .account-type-card:hover {
+            border-color: #9ca3af;
+
+            transform:
+                translateY(-1px);
+        }
+
+
+        .account-type-card:has(
+            input:checked
+        ) {
+            background: #ffffff;
+
+            border-color: #111827;
+
+            box-shadow:
+                0 8px 22px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .08
+                );
+        }
+
+
+        .account-type-card input {
+            position: absolute;
+
+            top: 13px;
+            right: 13px;
+
+            width: 18px;
+            height: 18px;
+
+            margin: 0;
+
+            accent-color: #111827;
+
+            cursor: pointer;
+        }
+
+
+        .account-type-icon {
+            display: block;
+
+            margin-top: 3px;
+
+            font-size: 29px;
+
+            line-height: 1;
+        }
+
+
+        .account-type-name {
+            margin-top: 4px;
+
+            color: #111827;
+
+            font-size: 15px;
+            font-weight: 950;
+
+            line-height: 1.2;
+        }
+
+
+        .account-type-description {
+            color: #64748b;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            line-height: 1.45;
+        }
+
+
+        /* =====================================================
+           BUTTON
+        ===================================================== */
+
         .button {
+            display: inline-flex;
 
-            display:
-                inline-flex;
+            align-items: center;
+            justify-content: center;
 
-            align-items:
-                center;
+            width: 100%;
 
-            justify-content:
-                center;
+            min-height: 50px;
 
-            width:
-                100%;
+            margin-top: 4px;
 
-            min-height:
-                50px;
+            padding: 12px 18px;
 
-            margin-top:
-                4px;
+            background: #111111;
 
-            padding:
-                12px 18px;
-
-            background:
-                #111111;
-
-            color:
-                #ffffff;
+            color: #ffffff;
 
             border:
                 1px solid #111111;
 
-            border-radius:
-                12px;
+            border-radius: 12px;
 
-            font-size:
-                15px;
+            font-size: 15px;
+            font-weight: 850;
 
-            font-weight:
-                850;
+            cursor: pointer;
 
-            cursor:
-                pointer;
+            transition:
+                background .15s ease,
+                transform .15s ease;
         }
 
 
         .button:hover {
+            background: #27272a;
 
-            background:
-                #27272a;
+            transform:
+                translateY(-1px);
         }
 
 
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
         .auth-footer {
+            margin-top: 20px;
 
-            margin-top:
-                20px;
+            color: #64748b;
 
-            color:
-                #64748b;
+            font-size: 13px;
 
-            font-size:
-                13px;
-
-            text-align:
-                center;
+            text-align: center;
         }
 
 
         .auth-footer a {
+            color: #111827;
 
-            color:
-                #111827;
+            font-weight: 850;
 
-            font-weight:
-                850;
-
-            text-decoration:
-                none;
+            text-decoration: none;
         }
 
 
         .back-link {
+            display: block;
 
-            display:
-                block;
+            margin-top: 14px;
 
-            margin-top:
-                14px;
+            color: #64748b;
 
-            color:
-                #64748b;
+            font-size: 12px;
 
-            font-size:
-                12px;
+            text-align: center;
 
-            text-align:
-                center;
-
-            text-decoration:
-                none;
+            text-decoration: none;
         }
 
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
 
         @media (
             max-width: 560px
         ) {
 
             body {
+                align-items: flex-start;
 
-                align-items:
-                    flex-start;
-
-                padding-top:
-                    28px;
+                padding-top: 28px;
             }
 
 
             .auth-card {
-
                 padding:
                     22px 18px;
 
-                border-radius:
-                    18px;
+                border-radius: 18px;
+            }
+
+
+            .account-type-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .account-type-card {
+                min-height: 125px;
             }
 
         }
@@ -459,21 +586,30 @@
 <div class="auth-shell">
 
 
+    <!-- =========================================
+         BRAND
+    ========================================== -->
+
     <a
         href="{{ url_for(
             'home'
         ) }}"
         class="auth-brand"
     >
-        KALXA TICKETING
+        KALXA
     </a>
+
 
 
     <div class="auth-card">
 
 
+        <!-- =====================================
+             HEADER
+        ====================================== -->
+
         <p class="eyebrow">
-            ORGANIZER ACCOUNT
+            BUSINESS ACCOUNT
         </p>
 
 
@@ -484,17 +620,22 @@
 
         <p class="intro">
 
-            Create your Kalxa Ticketing organizer account
-            to publish events, manage ticket sales and
-            control event entry.
+            Choose what you want to promote on Kalxa,
+            then create your business account.
 
         </p>
 
 
 
-        {% with messages = get_flashed_messages(
-            with_categories=true
-        ) %}
+        <!-- =====================================
+             FLASH MESSAGES
+        ====================================== -->
+
+        {% with messages =
+            get_flashed_messages(
+                with_categories=true
+            )
+        %}
 
             {% if messages %}
 
@@ -519,6 +660,10 @@
 
 
 
+        <!-- =====================================
+             SIGNUP FORM
+        ====================================== -->
+
         <form
             method="POST"
             action="{{ url_for(
@@ -527,6 +672,139 @@
             class="form-stack"
         >
 
+
+            <!-- =================================
+                 ACCOUNT TYPE
+            ================================== -->
+
+            <div class="account-type-section">
+
+
+                <div class="account-type-title">
+
+                    <span class="field-label">
+                        What do you want to promote?
+                    </span>
+
+                    <span class="required-label">
+                        Required
+                    </span>
+
+                </div>
+
+
+                <div class="account-type-grid">
+
+
+                    <!-- EVENT -->
+
+                    <label class="account-type-card">
+
+
+                        <input
+                            type="radio"
+                            name="account_type"
+                            value="event"
+                            required
+
+                            {% if
+                                request.form.get(
+                                    'account_type'
+                                ) == 'event'
+                            %}
+                                checked
+                            {% endif %}
+                        >
+
+
+                        <span class="account-type-icon">
+                            🎟️
+                        </span>
+
+
+                        <span class="account-type-name">
+                            Events
+                        </span>
+
+
+                        <span
+                            class="
+                                account-type-description
+                            "
+                        >
+                            Publish events, sell tickets,
+                            manage attendees and promote
+                            event reels.
+                        </span>
+
+
+                    </label>
+
+
+
+                    <!-- RESTAURANT -->
+
+                    <label class="account-type-card">
+
+
+                        <input
+                            type="radio"
+                            name="account_type"
+                            value="restaurant"
+                            required
+
+                            {% if
+                                request.form.get(
+                                    'account_type'
+                                ) == 'restaurant'
+                            %}
+                                checked
+                            {% endif %}
+                        >
+
+
+                        <span class="account-type-icon">
+                            🍔
+                        </span>
+
+
+                        <span class="account-type-name">
+                            Restaurant
+                        </span>
+
+
+                        <span
+                            class="
+                                account-type-description
+                            "
+                        >
+                            Promote your restaurant,
+                            publish adverts and upload
+                            restaurant reels.
+                        </span>
+
+
+                    </label>
+
+
+                </div>
+
+
+                <div class="helper">
+
+                    Your choice determines which
+                    business dashboard you will use.
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================
+                 NAME
+            ================================== -->
 
             <div class="form-group">
 
@@ -538,6 +816,14 @@
                     id="name"
                     type="text"
                     name="name"
+
+                    value="{{
+                        request.form.get(
+                            'name',
+                            ''
+                        )
+                    }}"
+
                     autocomplete="name"
                     required
                 >
@@ -546,27 +832,51 @@
 
 
 
+            <!-- =================================
+                 BUSINESS NAME
+            ================================== -->
+
             <div class="form-group">
 
                 <label for="business_name">
-                    Organizer / Brand Name
+                    Business / Brand Name
                 </label>
 
                 <input
                     id="business_name"
                     type="text"
                     name="business_name"
-                    placeholder="Example: Kamo Events"
+
+                    value="{{
+                        request.form.get(
+                            'business_name',
+                            ''
+                        )
+                    }}"
+
+                    placeholder="
+                        Example: Kamo Events
+                        or Mpho's Grill
+                    "
+
                     autocomplete="organization"
                 >
 
+
                 <div class="helper">
-                    Optional. This is the public organizer name attendees can see.
+
+                    This can be your event brand
+                    or restaurant name.
+
                 </div>
 
             </div>
 
 
+
+            <!-- =================================
+                 EMAIL
+            ================================== -->
 
             <div class="form-group">
 
@@ -578,13 +888,26 @@
                     id="email"
                     type="email"
                     name="email"
+
+                    value="{{
+                        request.form.get(
+                            'email',
+                            ''
+                        )
+                    }}"
+
                     autocomplete="email"
+
                     required
                 >
 
             </div>
 
 
+
+            <!-- =================================
+                 PHONE
+            ================================== -->
 
             <div class="form-group">
 
@@ -596,13 +919,28 @@
                     id="phone"
                     type="tel"
                     name="phone"
-                    placeholder="Example: 079 123 4567"
+
+                    value="{{
+                        request.form.get(
+                            'phone',
+                            ''
+                        )
+                    }}"
+
+                    placeholder="
+                        Example: 079 123 4567
+                    "
+
                     autocomplete="tel"
                 >
 
             </div>
 
 
+
+            <!-- =================================
+                 PASSWORD
+            ================================== -->
 
             <div class="form-group">
 
@@ -614,10 +952,14 @@
                     id="password"
                     type="password"
                     name="password"
+
                     minlength="8"
+
                     autocomplete="new-password"
+
                     required
                 >
+
 
                 <div class="helper">
                     Use at least 8 characters.
@@ -626,6 +968,10 @@
             </div>
 
 
+
+            <!-- =================================
+                 CONFIRM PASSWORD
+            ================================== -->
 
             <div class="form-group">
 
@@ -637,8 +983,11 @@
                     id="password_confirm"
                     type="password"
                     name="password_confirm"
+
                     minlength="8"
+
                     autocomplete="new-password"
+
                     required
                 >
 
@@ -646,16 +995,25 @@
 
 
 
+            <!-- =================================
+                 SUBMIT
+            ================================== -->
+
             <button
                 type="submit"
                 class="button"
             >
-                Create Organizer Account
+                Create Kalxa Account
             </button>
 
 
         </form>
 
+
+
+        <!-- =====================================
+             LOGIN
+        ====================================== -->
 
         <div class="auth-footer">
 
@@ -672,13 +1030,18 @@
         </div>
 
 
+
+        <!-- =====================================
+             HOME
+        ====================================== -->
+
         <a
             href="{{ url_for(
                 'home'
             ) }}"
             class="back-link"
         >
-            ← Back to events
+            ← Back to Kalxa
         </a>
 
 
