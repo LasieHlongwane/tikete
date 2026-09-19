@@ -3707,6 +3707,8 @@ class RestaurantAdvert(db.Model):
         nullable=True,
     )
 
+    # Kept for database compatibility.
+    # Not currently exposed in restaurant advertising UI.
     price_text = db.Column(
         db.String(80),
         nullable=True,
@@ -3828,15 +3830,188 @@ class RestaurantAdvert(db.Model):
     )
 
 
+    # ========================================================
+    # CAMPAIGN STATUS
+    # ========================================================
+
+    @property
+    def campaign_status(self):
+
+        now = (
+            datetime.utcnow()
+        )
+
+
+        if not self.active:
+
+            return "paused"
+
+
+        if (
+            self.starts_at
+            and self.starts_at > now
+        ):
+
+            return "scheduled"
+
+
+        if (
+            self.ends_at
+            and self.ends_at <= now
+        ):
+
+            return "expired"
+
+
+        return "live"
+
+
+    # ========================================================
+    # DAYS REMAINING
+    # ========================================================
+
+    @property
+    def days_remaining(self):
+
+        if not self.ends_at:
+
+            return None
+
+
+        now = (
+            datetime.utcnow()
+        )
+
+
+        if (
+            self.ends_at
+            <= now
+        ):
+
+            return 0
+
+
+        remaining = (
+            self.ends_at
+            - now
+        )
+
+
+        days = (
+            remaining.days
+        )
+
+
+        if (
+            remaining.seconds > 0
+            or remaining.microseconds > 0
+        ):
+
+            days += 1
+
+
+        return max(
+            days,
+            0,
+        )
+
+
+    # ========================================================
+    # DISPLAY START DATE
+    # ========================================================
+
+    @property
+    def campaign_start_date(self):
+
+        if not self.starts_at:
+
+            return None
+
+
+        return (
+            self.starts_at.date()
+        )
+
+
+    # ========================================================
+    # DISPLAY END DATE
+    #
+    # ends_at is stored as an exclusive ending timestamp.
+    #
+    # Example:
+    #
+    # Campaign visible through 30 September
+    # ends_at = 1 October 00:00
+    #
+    # ========================================================
+
+    @property
+    def campaign_end_date(self):
+
+        if not self.ends_at:
+
+            return None
+
+
+        return (
+            (
+                self.ends_at
+                - timedelta(
+                    microseconds=1
+                )
+            )
+            .date()
+        )
+
+
+    # ========================================================
+    # STATUS HELPERS
+    # ========================================================
+
+    @property
+    def is_live_campaign(self):
+
+        return (
+            self.campaign_status
+            == "live"
+        )
+
+
+    @property
+    def is_scheduled_campaign(self):
+
+        return (
+            self.campaign_status
+            == "scheduled"
+        )
+
+
+    @property
+    def is_expired_campaign(self):
+
+        return (
+            self.campaign_status
+            == "expired"
+        )
+
+
+    @property
+    def is_paused_campaign(self):
+
+        return (
+            self.campaign_status
+            == "paused"
+        )
+
+
     def __repr__(self):
 
         return (
             "<RestaurantAdvert "
             f"id={self.id} "
-            f"business_name={self.business_name}>"
+            f"business_name={self.business_name} "
+            f"status={self.campaign_status}>"
         )
-
-
 # ============================================================
 # RESTAURANT REEL
 # ============================================================
