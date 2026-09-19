@@ -1994,6 +1994,86 @@ def get_active_push_subscriptions():
         .all()
     )
 
+# ============================================================
+# RESTAURANT PUSH - NORMALIZE AREA
+# ============================================================
+
+def normalize_notification_area(
+    value,
+):
+
+    return (
+        " ".join(
+            str(
+                value
+                or ""
+            )
+            .strip()
+            .lower()
+            .split()
+        )
+    )
+
+
+# ============================================================
+# RESTAURANT PUSH - LOCAL SUBSCRIPTIONS
+# ============================================================
+
+def get_restaurant_push_subscriptions(
+    advert,
+):
+
+    if not advert:
+
+        return []
+
+
+    advert_area = (
+        normalize_notification_area(
+            advert.area
+        )
+    )
+
+
+    if not advert_area:
+
+        return []
+
+
+    active_subscriptions = (
+        get_active_push_subscriptions()
+    )
+
+
+    matched = []
+
+
+    for subscription in active_subscriptions:
+
+        subscription_area = (
+            normalize_notification_area(
+                subscription.home_area
+            )
+        )
+
+
+        if not subscription_area:
+
+            continue
+
+
+        if (
+            subscription_area
+            == advert_area
+        ):
+
+            matched.append(
+                subscription
+            )
+
+
+    return matched
+
 
 def send_push_campaign(
     campaign,
