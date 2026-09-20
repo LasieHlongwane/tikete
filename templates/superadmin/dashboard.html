@@ -119,6 +119,34 @@
         }
 
 
+        .nav-alert {
+            position: relative;
+        }
+
+
+        .nav-count {
+            display: inline-grid;
+
+            place-items: center;
+
+            min-width: 18px;
+            height: 18px;
+
+            margin-left: 4px;
+
+            padding:
+                0 5px;
+
+            background: #dc2626;
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 950;
+        }
+
+
         /* =====================================================
            HERO
         ===================================================== */
@@ -247,7 +275,7 @@
 
             grid-template-columns:
                 repeat(
-                    3,
+                    4,
                     minmax(0, 1fr)
                 );
 
@@ -289,6 +317,17 @@
             font-size: 30px;
 
             letter-spacing: -.04em;
+        }
+
+
+        .metric.attention {
+            border-color: #fed7aa;
+            background: #fffaf5;
+        }
+
+
+        .metric.attention strong {
+            color: #c2410c;
         }
 
 
@@ -335,6 +374,148 @@
             font-size: 12px;
 
             line-height: 1.55;
+        }
+
+
+        /* =====================================================
+           CUSTOMER EXPERIENCE MODERATION
+        ===================================================== */
+
+        .experience-section {
+            border-color: #fed7aa;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffffff,
+                    #fffaf5
+                );
+        }
+
+
+        .experience-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        min(
+                            100%,
+                            250px
+                        ),
+                        1fr
+                    )
+                );
+
+            gap: 12px;
+        }
+
+
+        .experience-preview {
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 14px;
+        }
+
+
+        .experience-media {
+            position: relative;
+
+            aspect-ratio: 16 / 9;
+
+            overflow: hidden;
+
+            background: #111827;
+        }
+
+
+        .experience-media img,
+        .experience-media video {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+
+        .experience-pending-badge {
+            position: absolute;
+
+            top: 8px;
+            left: 8px;
+
+            padding:
+                5px 7px;
+
+            background:
+                rgba(
+                    146,
+                    64,
+                    14,
+                    .92
+                );
+
+            color: #ffedd5;
+
+            border-radius: 999px;
+
+            font-size: 8px;
+            font-weight: 950;
+
+            letter-spacing: .04em;
+
+            text-transform: uppercase;
+        }
+
+
+        .experience-copy {
+            padding: 12px;
+        }
+
+
+        .experience-copy strong {
+            display: block;
+
+            color: #111827;
+
+            font-size: 12px;
+        }
+
+
+        .experience-restaurant {
+            display: block;
+
+            margin-top: 3px;
+
+            color: #92400e;
+
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+
+        .experience-text {
+            display: -webkit-box;
+
+            margin: 7px 0 0;
+
+            overflow: hidden;
+
+            color: #64748b;
+
+            font-size: 10px;
+            line-height: 1.45;
+
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
         }
 
 
@@ -578,7 +759,7 @@
            RESPONSIVE
         ===================================================== */
 
-        @media (max-width: 850px) {
+        @media (max-width: 950px) {
 
             .metrics {
                 grid-template-columns:
@@ -588,6 +769,10 @@
                     );
             }
 
+        }
+
+
+        @media (max-width: 850px) {
 
             .partner-grid {
                 grid-template-columns: 1fr;
@@ -716,6 +901,27 @@
 
             <a
                 href="{{ url_for(
+                    'superadmin_restaurant_experiences'
+                ) }}"
+                class="nav-alert"
+            >
+                📸 Experiences
+
+                {% if
+                    pending_restaurant_experience_count
+                    and pending_restaurant_experience_count > 0
+                %}
+
+                    <span class="nav-count">
+                        {{ pending_restaurant_experience_count }}
+                    </span>
+
+                {% endif %}
+            </a>
+
+
+            <a
+                href="{{ url_for(
                     'superadmin_logout'
                 ) }}"
             >
@@ -748,8 +954,8 @@
 
             <p>
                 Manage organizer access,
-                subscriptions, partnerships
-                and platform participation.
+                subscriptions, partnerships,
+                notifications and community content.
             </p>
 
         </div>
@@ -759,11 +965,31 @@
 
             <a
                 href="{{ url_for(
-                    'superadmin_create_partner'
+                    'superadmin_restaurant_experiences'
                 ) }}"
                 class="
                     button
                     button-light
+                "
+            >
+                📸 Review Experiences
+
+                {% if
+                    pending_restaurant_experience_count
+                    and pending_restaurant_experience_count > 0
+                %}
+                    · {{ pending_restaurant_experience_count }}
+                {% endif %}
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_create_partner'
+                ) }}"
+                class="
+                    button
+                    button-outline
                 "
             >
                 🤝 Create Event Partner
@@ -873,7 +1099,221 @@
         </div>
 
 
+        <div class="metric">
+
+            <span>
+                Restaurants Ready to Notify
+            </span>
+
+            <strong>
+                {{ notification_ready_restaurant_count }}
+            </strong>
+
+        </div>
+
+
+        <div
+            class="
+                metric
+                {% if
+                    pending_restaurant_experience_count
+                    and pending_restaurant_experience_count > 0
+                %}
+                    attention
+                {% endif %}
+            "
+        >
+
+            <span>
+                Experiences Waiting Review
+            </span>
+
+            <strong>
+                {{ pending_restaurant_experience_count }}
+            </strong>
+
+        </div>
+
+
     </div>
+
+
+
+    <!-- =====================================================
+         CUSTOMER EXPERIENCE MODERATION
+    ====================================================== -->
+
+    <section
+        class="
+            section
+            experience-section
+        "
+    >
+
+        <div class="section-head">
+
+            <div class="section-head-copy">
+
+                <p
+                    class="eyebrow"
+                    style="color:#92400e;"
+                >
+                    COMMUNITY CONTENT
+                </p>
+
+
+                <h2>
+                    📸 Restaurant Experiences
+                </h2>
+
+
+                <p class="section-copy">
+
+                    Review customer photos, reels and
+                    testimonials before they appear
+                    publicly on Kalxa.
+
+                    {% if
+                        pending_restaurant_experience_count
+                        and pending_restaurant_experience_count > 0
+                    %}
+
+                        There
+
+                        {% if pending_restaurant_experience_count == 1 %}
+                            is
+                        {% else %}
+                            are
+                        {% endif %}
+
+                        <strong>
+                            {{ pending_restaurant_experience_count }}
+                        </strong>
+
+                        post{% if pending_restaurant_experience_count != 1 %}s{% endif %}
+                        waiting for review.
+
+                    {% else %}
+
+                        There are currently no posts
+                        waiting for moderation.
+
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_restaurant_experiences'
+                ) }}"
+                class="button"
+            >
+                Review Experiences
+            </a>
+
+        </div>
+
+
+        {% if pending_restaurant_experiences %}
+
+            <div class="experience-grid">
+
+
+                {% for post in pending_restaurant_experiences[:6] %}
+
+                    <article class="experience-preview">
+
+
+                        <div class="experience-media">
+
+
+                            {% if post.is_video %}
+
+                                <video
+                                    muted
+                                    playsinline
+                                    preload="metadata"
+                                    {% if post.thumbnail_url %}
+                                        poster="{{ post.thumbnail_url }}"
+                                    {% endif %}
+                                >
+
+                                    <source
+                                        src="{{ post.media_url }}"
+                                    >
+
+                                </video>
+
+                            {% else %}
+
+                                <img
+                                    src="{{ post.media_url }}"
+                                    alt="Pending Kalxa customer experience"
+                                    loading="lazy"
+                                >
+
+                            {% endif %}
+
+
+                            <span class="experience-pending-badge">
+                                Pending
+                            </span>
+
+                        </div>
+
+
+                        <div class="experience-copy">
+
+                            <strong>
+                                {{ post.poster_name }}
+                            </strong>
+
+
+                            {% if post.restaurant_advert %}
+
+                                <span class="experience-restaurant">
+
+                                    📍
+                                    {{ post.restaurant_advert.business_name }}
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="experience-restaurant">
+                                    Restaurant unavailable
+                                </span>
+
+                            {% endif %}
+
+
+                            <p class="experience-text">
+                                “{{ post.experience_text }}”
+                            </p>
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+            <p class="empty">
+                No customer restaurant experiences
+                are waiting for review.
+            </p>
+
+        {% endif %}
+
+    </section>
 
 
 
@@ -1136,6 +1576,134 @@
 
 
     <!-- =====================================================
+         RESTAURANTS READY FOR NOTIFICATION
+    ====================================================== -->
+
+    <section class="section">
+
+
+        <div class="section-head">
+
+            <div class="section-head-copy">
+
+                <h2>
+                    🍔 New Restaurants Ready to Promote
+                </h2>
+
+
+                <p class="section-copy">
+
+                    Active subscribed restaurant campaigns
+                    that have not yet had a successful
+                    restaurant push campaign.
+
+                </p>
+
+            </div>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_notifications'
+                ) }}"
+                class="button"
+            >
+                Open Notification Centre
+            </a>
+
+        </div>
+
+
+        {% if notification_ready_restaurants %}
+
+            <div class="list">
+
+
+                {% for advert in notification_ready_restaurants %}
+
+                    <div class="row">
+
+
+                        <div class="row-main">
+
+                            <strong>
+                                {{ advert.business_name }}
+                            </strong>
+
+
+                            <small>
+
+                                {% if advert.area %}
+
+                                    📍 {{ advert.area }}
+
+                                {% else %}
+
+                                    Area not set
+
+                                {% endif %}
+
+
+                                {% if advert.organizer %}
+
+                                    ·
+                                    {{ advert.organizer.display_name }}
+
+                                {% endif %}
+
+                            </small>
+
+                        </div>
+
+
+                        <div class="row-actions">
+
+                            <span
+                                class="
+                                    status
+                                    active
+                                "
+                            >
+                                READY TO NOTIFY
+                            </span>
+
+
+                            <a
+                                href="{{ url_for(
+                                    'superadmin_notifications',
+                                    restaurant_id=advert.id
+                                ) }}"
+                                class="button"
+                            >
+                                Review &amp; Send
+                            </a>
+
+                        </div>
+
+
+                    </div>
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+            <p class="empty">
+                No restaurant campaigns are waiting
+                for promotion.
+            </p>
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- =====================================================
          PENDING SUBSCRIPTIONS
     ====================================================== -->
 
@@ -1187,7 +1755,13 @@
                                 R{{ "%.2f"|format(payment.amount) }}
 
                                 {% if payment.payment_method %}
-                                    · {{ payment.payment_method|replace('_', ' ')|title }}
+
+                                    ·
+                                    {{ payment.payment_method
+                                        |replace('_', ' ')
+                                        |title
+                                    }}
+
                                 {% endif %}
 
                             </small>
@@ -1299,6 +1873,7 @@
 
                                 {{ organizer.email }}
 
+
                                 {% if organizer.account_type %}
 
                                     ·
@@ -1307,10 +1882,17 @@
 
                                 {% endif %}
 
+
                                 {% if organizer.subscription_expires_at %}
 
                                     · Expires
-                                    {{ organizer.subscription_expires_at.strftime('%d %b %Y') }}
+                                    {{
+                                        organizer
+                                        .subscription_expires_at
+                                        .strftime(
+                                            '%d %b %Y'
+                                        )
+                                    }}
 
                                 {% endif %}
 
