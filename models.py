@@ -4249,3 +4249,538 @@ class RestaurantReel(db.Model):
             f"id={self.id} "
             f"advert_id={self.advert_id}>"
         )
+
+
+# ============================================================
+# RESTAURANT EXPERIENCE POST
+# ============================================================
+#
+# Public user-generated restaurant content.
+#
+# IMPORTANT:
+#
+# The person posting does NOT require a Kalxa account.
+#
+# A post must:
+#
+# - tag a RestaurantAdvert
+# - contain the poster's name
+# - contain their experience/testimonial
+# - contain either an image or a short video
+#
+# moderation_status:
+#
+# pending
+# approved
+# rejected
+#
+# Only approved + active posts should appear publicly.
+#
+# Restaurant subscription eligibility is NOT stored here.
+#
+# The public posting route must check the restaurant
+# organizer's CURRENT subscription before allowing a new post.
+#
+# This means:
+#
+# active restaurant subscription
+#     -> may receive new tagged posts
+#
+# expired restaurant subscription
+#     -> disappears from tagging selector
+#
+# Existing posts remain stored.
+# ============================================================
+
+class RestaurantExperiencePost(db.Model):
+
+    __tablename__ = (
+        "restaurant_experience_posts"
+    )
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # TAGGED RESTAURANT
+    # ========================================================
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # PUBLIC POSTER
+    # ========================================================
+    #
+    # No Kalxa account is required.
+    #
+    # We intentionally do not create a user/profile record
+    # for this person.
+    # ========================================================
+
+    poster_name = db.Column(
+        db.String(120),
+        nullable=False,
+    )
+
+
+    # ========================================================
+    # EXPERIENCE / TESTIMONIAL
+    # ========================================================
+
+    experience_text = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+
+    # ========================================================
+    # MEDIA TYPE
+    # ========================================================
+    #
+    # Supported:
+    #
+    # image
+    # video
+    #
+    # ========================================================
+
+    media_type = db.Column(
+        db.String(20),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # CLOUDINARY MEDIA
+    # ========================================================
+
+    cloudinary_public_id = db.Column(
+        db.String(500),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    media_url = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    thumbnail_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # MEDIA METADATA
+    # ========================================================
+
+    duration_seconds = db.Column(
+        db.Float,
+        nullable=True,
+    )
+
+    width = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    height = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    file_bytes = db.Column(
+        db.BigInteger,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # MODERATION
+    # ========================================================
+    #
+    # Because anybody can post without an account,
+    # posts should NOT go directly public.
+    #
+    # pending
+    # approved
+    # rejected
+    #
+    # ========================================================
+
+    moderation_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # MODERATION AUDIT
+    # ========================================================
+
+    moderated_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    moderated_by = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    rejection_reason = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
+        back_populates="experience_posts",
+    )
+
+
+    loves = db.relationship(
+        "RestaurantExperienceLove",
+        back_populates="post",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+    # ========================================================
+    # STATUS HELPERS
+    # ========================================================
+
+    @property
+    def is_pending(self):
+
+        return (
+            self.moderation_status
+            == "pending"
+        )
+
+
+    @property
+    def is_approved(self):
+
+        return (
+            self.moderation_status
+            == "approved"
+        )
+
+
+    @property
+    def is_rejected(self):
+
+        return (
+            self.moderation_status
+            == "rejected"
+        )
+
+
+    @property
+    def is_public(self):
+
+        return (
+            self.active
+            and self.moderation_status
+            == "approved"
+        )
+
+
+    # ========================================================
+    # MEDIA HELPERS
+    # ========================================================
+
+    @property
+    def is_image(self):
+
+        return (
+            self.media_type
+            == "image"
+        )
+
+
+    @property
+    def is_video(self):
+
+        return (
+            self.media_type
+            == "video"
+        )
+
+
+    # ========================================================
+    # LOVE COUNT
+    # ========================================================
+
+    @property
+    def love_count(self):
+
+        return len(
+            self.loves
+        )
+
+
+    # ========================================================
+    # RESTAURANT AVAILABILITY
+    # ========================================================
+    #
+    # This is deliberately dynamic.
+    #
+    # Existing testimonial content remains available even
+    # after the restaurant subscription expires.
+    #
+    # However the UI can use this property to decide whether
+    # "View Restaurant" should still be clickable.
+    # ========================================================
+
+    @property
+    def restaurant_is_available(self):
+
+        advert = (
+            self.restaurant_advert
+        )
+
+
+        if not advert:
+
+            return False
+
+
+        if not advert.active:
+
+            return False
+
+
+        organizer = (
+            advert.organizer
+        )
+
+
+        if not organizer:
+
+            return False
+
+
+        if not organizer.is_subscription_active:
+
+            return False
+
+
+        now = (
+            datetime.utcnow()
+        )
+
+
+        if (
+            advert.starts_at
+            and advert.starts_at > now
+        ):
+
+            return False
+
+
+        if (
+            advert.ends_at
+            and advert.ends_at <= now
+        ):
+
+            return False
+
+
+        return True
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantExperiencePost "
+            f"id={self.id} "
+            f"restaurant_advert_id="
+            f"{self.restaurant_advert_id} "
+            f"poster_name={self.poster_name} "
+            f"moderation_status="
+            f"{self.moderation_status}>"
+        )
+
+
+# ============================================================
+# RESTAURANT EXPERIENCE LOVE
+# ============================================================
+#
+# Anonymous ❤️ reactions to RestaurantExperiencePost.
+#
+# No Kalxa profile/account is required.
+#
+# anonymous_session_id represents one browser/device session
+# identity generated by Kalxa.
+#
+# The unique constraint means the same anonymous identity can
+# love a particular post only once.
+#
+# Example:
+#
+# post_id = 12
+# anonymous_session_id = abc123
+#
+# can only exist once.
+#
+# A different post may still be loved by the same browser.
+# ============================================================
+
+class RestaurantExperienceLove(db.Model):
+
+    __tablename__ = (
+        "restaurant_experience_loves"
+    )
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # EXPERIENCE POST
+    # ========================================================
+
+    post_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_experience_posts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # ANONYMOUS BROWSER / DEVICE IDENTITY
+    # ========================================================
+    #
+    # No name, email or phone number is required.
+    #
+    # We will generate this client-side / server-side when
+    # implementing the love endpoint.
+    # ========================================================
+
+    anonymous_session_id = db.Column(
+        db.String(100),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMP
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIP
+    # ========================================================
+
+    post = db.relationship(
+        "RestaurantExperiencePost",
+        back_populates="loves",
+    )
+
+
+    # ========================================================
+    # ONE LOVE PER BROWSER / POST
+    # ========================================================
+
+    __table_args__ = (
+
+        db.UniqueConstraint(
+            "post_id",
+            "anonymous_session_id",
+            name=(
+                "uq_restaurant_experience_love_session"
+            ),
+        ),
+
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantExperienceLove "
+            f"id={self.id} "
+            f"post_id={self.post_id}>"
+        )
+
