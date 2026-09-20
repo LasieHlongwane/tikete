@@ -5761,6 +5761,571 @@ def superadmin_logout():
     )
 
 
+
+# ============================================================
+# SUPER ADMIN - CREATE EVENT PARTNER ACCOUNT
+# ============================================================
+
+@app.route(
+    "/superadmin/partners/new",
+    methods=[
+        "GET",
+        "POST",
+    ],
+)
+def superadmin_create_partner():
+
+    auth = (
+        require_superadmin()
+    )
+
+    if auth:
+        return auth
+
+
+    if request.method == "POST":
+
+        # ====================================================
+        # FORM
+        # ====================================================
+
+        name = (
+            request.form.get(
+                "name",
+                "",
+            )
+            .strip()
+        )
+
+
+        business_name = (
+            request.form.get(
+                "business_name",
+                "",
+            )
+            .strip()
+        )
+
+
+        email = (
+            normalize_email(
+                request.form.get(
+                    "email",
+                    "",
+                )
+            )
+        )
+
+
+        phone = (
+            request.form.get(
+                "phone",
+                "",
+            )
+            .strip()
+            or None
+        )
+
+
+        # ====================================================
+        # VALIDATION
+        # ====================================================
+
+        if not name:
+
+            flash(
+                "Organizer name is required.",
+                "error",
+            )
+
+            return render_template(
+                "superadmin/partner_form.html"
+            )
+
+
+        if not business_name:
+
+            flash(
+                (
+                    "Event business or brand "
+                    "name is required."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "superadmin/partner_form.html"
+            )
+
+
+        if not email:
+
+            flash(
+                "Email address is required.",
+                "error",
+            )
+
+            return render_template(
+                "superadmin/partner_form.html"
+            )
+
+
+        existing_organizer = (
+            Organizer.query
+            .filter_by(
+                email=
+                    email
+            )
+            .first()
+        )
+
+
+        if existing_organizer:
+
+            flash(
+                (
+                    "An organizer account already "
+                    "exists with this email."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "superadmin_organizer_detail",
+                    organizer_id=
+                        existing_organizer.id,
+                )
+            )
+
+
+        # ====================================================
+        # PARTNER ACCESS
+        # ====================================================
+
+        temporary_password = (
+            generate_partner_temporary_password()
+        )
+
+
+        now = (
+            datetime.utcnow()
+        )
+
+
+        subscription_end = (
+            now
+            + timedelta(
+                days=
+                    KALXA_PARTNER_ACCESS_DAYS
+            )
+        )
+
+
+        # ====================================================
+        # CREATE EVENT ORGANIZER
+        # ====================================================
+
+        organizer = Organizer(
+
+            name=
+                name,
+
+            business_name=
+                business_name,
+
+            email=
+                email,
+
+            phone=
+                phone,
+
+            account_type=
+                "event",
+
+            active=
+                True,
+
+            subscription_status=
+                "active",
+
+            subscription_started_at=
+                now,
+
+            subscription_expires_at=
+                subscription_end,
+        )
+
+
+        organizer.set_password(
+            temporary_password
+        )
+
+
+        try:
+
+            db.session.add(
+                organizer
+            )
+
+            db.session.flush()
+
+
+            # ================================================
+            # PARTNER GRANT AUDIT RECORD
+            # ================================================
+
+            partner_payment = (
+                SubscriptionPayment(
+
+                    organizer_id=
+                        organizer.id,
+
+                    plan_name=
+                        KALXA_PARTNER_PLAN_NAME,
+
+                    amount=
+                        Decimal(
+                            "0.00"
+                        ),
+
+                    period_days=
+                        KALXA_PARTNER_ACCESS_DAYS,
+
+                    payment_reference=
+                        generate_subscription_payment_reference(),
+
+                    payment_method=
+                        "partner_grant",
+
+                    payment_status=
+                        "paid",
+
+                    paid_at=
+                        now,
+
+                    confirmed_at=
+                        now,
+
+                    confirmed_by=
+                        "superadmin_partner_grant",
+
+                    subscription_start=
+                        now,
+
+                    subscription_end=
+                        subscription_end,
+                )
+            )
+
+
+            db.session.add(
+                partner_payment
+            )
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Event Partner] "
+                    "Unable to create partner "
+                    "email=%s error=%s"
+                ),
+                email,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Partner account could "
+                    "not be created."
+                ),
+                "error",
+            )
+
+
+            return render_template(
+                "superadmin/partner_form.html"
+            )
+
+
+        # ====================================================
+        # SUCCESS
+        # ====================================================
+
+        current_app.logger.info(
+            (
+                "[Event Partner] "
+                "Partner account created "
+                "organizer_id=%s expires_at=%s"
+            ),
+            organizer.id,
+            subscription_end,
+        )
+
+
+        return render_template(
+            "superadmin/partner_created.html",
+
+            organizer=
+                organizer,
+
+            temporary_password=
+                temporary_password,
+
+            subscription_end=
+                subscription_end,
+        )
+
+
+    return render_template(
+        "superadmin/partner_form.html"
+    )
+
+
+# ============================================================
+# SUPER ADMIN - EXTEND EVENT PARTNER
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/partner/extend",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_extend_partner_access(
+    organizer_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+    if auth:
+        return auth
+
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    if not organizer:
+        abort(404)
+
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            "event",
+        )
+        != "event"
+    ):
+
+        flash(
+            (
+                "Complimentary Event Partner "
+                "access can only be granted "
+                "to Event accounts."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    if (
+        organizer.subscription_status
+        == "suspended"
+        or not organizer.active
+    ):
+
+        flash(
+            (
+                "Reactivate this organizer "
+                "before extending partner access."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        organizer.subscription_expires_at
+        and organizer.subscription_expires_at
+        > now
+    ):
+
+        subscription_start = (
+            organizer.subscription_expires_at
+        )
+
+    else:
+
+        subscription_start = now
+
+
+    subscription_end = (
+        subscription_start
+        + timedelta(
+            days=
+                KALXA_PARTNER_ACCESS_DAYS
+        )
+    )
+
+
+    partner_payment = (
+        SubscriptionPayment(
+
+            organizer_id=
+                organizer.id,
+
+            plan_name=
+                KALXA_PARTNER_PLAN_NAME,
+
+            amount=
+                Decimal(
+                    "0.00"
+                ),
+
+            period_days=
+                KALXA_PARTNER_ACCESS_DAYS,
+
+            payment_reference=
+                generate_subscription_payment_reference(),
+
+            payment_method=
+                "partner_grant",
+
+            payment_status=
+                "paid",
+
+            paid_at=
+                now,
+
+            confirmed_at=
+                now,
+
+            confirmed_by=
+                "superadmin_partner_extension",
+
+            subscription_start=
+                subscription_start,
+
+            subscription_end=
+                subscription_end,
+        )
+    )
+
+
+    organizer.active = True
+
+    organizer.subscription_status = (
+        "active"
+    )
+
+
+    if not organizer.subscription_started_at:
+
+        organizer.subscription_started_at = (
+            now
+        )
+
+
+    organizer.subscription_expires_at = (
+        subscription_end
+    )
+
+
+    try:
+
+        db.session.add(
+            partner_payment
+        )
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Event Partner] "
+                "Extension failed "
+                "organizer_id=%s error=%s"
+            ),
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "Partner access could not "
+                "be extended."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=
+                    organizer.id,
+            )
+        )
+
+
+    flash(
+        (
+            "30 days of complimentary "
+            "partner access added successfully."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=
+                organizer.id,
+        )
+    )
+
 # ============================================================
 # SUPER ADMIN DASHBOARD
 # ============================================================
