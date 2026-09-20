@@ -14824,6 +14824,159 @@ def create_restaurant_experience():
             restaurants,
     )
 
+
+# ============================================================
+# PUBLIC - LOVE / UNLOVE RESTAURANT EXPERIENCE
+# ============================================================
+
+@app.route(
+    "/experiences/<int:post_id>/love",
+    methods=[
+        "POST",
+    ],
+)
+def love_restaurant_experience(
+    post_id,
+):
+
+    experience_post = (
+        RestaurantExperiencePost.query
+
+        .filter_by(
+            id=
+                post_id,
+
+            active=
+                True,
+
+            moderation_status=
+                "approved",
+        )
+
+        .first_or_404()
+    )
+
+
+    anonymous_session_id = (
+        get_restaurant_experience_session_id()
+    )
+
+
+    existing_love = (
+        RestaurantExperienceLove.query
+
+        .filter_by(
+            post_id=
+                experience_post.id,
+
+            anonymous_session_id=
+                anonymous_session_id,
+        )
+
+        .first()
+    )
+
+
+    loved = False
+
+
+    try:
+
+        # ====================================================
+        # UNLOVE
+        # ====================================================
+
+        if existing_love:
+
+            db.session.delete(
+                existing_love
+            )
+
+
+            loved = False
+
+
+        # ====================================================
+        # LOVE
+        # ====================================================
+
+        else:
+
+            love = (
+                RestaurantExperienceLove(
+
+                    post_id=
+                        experience_post.id,
+
+                    anonymous_session_id=
+                        anonymous_session_id,
+                )
+            )
+
+
+            db.session.add(
+                love
+            )
+
+
+            loved = True
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Experience Love] "
+                "Failed post_id=%s error=%s"
+            ),
+            experience_post.id,
+            error,
+        )
+
+
+        return jsonify(
+            {
+                "ok": False,
+                "message": (
+                    "Unable to update love."
+                ),
+            }
+        ), 500
+
+
+    love_count = (
+        RestaurantExperienceLove.query
+
+        .filter_by(
+            post_id=
+                experience_post.id
+        )
+
+        .count()
+    )
+
+
+    return jsonify(
+        {
+            "ok": True,
+
+            "post_id":
+                experience_post.id,
+
+            "loved":
+                loved,
+
+            "love_count":
+                love_count,
+        }
+    )
+
 # ============================================================
 # RESERVE TICKET
 # ============================================================
