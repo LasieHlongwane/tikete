@@ -6702,6 +6702,90 @@ def superadmin_dashboard():
             KALXA_SUBSCRIPTION_PRICE,
     )
 
+
+# ============================================================
+# SUPERADMIN - RESTAURANT EXPERIENCE MODERATION
+# ============================================================
+
+@app.route(
+    "/superadmin/restaurant-experiences"
+)
+def superadmin_restaurant_experiences():
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+        return auth
+
+
+    pending_posts = (
+        RestaurantExperiencePost.query
+
+        .filter(
+            RestaurantExperiencePost.moderation_status
+            == "pending"
+        )
+
+        .order_by(
+            RestaurantExperiencePost.created_at.asc()
+        )
+
+        .all()
+    )
+
+
+    approved_posts = (
+        RestaurantExperiencePost.query
+
+        .filter(
+            RestaurantExperiencePost.moderation_status
+            == "approved"
+        )
+
+        .order_by(
+            RestaurantExperiencePost.created_at.desc()
+        )
+
+        .limit(50)
+
+        .all()
+    )
+
+
+    rejected_posts = (
+        RestaurantExperiencePost.query
+
+        .filter(
+            RestaurantExperiencePost.moderation_status
+            == "rejected"
+        )
+
+        .order_by(
+            RestaurantExperiencePost.created_at.desc()
+        )
+
+        .limit(50)
+
+        .all()
+    )
+
+
+    return render_template(
+        "superadmin/restaurant_experiences.html",
+
+        pending_posts=
+            pending_posts,
+
+        approved_posts=
+            approved_posts,
+
+        rejected_posts=
+            rejected_posts,
+    )
+
 # ============================================================
 # SUPER ADMIN - PUSH NOTIFICATION CENTRE
 # ============================================================
