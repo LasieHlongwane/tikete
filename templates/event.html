@@ -8673,6 +8673,134 @@ document.querySelectorAll(
 })();
 </script>
 
+
+<script>
+(() => {
+
+    const loveButtons =
+        Array.from(
+            document.querySelectorAll(
+                '[data-experience-love]'
+            )
+        );
+
+
+    if (!loveButtons.length) {
+        return;
+    }
+
+
+    loveButtons.forEach(
+        (button) => {
+
+            button.addEventListener(
+                'click',
+                async () => {
+
+                    const postId =
+                        Number(
+                            button.dataset.postId
+                        );
+
+
+                    if (
+                        !Number.isInteger(postId)
+                        || postId <= 0
+                    ) {
+                        return;
+                    }
+
+
+                    const countElement =
+                        button.querySelector(
+                            '[data-love-count]'
+                        );
+
+
+                    button.disabled =
+                        true;
+
+
+                    try {
+
+                        const response =
+                            await fetch(
+                                `/experiences/${postId}/love`,
+                                {
+                                    method:
+                                        'POST',
+
+                                    headers: {
+                                        'Accept':
+                                            'application/json'
+                                    }
+                                }
+                            );
+
+
+                        const result =
+                            await response.json();
+
+
+                        if (
+                            !response.ok
+                            || !result.ok
+                        ) {
+
+                            throw new Error(
+                                result.message
+                                || 'Unable to update love.'
+                            );
+                        }
+
+
+                        button.classList.toggle(
+                            'loved',
+                            Boolean(
+                                result.loved
+                            )
+                        );
+
+
+                        button.setAttribute(
+                            'aria-pressed',
+                            result.loved
+                                ? 'true'
+                                : 'false'
+                        );
+
+
+                        if (countElement) {
+
+                            countElement.textContent =
+                                String(
+                                    result.love_count
+                                    ?? 0
+                                );
+                        }
+
+                    } catch (error) {
+
+                        console.error(
+                            '[Kalxa Experience Love]',
+                            error
+                        );
+
+                    } finally {
+
+                        button.disabled =
+                            false;
+                    }
+
+                }
+            );
+
+        }
+    );
+
+})();
+</script>
+
 </body>
 
 </html>
