@@ -11890,6 +11890,306 @@ def admin_restaurant_reel(
     )
 
 
+
+# ============================================================
+# RESTAURANT EXPERIENCE POSTS
+# ============================================================
+#
+# Public customer-generated content.
+#
+# Users do NOT need a Kalxa account.
+#
+# Supported media:
+#
+# - image
+# - short video / reel
+#
+# Images use the same 8 MB limit as restaurant posters.
+# Videos use the same 80 MB / 30 second limits as event reels.
+# ============================================================
+
+RESTAURANT_EXPERIENCE_IMAGE_EXTENSIONS = {
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+}
+
+
+RESTAURANT_EXPERIENCE_VIDEO_EXTENSIONS = {
+    "mp4",
+    "mov",
+    "m4v",
+    "webm",
+}
+
+
+# ============================================================
+# EXPERIENCE MEDIA TYPE
+# ============================================================
+
+def get_restaurant_experience_media_type(
+    filename,
+):
+
+    filename = (
+        str(
+            filename
+            or ""
+        )
+        .strip()
+        .lower()
+    )
+
+
+    if (
+        "." not in filename
+    ):
+
+        return None
+
+
+    extension = (
+        filename
+        .rsplit(
+            ".",
+            1,
+        )[1]
+    )
+
+
+    if (
+        extension
+        in RESTAURANT_EXPERIENCE_IMAGE_EXTENSIONS
+    ):
+
+        return "image"
+
+
+    if (
+        extension
+        in RESTAURANT_EXPERIENCE_VIDEO_EXTENSIONS
+    ):
+
+        return "video"
+
+
+    return None
+
+
+# ============================================================
+# ANONYMOUS EXPERIENCE SESSION
+# ============================================================
+#
+# Used for ❤️ loves.
+#
+# No Kalxa account is required.
+#
+# The random identifier is stored inside the user's Flask
+# session cookie and does not contain their name, email
+# or phone number.
+# ============================================================
+
+def get_restaurant_experience_session_id():
+
+    session_key = (
+        "kalxa_restaurant_experience_session"
+    )
+
+
+    anonymous_session_id = (
+        session.get(
+            session_key
+        )
+    )
+
+
+    if not anonymous_session_id:
+
+        anonymous_session_id = (
+            secrets.token_urlsafe(
+                32
+            )
+        )
+
+
+        session[
+            session_key
+        ] = (
+            anonymous_session_id
+        )
+
+
+    return anonymous_session_id
+
+
+# ============================================================
+# RESTAURANTS AVAILABLE FOR PUBLIC TAGGING
+# ============================================================
+#
+# A restaurant may be tagged only when:
+#
+# - advert is active
+# - advert campaign has started
+# - advert campaign has not expired
+# - organizer is active
+# - organizer account type is restaurant
+# - subscription is active
+# - subscription has not expired
+#
+# Expired restaurants therefore disappear automatically
+# from the public tagging selector.
+# ============================================================
+
+def get_taggable_restaurants():
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    return (
+        RestaurantAdvert.query
+
+        .join(
+            Organizer,
+
+            RestaurantAdvert.organizer_id
+            == Organizer.id,
+        )
+
+        .filter(
+            RestaurantAdvert.active.is_(
+                True
+            )
+        )
+
+        .filter(
+            or_(
+                RestaurantAdvert.starts_at.is_(
+                    None
+                ),
+
+                RestaurantAdvert.starts_at
+                <= now,
+            )
+        )
+
+        .filter(
+            or_(
+                RestaurantAdvert.ends_at.is_(
+                    None
+                ),
+
+                RestaurantAdvert.ends_at
+                > now,
+            )
+        )
+
+        .filter(
+            Organizer.active.is_(
+                True
+            )
+        )
+
+        .filter(
+            Organizer.account_type
+            == "restaurant"
+        )
+
+        .filter(
+            Organizer.subscription_status
+            == "active"
+        )
+
+        .filter(
+            Organizer.subscription_expires_at.isnot(
+                None
+            )
+        )
+
+        .filter(
+            Organizer.subscription_expires_at
+            > now
+        )
+
+        .order_by(
+            RestaurantAdvert.business_name.asc(),
+            RestaurantAdvert.area.asc(),
+        )
+
+        .all()
+    )
+
+
+# ============================================================
+# RESTAURANT TAGGING ELIGIBILITY
+# ============================================================
+
+def restaurant_can_receive_experience_posts(
+    advert,
+):
+
+    if not advert:
+
+        return False
+
+
+    if not advert.active:
+
+        return False
+
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        return False
+
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        return False
+
+
+    if not organizer.is_subscription_active:
+
+        return False
+
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.starts_at
+        and advert.starts_at > now
+    ):
+
+        return False
+
+
+    if (
+        advert.ends_at
+        and advert.ends_at <= now
+    ):
+
+        return False
+
+
+    return True
+
 # ============================================================
 # ORGANIZER - DELETE RESTAURANT REEL
 # ============================================================
