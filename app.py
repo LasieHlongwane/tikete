@@ -6786,6 +6786,222 @@ def superadmin_restaurant_experiences():
             rejected_posts,
     )
 
+
+# ============================================================
+# SUPERADMIN - APPROVE RESTAURANT EXPERIENCE
+# ============================================================
+
+@app.route(
+    "/superadmin/restaurant-experiences/<int:post_id>/approve",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_approve_restaurant_experience(
+    post_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+        return auth
+
+
+    experience_post = (
+        RestaurantExperiencePost.query
+        .filter_by(
+            id=
+                post_id
+        )
+        .first_or_404()
+    )
+
+
+    experience_post.moderation_status = (
+        "approved"
+    )
+
+
+    experience_post.active = True
+
+
+    experience_post.moderated_at = (
+        datetime.utcnow()
+    )
+
+
+    experience_post.moderated_by = (
+        "superadmin"
+    )
+
+
+    experience_post.rejection_reason = (
+        None
+    )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Experience Moderation] "
+                "Approve failed post_id=%s "
+                "error=%s"
+            ),
+            experience_post.id,
+            error,
+        )
+
+
+        flash(
+            "Experience could not be approved.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_restaurant_experiences"
+            )
+        )
+
+
+    flash(
+        "Restaurant experience approved.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_restaurant_experiences"
+        )
+    )
+
+
+# ============================================================
+# SUPERADMIN - REJECT RESTAURANT EXPERIENCE
+# ============================================================
+
+@app.route(
+    "/superadmin/restaurant-experiences/<int:post_id>/reject",
+    methods=[
+        "POST",
+    ],
+)
+def superadmin_reject_restaurant_experience(
+    post_id,
+):
+
+    auth = (
+        require_superadmin()
+    )
+
+
+    if auth:
+        return auth
+
+
+    experience_post = (
+        RestaurantExperiencePost.query
+        .filter_by(
+            id=
+                post_id
+        )
+        .first_or_404()
+    )
+
+
+    rejection_reason = (
+        request.form.get(
+            "rejection_reason",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    experience_post.moderation_status = (
+        "rejected"
+    )
+
+
+    experience_post.active = False
+
+
+    experience_post.moderated_at = (
+        datetime.utcnow()
+    )
+
+
+    experience_post.moderated_by = (
+        "superadmin"
+    )
+
+
+    experience_post.rejection_reason = (
+        rejection_reason
+    )
+
+
+    try:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Experience Moderation] "
+                "Reject failed post_id=%s "
+                "error=%s"
+            ),
+            experience_post.id,
+            error,
+        )
+
+
+        flash(
+            "Experience could not be rejected.",
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_restaurant_experiences"
+            )
+        )
+
+
+    flash(
+        "Restaurant experience rejected.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "superadmin_restaurant_experiences"
+        )
+    )
+
 # ============================================================
 # SUPER ADMIN - PUSH NOTIFICATION CENTRE
 # ============================================================
