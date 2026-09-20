@@ -3911,6 +3911,14 @@ class RestaurantAdvert(db.Model):
         cascade="all, delete-orphan",
     )
 
+    experience_posts = db.relationship(
+        "RestaurantExperiencePost",
+        back_populates="restaurant_advert",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="RestaurantExperiencePost.created_at.desc()",
+    )
+
 
     # ========================================================
     # CAMPAIGN STATUS
