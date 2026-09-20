@@ -88,6 +88,8 @@ from models import (
     EventReelAnalytics,
     RestaurantAdvert,
     RestaurantReel,
+    RestaurantExperiencePost,
+    RestaurantExperienceLove,
 )
 
 
