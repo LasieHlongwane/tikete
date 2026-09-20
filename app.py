@@ -5534,6 +5534,24 @@ def generate_subscription_payment_reference():
 
             return reference
 
+# ============================================================
+# EVENT PARTNER TEMPORARY PASSWORD
+# ============================================================
+
+def generate_partner_temporary_password():
+
+    alphabet = (
+        string.ascii_letters
+        + string.digits
+    )
+
+    return "".join(
+        secrets.choice(
+            alphabet
+        )
+        for _ in range(12)
+    )
+
 
 # ============================================================
 # UNIQUE ENTRY CODE
