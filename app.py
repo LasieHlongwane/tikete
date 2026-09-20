@@ -91,6 +91,7 @@ from models import (
     RestaurantReel,
     RestaurantExperiencePost,
     RestaurantExperienceLove,
+    RestaurantExperienceMedia,
 )
 
 
