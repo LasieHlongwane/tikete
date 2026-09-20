@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Partner Created | Kalxa
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+
+            background: #f6f7f9;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+        }
+
+
+        .shell {
+            width:
+                min(
+                    680px,
+                    calc(100% - 28px)
+                );
+
+            margin: 0 auto;
+
+            padding:
+                35px 0 60px;
+        }
+
+
+        .card {
+            padding: 26px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 18px;
+        }
+
+
+        .success-label {
+            margin-bottom: 8px;
+
+            color: #166534;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            letter-spacing: .08em;
+        }
+
+
+        h1 {
+            margin: 0 0 8px;
+
+            font-size:
+                clamp(
+                    28px,
+                    6vw,
+                    36px
+                );
+
+            letter-spacing: -.04em;
+        }
+
+
+        .intro {
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 12px;
+
+            line-height: 1.6;
+        }
+
+
+        .credentials {
+            display: grid;
+
+            gap: 12px;
+
+            margin-top: 20px;
+
+            padding: 18px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius: 13px;
+        }
+
+
+        .row {
+            padding-bottom: 10px;
+
+            border-bottom:
+                1px solid #e2e8f0;
+        }
+
+
+        .row:last-child {
+            padding-bottom: 0;
+
+            border-bottom: 0;
+        }
+
+
+        .label {
+            display: block;
+
+            color: #64748b;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            letter-spacing: .08em;
+
+            text-transform: uppercase;
+        }
+
+
+        .value {
+            display: block;
+
+            margin-top: 5px;
+
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 900;
+
+            word-break: break-word;
+        }
+
+
+        .warning {
+            margin-top: 18px;
+
+            padding: 13px;
+
+            background: #fff7ed;
+            color: #9a3412;
+
+            border:
+                1px solid #fed7aa;
+
+            border-radius: 11px;
+
+            font-size: 11px;
+
+            line-height: 1.55;
+        }
+
+
+        .actions {
+            display: grid;
+
+            gap: 9px;
+
+            margin-top: 20px;
+        }
+
+
+        .button {
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            min-height: 44px;
+
+            padding: 10px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border:
+                1px solid #111827;
+
+            border-radius: 10px;
+
+            text-decoration: none;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+
+        .button-secondary {
+            background: #ffffff;
+            color: #111827;
+
+            border-color: #cbd5e1;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="shell">
+
+
+    <section class="card">
+
+
+        <div class="success-label">
+            ✅ PARTNER ACCOUNT CREATED
+        </div>
+
+
+        <h1>
+            {{ organizer.display_name }}
+        </h1>
+
+
+        <p class="intro">
+
+            This Event organizer now has
+            complimentary Kalxa Ticketing access until
+
+            <strong>
+                {{ subscription_end.strftime(
+                    '%d %B %Y'
+                ) }}
+            </strong>.
+
+        </p>
+
+
+
+        <div class="credentials">
+
+
+            <div class="row">
+
+                <span class="label">
+                    Account Type
+                </span>
+
+                <span class="value">
+                    🎟 Event Organizer
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+                    Login Email
+                </span>
+
+                <span class="value">
+                    {{ organizer.email }}
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+                    Temporary Password
+                </span>
+
+                <span class="value">
+                    {{ temporary_password }}
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+                    Complimentary Access
+                </span>
+
+                <span class="value">
+                    30 Days
+                </span>
+
+            </div>
+
+
+            <div class="row">
+
+                <span class="label">
+                    Access Expires
+                </span>
+
+                <span class="value">
+
+                    {{ subscription_end.strftime(
+                        '%d %B %Y %H:%M'
+                    ) }}
+
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="warning">
+
+            <strong>
+                Save these login details now.
+            </strong>
+
+            <br>
+
+            The temporary password is only shown
+            on this page. Kalxa stores the hashed
+            password, not this plain-text password.
+
+        </div>
+
+
+
+        <div class="actions">
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_organizer_detail',
+                    organizer_id=organizer.id
+                ) }}"
+                class="button"
+            >
+                Open Organizer Profile
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_create_partner'
+                ) }}"
+                class="
+                    button
+                    button-secondary
+                "
+            >
+                Create Another Partner
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_dashboard'
+                ) }}"
+                class="
+                    button
+                    button-secondary
+                "
+            >
+                Back to Super Admin
+            </a>
+
+
+        </div>
+
+
+    </section>
+
+
+</div>
+
+
+</body>
+
+</html>
