@@ -9383,18 +9383,16 @@ def superadmin_reactivate_organizer(
 # ============================================================
 # HOME
 # ============================================================
-# ============================================================
-# HOME
-# ============================================================
-# ============================================================
-# HOME
-# ============================================================
-
 @app.route("/")
 def home():
 
     today = (
         date.today()
+    )
+
+
+    now = (
+        datetime.utcnow()
     )
 
 
@@ -9422,11 +9420,6 @@ def home():
         )
 
         .all()
-    )
-
-
-    now = (
-        datetime.utcnow()
     )
 
 
@@ -9537,10 +9530,7 @@ def home():
     # EVENT REELS
     # ========================================================
     #
-    # "SEE THE VIBE"
-    #
-    # Event reels remain completely separate from
-    # restaurant reels.
+    # SEE THE VIBE
     # ========================================================
 
     reels = (
@@ -9581,10 +9571,9 @@ def home():
     # RESTAURANT REELS
     # ========================================================
     #
-    # "EAT AROUND YOU"
+    # EAT AROUND YOU
     #
-    # These reels appear in their own section directly
-    # below See the Vibe.
+    # Subscription is now checked here too.
     # ========================================================
 
     restaurant_reels = (
@@ -9597,20 +9586,39 @@ def home():
             == RestaurantAdvert.id,
         )
 
+        .join(
+            Organizer,
+
+            RestaurantAdvert.organizer_id
+            == Organizer.id,
+        )
+
         .filter(
             RestaurantReel.active.is_(True),
 
             RestaurantAdvert.active.is_(True),
 
+            Organizer.active.is_(True),
+
+            Organizer.subscription_status
+            == "active",
+
+            Organizer.subscription_expires_at
+            > now,
+
             or_(
-                RestaurantAdvert.starts_at.is_(None),
+                RestaurantAdvert.starts_at.is_(
+                    None
+                ),
 
                 RestaurantAdvert.starts_at
                 <= now,
             ),
 
             or_(
-                RestaurantAdvert.ends_at.is_(None),
+                RestaurantAdvert.ends_at.is_(
+                    None
+                ),
 
                 RestaurantAdvert.ends_at
                 > now,
@@ -9625,6 +9633,85 @@ def home():
 
         .all()
     )
+
+
+    # ========================================================
+    # CUSTOMER RESTAURANT EXPERIENCES
+    # ========================================================
+    #
+    # Approved testimonials / tagged posts.
+    #
+    # Existing approved posts remain visible even when the
+    # restaurant subscription later expires.
+    # ========================================================
+
+    restaurant_experiences = (
+        RestaurantExperiencePost.query
+
+        .filter(
+            RestaurantExperiencePost.active.is_(
+                True
+            )
+        )
+
+        .filter(
+            RestaurantExperiencePost.moderation_status
+            == "approved"
+        )
+
+        .order_by(
+            RestaurantExperiencePost.created_at.desc()
+        )
+
+        .limit(20)
+
+        .all()
+    )
+
+
+    # ========================================================
+    # CURRENT ANONYMOUS LOVE STATE
+    # ========================================================
+
+    anonymous_session_id = (
+        get_restaurant_experience_session_id()
+    )
+
+
+    loved_experience_post_ids = set()
+
+
+    if restaurant_experiences:
+
+        post_ids = [
+            post.id
+            for post
+            in restaurant_experiences
+        ]
+
+
+        loved_experience_post_ids = {
+
+            love.post_id
+
+            for love
+            in (
+                RestaurantExperienceLove.query
+
+                .filter(
+                    RestaurantExperienceLove.post_id.in_(
+                        post_ids
+                    )
+                )
+
+                .filter(
+                    RestaurantExperienceLove.anonymous_session_id
+                    == anonymous_session_id
+                )
+
+                .all()
+            )
+        }
 
 
     # ========================================================
@@ -9643,15 +9730,19 @@ def home():
         event=
             None,
 
-        # Event reels:
-        # See the Vibe
         reels=
             reels,
 
-        # Restaurant reels:
-        # Eat Around You
         restaurant_reels=
             restaurant_reels,
+
+        # NEW
+        restaurant_experiences=
+            restaurant_experiences,
+
+        # NEW
+        loved_experience_post_ids=
+            loved_experience_post_ids,
 
         firebase_config=
             FIREBASE_WEB_CONFIG,
