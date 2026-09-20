@@ -4255,41 +4255,19 @@ class RestaurantReel(db.Model):
 # RESTAURANT EXPERIENCE POST
 # ============================================================
 #
-# Public user-generated restaurant content.
+# Public customer-generated restaurant content.
 #
-# IMPORTANT:
+# No Kalxa profile/account is required.
 #
-# The person posting does NOT require a Kalxa account.
+# One post may contain:
 #
-# A post must:
+# - 1 to 3 photos
 #
-# - tag a RestaurantAdvert
-# - contain the poster's name
-# - contain their experience/testimonial
-# - contain either an image or a short video
+# OR
 #
-# moderation_status:
+# - exactly 1 reel
 #
-# pending
-# approved
-# rejected
-#
-# Only approved + active posts should appear publicly.
-#
-# Restaurant subscription eligibility is NOT stored here.
-#
-# The public posting route must check the restaurant
-# organizer's CURRENT subscription before allowing a new post.
-#
-# This means:
-#
-# active restaurant subscription
-#     -> may receive new tagged posts
-#
-# expired restaurant subscription
-#     -> disappears from tagging selector
-#
-# Existing posts remain stored.
+# Media itself is stored in RestaurantExperienceMedia.
 # ============================================================
 
 class RestaurantExperiencePost(db.Model):
@@ -4327,12 +4305,6 @@ class RestaurantExperiencePost(db.Model):
     # ========================================================
     # PUBLIC POSTER
     # ========================================================
-    #
-    # No Kalxa account is required.
-    #
-    # We intentionally do not create a user/profile record
-    # for this person.
-    # ========================================================
 
     poster_name = db.Column(
         db.String(120),
@@ -4351,81 +4323,12 @@ class RestaurantExperiencePost(db.Model):
 
 
     # ========================================================
-    # MEDIA TYPE
-    # ========================================================
-    #
-    # Supported:
-    #
-    # image
-    # video
-    #
-    # ========================================================
-
-    media_type = db.Column(
-        db.String(20),
-        nullable=False,
-        index=True,
-    )
-
-
-    # ========================================================
-    # CLOUDINARY MEDIA
-    # ========================================================
-
-    cloudinary_public_id = db.Column(
-        db.String(500),
-        nullable=False,
-        unique=True,
-        index=True,
-    )
-
-    media_url = db.Column(
-        db.Text,
-        nullable=False,
-    )
-
-    thumbnail_url = db.Column(
-        db.Text,
-        nullable=True,
-    )
-
-
-    # ========================================================
-    # MEDIA METADATA
-    # ========================================================
-
-    duration_seconds = db.Column(
-        db.Float,
-        nullable=True,
-    )
-
-    width = db.Column(
-        db.Integer,
-        nullable=True,
-    )
-
-    height = db.Column(
-        db.Integer,
-        nullable=True,
-    )
-
-    file_bytes = db.Column(
-        db.BigInteger,
-        nullable=True,
-    )
-
-
-    # ========================================================
     # MODERATION
     # ========================================================
-    #
-    # Because anybody can post without an account,
-    # posts should NOT go directly public.
     #
     # pending
     # approved
     # rejected
-    #
     # ========================================================
 
     moderation_status = db.Column(
@@ -4498,6 +4401,18 @@ class RestaurantExperiencePost(db.Model):
     )
 
 
+    media_items = db.relationship(
+        "RestaurantExperienceMedia",
+        back_populates="post",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by=(
+            "RestaurantExperienceMedia.media_order.asc(), "
+            "RestaurantExperienceMedia.id.asc()"
+        ),
+    )
+
+
     loves = db.relationship(
         "RestaurantExperienceLove",
         back_populates="post",
@@ -4552,11 +4467,57 @@ class RestaurantExperiencePost(db.Model):
     # ========================================================
 
     @property
-    def is_image(self):
+    def media_count(self):
+
+        return len(
+            self.media_items
+        )
+
+
+    @property
+    def primary_media(self):
+
+        if not self.media_items:
+            return None
 
         return (
-            self.media_type
+            self.media_items[0]
+        )
+
+
+    @property
+    def photos(self):
+
+        return [
+            media
+            for media
+            in self.media_items
+            if media.media_type
             == "image"
+        ]
+
+
+    @property
+    def reel(self):
+
+        for media in self.media_items:
+
+            if (
+                media.media_type
+                == "video"
+            ):
+
+                return media
+
+        return None
+
+
+    @property
+    def is_image(self):
+
+        return bool(
+            self.media_items
+            and not self.reel
         )
 
 
@@ -4564,8 +4525,8 @@ class RestaurantExperiencePost(db.Model):
     def is_video(self):
 
         return (
-            self.media_type
-            == "video"
+            self.reel
+            is not None
         )
 
 
@@ -4583,15 +4544,6 @@ class RestaurantExperiencePost(db.Model):
 
     # ========================================================
     # RESTAURANT AVAILABILITY
-    # ========================================================
-    #
-    # This is deliberately dynamic.
-    #
-    # Existing testimonial content remains available even
-    # after the restaurant subscription expires.
-    #
-    # However the UI can use this property to decide whether
-    # "View Restaurant" should still be clickable.
     # ========================================================
 
     @property
@@ -4665,27 +4617,218 @@ class RestaurantExperiencePost(db.Model):
 
 
 # ============================================================
+# RESTAURANT EXPERIENCE MEDIA
+# ============================================================
+#
+# One RestaurantExperiencePost may contain:
+#
+# PHOTOS:
+#   image order 0
+#   image order 1
+#   image order 2
+#
+# OR
+#
+# REEL:
+#   one video at order 0
+#
+# The application route enforces:
+#
+# - maximum 3 images
+# - maximum 1 video
+# - images and video cannot be mixed in one post
+# ============================================================
+
+class RestaurantExperienceMedia(db.Model):
+
+    __tablename__ = (
+        "restaurant_experience_media"
+    )
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # EXPERIENCE POST
+    # ========================================================
+
+    post_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_experience_posts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # MEDIA TYPE
+    # ========================================================
+    #
+    # image
+    # video
+    # ========================================================
+
+    media_type = db.Column(
+        db.String(20),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # DISPLAY ORDER
+    # ========================================================
+
+    media_order = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+        index=True,
+    )
+
+
+    # ========================================================
+    # CLOUDINARY
+    # ========================================================
+
+    cloudinary_public_id = db.Column(
+        db.String(500),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+
+    media_url = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+
+    thumbnail_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # MEDIA METADATA
+    # ========================================================
+
+    duration_seconds = db.Column(
+        db.Float,
+        nullable=True,
+    )
+
+
+    width = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+
+    height = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+
+    file_bytes = db.Column(
+        db.BigInteger,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIP
+    # ========================================================
+
+    post = db.relationship(
+        "RestaurantExperiencePost",
+        back_populates="media_items",
+    )
+
+
+    # ========================================================
+    # TYPE HELPERS
+    # ========================================================
+
+    @property
+    def is_image(self):
+
+        return (
+            self.media_type
+            == "image"
+        )
+
+
+    @property
+    def is_video(self):
+
+        return (
+            self.media_type
+            == "video"
+        )
+
+
+    # ========================================================
+    # ONE POSITION PER POST
+    # ========================================================
+
+    __table_args__ = (
+
+        db.UniqueConstraint(
+            "post_id",
+            "media_order",
+            name=(
+                "uq_restaurant_experience_media_order"
+            ),
+        ),
+
+    )
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantExperienceMedia "
+            f"id={self.id} "
+            f"post_id={self.post_id} "
+            f"type={self.media_type} "
+            f"order={self.media_order}>"
+        )
+
+
+# ============================================================
 # RESTAURANT EXPERIENCE LOVE
 # ============================================================
 #
-# Anonymous ❤️ reactions to RestaurantExperiencePost.
+# Anonymous ❤️ reactions.
 #
-# No Kalxa profile/account is required.
-#
-# anonymous_session_id represents one browser/device session
-# identity generated by Kalxa.
-#
-# The unique constraint means the same anonymous identity can
-# love a particular post only once.
-#
-# Example:
-#
-# post_id = 12
-# anonymous_session_id = abc123
-#
-# can only exist once.
-#
-# A different post may still be loved by the same browser.
+# One anonymous session can love each post only once.
 # ============================================================
 
 class RestaurantExperienceLove(db.Model):
@@ -4721,13 +4864,7 @@ class RestaurantExperienceLove(db.Model):
 
 
     # ========================================================
-    # ANONYMOUS BROWSER / DEVICE IDENTITY
-    # ========================================================
-    #
-    # No name, email or phone number is required.
-    #
-    # We will generate this client-side / server-side when
-    # implementing the love endpoint.
+    # ANONYMOUS SESSION
     # ========================================================
 
     anonymous_session_id = db.Column(
@@ -4760,7 +4897,7 @@ class RestaurantExperienceLove(db.Model):
 
 
     # ========================================================
-    # ONE LOVE PER BROWSER / POST
+    # ONE LOVE PER SESSION / POST
     # ========================================================
 
     __table_args__ = (
@@ -4783,4 +4920,3 @@ class RestaurantExperienceLove(db.Model):
             f"id={self.id} "
             f"post_id={self.post_id}>"
         )
-
