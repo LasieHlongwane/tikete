@@ -4856,6 +4856,208 @@
             </section>
             {% endif %}
 
+
+
+            <!-- =========================================
+     PEOPLE ARE HERE — CUSTOMER EXPERIENCES
+========================================== -->
+
+            <section
+              class="restaurant-experience-section"
+              aria-labelledby="restaurant-experience-title"
+            >
+  
+              <div class="restaurant-experience-heading">
+  
+                <div class="restaurant-experience-heading-copy">
+
+                 <span class="restaurant-experience-kicker">
+                    PEOPLE ARE HERE
+                 </span>
+
+                 <h2 id="restaurant-experience-title">
+                   Real experiences
+                 </h2>
+
+                 <p>
+                   See what people are sharing from
+                   restaurants and places on Kalxa.
+                 </p>
+
+              </div>
+
+
+               <a
+                 href="{{ url_for(
+                   'create_restaurant_experience'
+                 ) }}"
+                 class="restaurant-experience-share"
+               >
+                 + Share yours
+               </a>
+
+             </div>
+
+
+             {% if restaurant_experiences %}
+
+              <div
+               class="restaurant-experience-rail"
+               aria-label="Customer restaurant experiences"
+              >
+
+               {% for post in restaurant_experiences %}
+
+                <article
+                    class="restaurant-experience-card"
+                    data-experience-post="{{ post.id }}"
+                >
+
+                    <div class="restaurant-experience-media">
+
+
+                        <!-- ================================
+                             ❤️ LOVE BUTTON
+                        ================================= -->
+
+                        <button
+                            type="button"
+                            class="
+                                restaurant-experience-love
+                                {% if post.id in loved_experience_post_ids %}
+                                    loved
+                                {% endif %}
+                            "
+                            data-experience-love
+                            data-post-id="{{ post.id }}"
+                            aria-label="Love this experience"
+                            aria-pressed="{{
+                                'true'
+                                if post.id in loved_experience_post_ids
+                                else 'false'
+                            }}"
+                        >
+
+                            <span class="heart">
+                                ♥
+                            </span>
+
+                            <span
+                                data-love-count
+                            >
+                                {{ post.love_count }}
+                            </span>
+
+                        </button>
+
+
+                        <!-- ================================
+                             MEDIA
+                        ================================= -->
+
+                        {% if post.is_video %}
+
+                            <video
+                                playsinline
+                                muted
+                                loop
+                                preload="metadata"
+                                controls
+                                controlslist="nodownload noremoteplayback"
+                                disablepictureinpicture
+                                oncontextmenu="return false;"
+                                {% if post.thumbnail_url %}
+                                    poster="{{ post.thumbnail_url }}"
+                                {% endif %}
+                            >
+                                <source
+                                    src="{{ post.media_url }}"
+                                >
+                            </video>
+
+                        {% else %}
+
+                            <img
+                                src="{{ post.media_url }}"
+                                alt="{{ post.poster_name }} at {{ post.restaurant_advert.business_name if post.restaurant_advert else 'a Kalxa restaurant' }}"
+                                loading="lazy"
+                            >
+
+                        {% endif %}
+
+
+                        {% if post.restaurant_advert %}
+
+                            <span class="restaurant-experience-tag">
+                                📍 {{ post.restaurant_advert.business_name }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="restaurant-experience-copy">
+
+                        <p class="restaurant-experience-name">
+                            {{ post.poster_name }}
+                        </p>
+
+
+                        <p class="restaurant-experience-text">
+                            “{{ post.experience_text }}”
+                        </p>
+
+
+                        <div class="restaurant-experience-actions">
+
+                            {% if
+                                post.restaurant_advert
+                                and post.restaurant_is_available
+                            %}
+
+                                <a
+                                    href="{{ url_for(
+                                        'restaurant_page',
+                                        advert_id=
+                                            post.restaurant_advert.id
+                                    ) }}"
+                                    class="restaurant-experience-restaurant"
+                                >
+                                    View restaurant →
+                                </a>
+
+                            {% else %}
+
+                                <span
+                                    class="restaurant-experience-unavailable"
+                                >
+                                    Restaurant currently unavailable
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+              </div>
+
+            {% else %}
+
+              <div class="restaurant-experience-empty">
+                No customer experiences have been published yet.
+                Be the first to share one.
+              </div>
+
+            {% endif %}
+
+            </section>
+
             {% if featured_events %}
             <section class="discovery-section featured-shell" aria-labelledby="featured-title">
                 <div class="section-heading">
