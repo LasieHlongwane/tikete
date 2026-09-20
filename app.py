@@ -4462,6 +4462,16 @@ except InvalidOperation:
 KALXA_SUBSCRIPTION_PERIOD_DAYS = 30
 
 
+# ============================================================
+# KALXA EVENT PARTNER PROGRAM
+# ============================================================
+
+KALXA_PARTNER_PLAN_NAME = (
+    "Kalxa Event Partner - 30 Day Access"
+)
+
+KALXA_PARTNER_ACCESS_DAYS = 30
+
 KALXA_SUBSCRIPTION_BANK = {
 
     "bank_name": (
