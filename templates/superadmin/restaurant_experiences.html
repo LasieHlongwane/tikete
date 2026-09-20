@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Restaurant Experiences | Kalxa Superadmin
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background: #f8fafc;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+
+        .page {
+
+            width:
+                min(
+                    100% - 30px,
+                    1180px
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                24px 0 70px;
+        }
+
+
+        .topbar {
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 16px;
+
+            margin-bottom: 28px;
+
+            padding-bottom: 15px;
+
+            border-bottom:
+                1px solid #d1d5db;
+        }
+
+
+        .brand {
+
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 950;
+
+            letter-spacing: .06em;
+
+            text-decoration: none;
+        }
+
+
+        .back {
+
+            color: #6b7280;
+
+            font-size: 11px;
+            font-weight: 850;
+
+            text-decoration: none;
+        }
+
+
+        .hero {
+
+            margin-bottom: 28px;
+        }
+
+
+        .hero small {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing: .12em;
+
+            text-transform: uppercase;
+        }
+
+
+        h1 {
+
+            margin: 0;
+
+            font-size:
+                clamp(
+                    30px,
+                    6vw,
+                    44px
+                );
+
+            line-height: 1;
+
+            font-weight: 950;
+
+            letter-spacing: -.05em;
+        }
+
+
+        .hero p {
+
+            max-width: 650px;
+
+            margin:
+                11px 0 0;
+
+            color: #6b7280;
+
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+
+        .section {
+
+            margin-top: 35px;
+        }
+
+
+        .section-heading {
+
+            display: flex;
+
+            align-items: flex-end;
+            justify-content: space-between;
+
+            gap: 12px;
+
+            margin-bottom: 13px;
+        }
+
+
+        .section-heading h2 {
+
+            margin: 0;
+
+            font-size: 20px;
+            font-weight: 950;
+        }
+
+
+        .count {
+
+            color: #6b7280;
+
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+
+        .grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(
+                        min(
+                            100%,
+                            300px
+                        ),
+                        1fr
+                    )
+                );
+
+            gap: 15px;
+        }
+
+
+        .post-card {
+
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 7px 22px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .05
+                );
+        }
+
+
+        .media {
+
+            position: relative;
+
+            overflow: hidden;
+
+            aspect-ratio: 4 / 5;
+
+            background: #111827;
+        }
+
+
+        .media img,
+        .media video {
+
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+
+            background: #000000;
+        }
+
+
+        .status {
+
+            position: absolute;
+
+            top: 10px;
+            left: 10px;
+
+            z-index: 5;
+
+            padding:
+                6px 8px;
+
+            border-radius: 999px;
+
+            font-size: 8px;
+            font-weight: 950;
+
+            text-transform: uppercase;
+
+            backdrop-filter:
+                blur(8px);
+
+            -webkit-backdrop-filter:
+                blur(8px);
+        }
+
+
+        .status.pending {
+
+            background:
+                rgba(
+                    146,
+                    64,
+                    14,
+                    .90
+                );
+
+            color: #ffedd5;
+        }
+
+
+        .status.approved {
+
+            background:
+                rgba(
+                    22,
+                    101,
+                    52,
+                    .90
+                );
+
+            color: #dcfce7;
+        }
+
+
+        .status.rejected {
+
+            background:
+                rgba(
+                    153,
+                    27,
+                    27,
+                    .90
+                );
+
+            color: #fee2e2;
+        }
+
+
+        .post-content {
+
+            padding: 14px;
+        }
+
+
+        .restaurant {
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: .07em;
+        }
+
+
+        .poster-name {
+
+            margin: 6px 0 0;
+
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 950;
+        }
+
+
+        .experience {
+
+            margin:
+                7px 0 0;
+
+            color: #4b5563;
+
+            font-size: 11px;
+            line-height: 1.55;
+
+            white-space: pre-line;
+        }
+
+
+        .metadata {
+
+            margin-top: 10px;
+
+            color: #9ca3af;
+
+            font-size: 9px;
+        }
+
+
+        .moderation-actions {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 8px;
+
+            margin-top: 14px;
+        }
+
+
+        .approve-button,
+        .reject-button {
+
+            width: 100%;
+
+            min-height: 39px;
+
+            border-radius: 9px;
+
+            font: inherit;
+
+            font-size: 10px;
+            font-weight: 950;
+
+            cursor: pointer;
+        }
+
+
+        .approve-button {
+
+            background: #166534;
+            color: #ffffff;
+
+            border:
+                1px solid #166534;
+        }
+
+
+        .reject-button {
+
+            background: #ffffff;
+            color: #991b1b;
+
+            border:
+                1px solid #fecaca;
+        }
+
+
+        .reject-form {
+
+            grid-column:
+                1 / -1;
+
+            display: grid;
+
+            grid-template-columns:
+                1fr auto;
+
+            gap: 7px;
+        }
+
+
+        .reject-form input {
+
+            min-width: 0;
+
+            padding:
+                8px 9px;
+
+            background: #f8fafc;
+            color: #111827;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 8px;
+
+            font: inherit;
+
+            font-size: 9px;
+        }
+
+
+        .empty {
+
+            padding: 28px;
+
+            background: #ffffff;
+
+            color: #6b7280;
+
+            border:
+                1px dashed #cbd5e1;
+
+            border-radius: 15px;
+
+            font-size: 11px;
+
+            text-align: center;
+        }
+
+
+        .flash {
+
+            margin-bottom: 15px;
+
+            padding:
+                11px 12px;
+
+            border-radius: 10px;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        .flash.error {
+
+            background: #fef2f2;
+            color: #991b1b;
+
+            border:
+                1px solid #fecaca;
+        }
+
+
+        .flash.success {
+
+            background: #f0fdf4;
+            color: #166534;
+
+            border:
+                1px solid #bbf7d0;
+        }
+
+
+        @media (
+            max-width: 560px
+        ) {
+
+            .page {
+
+                width:
+                    min(
+                        100% - 20px,
+                        1180px
+                    );
+            }
+
+
+            .moderation-actions {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .reject-form {
+
+                grid-column: auto;
+
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="page">
+
+
+    <header class="topbar">
+
+        <a
+            href="{{ url_for(
+                'superadmin_dashboard'
+            ) }}"
+            class="brand"
+        >
+            KALXA SUPERADMIN
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'superadmin_dashboard'
+            ) }}"
+            class="back"
+        >
+            ← Dashboard
+        </a>
+
+    </header>
+
+
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="flash {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <section class="hero">
+
+        <small>
+            CUSTOMER CONTENT
+        </small>
+
+        <h1>
+            Restaurant Experiences
+        </h1>
+
+        <p>
+            Review customer photos, reels and testimonials
+            before they become visible publicly on Kalxa.
+        </p>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PENDING
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <h2>
+                Pending review
+            </h2>
+
+            <span class="count">
+                {{ pending_posts|length }}
+            </span>
+
+        </div>
+
+
+        {% if pending_posts %}
+
+            <div class="grid">
+
+                {% for post in pending_posts %}
+
+                    <article class="post-card">
+
+                        <div class="media">
+
+                            {% if post.is_video %}
+
+                                <video
+                                    controls
+                                    playsinline
+                                    preload="metadata"
+                                    {% if post.thumbnail_url %}
+                                        poster="{{ post.thumbnail_url }}"
+                                    {% endif %}
+                                >
+                                    <source
+                                        src="{{ post.media_url }}"
+                                    >
+                                </video>
+
+                            {% else %}
+
+                                <img
+                                    src="{{ post.media_url }}"
+                                    alt="Customer experience"
+                                >
+
+                            {% endif %}
+
+
+                            <span class="status pending">
+                                Pending
+                            </span>
+
+                        </div>
+
+
+                        <div class="post-content">
+
+                            <div class="restaurant">
+
+                                {% if post.restaurant_advert %}
+
+                                    📍
+                                    {{ post.restaurant_advert.business_name }}
+
+                                {% else %}
+
+                                    Restaurant unavailable
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <p class="poster-name">
+                                {{ post.poster_name }}
+                            </p>
+
+
+                            <div class="experience">
+                                “{{ post.experience_text }}”
+                            </div>
+
+
+                            <div class="metadata">
+
+                                Submitted
+                                {% if post.created_at %}
+                                    {{ post.created_at.strftime(
+                                        '%d %b %Y · %H:%M'
+                                    ) }}
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="moderation-actions">
+
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'superadmin_approve_restaurant_experience',
+                                        post_id=post.id
+                                    ) }}"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="approve-button"
+                                    >
+                                        ✓ Approve
+                                    </button>
+
+                                </form>
+
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'superadmin_reject_restaurant_experience',
+                                        post_id=post.id
+                                    ) }}"
+                                    class="reject-form"
+                                >
+
+                                    <input
+                                        type="text"
+                                        name="rejection_reason"
+                                        maxlength="500"
+                                        placeholder="Reason (optional)"
+                                    >
+
+                                    <button
+                                        type="submit"
+                                        class="reject-button"
+                                    >
+                                        Reject
+                                    </button>
+
+                                </form>
+
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+                No customer experiences are waiting for review.
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- =====================================================
+         APPROVED
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <h2>
+                Approved
+            </h2>
+
+            <span class="count">
+                {{ approved_posts|length }}
+            </span>
+
+        </div>
+
+
+        {% if approved_posts %}
+
+            <div class="grid">
+
+                {% for post in approved_posts %}
+
+                    <article class="post-card">
+
+                        <div class="media">
+
+                            {% if post.is_video %}
+
+                                <video
+                                    controls
+                                    playsinline
+                                    preload="metadata"
+                                    {% if post.thumbnail_url %}
+                                        poster="{{ post.thumbnail_url }}"
+                                    {% endif %}
+                                >
+                                    <source
+                                        src="{{ post.media_url }}"
+                                    >
+                                </video>
+
+                            {% else %}
+
+                                <img
+                                    src="{{ post.media_url }}"
+                                    alt="Approved customer experience"
+                                    loading="lazy"
+                                >
+
+                            {% endif %}
+
+
+                            <span class="status approved">
+                                Approved
+                            </span>
+
+                        </div>
+
+
+                        <div class="post-content">
+
+                            <div class="restaurant">
+
+                                {% if post.restaurant_advert %}
+
+                                    📍
+                                    {{ post.restaurant_advert.business_name }}
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <p class="poster-name">
+                                {{ post.poster_name }}
+                            </p>
+
+
+                            <div class="experience">
+                                “{{ post.experience_text }}”
+                            </div>
+
+
+                            <div class="metadata">
+                                ♥ {{ post.love_count }} loves
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+                No approved customer experiences yet.
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- =====================================================
+         REJECTED
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <h2>
+                Rejected
+            </h2>
+
+            <span class="count">
+                {{ rejected_posts|length }}
+            </span>
+
+        </div>
+
+
+        {% if rejected_posts %}
+
+            <div class="grid">
+
+                {% for post in rejected_posts %}
+
+                    <article class="post-card">
+
+                        <div class="media">
+
+                            {% if post.is_video %}
+
+                                <video
+                                    controls
+                                    playsinline
+                                    preload="metadata"
+                                    {% if post.thumbnail_url %}
+                                        poster="{{ post.thumbnail_url }}"
+                                    {% endif %}
+                                >
+                                    <source
+                                        src="{{ post.media_url }}"
+                                    >
+                                </video>
+
+                            {% else %}
+
+                                <img
+                                    src="{{ post.media_url }}"
+                                    alt="Rejected customer experience"
+                                    loading="lazy"
+                                >
+
+                            {% endif %}
+
+
+                            <span class="status rejected">
+                                Rejected
+                            </span>
+
+                        </div>
+
+
+                        <div class="post-content">
+
+                            <div class="restaurant">
+
+                                {% if post.restaurant_advert %}
+                                    {{ post.restaurant_advert.business_name }}
+                                {% endif %}
+
+                            </div>
+
+
+                            <p class="poster-name">
+                                {{ post.poster_name }}
+                            </p>
+
+
+                            <div class="experience">
+                                “{{ post.experience_text }}”
+                            </div>
+
+
+                            {% if post.rejection_reason %}
+
+                                <div class="metadata">
+                                    Reason:
+                                    {{ post.rejection_reason }}
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+                No rejected customer experiences.
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+</div>
+
+
+</body>
+
+</html>
