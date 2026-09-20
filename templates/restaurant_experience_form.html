@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
+    <title>
+        Share Your Experience | Kalxa
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            background: #ffffff;
+            color: #111827;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            -webkit-font-smoothing:
+                antialiased;
+        }
+
+
+        .page {
+
+            width:
+                min(
+                    100% - 28px,
+                    640px
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                18px 0 70px;
+        }
+
+
+        .topbar {
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 24px;
+
+            padding-bottom: 13px;
+
+            border-bottom:
+                1px solid #e5e7eb;
+        }
+
+
+        .brand {
+
+            color: #111827;
+
+            font-size: 14px;
+            font-weight: 950;
+
+            letter-spacing:
+                .07em;
+
+            text-decoration: none;
+        }
+
+
+        .back {
+
+            color: #6b7280;
+
+            font-size: 11px;
+            font-weight: 850;
+
+            text-decoration: none;
+        }
+
+
+        .hero {
+
+            margin-bottom: 23px;
+        }
+
+
+        .eyebrow {
+
+            margin: 0 0 7px;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 950;
+
+            letter-spacing: .13em;
+
+            text-transform: uppercase;
+        }
+
+
+        h1 {
+
+            margin: 0;
+
+            color: #111827;
+
+            font-size:
+                clamp(
+                    30px,
+                    8vw,
+                    46px
+                );
+
+            line-height: 1;
+
+            font-weight: 950;
+
+            letter-spacing: -.05em;
+        }
+
+
+        .hero p {
+
+            max-width: 520px;
+
+            margin:
+                13px 0 0;
+
+            color: #6b7280;
+
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+
+        .form-card {
+
+            padding: 22px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 20px;
+
+            box-shadow:
+                0 10px 32px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .06
+                );
+        }
+
+
+        .field {
+
+            margin-bottom: 18px;
+        }
+
+
+        label {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #111827;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+
+        .field-help {
+
+            display: block;
+
+            margin-top: 5px;
+
+            color: #9ca3af;
+
+            font-size: 9px;
+            line-height: 1.4;
+        }
+
+
+        input,
+        select,
+        textarea {
+
+            width: 100%;
+
+            padding:
+                11px 12px;
+
+            background: #ffffff;
+            color: #111827;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            font: inherit;
+
+            font-size: 13px;
+        }
+
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+
+            border-color: #111827;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .08
+                );
+        }
+
+
+        textarea {
+
+            min-height: 130px;
+
+            resize: vertical;
+        }
+
+
+        input[type="file"] {
+
+            padding: 10px;
+
+            background: #ffffff;
+        }
+
+
+        .submit-button {
+
+            width: 100%;
+
+            min-height: 50px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            margin-top: 6px;
+
+            background: #111827;
+            color: #ffffff;
+
+            border: 0;
+            border-radius: 11px;
+
+            font-size: 13px;
+            font-weight: 950;
+
+            cursor: pointer;
+        }
+
+
+        .submit-button:hover {
+
+            background: #27272a;
+        }
+
+
+        .submission-note {
+
+            margin:
+                14px 0 0;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            line-height: 1.55;
+
+            text-align: center;
+        }
+
+
+        .no-restaurants {
+
+            padding: 24px;
+
+            background: #fff7ed;
+            color: #9a3412;
+
+            border:
+                1px solid #fed7aa;
+
+            border-radius: 15px;
+
+            font-size: 12px;
+            line-height: 1.55;
+
+            text-align: center;
+        }
+
+
+        .flash {
+
+            margin-bottom: 14px;
+
+            padding:
+                11px 12px;
+
+            border-radius: 10px;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        .flash.error {
+
+            background: #fef2f2;
+            color: #991b1b;
+
+            border:
+                1px solid #fecaca;
+        }
+
+
+        .flash.success {
+
+            background: #f0fdf4;
+            color: #166534;
+
+            border:
+                1px solid #bbf7d0;
+        }
+
+
+        @media (
+            max-width: 560px
+        ) {
+
+            .page {
+
+                width:
+                    min(
+                        100% - 20px,
+                        640px
+                    );
+            }
+
+
+            .form-card {
+
+                padding: 17px;
+
+                border-radius: 16px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="page">
+
+
+    <header class="topbar">
+
+        <a
+            href="{{ url_for('home') }}"
+            class="brand"
+        >
+            KALXA
+        </a>
+
+
+        <a
+            href="{{ url_for('home') }}"
+            class="back"
+        >
+            ← Discover
+        </a>
+
+    </header>
+
+
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="flash {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <section class="hero">
+
+        <p class="eyebrow">
+            KALXA EXPERIENCES
+        </p>
+
+        <h1>
+            Share your experience.
+        </h1>
+
+        <p>
+            Been somewhere worth talking about?
+            Tag the restaurant, add a photo or short reel,
+            and tell people what your experience was like.
+            You do not need a Kalxa account.
+        </p>
+
+    </section>
+
+
+
+    {% if restaurants %}
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+            class="form-card"
+        >
+
+
+            <!-- =====================================
+                 NAME
+            ====================================== -->
+
+            <div class="field">
+
+                <label for="poster_name">
+                    Your name
+                </label>
+
+                <input
+                    id="poster_name"
+                    name="poster_name"
+                    type="text"
+                    maxlength="120"
+                    required
+                    placeholder="e.g. Thabo"
+                    value="{{ request.form.get(
+                        'poster_name',
+                        ''
+                    ) }}"
+                >
+
+                <span class="field-help">
+                    This name will appear publicly with your post.
+                </span>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 RESTAURANT
+            ====================================== -->
+
+            <div class="field">
+
+                <label for="restaurant_advert_id">
+                    Tag a restaurant
+                </label>
+
+                {% set selected_restaurant =
+                    request.form.get(
+                        'restaurant_advert_id'
+                    )
+                    or request.args.get(
+                        'restaurant_id'
+                    )
+                %}
+
+                <select
+                    id="restaurant_advert_id"
+                    name="restaurant_advert_id"
+                    required
+                >
+
+                    <option value="">
+                        Choose restaurant
+                    </option>
+
+
+                    {% for restaurant in restaurants %}
+
+                        <option
+                            value="{{ restaurant.id }}"
+                            {% if
+                                selected_restaurant
+                                and selected_restaurant|string
+                                    == restaurant.id|string
+                            %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{ restaurant.business_name }}
+
+                            {% if restaurant.area %}
+                                — {{ restaurant.area }}
+                            {% endif %}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <span class="field-help">
+                    Only restaurants with an active Kalxa
+                    subscription can be tagged.
+                </span>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 EXPERIENCE
+            ====================================== -->
+
+            <div class="field">
+
+                <label for="experience_text">
+                    How was your experience?
+                </label>
+
+                <textarea
+                    id="experience_text"
+                    name="experience_text"
+                    maxlength="2000"
+                    required
+                    placeholder="Tell people what you enjoyed, the atmosphere, food, service or what made the place memorable."
+                >{{ request.form.get(
+                    'experience_text',
+                    ''
+                ) }}</textarea>
+
+                <span class="field-help">
+                    Maximum 2,000 characters.
+                </span>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 MEDIA
+            ====================================== -->
+
+            <div class="field">
+
+                <label for="experience_media">
+                    Add a photo or short reel
+                </label>
+
+                <input
+                    id="experience_media"
+                    name="experience_media"
+                    type="file"
+                    accept="
+                        image/jpeg,
+                        image/png,
+                        image/webp,
+                        video/mp4,
+                        video/quicktime,
+                        video/webm
+                    "
+                    required
+                >
+
+                <span class="field-help">
+                    Photos: JPG, PNG or WebP up to 8 MB.
+                    Videos: MP4, MOV, M4V or WebM,
+                    maximum 30 seconds and 80 MB.
+                </span>
+
+            </div>
+
+
+
+            <button
+                type="submit"
+                class="submit-button"
+            >
+                Submit Experience →
+            </button>
+
+
+            <p class="submission-note">
+                Posts are reviewed before appearing publicly
+                on Kalxa. By submitting media, you confirm
+                that you have permission to share it.
+            </p>
+
+        </form>
+
+
+    {% else %}
+
+        <div class="no-restaurants">
+
+            There are currently no active subscribed
+            restaurants available for tagging.
+
+            <br><br>
+
+            Please check again later.
+
+        </div>
+
+    {% endif %}
+
+
+</div>
+
+
+</body>
+
+</html>
