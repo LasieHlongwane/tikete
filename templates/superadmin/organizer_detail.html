@@ -1,248 +1,1028 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ organizer.display_name }} | Kalxa Super Admin</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {{ organizer.display_name }} | Kalxa Super Admin
+    </title>
+
+
     <style>
-        * { box-sizing: border-box; }
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
         body {
             margin: 0;
+
             background: #f6f7f9;
             color: #111827;
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            -webkit-font-smoothing: antialiased;
         }
+
+
         .shell {
-            width: min(1100px, calc(100% - 28px));
+            width:
+                min(
+                    1100px,
+                    calc(100% - 28px)
+                );
+
             margin: 0 auto;
-            padding: 22px 0 60px;
+
+            padding:
+                22px 0 60px;
         }
-        .nav, .card {
+
+
+        /* =====================================================
+           NAV
+        ===================================================== */
+
+        .nav,
+        .card {
             background: #ffffff;
-            border: 1px solid #e5e7eb;
+
+            border:
+                1px solid #e5e7eb;
+
             border-radius: 16px;
         }
+
+
         .nav {
             display: flex;
+
             justify-content: space-between;
-            gap: 14px;
             align-items: center;
+
+            gap: 14px;
+
             padding: 14px 16px;
+
             margin-bottom: 20px;
         }
-        .brand { font-size: 14px; font-weight: 900; }
+
+
+        .brand {
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+
+        .nav-links {
+            display: flex;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+
         .nav a {
-            margin-left: 10px;
+            padding: 7px 9px;
+
             color: #334155;
+
+            border-radius: 8px;
+
             text-decoration: none;
+
             font-size: 12px;
             font-weight: 750;
         }
-        .card { padding: 22px; margin-bottom: 18px; }
+
+
+        .nav a:hover {
+            background: #f1f5f9;
+        }
+
+
+        /* =====================================================
+           CARDS
+        ===================================================== */
+
+        .card {
+            padding: 22px;
+
+            margin-bottom: 18px;
+        }
+
+
         .eyebrow {
             margin: 0 0 6px;
+
             color: #64748b;
+
             font-size: 10px;
             font-weight: 850;
-            letter-spacing: 0.12em;
+
+            letter-spacing: .12em;
+
             text-transform: uppercase;
         }
-        h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.04em; }
-        h2 { margin: 0 0 16px; font-size: 20px; }
-        .meta { color: #64748b; font-size: 13px; line-height: 1.8; }
+
+
+        h1 {
+            margin: 0 0 8px;
+
+            font-size:
+                clamp(
+                    28px,
+                    6vw,
+                    36px
+                );
+
+            letter-spacing: -.04em;
+        }
+
+
+        h2 {
+            margin: 0 0 16px;
+
+            font-size: 20px;
+        }
+
+
+        .meta {
+            color: #64748b;
+
+            font-size: 13px;
+
+            line-height: 1.8;
+        }
+
+
+        /* =====================================================
+           PROFILE BADGES
+        ===================================================== */
+
+        .badges {
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            flex-wrap: wrap;
+
+            margin-top: 12px;
+        }
+
+
         .status {
             display: inline-flex;
-            margin-top: 12px;
+
             padding: 6px 9px;
+
             border-radius: 999px;
-            font-size: 10px;
+
+            font-size: 9px;
             font-weight: 900;
+
             text-transform: uppercase;
         }
-        .status.active { background: #dcfce7; color: #166534; }
-        .status.inactive, .status.expired { background: #fff7ed; color: #9a3412; }
-        .status.suspended { background: #fef2f2; color: #991b1b; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
+
+
+        .status.active {
+            background: #dcfce7;
+            color: #166534;
         }
-        .panel {
-            padding: 16px;
-            background: #fafafa;
-            border: 1px solid #e8edf2;
+
+
+        .status.inactive,
+        .status.expired {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+
+        .status.suspended {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+
+        .status.partner {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+
+        .status.event-account {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+
+        .status.restaurant-account {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+
+        /* =====================================================
+           PARTNER BANNER
+        ===================================================== */
+
+        .partner-banner {
+            margin-top: 16px;
+
+            padding: 15px;
+
+            background: #f5f3ff;
+            color: #5b21b6;
+
+            border:
+                1px solid #ddd6fe;
+
             border-radius: 12px;
         }
-        form { display: grid; gap: 10px; }
-        label { font-size: 11px; font-weight: 800; color: #475569; }
-        input, textarea {
-            width: 100%;
-            min-height: 42px;
-            padding: 9px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 9px;
-            font: inherit;
+
+
+        .partner-banner strong {
+            display: block;
+
+            margin-bottom: 4px;
+
+            font-size: 13px;
         }
-        textarea { min-height: 80px; resize: vertical; }
-        button {
-            min-height: 42px;
-            border: 1px solid #111111;
-            border-radius: 9px;
-            background: #111111;
-            color: #ffffff;
-            font: inherit;
-            font-size: 12px;
-            font-weight: 850;
-            cursor: pointer;
+
+
+        .partner-banner p {
+            margin: 0;
+
+            font-size: 11px;
+
+            line-height: 1.55;
         }
-        .danger button { background: #991b1b; border-color: #991b1b; }
-        .success button { background: #166534; border-color: #166534; }
-        .stats {
+
+
+        /* =====================================================
+           GRID / PANELS
+        ===================================================== */
+
+        .grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 16px;
+        }
+
+
+        .panel {
+            padding: 16px;
+
+            background: #fafafa;
+
+            border:
+                1px solid #e8edf2;
+
+            border-radius: 12px;
+        }
+
+
+        .panel-title {
+            display: block;
+
+            margin-bottom: 8px;
+
+            color: #111827;
+
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+
+        .panel-copy {
+            margin: 0 0 12px;
+
+            color: #64748b;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           FORMS
+        ===================================================== */
+
+        form {
+            display: grid;
+
             gap: 10px;
         }
+
+
+        label {
+            color: #475569;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+
+        input,
+        textarea {
+            width: 100%;
+
+            min-height: 42px;
+
+            padding: 9px 10px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #cbd5e1;
+
+            border-radius: 9px;
+
+            font: inherit;
+        }
+
+
+        textarea {
+            min-height: 80px;
+
+            resize: vertical;
+        }
+
+
+        button {
+            min-height: 42px;
+
+            padding: 9px 12px;
+
+            border:
+                1px solid #111111;
+
+            border-radius: 9px;
+
+            background: #111111;
+            color: #ffffff;
+
+            font: inherit;
+
+            font-size: 12px;
+            font-weight: 850;
+
+            cursor: pointer;
+        }
+
+
+        .danger button {
+            background: #991b1b;
+
+            border-color: #991b1b;
+        }
+
+
+        .success button {
+            background: #166534;
+
+            border-color: #166534;
+        }
+
+
+        /* =====================================================
+           STATS
+        ===================================================== */
+
+        .stats {
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    4,
+                    minmax(0, 1fr)
+                );
+
+            gap: 10px;
+        }
+
+
         .stat {
             padding: 14px;
+
             background: #fafafa;
-            border: 1px solid #e8edf2;
+
+            border:
+                1px solid #e8edf2;
+
             border-radius: 11px;
         }
-        .stat span { color: #64748b; font-size: 10px; font-weight: 800; }
-        .stat strong { display: block; margin-top: 5px; font-size: 24px; }
-        .event-list { display: grid; gap: 9px; }
+
+
+        .stat span {
+            color: #64748b;
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+
+        .stat strong {
+            display: block;
+
+            margin-top: 5px;
+
+            font-size: 24px;
+        }
+
+
+        /* =====================================================
+           LISTS
+        ===================================================== */
+
+        .event-list {
+            display: grid;
+
+            gap: 9px;
+        }
+
+
         .event-row {
             padding: 12px;
+
             background: #fafafa;
-            border: 1px solid #e8edf2;
+
+            border:
+                1px solid #e8edf2;
+
             border-radius: 10px;
         }
-        .flash-wrapper { display: grid; gap: 8px; margin-bottom: 16px; }
+
+
+        .payment-head {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: flex-start;
+
+            gap: 10px;
+        }
+
+
+        .payment-method {
+            display: inline-flex;
+
+            padding: 4px 7px;
+
+            background: #f1f5f9;
+            color: #475569;
+
+            border-radius: 999px;
+
+            font-size: 8px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+
+        .payment-method.partner {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
+
+        .flash-wrapper {
+            display: grid;
+
+            gap: 8px;
+
+            margin-bottom: 16px;
+        }
+
+
         .alert {
             padding: 11px 13px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
             border-radius: 10px;
+
             font-size: 12px;
             font-weight: 700;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
         }
+
+
         .alert[data-category="error"] {
             color: #991b1b;
+
             background: #fef2f2;
+
             border-color: #fecaca;
         }
+
+
         .alert[data-category="success"] {
             color: #166534;
+
             background: #f0fdf4;
+
             border-color: #bbf7d0;
         }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
         @media(max-width: 760px) {
-            .grid, .stats { grid-template-columns: 1fr; }
-            .nav { align-items: flex-start; flex-direction: column; }
+
+            .grid,
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+
+            .nav {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+
+            .payment-head {
+                flex-direction: column;
+            }
+
         }
+
     </style>
+
 </head>
+
+
 <body>
+
+
 <div class="shell">
 
+
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
     <nav class="nav">
+
         <div class="brand">
             KALXA TICKETING · SUPER ADMIN
         </div>
-        <div>
-            <a href="{{ url_for('superadmin_organizers') }}">Organizers</a>
-            <a href="{{ url_for('superadmin_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('superadmin_logout') }}">Logout</a>
+
+
+        <div class="nav-links">
+
+            <a
+                href="{{ url_for(
+                    'superadmin_dashboard'
+                ) }}"
+            >
+                Dashboard
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_organizers'
+                ) }}"
+            >
+                Organizers
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_create_partner'
+                ) }}"
+            >
+                🤝 Partners
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_notifications'
+                ) }}"
+            >
+                🔔 Notifications
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'superadmin_logout'
+                ) }}"
+            >
+                Logout
+            </a>
+
         </div>
+
     </nav>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages =
+        get_flashed_messages(
+            with_categories=true
+        )
+    %}
+
         {% if messages %}
+
             <div class="flash-wrapper">
+
                 {% for category, message in messages %}
-                    <div class="alert" data-category="{{ category }}">
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                    >
                         {{ message }}
                     </div>
+
                 {% endfor %}
+
             </div>
+
         {% endif %}
+
     {% endwith %}
 
+
+
+    <!-- =====================================================
+         DETECT PARTNER GRANT
+    ====================================================== -->
+
+    {% set partner = namespace(
+        is_partner=false,
+        latest_grant=None
+    ) %}
+
+
+    {% for payment in subscription_payments %}
+
+        {% if
+            payment.payment_method
+            == "partner_grant"
+        %}
+
+            {% if not partner.is_partner %}
+
+                {% set partner.is_partner = true %}
+
+                {% set partner.latest_grant = payment %}
+
+            {% endif %}
+
+        {% endif %}
+
+    {% endfor %}
+
+
+
+    <!-- =====================================================
+         ORGANIZER PROFILE
+    ====================================================== -->
+
     <section class="card">
+
 
         <p class="eyebrow">
             ORGANIZER PROFILE
         </p>
 
+
         <h1>
             {{ organizer.display_name }}
         </h1>
 
+
         <div class="meta">
-            Organizer #{{ organizer.id }}<br>
+
+            Organizer #{{ organizer.id }}
+
+            <br>
+
             {{ organizer.email }}
+
             {% if organizer.phone %}
+
                 · {{ organizer.phone }}
+
             {% endif %}
+
         </div>
 
-        <span
-            class="status {{ organizer.effective_subscription_status }}"
-        >
-            {{ organizer.effective_subscription_status }}
-        </span>
+
+        <div class="badges">
+
+
+            {% if organizer.account_type == "restaurant" %}
+
+                <span
+                    class="
+                        status
+                        restaurant-account
+                    "
+                >
+                    🍔 Restaurant Account
+                </span>
+
+            {% else %}
+
+                <span
+                    class="
+                        status
+                        event-account
+                    "
+                >
+                    🎟 Event Account
+                </span>
+
+            {% endif %}
+
+
+            <span
+                class="
+                    status
+                    {{ organizer.effective_subscription_status }}
+                "
+            >
+                {{ organizer.effective_subscription_status }}
+            </span>
+
+
+            {% if partner.is_partner %}
+
+                <span
+                    class="
+                        status
+                        partner
+                    "
+                >
+                    🤝 Event Partner
+                </span>
+
+            {% endif %}
+
+
+        </div>
+
 
         {% if organizer.subscription_expires_at %}
-            <div class="meta" style="margin-top: 10px;">
-                Subscription expires:
-                {{ organizer.subscription_expires_at.strftime('%d %B %Y %H:%M') }}
+
+            <div
+                class="meta"
+                style="margin-top:10px;"
+            >
+
+                Access expires:
+
+                <strong>
+                    {{ organizer.subscription_expires_at.strftime('%d %B %Y %H:%M') }}
+                </strong>
+
             </div>
+
         {% endif %}
+
+
+        {% if partner.is_partner %}
+
+            <div class="partner-banner">
+
+                <strong>
+                    🤝 Kalxa Event Partner
+                </strong>
+
+
+                <p>
+
+                    This organizer has received
+                    complimentary Kalxa Ticketing access.
+
+                    {% if partner.latest_grant
+                          and partner.latest_grant.subscription_end %}
+
+                        Latest partner period ends on
+
+                        <strong
+                            style="
+                                display:inline;
+                                font-size:inherit;
+                            "
+                        >
+                            {{ partner.latest_grant.subscription_end.strftime('%d %B %Y') }}
+                        </strong>.
+
+                    {% endif %}
+
+                    Their events, orders and account data
+                    remain available after expiry,
+                    but normal subscription rules apply
+                    when complimentary access ends.
+
+                </p>
+
+            </div>
+
+        {% endif %}
+
 
         {% if organizer.suspension_reason %}
-            <div class="meta" style="margin-top: 10px;">
+
+            <div
+                class="meta"
+                style="margin-top:10px;"
+            >
+
                 Suspension reason:
+
                 {{ organizer.suspension_reason }}
+
             </div>
+
         {% endif %}
 
+
     </section>
+
+
+
+    <!-- =====================================================
+         USAGE
+    ====================================================== -->
 
     <section class="card">
 
-        <h2>Usage</h2>
+
+        <h2>
+            Usage
+        </h2>
+
 
         <div class="stats">
-            <div class="stat">
-                <span>Events</span>
-                <strong>{{ events|length }}</strong>
-            </div>
+
 
             <div class="stat">
-                <span>Orders</span>
-                <strong>{{ orders|length }}</strong>
+
+                <span>
+                    Events
+                </span>
+
+                <strong>
+                    {{ events|length }}
+                </strong>
+
             </div>
 
-            <div class="stat">
-                <span>Paid Orders</span>
-                <strong>{{ paid_orders }}</strong>
-            </div>
 
             <div class="stat">
-                <span>Paid Tickets</span>
-                <strong>{{ paid_tickets }}</strong>
+
+                <span>
+                    Orders
+                </span>
+
+                <strong>
+                    {{ orders|length }}
+                </strong>
+
             </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Paid Orders
+                </span>
+
+                <strong>
+                    {{ paid_orders }}
+                </strong>
+
+            </div>
+
+
+            <div class="stat">
+
+                <span>
+                    Paid Tickets
+                </span>
+
+                <strong>
+                    {{ paid_tickets }}
+                </strong>
+
+            </div>
+
+
         </div>
+
 
     </section>
 
+
+
+    <!-- =====================================================
+         SUBSCRIPTION / PARTNER CONTROLS
+    ====================================================== -->
+
     <section class="card">
 
-        <h2>Subscription Controls</h2>
+
+        <h2>
+            Access Controls
+        </h2>
+
 
         <div class="grid">
 
+
+            <!-- =============================================
+                 EXTEND
+            ============================================== -->
+
             <div class="panel">
+
+                <span class="panel-title">
+
+                    {% if partner.is_partner %}
+
+                        🤝 Extend Partner Access
+
+                    {% else %}
+
+                        Subscription Access
+
+                    {% endif %}
+
+                </span>
+
+
+                <p class="panel-copy">
+
+                    {% if partner.is_partner %}
+
+                        Extend this partner's
+                        current complimentary access.
+
+                    {% else %}
+
+                        Activate or extend this
+                        organizer's access.
+
+                    {% endif %}
+
+                </p>
+
+
                 <form
                     method="POST"
                     action="{{ url_for(
@@ -250,9 +1030,11 @@
                         organizer_id=organizer.id
                     ) }}"
                 >
+
                     <label for="days">
-                        Activate / extend access by days
+                        Extend access by days
                     </label>
+
 
                     <input
                         id="days"
@@ -264,13 +1046,44 @@
                         required
                     >
 
+
                     <button type="submit">
-                        Activate / Extend Subscription
+
+                        {% if partner.is_partner %}
+
+                            Grant Another 30 Days
+
+                        {% else %}
+
+                            Activate / Extend Subscription
+
+                        {% endif %}
+
                     </button>
+
                 </form>
+
             </div>
 
+
+
+            <!-- =============================================
+                 EXACT EXPIRY
+            ============================================== -->
+
             <div class="panel">
+
+                <span class="panel-title">
+                    Set Exact Expiry
+                </span>
+
+
+                <p class="panel-copy">
+                    Override the current access expiry
+                    using a specific calendar date.
+                </p>
+
+
                 <form
                     method="POST"
                     action="{{ url_for(
@@ -278,9 +1091,11 @@
                         organizer_id=organizer.id
                     ) }}"
                 >
+
                     <label for="subscription_expires_on">
-                        Set exact expiry date
+                        Access expiry date
                     </label>
+
 
                     <input
                         id="subscription_expires_on"
@@ -289,57 +1104,151 @@
                         required
                     >
 
+
                     <button type="submit">
                         Set Expiry Date
                     </button>
+
                 </form>
+
             </div>
+
 
         </div>
 
+
     </section>
+
+
+
+    <!-- =====================================================
+         SUBSCRIPTION / PARTNER HISTORY
+    ====================================================== -->
 
     <section class="card">
 
-        <h2>Subscription Payments</h2>
+
+        <h2>
+            Access &amp; Payment History
+        </h2>
+
 
         {% if subscription_payments %}
 
             <div class="event-list">
 
+
                 {% for payment in subscription_payments %}
 
                     <div class="event-row">
 
-                        <strong>
-                            {{ payment.payment_reference }}
-                        </strong>
 
-                        <div class="meta">
-                            {{ payment.plan_name }}
-                            · R{{ "%.2f"|format(payment.amount) }}
-                            · {{ payment.payment_status|upper }}
-                            · {{ payment.created_at.strftime('%d %B %Y %H:%M') }}
+                        <div class="payment-head">
+
+
+                            <div>
+
+                                <strong>
+                                    {{ payment.payment_reference }}
+                                </strong>
+
+
+                                <div class="meta">
+
+                                    {{ payment.plan_name }}
+
+                                    ·
+
+                                    {% if
+                                        payment.payment_method
+                                        == "partner_grant"
+                                    %}
+
+                                        Complimentary
+
+                                    {% else %}
+
+                                        R{{ "%.2f"|format(payment.amount) }}
+
+                                    {% endif %}
+
+                                    ·
+
+                                    {{ payment.payment_status|upper }}
+
+                                    ·
+
+                                    {{ payment.created_at.strftime('%d %B %Y %H:%M') }}
+
+                                </div>
+
+                            </div>
+
+
+                            {% if
+                                payment.payment_method
+                                == "partner_grant"
+                            %}
+
+                                <span
+                                    class="
+                                        payment-method
+                                        partner
+                                    "
+                                >
+                                    🤝 Partner Grant
+                                </span>
+
+                            {% else %}
+
+                                <span class="payment-method">
+                                    {{ payment.payment_method|replace('_', ' ') }}
+                                </span>
+
+                            {% endif %}
+
+
                         </div>
 
-                        {% if payment.payment_status == "pending" %}
+
+
+                        {% if
+                            payment.payment_status
+                            == "pending"
+                        %}
 
                             <div
-                                style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"
+                                style="
+                                    display:flex;
+                                    gap:8px;
+                                    flex-wrap:wrap;
+                                    margin-top:10px;
+                                "
                             >
 
-                                <form
-                                    method="POST"
-                                    action="{{ url_for(
-                                        'superadmin_confirm_subscription_payment',
-                                        payment_id=payment.id
-                                    ) }}"
-                                    style="display:inline;"
-                                >
-                                    <button type="submit">
-                                        Confirm Payment
-                                    </button>
-                                </form>
+
+                                {% if
+                                    payment.payment_method
+                                    != "paystack"
+                                %}
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'superadmin_confirm_subscription_payment',
+                                            payment_id=payment.id
+                                        ) }}"
+                                        style="display:inline;"
+                                    >
+
+                                        <button type="submit">
+                                            Confirm Payment
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
+
 
                                 <form
                                     method="POST"
@@ -350,53 +1259,104 @@
                                     style="display:inline;"
                                     class="danger"
                                 >
+
                                     <button type="submit">
                                         Cancel Request
                                     </button>
+
                                 </form>
+
 
                             </div>
 
-                        {% elif payment.payment_status == "paid" %}
 
-                            <div class="meta" style="margin-top:8px;">
+                        {% elif
+                            payment.payment_status
+                            == "paid"
+                        %}
+
+                            <div
+                                class="meta"
+                                style="margin-top:8px;"
+                            >
+
                                 {% if payment.subscription_start %}
+
                                     Access starts:
+
                                     {{ payment.subscription_start.strftime('%d %B %Y') }}
+
                                 {% endif %}
+
 
                                 {% if payment.subscription_end %}
+
                                     · Access ends:
+
                                     {{ payment.subscription_end.strftime('%d %B %Y') }}
+
                                 {% endif %}
+
+
+                                {% if payment.confirmed_by %}
+
+                                    · Granted / confirmed by:
+
+                                    {{ payment.confirmed_by }}
+
+                                {% endif %}
+
                             </div>
 
                         {% endif %}
+
 
                     </div>
 
                 {% endfor %}
 
+
             </div>
+
 
         {% else %}
 
             <p class="meta">
-                No subscription payment records yet.
+                No subscription or partner
+                access records yet.
             </p>
 
         {% endif %}
 
+
     </section>
 
 
+
+    <!-- =====================================================
+         ACCOUNT CONTROLS
+    ====================================================== -->
+
     <section class="card">
 
-        <h2>Account Controls</h2>
 
-        {% if organizer.effective_subscription_status == "suspended" %}
+        <h2>
+            Account Controls
+        </h2>
 
-            <div class="panel success">
+
+        {% if
+            organizer.effective_subscription_status
+            == "suspended"
+        %}
+
+            <div
+                class="
+                    panel
+                    success
+                "
+            >
+
                 <form
                     method="POST"
                     action="{{ url_for(
@@ -404,15 +1364,25 @@
                         organizer_id=organizer.id
                     ) }}"
                 >
+
                     <button type="submit">
                         Reactivate Organizer
                     </button>
+
                 </form>
+
             </div>
+
 
         {% else %}
 
-            <div class="panel danger">
+            <div
+                class="
+                    panel
+                    danger
+                "
+            >
+
                 <form
                     method="POST"
                     action="{{ url_for(
@@ -420,9 +1390,11 @@
                         organizer_id=organizer.id
                     ) }}"
                 >
+
                     <label for="reason">
                         Suspension reason
                     </label>
+
 
                     <textarea
                         id="reason"
@@ -430,52 +1402,123 @@
                         placeholder="Reason for suspension..."
                     ></textarea>
 
+
                     <button type="submit">
                         Suspend Organizer
                     </button>
+
                 </form>
+
             </div>
 
         {% endif %}
 
+
     </section>
+
+
+
+    <!-- =====================================================
+         ORGANIZER EVENTS
+    ====================================================== -->
 
     <section class="card">
 
-        <h2>Organizer Events</h2>
+
+        <h2>
+            Organizer Events
+        </h2>
+
 
         {% if events %}
 
             <div class="event-list">
 
+
                 {% for event in events %}
 
                     <div class="event-row">
-                        <strong>{{ event.title }}</strong><br>
 
-                        <span class="meta">
+
+                        <strong>
+                            {{ event.title }}
+                        </strong>
+
+
+                        <div class="meta">
+
                             Event #{{ event.id }}
+
                             {% if event.event_date %}
-                                · {{ event.event_date.strftime('%d %B %Y') }}
+
+                                ·
+                                {{ event.event_date.strftime('%d %B %Y') }}
+
                             {% endif %}
-                            · Sold {{ event.paid_ticket_count }}
-                        </span>
+
+                            · Sold
+                            {{ event.paid_ticket_count }}
+
+                        </div>
+
+
+                        {% if event.status %}
+
+                            <div style="margin-top:7px;">
+
+                                <span
+                                    class="
+                                        status
+                                        {% if event.status == 'published' %}
+                                            active
+                                        {% else %}
+                                            inactive
+                                        {% endif %}
+                                    "
+                                >
+                                    {{ event.status }}
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
                     </div>
 
                 {% endfor %}
 
+
             </div>
+
 
         {% else %}
 
             <p class="meta">
-                This organizer has not created any events yet.
+
+                {% if organizer.account_type == "restaurant" %}
+
+                    This is a Restaurant account,
+                    so no ticketing events are expected.
+
+                {% else %}
+
+                    This organizer has not
+                    created any events yet.
+
+                {% endif %}
+
             </p>
 
         {% endif %}
 
+
     </section>
 
+
 </div>
+
+
 </body>
+
 </html>
