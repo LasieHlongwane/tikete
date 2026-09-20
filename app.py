@@ -9837,9 +9837,6 @@ def featured_listing_image(
 # ADMIN - RESTAURANTS
 # ============================================================
 # ============================================================
-# ADMIN - RESTAURANT CONTROL CENTRE
-# ============================================================
-
 @app.route(
     "/admin/restaurants"
 )
@@ -9900,15 +9897,25 @@ def admin_restaurants():
 
     adverts = (
         RestaurantAdvert.query
+
         .filter_by(
             organizer_id=
                 organizer.id
         )
+
         .order_by(
             RestaurantAdvert.created_at.desc()
         )
+
         .all()
     )
+
+
+    advert_ids = [
+        advert.id
+        for advert
+        in adverts
+    ]
 
 
     # ========================================================
@@ -9960,11 +9967,108 @@ def admin_restaurants():
 
 
     # ========================================================
+    # CUSTOMER EXPERIENCE METRICS
+    # ========================================================
+
+    approved_experience_count = 0
+    pending_experience_count = 0
+    total_experience_loves = 0
+
+
+    if advert_ids:
+
+        approved_experience_count = (
+            RestaurantExperiencePost.query
+
+            .filter(
+                RestaurantExperiencePost.restaurant_advert_id.in_(
+                    advert_ids
+                )
+            )
+
+            .filter(
+                RestaurantExperiencePost.active.is_(
+                    True
+                )
+            )
+
+            .filter(
+                RestaurantExperiencePost.moderation_status
+                == "approved"
+            )
+
+            .count()
+        )
+
+
+        pending_experience_count = (
+            RestaurantExperiencePost.query
+
+            .filter(
+                RestaurantExperiencePost.restaurant_advert_id.in_(
+                    advert_ids
+                )
+            )
+
+            .filter(
+                RestaurantExperiencePost.moderation_status
+                == "pending"
+            )
+
+            .count()
+        )
+
+
+        restaurant_post_ids = [
+
+            post_id
+
+            for (
+                post_id,
+            )
+            in (
+                db.session.query(
+                    RestaurantExperiencePost.id
+                )
+
+                .filter(
+                    RestaurantExperiencePost.restaurant_advert_id.in_(
+                        advert_ids
+                    )
+                )
+
+                .filter(
+                    RestaurantExperiencePost.moderation_status
+                    == "approved"
+                )
+
+                .all()
+            )
+        ]
+
+
+        if restaurant_post_ids:
+
+            total_experience_loves = (
+                RestaurantExperienceLove.query
+
+                .filter(
+                    RestaurantExperienceLove.post_id.in_(
+                        restaurant_post_ids
+                    )
+                )
+
+                .count()
+            )
+
+
+    # ========================================================
     # PENDING SUBSCRIPTION
     # ========================================================
 
     pending_subscription_payment = (
         SubscriptionPayment.query
+
         .filter_by(
             organizer_id=
                 organizer.id,
@@ -9972,9 +10076,11 @@ def admin_restaurants():
             payment_status=
                 "pending",
         )
+
         .order_by(
             SubscriptionPayment.created_at.desc()
         )
+
         .first()
     )
 
@@ -10002,6 +10108,16 @@ def admin_restaurants():
 
         live_reels=
             live_reels,
+
+        # NEW
+        approved_experience_count=
+            approved_experience_count,
+
+        pending_experience_count=
+            pending_experience_count,
+
+        total_experience_loves=
+            total_experience_loves,
 
         subscription_active=
             organizer.is_subscription_active,
