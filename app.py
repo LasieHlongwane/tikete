@@ -6332,7 +6332,6 @@ def superadmin_extend_partner_access(
 # ============================================================
 # SUPER ADMIN DASHBOARD
 # ============================================================
-
 @app.route(
     "/superadmin"
 )
@@ -6353,6 +6352,10 @@ def superadmin_dashboard():
     )
 
 
+    # ========================================================
+    # ORGANIZERS
+    # ========================================================
+
     total_organizers = (
         Organizer.query.count()
     )
@@ -6360,27 +6363,35 @@ def superadmin_dashboard():
 
     active_subscriptions = (
         Organizer.query
+
         .filter(
-            Organizer.active.is_(True)
+            Organizer.active.is_(
+                True
+            )
         )
+
         .filter(
             Organizer.subscription_status
             == "active"
         )
+
         .filter(
             Organizer.subscription_expires_at
             > now
         )
+
         .count()
     )
 
 
     suspended_organizers = (
         Organizer.query
+
         .filter(
             Organizer.subscription_status
             == "suspended"
         )
+
         .count()
     )
 
@@ -6394,58 +6405,101 @@ def superadmin_dashboard():
 
     recent_organizers = (
         Organizer.query
+
         .order_by(
             Organizer.created_at.desc()
         )
+
         .limit(10)
+
         .all()
     )
 
 
+    # ========================================================
+    # SUBSCRIPTION PAYMENTS
+    # ========================================================
+
     pending_subscription_payments = (
         SubscriptionPayment.query
+
         .filter_by(
             payment_status=
                 "pending"
         )
+
         .order_by(
             SubscriptionPayment.created_at.asc()
         )
+
         .limit(20)
+
         .all()
     )
 
 
     pending_subscription_count = (
         SubscriptionPayment.query
+
         .filter_by(
             payment_status=
                 "pending"
         )
+
         .count()
     )
 
 
     # ========================================================
-    # NEWLY PUBLISHED EVENTS READY FOR PUSH PROMOTION
+    # RESTAURANT EXPERIENCE POSTS WAITING FOR MODERATION
     # ========================================================
-    #
-    # An event remains in this queue until it has at least one
-    # completed/partial push campaign.
-    #
-    # failed campaigns do NOT remove the event from the queue,
-    # so Super Admin can retry.
+
+    pending_restaurant_experiences = (
+        RestaurantExperiencePost.query
+
+        .filter(
+            RestaurantExperiencePost.moderation_status
+            == "pending"
+        )
+
+        .order_by(
+            RestaurantExperiencePost.created_at.asc()
+        )
+
+        .limit(20)
+
+        .all()
+    )
+
+
+    pending_restaurant_experience_count = (
+        RestaurantExperiencePost.query
+
+        .filter(
+            RestaurantExperiencePost.moderation_status
+            == "pending"
+        )
+
+        .count()
+    )
+
+
+    # ========================================================
+    # EVENTS READY FOR PUSH
     # ========================================================
 
     promoted_event_ids = (
+
         db.session.query(
             PushCampaign.event_id
         )
+
         .filter(
             PushCampaign.event_id.isnot(
                 None
             )
         )
+
         .filter(
             PushCampaign.status.in_(
                 [
@@ -6454,22 +6508,27 @@ def superadmin_dashboard():
                 ]
             )
         )
+
         .distinct()
+
         .subquery()
     )
 
 
     notification_ready_events = (
         TicketEvent.query
+
         .filter(
             TicketEvent.status
             == "published"
         )
+
         .filter(
             TicketEvent.active.is_(
                 True
             )
         )
+
         .filter(
             ~TicketEvent.id.in_(
                 db.select(
@@ -6477,95 +6536,99 @@ def superadmin_dashboard():
                 )
             )
         )
+
         .order_by(
             TicketEvent.published_at.desc(),
             TicketEvent.created_at.desc(),
         )
+
         .limit(20)
+
         .all()
     )
 
+
     # ========================================================
-# RESTAURANT ADVERTS READY FOR PUSH
-# ========================================================
+    # RESTAURANT ADVERTS READY FOR PUSH
+    # ========================================================
 
     promoted_restaurant_ids = (
 
-      db.session.query(
-        PushCampaign.restaurant_advert_id
-      )
-
-      .filter(
-        PushCampaign.restaurant_advert_id.isnot(
-            None
+        db.session.query(
+            PushCampaign.restaurant_advert_id
         )
-      )
 
-      .filter(
-        PushCampaign.status.in_(
-            [
-                "completed",
-                "partial",
-            ]
+        .filter(
+            PushCampaign.restaurant_advert_id.isnot(
+                None
+            )
         )
-      )
 
-      .distinct()
+        .filter(
+            PushCampaign.status.in_(
+                [
+                    "completed",
+                    "partial",
+                ]
+            )
+        )
 
-      .subquery()
+        .distinct()
+
+        .subquery()
     )
 
 
     notification_ready_restaurants = (
 
-      RestaurantAdvert.query
+        RestaurantAdvert.query
 
-      .join(
-        Organizer,
-        RestaurantAdvert.organizer_id
-        == Organizer.id,
-      )
-
-      .filter(
-        RestaurantAdvert.active.is_(
-            True
+        .join(
+            Organizer,
+            RestaurantAdvert.organizer_id
+            == Organizer.id,
         )
-      )
 
-      .filter(
-        Organizer.subscription_status
-        == "active"
-      )
-
-      .filter(
-        Organizer.subscription_expires_at
-        > now
-      )
-
-      .filter(
-        ~RestaurantAdvert.id.in_(
-            db.select(
-                promoted_restaurant_ids
-                .c
-                .restaurant_advert_id
+        .filter(
+            RestaurantAdvert.active.is_(
+                True
             )
         )
-      )
 
-      .order_by(
-        RestaurantAdvert.created_at.desc()
-      )
+        .filter(
+            Organizer.subscription_status
+            == "active"
+        )
 
-      .limit(20)
+        .filter(
+            Organizer.subscription_expires_at
+            > now
+        )
 
-      .all()
+        .filter(
+            ~RestaurantAdvert.id.in_(
+                db.select(
+                    promoted_restaurant_ids
+                    .c
+                    .restaurant_advert_id
+                )
+            )
+        )
+
+        .order_by(
+            RestaurantAdvert.created_at.desc()
+        )
+
+        .limit(20)
+
+        .all()
     )
 
 
     notification_ready_restaurant_count = (
-      len(
-        notification_ready_restaurants
-      )
+        len(
+            notification_ready_restaurants
+        )
     )
 
 
@@ -6625,15 +6688,19 @@ def superadmin_dashboard():
         active_push_audience_count=
             active_push_audience_count,
 
+        # NEW
+        pending_restaurant_experiences=
+            pending_restaurant_experiences,
+
+        pending_restaurant_experience_count=
+            pending_restaurant_experience_count,
+
         subscription_plan_name=
             KALXA_SUBSCRIPTION_PLAN_NAME,
 
         subscription_price=
             KALXA_SUBSCRIPTION_PRICE,
     )
-
-
-
 
 # ============================================================
 # SUPER ADMIN - PUSH NOTIFICATION CENTRE
