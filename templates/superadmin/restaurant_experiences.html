@@ -44,6 +44,17 @@
         }
 
 
+        body.modal-open {
+            overflow: hidden;
+        }
+
+
+        button,
+        input {
+            font: inherit;
+        }
+
+
         .page {
 
             width:
@@ -59,6 +70,10 @@
                 24px 0 70px;
         }
 
+
+        /* =====================================================
+           TOP BAR
+        ===================================================== */
 
         .topbar {
 
@@ -101,6 +116,10 @@
             text-decoration: none;
         }
 
+
+        /* =====================================================
+           HERO
+        ===================================================== */
 
         .hero {
 
@@ -158,6 +177,10 @@
         }
 
 
+        /* =====================================================
+           SECTIONS
+        ===================================================== */
+
         .section {
 
             margin-top: 35px;
@@ -194,6 +217,10 @@
             font-weight: 850;
         }
 
+
+        /* =====================================================
+           GRID
+        ===================================================== */
 
         .grid {
 
@@ -237,6 +264,10 @@
         }
 
 
+        /* =====================================================
+           MEDIA
+        ===================================================== */
+
         .media {
 
             position: relative;
@@ -249,8 +280,25 @@
         }
 
 
-        .media img,
-        .media video {
+        .media-open {
+
+            display: block;
+
+            width: 100%;
+            height: 100%;
+
+            padding: 0;
+
+            background: #000000;
+
+            border: 0;
+
+            cursor: zoom-in;
+        }
+
+
+        .media-open img,
+        .media-open video {
 
             width: 100%;
             height: 100%;
@@ -260,8 +308,138 @@
             object-fit: cover;
 
             background: #000000;
+
+            pointer-events: none;
         }
 
+
+        .media-count {
+
+            position: absolute;
+
+            right: 10px;
+            bottom: 10px;
+
+            z-index: 6;
+
+            padding:
+                5px 8px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .82
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 8px;
+            font-weight: 950;
+
+            pointer-events: none;
+        }
+
+
+        .media-type {
+
+            position: absolute;
+
+            left: 10px;
+            bottom: 10px;
+
+            z-index: 6;
+
+            padding:
+                5px 8px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .82
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 8px;
+            font-weight: 950;
+
+            pointer-events: none;
+        }
+
+
+        .media-missing {
+
+            width: 100%;
+            height: 100%;
+
+            display: grid;
+            place-items: center;
+
+            padding: 20px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1f2937,
+                    #030712
+                );
+
+            color: #fff4df;
+
+            text-align: center;
+        }
+
+
+        .media-missing-inner {
+
+            display: grid;
+
+            gap: 6px;
+
+            place-items: center;
+        }
+
+
+        .media-missing strong {
+
+            font-size: 12px;
+            font-weight: 950;
+
+            letter-spacing: .12em;
+        }
+
+
+        .media-missing span {
+
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .62
+                );
+
+            font-size: 9px;
+        }
+
+
+        .media-source {
+
+            display: none !important;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
 
         .status {
 
@@ -270,7 +448,7 @@
             top: 10px;
             left: 10px;
 
-            z-index: 5;
+            z-index: 8;
 
             padding:
                 6px 8px;
@@ -332,6 +510,10 @@
         }
 
 
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
         .post-content {
 
             padding: 14px;
@@ -353,7 +535,8 @@
 
         .poster-name {
 
-            margin: 6px 0 0;
+            margin:
+                6px 0 0;
 
             color: #111827;
 
@@ -383,8 +566,13 @@
             color: #9ca3af;
 
             font-size: 9px;
+            line-height: 1.5;
         }
 
+
+        /* =====================================================
+           MODERATION
+        ===================================================== */
 
         .moderation-actions {
 
@@ -472,6 +660,10 @@
         }
 
 
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
         .empty {
 
             padding: 28px;
@@ -490,6 +682,10 @@
             text-align: center;
         }
 
+
+        /* =====================================================
+           FLASH
+        ===================================================== */
 
         .flash {
 
@@ -525,6 +721,204 @@
         }
 
 
+        /* =====================================================
+           MEDIA VIEWER
+        ===================================================== */
+
+        .viewer {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 2000;
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            background:
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .96
+                );
+        }
+
+
+        .viewer.open {
+
+            display: flex;
+        }
+
+
+        .viewer-stage {
+
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                70px 24px
+                80px;
+        }
+
+
+        .viewer-stage img,
+        .viewer-stage video {
+
+            max-width: 96vw;
+            max-height: 84vh;
+
+            width: auto;
+            height: auto;
+
+            display: block;
+
+            object-fit: contain;
+
+            background: #000000;
+
+            border-radius: 10px;
+        }
+
+
+        .viewer-close {
+
+            position: fixed;
+
+            top: 15px;
+            right: 15px;
+
+            z-index: 2010;
+
+            width: 44px;
+            height: 44px;
+
+            display: grid;
+            place-items: center;
+
+            background: #ffffff;
+            color: #111827;
+
+            border: 0;
+
+            border-radius: 999px;
+
+            font-size: 24px;
+            font-weight: 950;
+
+            cursor: pointer;
+        }
+
+
+        .viewer-prev,
+        .viewer-next {
+
+            position: fixed;
+
+            top: 50%;
+
+            z-index: 2010;
+
+            width: 44px;
+            height: 44px;
+
+            display: grid;
+            place-items: center;
+
+            transform:
+                translateY(-50%);
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .16
+                );
+
+            color: #ffffff;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .25
+                );
+
+            border-radius: 999px;
+
+            font-size: 23px;
+
+            cursor: pointer;
+        }
+
+
+        .viewer-prev {
+
+            left: 12px;
+        }
+
+
+        .viewer-next {
+
+            right: 12px;
+        }
+
+
+        .viewer-prev[hidden],
+        .viewer-next[hidden],
+        .viewer-counter[hidden] {
+
+            display: none;
+        }
+
+
+        .viewer-counter {
+
+            position: fixed;
+
+            left: 50%;
+            bottom: 20px;
+
+            z-index: 2010;
+
+            transform:
+                translateX(-50%);
+
+            padding:
+                6px 10px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .84
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
         @media (
             max-width: 560px
         ) {
@@ -554,6 +948,34 @@
                     1fr;
             }
 
+
+            .viewer-stage {
+
+                padding:
+                    64px 8px
+                    70px;
+            }
+
+
+            .viewer-prev,
+            .viewer-next {
+
+                width: 39px;
+                height: 39px;
+            }
+
+
+            .viewer-prev {
+
+                left: 5px;
+            }
+
+
+            .viewer-next {
+
+                right: 5px;
+            }
+
         }
 
     </style>
@@ -566,6 +988,10 @@
 
 <div class="page">
 
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
 
     <header class="topbar">
 
@@ -592,6 +1018,10 @@
 
 
 
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
     {% with messages = get_flashed_messages(
         with_categories=true
     ) %}
@@ -612,15 +1042,21 @@
 
 
 
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
     <section class="hero">
 
         <small>
             CUSTOMER CONTENT
         </small>
 
+
         <h1>
             Restaurant Experiences
         </h1>
+
 
         <p>
             Review customer photos, reels and testimonials
@@ -643,6 +1079,7 @@
                 Pending review
             </h2>
 
+
             <span class="count">
                 {{ pending_posts|length }}
             </span>
@@ -656,31 +1093,122 @@
 
                 {% for post in pending_posts %}
 
+                    {% set primary_media =
+                        post.primary_media
+                    %}
+
+
                     <article class="post-card">
+
+
+                        <!-- =================================
+                             MEDIA MANIFEST
+                        ================================== -->
+
+                        {% if post.media_items %}
+
+                            <div
+                                class="media-source"
+                                data-media-source="{{ post.id }}"
+                            >
+
+                                {% for media_item in post.media_items %}
+
+                                    <span
+                                        data-media-item
+                                        data-media-url="{{ media_item.media_url }}"
+                                        data-media-type="{{ media_item.media_type }}"
+                                        data-thumbnail-url="{{ media_item.thumbnail_url or '' }}"
+                                    ></span>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
 
                         <div class="media">
 
-                            {% if post.is_video %}
 
-                                <video
-                                    controls
-                                    playsinline
-                                    preload="metadata"
-                                    {% if post.thumbnail_url %}
-                                        poster="{{ post.thumbnail_url }}"
-                                    {% endif %}
+                            {% if primary_media %}
+
+                                <button
+                                    type="button"
+                                    class="media-open"
+                                    data-open-media
+                                    data-post-id="{{ post.id }}"
+                                    aria-label="View customer experience media"
                                 >
-                                    <source
-                                        src="{{ post.media_url }}"
-                                    >
-                                </video>
+
+
+                                    {% if primary_media.is_video %}
+
+                                        <video
+                                            playsinline
+                                            muted
+                                            preload="metadata"
+                                            controlslist="nodownload noremoteplayback"
+                                            disablepictureinpicture
+                                            {% if primary_media.thumbnail_url %}
+                                                poster="{{ primary_media.thumbnail_url }}"
+                                            {% endif %}
+                                        >
+
+                                            <source
+                                                src="{{ primary_media.media_url }}"
+                                            >
+
+                                        </video>
+
+
+                                        <span class="media-type">
+                                            ▶ VIDEO
+                                        </span>
+
+
+                                    {% elif primary_media.is_image %}
+
+                                        <img
+                                            src="{{ primary_media.media_url }}"
+                                            alt="{{ post.poster_name }} restaurant experience"
+                                            loading="eager"
+                                        >
+
+                                    {% endif %}
+
+
+                                    {% if post.media_count > 1 %}
+
+                                        <span class="media-count">
+
+                                            ▣
+                                            {{ post.media_count }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </button>
+
 
                             {% else %}
 
-                                <img
-                                    src="{{ post.media_url }}"
-                                    alt="Customer experience"
-                                >
+                                <div class="media-missing">
+
+                                    <div class="media-missing-inner">
+
+                                        <strong>
+                                            KALXA
+                                        </strong>
+
+                                        <span>
+                                            No media attached to this post
+                                        </span>
+
+                                    </div>
+
+                                </div>
 
                             {% endif %}
 
@@ -723,10 +1251,25 @@
                             <div class="metadata">
 
                                 Submitted
+
                                 {% if post.created_at %}
-                                    {{ post.created_at.strftime(
-                                        '%d %b %Y · %H:%M'
-                                    ) }}
+
+                                    {{
+                                        post.created_at.strftime(
+                                            '%d %b %Y · %H:%M'
+                                        )
+                                    }}
+
+                                {% endif %}
+
+                                <br>
+
+                                {{ post.media_count }}
+                                media
+                                {% if post.media_count != 1 %}
+                                    items
+                                {% else %}
+                                    item
                                 {% endif %}
 
                             </div>
@@ -769,6 +1312,7 @@
                                         placeholder="Reason (optional)"
                                     >
 
+
                                     <button
                                         type="submit"
                                         class="reject-button"
@@ -788,6 +1332,7 @@
                 {% endfor %}
 
             </div>
+
 
         {% else %}
 
@@ -813,6 +1358,7 @@
                 Approved
             </h2>
 
+
             <span class="count">
                 {{ approved_posts|length }}
             </span>
@@ -826,32 +1372,122 @@
 
                 {% for post in approved_posts %}
 
+                    {% set primary_media =
+                        post.primary_media
+                    %}
+
+
                     <article class="post-card">
+
+
+                        <!-- =================================
+                             MEDIA MANIFEST
+                        ================================== -->
+
+                        {% if post.media_items %}
+
+                            <div
+                                class="media-source"
+                                data-media-source="{{ post.id }}"
+                            >
+
+                                {% for media_item in post.media_items %}
+
+                                    <span
+                                        data-media-item
+                                        data-media-url="{{ media_item.media_url }}"
+                                        data-media-type="{{ media_item.media_type }}"
+                                        data-thumbnail-url="{{ media_item.thumbnail_url or '' }}"
+                                    ></span>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
 
                         <div class="media">
 
-                            {% if post.is_video %}
 
-                                <video
-                                    controls
-                                    playsinline
-                                    preload="metadata"
-                                    {% if post.thumbnail_url %}
-                                        poster="{{ post.thumbnail_url }}"
-                                    {% endif %}
+                            {% if primary_media %}
+
+                                <button
+                                    type="button"
+                                    class="media-open"
+                                    data-open-media
+                                    data-post-id="{{ post.id }}"
+                                    aria-label="View approved customer experience media"
                                 >
-                                    <source
-                                        src="{{ post.media_url }}"
-                                    >
-                                </video>
+
+
+                                    {% if primary_media.is_video %}
+
+                                        <video
+                                            playsinline
+                                            muted
+                                            preload="metadata"
+                                            controlslist="nodownload noremoteplayback"
+                                            disablepictureinpicture
+                                            {% if primary_media.thumbnail_url %}
+                                                poster="{{ primary_media.thumbnail_url }}"
+                                            {% endif %}
+                                        >
+
+                                            <source
+                                                src="{{ primary_media.media_url }}"
+                                            >
+
+                                        </video>
+
+
+                                        <span class="media-type">
+                                            ▶ VIDEO
+                                        </span>
+
+
+                                    {% elif primary_media.is_image %}
+
+                                        <img
+                                            src="{{ primary_media.media_url }}"
+                                            alt="Approved customer experience"
+                                            loading="lazy"
+                                        >
+
+                                    {% endif %}
+
+
+                                    {% if post.media_count > 1 %}
+
+                                        <span class="media-count">
+
+                                            ▣
+                                            {{ post.media_count }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </button>
+
 
                             {% else %}
 
-                                <img
-                                    src="{{ post.media_url }}"
-                                    alt="Approved customer experience"
-                                    loading="lazy"
-                                >
+                                <div class="media-missing">
+
+                                    <div class="media-missing-inner">
+
+                                        <strong>
+                                            KALXA
+                                        </strong>
+
+                                        <span>
+                                            No media attached to this post
+                                        </span>
+
+                                    </div>
+
+                                </div>
 
                             {% endif %}
 
@@ -872,6 +1508,10 @@
                                     📍
                                     {{ post.restaurant_advert.business_name }}
 
+                                {% else %}
+
+                                    Restaurant unavailable
+
                                 {% endif %}
 
                             </div>
@@ -888,7 +1528,33 @@
 
 
                             <div class="metadata">
-                                ♥ {{ post.love_count }} loves
+
+                                ♥
+                                {{ post.love_count }}
+                                loves
+
+                                <br>
+
+                                {{ post.media_count }}
+                                media
+                                {% if post.media_count != 1 %}
+                                    items
+                                {% else %}
+                                    item
+                                {% endif %}
+
+                                {% if post.created_at %}
+
+                                    <br>
+
+                                    {{
+                                        post.created_at.strftime(
+                                            '%d %b %Y · %H:%M'
+                                        )
+                                    }}
+
+                                {% endif %}
+
                             </div>
 
                         </div>
@@ -898,6 +1564,7 @@
                 {% endfor %}
 
             </div>
+
 
         {% else %}
 
@@ -923,6 +1590,7 @@
                 Rejected
             </h2>
 
+
             <span class="count">
                 {{ rejected_posts|length }}
             </span>
@@ -936,32 +1604,122 @@
 
                 {% for post in rejected_posts %}
 
+                    {% set primary_media =
+                        post.primary_media
+                    %}
+
+
                     <article class="post-card">
+
+
+                        <!-- =================================
+                             MEDIA MANIFEST
+                        ================================== -->
+
+                        {% if post.media_items %}
+
+                            <div
+                                class="media-source"
+                                data-media-source="{{ post.id }}"
+                            >
+
+                                {% for media_item in post.media_items %}
+
+                                    <span
+                                        data-media-item
+                                        data-media-url="{{ media_item.media_url }}"
+                                        data-media-type="{{ media_item.media_type }}"
+                                        data-thumbnail-url="{{ media_item.thumbnail_url or '' }}"
+                                    ></span>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
 
                         <div class="media">
 
-                            {% if post.is_video %}
 
-                                <video
-                                    controls
-                                    playsinline
-                                    preload="metadata"
-                                    {% if post.thumbnail_url %}
-                                        poster="{{ post.thumbnail_url }}"
-                                    {% endif %}
+                            {% if primary_media %}
+
+                                <button
+                                    type="button"
+                                    class="media-open"
+                                    data-open-media
+                                    data-post-id="{{ post.id }}"
+                                    aria-label="View rejected customer experience media"
                                 >
-                                    <source
-                                        src="{{ post.media_url }}"
-                                    >
-                                </video>
+
+
+                                    {% if primary_media.is_video %}
+
+                                        <video
+                                            playsinline
+                                            muted
+                                            preload="metadata"
+                                            controlslist="nodownload noremoteplayback"
+                                            disablepictureinpicture
+                                            {% if primary_media.thumbnail_url %}
+                                                poster="{{ primary_media.thumbnail_url }}"
+                                            {% endif %}
+                                        >
+
+                                            <source
+                                                src="{{ primary_media.media_url }}"
+                                            >
+
+                                        </video>
+
+
+                                        <span class="media-type">
+                                            ▶ VIDEO
+                                        </span>
+
+
+                                    {% elif primary_media.is_image %}
+
+                                        <img
+                                            src="{{ primary_media.media_url }}"
+                                            alt="Rejected customer experience"
+                                            loading="lazy"
+                                        >
+
+                                    {% endif %}
+
+
+                                    {% if post.media_count > 1 %}
+
+                                        <span class="media-count">
+
+                                            ▣
+                                            {{ post.media_count }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </button>
+
 
                             {% else %}
 
-                                <img
-                                    src="{{ post.media_url }}"
-                                    alt="Rejected customer experience"
-                                    loading="lazy"
-                                >
+                                <div class="media-missing">
+
+                                    <div class="media-missing-inner">
+
+                                        <strong>
+                                            KALXA
+                                        </strong>
+
+                                        <span>
+                                            No media attached to this post
+                                        </span>
+
+                                    </div>
+
+                                </div>
 
                             {% endif %}
 
@@ -978,7 +1736,14 @@
                             <div class="restaurant">
 
                                 {% if post.restaurant_advert %}
+
+                                    📍
                                     {{ post.restaurant_advert.business_name }}
+
+                                {% else %}
+
+                                    Restaurant unavailable
+
                                 {% endif %}
 
                             </div>
@@ -994,14 +1759,26 @@
                             </div>
 
 
-                            {% if post.rejection_reason %}
+                            <div class="metadata">
 
-                                <div class="metadata">
+                                {{ post.media_count }}
+                                media
+                                {% if post.media_count != 1 %}
+                                    items
+                                {% else %}
+                                    item
+                                {% endif %}
+
+                                {% if post.rejection_reason %}
+
+                                    <br><br>
+
                                     Reason:
                                     {{ post.rejection_reason }}
-                                </div>
 
-                            {% endif %}
+                                {% endif %}
+
+                            </div>
 
                         </div>
 
@@ -1010,6 +1787,7 @@
                 {% endfor %}
 
             </div>
+
 
         {% else %}
 
@@ -1023,6 +1801,562 @@
 
 
 </div>
+
+
+
+<!-- =====================================================
+     FULLSCREEN MEDIA VIEWER
+====================================================== -->
+
+<div
+    class="viewer"
+    id="media-viewer"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Restaurant experience media viewer"
+>
+
+    <button
+        type="button"
+        class="viewer-close"
+        id="viewer-close"
+        aria-label="Close"
+    >
+        ×
+    </button>
+
+
+    <button
+        type="button"
+        class="viewer-prev"
+        id="viewer-prev"
+        aria-label="Previous media"
+        hidden
+    >
+        ‹
+    </button>
+
+
+    <div
+        class="viewer-stage"
+        id="viewer-stage"
+    ></div>
+
+
+    <button
+        type="button"
+        class="viewer-next"
+        id="viewer-next"
+        aria-label="Next media"
+        hidden
+    >
+        ›
+    </button>
+
+
+    <div
+        class="viewer-counter"
+        id="viewer-counter"
+        hidden
+    ></div>
+
+</div>
+
+
+
+<!-- =====================================================
+     MEDIA VIEWER JAVASCRIPT
+====================================================== -->
+
+<script>
+
+(() => {
+
+    const viewer =
+        document.getElementById(
+            "media-viewer"
+        );
+
+
+    const stage =
+        document.getElementById(
+            "viewer-stage"
+        );
+
+
+    const closeButton =
+        document.getElementById(
+            "viewer-close"
+        );
+
+
+    const previousButton =
+        document.getElementById(
+            "viewer-prev"
+        );
+
+
+    const nextButton =
+        document.getElementById(
+            "viewer-next"
+        );
+
+
+    const counter =
+        document.getElementById(
+            "viewer-counter"
+        );
+
+
+    if (
+        !viewer
+        ||
+        !stage
+    ) {
+
+        return;
+
+    }
+
+
+    let items = [];
+    let index = 0;
+
+
+    function stopVideo() {
+
+        stage
+            .querySelectorAll(
+                "video"
+            )
+            .forEach(
+                (video) => {
+
+                    try {
+
+                        video.pause();
+
+                    } catch {
+
+                        /* Ignore */
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    function render() {
+
+        stopVideo();
+
+
+        stage.innerHTML =
+            "";
+
+
+        if (!items.length) {
+
+            return;
+
+        }
+
+
+        index =
+            Math.max(
+                0,
+                Math.min(
+                    index,
+                    items.length - 1
+                )
+            );
+
+
+        const item =
+            items[index];
+
+
+        const type =
+            (
+                item.type
+                || ""
+            )
+            .toLowerCase();
+
+
+        let element;
+
+
+        if (
+            type === "video"
+            ||
+            type === "reel"
+        ) {
+
+            element =
+                document.createElement(
+                    "video"
+                );
+
+
+            element.controls =
+                true;
+
+
+            element.autoplay =
+                true;
+
+
+            element.playsInline =
+                true;
+
+
+            if (item.thumbnail) {
+
+                element.poster =
+                    item.thumbnail;
+
+            }
+
+
+            const source =
+                document.createElement(
+                    "source"
+                );
+
+
+            source.src =
+                item.url;
+
+
+            element.appendChild(
+                source
+            );
+
+
+        } else {
+
+            element =
+                document.createElement(
+                    "img"
+                );
+
+
+            element.src =
+                item.url;
+
+
+            element.alt =
+                "Restaurant experience";
+
+        }
+
+
+        stage.appendChild(
+            element
+        );
+
+
+        const multiple =
+            items.length > 1;
+
+
+        previousButton.hidden =
+            !multiple;
+
+
+        nextButton.hidden =
+            !multiple;
+
+
+        counter.hidden =
+            !multiple;
+
+
+        if (multiple) {
+
+            counter.textContent =
+                `${index + 1} / ${items.length}`;
+
+        }
+
+    }
+
+
+    function openViewer(
+        postId
+    ) {
+
+        const sourceContainer =
+            document.querySelector(
+                `[data-media-source="${postId}"]`
+            );
+
+
+        if (!sourceContainer) {
+
+            console.warn(
+                "[Kalxa Superadmin] No media source for post:",
+                postId
+            );
+
+            return;
+
+        }
+
+
+        items =
+            Array.from(
+                sourceContainer.querySelectorAll(
+                    "[data-media-item]"
+                )
+            )
+            .map(
+                (element) => ({
+
+                    url:
+                        element.dataset.mediaUrl,
+
+                    type:
+                        element.dataset.mediaType,
+
+                    thumbnail:
+                        element.dataset.thumbnailUrl,
+
+                })
+            )
+            .filter(
+                (item) =>
+                    Boolean(
+                        item.url
+                    )
+            );
+
+
+        if (!items.length) {
+
+            console.warn(
+                "[Kalxa Superadmin] No valid media URLs."
+            );
+
+            return;
+
+        }
+
+
+        index =
+            0;
+
+
+        render();
+
+
+        viewer.classList.add(
+            "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+    }
+
+
+    function closeViewer() {
+
+        stopVideo();
+
+
+        stage.innerHTML =
+            "";
+
+
+        viewer.classList.remove(
+            "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+
+        items =
+            [];
+
+
+        index =
+            0;
+
+    }
+
+
+    function previous() {
+
+        if (
+            items.length < 2
+        ) {
+
+            return;
+
+        }
+
+
+        index =
+            (
+                index - 1
+                + items.length
+            )
+            %
+            items.length;
+
+
+        render();
+
+    }
+
+
+    function next() {
+
+        if (
+            items.length < 2
+        ) {
+
+            return;
+
+        }
+
+
+        index =
+            (
+                index + 1
+            )
+            %
+            items.length;
+
+
+        render();
+
+    }
+
+
+    document
+        .querySelectorAll(
+            "[data-open-media]"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        openViewer(
+                            button.dataset.postId
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    closeButton?.addEventListener(
+        "click",
+        closeViewer
+    );
+
+
+    previousButton?.addEventListener(
+        "click",
+        previous
+    );
+
+
+    nextButton?.addEventListener(
+        "click",
+        next
+    );
+
+
+    viewer.addEventListener(
+        "click",
+        (event) => {
+
+            if (
+                event.target === viewer
+                ||
+                event.target === stage
+            ) {
+
+                closeViewer();
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                !viewer.classList.contains(
+                    "open"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                closeViewer();
+
+
+            } else if (
+                event.key === "ArrowLeft"
+            ) {
+
+                previous();
+
+
+            } else if (
+                event.key === "ArrowRight"
+            ) {
+
+                next();
+
+            }
+
+        }
+    );
+
+})();
+
+</script>
 
 
 </body>
