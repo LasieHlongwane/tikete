@@ -3223,22 +3223,29 @@
     ===================================================== */
 
     .experience-viewer {
-        position: fixed;
 
-        inset: 0;
+    display: none;
 
-        z-index: 1500;
+    position: relative;
 
-        display: none;
+    width: 100%;
 
-        background:
-            rgba(
-                0,
-                0,
-                0,
-                .97
-            );
-    }
+    margin:
+        14px 0
+        24px;
+
+    background: #000000;
+
+    border-radius: 16px;
+
+    overflow: hidden;
+}
+
+
+.experience-viewer.open {
+
+    display: block;
+}
 
     .experience-viewer.open {
         display: flex;
@@ -3247,14 +3254,13 @@
         justify-content: center;
     }
 
-    .experience-viewer-stage {
+   .experience-viewer-stage {
 
-    position: absolute;
-
-    inset: 0;
+    position: relative;
 
     width: 100%;
-    height: 100dvh;
+
+    min-height: 70vh;
 
     display: flex;
 
@@ -3263,28 +3269,27 @@
 
     padding: 0;
 
-    overflow: hidden;
-
     background: #000000;
 
     touch-action: pan-y;
 
     user-select: none;
-
     -webkit-user-select: none;
-}  
 
-   .experience-viewer-media {
+    overflow: hidden;
+}
+
+    .experience-viewer-media {
 
     width: 100%;
-    height: 100%;
+    height: auto;
 
-    max-width: none;
-    max-height: none;
+    max-width: 100%;
+    max-height: 90vh;
 
     display: block;
 
-    object-fit: cover;
+    object-fit: contain;
 
     background: #000000;
 
@@ -3293,9 +3298,10 @@
     -webkit-user-drag: none;
 
     user-select: none;
-
     -webkit-user-select: none;
 }
+
+    
     .experience-viewer-close {
         position: fixed;
 
@@ -3382,61 +3388,25 @@
     }
 
     .experience-viewer-details {
-        position: fixed;
 
-        left: 50%;
+    position: static;
 
-        bottom:
-            max(
-                18px,
-                env(
-                    safe-area-inset-bottom
-                )
-            );
+    width: 100%;
 
-        z-index: 1512;
+    display: grid;
 
-        transform:
-            translateX(-50%);
+    gap: 10px;
 
-        width:
-            min(
-                calc(100% - 28px),
-                440px
-            );
+    padding: 12px;
 
-        display: grid;
+    background: #111827;
 
-        gap: 10px;
+    border: 0;
 
-        padding:
-            12px;
+    border-radius: 0;
 
-        background:
-            rgba(
-                17,
-                24,
-                39,
-                .92
-            );
-
-        border:
-            1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .13
-            );
-
-        border-radius: 14px;
-
-        backdrop-filter:
-            blur(12px);
-
-        -webkit-backdrop-filter:
-            blur(12px);
-    }
+    transform: none;
+}
 
     .experience-viewer-rating {
         display: flex;
