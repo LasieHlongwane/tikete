@@ -3224,19 +3224,18 @@
 
     .experience-viewer {
 
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1500;
+
     display: none;
 
-    position: relative;
-
     width: 100%;
-
-    margin:
-        14px 0
-        24px;
+    height: 100dvh;
 
     background: #000000;
-
-    border-radius: 16px;
 
     overflow: hidden;
 }
@@ -3247,6 +3246,7 @@
     display: block;
 }
 
+
     .experience-viewer.open {
         display: flex;
 
@@ -3254,29 +3254,73 @@
         justify-content: center;
     }
 
-   .experience-viewer-stage {
+    .experience-viewer-feed {
+
+    width: 100%;
+    height: 100dvh;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scroll-snap-type: y mandatory;
+
+    overscroll-behavior-y: contain;
+
+    scrollbar-width: none;
+}
+
+
+.experience-viewer-feed::-webkit-scrollbar {
+
+    display: none;
+}
+
+    .experience-viewer-post {
 
     position: relative;
 
     width: 100%;
-
-    min-height: 70vh;
+    height: 100dvh;
 
     display: flex;
 
     align-items: center;
     justify-content: center;
 
-    padding: 0;
-
     background: #000000;
 
-    touch-action: pan-y;
-
-    user-select: none;
-    -webkit-user-select: none;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
 
     overflow: hidden;
+}
+
+
+.experience-viewer-post-media {
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #000000;
+}
+
+
+.experience-viewer-post-media img,
+.experience-viewer-post-media video {
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: contain;
+
+    background: #000000;
 }
 
     .experience-viewer-media {
@@ -6687,8 +6731,8 @@
 
 
 <div
-    class="experience-viewer-stage"
-    id="experience-viewer-stage"
+    class="experience-viewer-feed"
+    id="experience-viewer-feed"
 ></div>
 
 
@@ -8625,6 +8669,197 @@ and restaurant_reels
 
     }
 
+    
+    const viewer =
+    document.getElementById(
+        "experience-viewer"
+    );
+
+const feed =
+    document.getElementById(
+        "experience-viewer-feed"
+    );
+
+
+function buildExperienceFeed(
+    selectedPostId
+) {
+
+    feed.innerHTML =
+        "";
+
+
+    const sources =
+        Array.from(
+            document.querySelectorAll(
+                "[data-experience-media-source]"
+            )
+        );
+
+
+    sources.forEach(
+        (source) => {
+
+            const postId =
+                source.dataset.experienceMediaSource;
+
+
+            const mediaItems =
+                Array.from(
+                    source.querySelectorAll(
+                        "[data-experience-media-item]"
+                    )
+                );
+
+
+            if (
+                !mediaItems.length
+            ) {
+
+                return;
+
+            }
+
+
+            const post =
+                document.createElement(
+                    "section"
+                );
+
+
+            post.className =
+                "experience-viewer-post";
+
+
+            post.dataset.viewerPostId =
+                postId;
+
+
+            const mediaArea =
+                document.createElement(
+                    "div"
+                );
+
+
+            mediaArea.className =
+                "experience-viewer-post-media";
+
+
+            const firstMedia =
+                mediaItems[0];
+
+
+            const mediaType =
+                (
+                    firstMedia.dataset.mediaType
+                    ||
+                    ""
+                ).toLowerCase();
+
+
+            let media;
+
+
+            if (
+                mediaType === "video"
+                ||
+                mediaType === "reel"
+            ) {
+
+                media =
+                    document.createElement(
+                        "video"
+                    );
+
+
+                media.controls =
+                    true;
+
+                media.playsInline =
+                    true;
+
+                media.preload =
+                    "metadata";
+
+
+                if (
+                    firstMedia.dataset.thumbnailUrl
+                ) {
+
+                    media.poster =
+                        firstMedia.dataset.thumbnailUrl;
+
+                }
+
+
+                const videoSource =
+                    document.createElement(
+                        "source"
+                    );
+
+
+                videoSource.src =
+                    firstMedia.dataset.mediaUrl;
+
+
+                media.appendChild(
+                    videoSource
+                );
+
+
+            } else {
+
+                media =
+                    document.createElement(
+                        "img"
+                    );
+
+
+                media.src =
+                    firstMedia.dataset.mediaUrl;
+
+
+                media.alt =
+                    "Kalxa customer experience";
+
+            }
+
+
+            mediaArea.appendChild(
+                media
+            );
+
+
+            post.appendChild(
+                mediaArea
+            );
+
+
+            feed.appendChild(
+                post
+            );
+
+        }
+    );
+
+
+    const selectedPost =
+        feed.querySelector(
+            `[data-viewer-post-id="${selectedPostId}"]`
+        );
+
+
+    if (
+        selectedPost
+    ) {
+
+        selectedPost.scrollIntoView({
+            block: "start",
+        });
+
+    }
+
+}
 
     function openViewer(
         postId
@@ -8714,10 +8949,14 @@ and restaurant_reels
             "false"
         );
 
-        viewer.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-        });
+
+        buildExperienceFeed(
+            postId
+        );
+
+        document.body.classList.add(
+            "modal-open"
+        );
 
 
     }
@@ -8736,6 +8975,10 @@ and restaurant_reels
             "open"
         );
 
+        
+        document.body.classList.remove(
+            "modal-open"
+        );
 
         viewer.setAttribute(
             "aria-hidden",
