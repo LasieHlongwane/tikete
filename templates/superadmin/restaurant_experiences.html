@@ -2227,91 +2227,131 @@
     }
 
 
+
     function openViewer(
-        postId
+      postId
     ) {
 
-        const sourceContainer =
-            document.querySelector(
-                `[data-media-source="${postId}"]`
-            );
+      const sourceContainer =
+        document.querySelector(
+            `[data-media-source="${postId}"]`
+        );
 
 
-        if (!sourceContainer) {
+      if (!sourceContainer) {
 
-            console.warn(
-                "[Kalxa Superadmin] No media source for post:",
-                postId
-            );
+        console.warn(
+            "[Kalxa Superadmin] No media source for post:",
+            postId
+        );
 
-            return;
+        return;
 
-        }
+      }
 
 
-        items =
-            Array.from(
-                sourceContainer.querySelectorAll(
-                    "[data-media-item]"
+      const restaurantUrl =
+        sourceContainer.dataset.restaurantUrl
+        || "";
+
+
+      const restaurantName =
+        sourceContainer.dataset.restaurantName
+        || "";
+
+
+      if (
+        restaurantAction
+        &&
+        restaurantLink
+        &&
+        restaurantUrl
+      ) {
+
+        restaurantLink.href =
+            restaurantUrl;
+
+
+        restaurantLink.textContent =
+            restaurantName
+                ? `View ${restaurantName} →`
+                : "View restaurant →";
+
+
+        restaurantAction.hidden =
+            false;
+
+
+      } else if (restaurantAction) {
+
+        restaurantAction.hidden =
+            true;
+
+      }
+
+
+      items =
+        Array.from(
+            sourceContainer.querySelectorAll(
+                "[data-media-item]"
+            )
+        )
+        .map(
+            (element) => ({
+
+                url:
+                    element.dataset.mediaUrl,
+
+                type:
+                    element.dataset.mediaType,
+
+                thumbnail:
+                    element.dataset.thumbnailUrl,
+
+            })
+        )
+        .filter(
+            (item) =>
+                Boolean(
+                    item.url
                 )
-            )
-            .map(
-                (element) => ({
-
-                    url:
-                        element.dataset.mediaUrl,
-
-                    type:
-                        element.dataset.mediaType,
-
-                    thumbnail:
-                        element.dataset.thumbnailUrl,
-
-                })
-            )
-            .filter(
-                (item) =>
-                    Boolean(
-                        item.url
-                    )
-            );
-
-
-        if (!items.length) {
-
-            console.warn(
-                "[Kalxa Superadmin] No valid media URLs."
-            );
-
-            return;
-
-        }
-
-
-        index =
-            0;
-
-
-        render();
-
-
-        viewer.classList.add(
-            "open"
         );
 
 
-        viewer.setAttribute(
-            "aria-hidden",
-            "false"
+      if (!items.length) {
+
+        console.warn(
+            "[Kalxa Superadmin] No valid media URLs."
         );
 
+        return;
 
-        document.body.classList.add(
-            "modal-open"
-        );
+      }
+
+
+      index =
+        0;
+
+
+      render();
+
+
+      viewer.classList.add(
+        "open"
+      );
+
+
+      viewer.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+
+
+      document.body.classList.add(
+        "modal-open"
+      );
 
     }
-
 
     function closeViewer() {
 
