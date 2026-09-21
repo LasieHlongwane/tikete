@@ -3248,24 +3248,31 @@
     }
 
     .experience-viewer-stage {
-        width: 100%;
-        height: 100%;
 
-        display: flex;
+    position: absolute;
 
-        align-items: center;
-        justify-content: center;
+    inset: 0;
 
-        padding:
-            70px 16px
-            175px;
+    width: 100%;
+    height: 100dvh;
 
-        touch-action: pan-y;
+    display: flex;
 
-        user-select: none;
+    align-items: center;
+    justify-content: center;
 
-        -webkit-user-select: none;
-    }
+    padding: 0;
+
+    overflow: hidden;
+
+    background: #000000;
+
+    touch-action: pan-y;
+
+    user-select: none;
+
+    -webkit-user-select: none;
+}  
 
     .experience-viewer-media {
         max-width: 96vw;
