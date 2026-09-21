@@ -4621,6 +4621,29 @@ class RestaurantExperiencePost(db.Model):
         return True
 
 
+    @property
+    def created_at_johannesburg(self):
+
+      if not self.created_at:
+        return None
+
+      created_at = self.created_at
+
+    # PostgreSQL/SQLAlchemy may return a naive datetime
+    # even though the timestamp represents UTC.
+      if created_at.tzinfo is None:
+
+        created_at = created_at.replace(
+            tzinfo=timezone.utc
+        )
+
+      return created_at.astimezone(
+        ZoneInfo(
+            "Africa/Johannesburg"
+        )
+      )
+
+
     def __repr__(self):
 
         return (
