@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -54,8 +55,16 @@
                 antialiased;
         }
 
+        body.modal-open {
+            overflow: hidden;
+        }
+
         a {
             color: inherit;
+        }
+
+        button {
+            font: inherit;
         }
 
 
@@ -625,8 +634,25 @@
         }
 
 
-        .experience-media img,
-        .experience-media video {
+        .experience-media-open {
+
+            display: block;
+
+            width: 100%;
+            height: 100%;
+
+            padding: 0;
+
+            background: #000000;
+
+            border: 0;
+
+            cursor: zoom-in;
+        }
+
+
+        .experience-media-open img,
+        .experience-media-open video {
 
             width: 100%;
             height: 100%;
@@ -636,6 +662,70 @@
             object-fit: cover;
 
             background: #000000;
+
+            pointer-events: none;
+        }
+
+
+        .experience-media-type {
+
+            position: absolute;
+
+            left: 10px;
+            top: 10px;
+
+            z-index: 4;
+
+            padding:
+                5px 7px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .80
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            pointer-events: none;
+        }
+
+
+        .experience-media-count {
+
+            position: absolute;
+
+            right: 10px;
+            bottom: 10px;
+
+            z-index: 4;
+
+            padding:
+                5px 7px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .80
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            pointer-events: none;
         }
 
 
@@ -646,7 +736,7 @@
             top: 10px;
             right: 10px;
 
-            z-index: 5;
+            z-index: 8;
 
             display: inline-flex;
 
@@ -778,6 +868,237 @@
         }
 
 
+        .experience-media-source {
+
+            display: none !important;
+        }
+
+
+        /* =====================================================
+           FULLSCREEN EXPERIENCE VIEWER
+        ===================================================== */
+
+        .experience-viewer {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 1000;
+
+            display: none;
+
+            background:
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .96
+                );
+        }
+
+
+        .experience-viewer.open {
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .experience-viewer-stage {
+
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            padding:
+                70px
+                24px
+                80px;
+        }
+
+
+        .experience-viewer-media {
+
+            max-width: 96vw;
+            max-height: 84vh;
+
+            width: auto;
+            height: auto;
+
+            display: block;
+
+            object-fit: contain;
+
+            background: #000000;
+
+            border-radius: 10px;
+        }
+
+
+        .experience-viewer-close {
+
+            position: fixed;
+
+            top:
+                max(
+                    14px,
+                    env(
+                        safe-area-inset-top
+                    )
+                );
+
+            right: 14px;
+
+            z-index: 1010;
+
+            width: 44px;
+            height: 44px;
+
+            display: grid;
+
+            place-items: center;
+
+            padding: 0;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .95
+                );
+
+            color: #111827;
+
+            border: 0;
+            border-radius: 999px;
+
+            font-size: 24px;
+            font-weight: 950;
+
+            cursor: pointer;
+        }
+
+
+        .experience-viewer-prev,
+        .experience-viewer-next {
+
+            position: fixed;
+
+            top: 50%;
+
+            z-index: 1010;
+
+            width: 46px;
+            height: 46px;
+
+            display: grid;
+
+            place-items: center;
+
+            padding: 0;
+
+            transform:
+                translateY(-50%);
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .15
+                );
+
+            color: #ffffff;
+
+            border:
+                1px solid
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .22
+                );
+
+            border-radius: 999px;
+
+            font-size: 24px;
+
+            cursor: pointer;
+        }
+
+
+        .experience-viewer-prev {
+
+            left: 12px;
+        }
+
+
+        .experience-viewer-next {
+
+            right: 12px;
+        }
+
+
+        .experience-viewer-prev[hidden],
+        .experience-viewer-next[hidden] {
+
+            display: none;
+        }
+
+
+        .experience-viewer-counter {
+
+            position: fixed;
+
+            left: 50%;
+
+            bottom:
+                max(
+                    20px,
+                    env(
+                        safe-area-inset-bottom
+                    )
+                );
+
+            z-index: 1010;
+
+            transform:
+                translateX(-50%);
+
+            padding:
+                6px 10px;
+
+            background:
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .82
+                );
+
+            color: #ffffff;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+
+        .experience-viewer-counter[hidden] {
+
+            display: none;
+        }
+
+
         /* =====================================================
            KALXA CREDIT
         ===================================================== */
@@ -852,6 +1173,37 @@
 
                 grid-template-columns:
                     1fr;
+            }
+
+
+            .experience-viewer-stage {
+
+                padding:
+                    66px
+                    8px
+                    70px;
+            }
+
+
+            .experience-viewer-prev,
+            .experience-viewer-next {
+
+                width: 40px;
+                height: 40px;
+
+                font-size: 21px;
+            }
+
+
+            .experience-viewer-prev {
+
+                left: 6px;
+            }
+
+
+            .experience-viewer-next {
+
+                right: 6px;
             }
 
 
@@ -1107,7 +1459,7 @@
                 </h2>
 
                 <p>
-                    Post a photo or short reel and tell
+                    Post photos or short reels and tell
                     people what your experience at
                     {{ advert.business_name }} was like.
                     No Kalxa account required.
@@ -1248,104 +1600,214 @@
 
                 {% for post in experience_posts %}
 
-                    <article
-                        class="experience-card"
-                        data-experience-post="{{ post.id }}"
-                    >
+                    {% set experience_media =
+                        post.media
+                        if post.media
+                        else []
+                    %}
 
-                        <div class="experience-media">
 
-                            <button
-                                type="button"
-                                class="
-                                    experience-love
-                                    {% if post.id in loved_experience_post_ids %}
-                                        loved
-                                    {% endif %}
-                                "
-                                data-experience-love
-                                data-post-id="{{ post.id }}"
-                                aria-label="Love this experience"
-                                aria-pressed="{{
-                                    'true'
-                                    if post.id in loved_experience_post_ids
-                                    else 'false'
-                                }}"
+                    {% if experience_media|length > 0 %}
+
+                        {% set primary_media =
+                            experience_media[0]
+                        %}
+
+
+                        <article
+                            class="experience-card"
+                            data-experience-post="{{ post.id }}"
+                        >
+
+
+                            <!-- =================================
+                                 HIDDEN MEDIA MANIFEST
+                            ================================== -->
+
+                            <div
+                                class="experience-media-source"
+                                data-experience-media-source="{{ post.id }}"
                             >
 
-                                <span class="heart">
-                                    ♥
-                                </span>
+                                {% for media in experience_media %}
 
-                                <span data-love-count>
-                                    {{ post.love_count }}
-                                </span>
+                                    <span
+                                        data-experience-media-item
+                                        data-media-url="{{ media.media_url }}"
+                                        data-media-type="{{ media.media_type }}"
+                                        data-thumbnail-url="{{ media.thumbnail_url or '' }}"
+                                    ></span>
 
-                            </button>
+                                {% endfor %}
+
+                            </div>
 
 
-                            {% if post.is_video %}
 
-                                <video
-                                    playsinline
-                                    muted
-                                    loop
-                                    controls
-                                    preload="metadata"
-                                    controlslist="nodownload noremoteplayback"
-                                    disablepictureinpicture
-                                    oncontextmenu="return false;"
-                                    {% if post.thumbnail_url %}
-                                        poster="{{ post.thumbnail_url }}"
+                            <div class="experience-media">
+
+
+                                <!-- =============================
+                                     LOVE
+                                ============================== -->
+
+                                <button
+                                    type="button"
+                                    class="
+                                        experience-love
+                                        {% if
+                                            post.id
+                                            in loved_experience_post_ids
+                                        %}
+                                            loved
+                                        {% endif %}
+                                    "
+                                    data-experience-love
+                                    data-post-id="{{ post.id }}"
+                                    aria-label="Love this experience"
+                                    aria-pressed="{{
+                                        'true'
+                                        if
+                                            post.id
+                                            in loved_experience_post_ids
+                                        else
+                                            'false'
+                                    }}"
+                                >
+
+                                    <span class="heart">
+                                        ♥
+                                    </span>
+
+                                    <span data-love-count>
+                                        {{ post.love_count }}
+                                    </span>
+
+                                </button>
+
+
+
+                                <!-- =============================
+                                     CLICKABLE MEDIA
+                                ============================== -->
+
+                                <button
+                                    type="button"
+                                    class="experience-media-open"
+                                    data-experience-open
+                                    data-post-id="{{ post.id }}"
+                                    aria-label="View experience media"
+                                >
+
+
+                                    {% if
+                                        primary_media.media_type
+                                        in [
+                                            'video',
+                                            'reel'
+                                        ]
+                                    %}
+
+                                        <video
+                                            playsinline
+                                            muted
+                                            loop
+                                            preload="metadata"
+                                            controlslist="nodownload noremoteplayback"
+                                            disablepictureinpicture
+                                            oncontextmenu="return false;"
+                                            {% if
+                                                primary_media.thumbnail_url
+                                            %}
+                                                poster="{{
+                                                    primary_media.thumbnail_url
+                                                }}"
+                                            {% endif %}
+                                        >
+
+                                            <source
+                                                src="{{
+                                                    primary_media.media_url
+                                                }}"
+                                            >
+
+                                        </video>
+
+
+                                        <span class="experience-media-type">
+                                            ▶ Reel
+                                        </span>
+
+
+                                    {% else %}
+
+                                        <img
+                                            src="{{
+                                                primary_media.media_url
+                                            }}"
+                                            alt="{{ post.poster_name }} at {{ advert.business_name }}"
+                                            loading="lazy"
+                                        >
+
                                     {% endif %}
-                                >
-
-                                    <source
-                                        src="{{ post.media_url }}"
-                                    >
-
-                                </video>
-
-                            {% else %}
-
-                                <img
-                                    src="{{ post.media_url }}"
-                                    alt="{{ post.poster_name }} at {{ advert.business_name }}"
-                                    loading="lazy"
-                                >
-
-                            {% endif %}
-
-                        </div>
 
 
-                        <div class="experience-copy">
 
-                            <p class="experience-name">
-                                {{ post.poster_name }}
-                            </p>
+                                    {% if
+                                        experience_media|length > 1
+                                    %}
+
+                                        <span class="experience-media-count">
+                                            ▣
+                                            {{ experience_media|length }}
+                                        </span>
+
+                                    {% endif %}
 
 
-                            <p class="experience-text">
-                                “{{ post.experience_text }}”
-                            </p>
+                                </button>
+
+                            </div>
 
 
-                            <span class="experience-date">
 
-                                {% if post.created_at %}
+                            <div class="experience-copy">
 
-                                    {{ post.created_at.strftime(
-                                        '%d %b %Y'
-                                    ) }}
+
+                                <p class="experience-name">
+                                    {{ post.poster_name }}
+                                </p>
+
+
+                                {% if post.experience_text %}
+
+                                    <p class="experience-text">
+                                        “{{ post.experience_text }}”
+                                    </p>
 
                                 {% endif %}
 
-                            </span>
 
-                        </div>
+                                <span class="experience-date">
 
-                    </article>
+                                    {% if post.created_at %}
+
+                                        {{
+                                            post.created_at.strftime(
+                                                '%d %b %Y'
+                                            )
+                                        }}
+
+                                    {% endif %}
+
+                                </span>
+
+
+                            </div>
+
+                        </article>
+
+                    {% endif %}
 
                 {% endfor %}
 
@@ -1368,6 +1830,69 @@
         {% endif %}
 
     </section>
+
+
+</div>
+
+
+
+<!-- =========================================
+     FULLSCREEN EXPERIENCE VIEWER
+========================================== -->
+
+<div
+    class="experience-viewer"
+    id="experience-viewer"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Customer experience viewer"
+>
+
+
+    <button
+        type="button"
+        class="experience-viewer-close"
+        id="experience-viewer-close"
+        aria-label="Close media"
+    >
+        ×
+    </button>
+
+
+    <button
+        type="button"
+        class="experience-viewer-prev"
+        id="experience-viewer-prev"
+        aria-label="Previous media"
+        hidden
+    >
+        ‹
+    </button>
+
+
+    <div
+        class="experience-viewer-stage"
+        id="experience-viewer-stage"
+    ></div>
+
+
+    <button
+        type="button"
+        class="experience-viewer-next"
+        id="experience-viewer-next"
+        aria-label="Next media"
+        hidden
+    >
+        ›
+    </button>
+
+
+    <div
+        class="experience-viewer-counter"
+        id="experience-viewer-counter"
+        hidden
+    ></div>
 
 
 </div>
@@ -1438,10 +1963,488 @@
 
 
 <!-- =========================================
+     EXPERIENCE MEDIA VIEWER
+========================================== -->
+
+<script>
+
+(() => {
+
+    const viewer =
+        document.getElementById(
+            "experience-viewer"
+        );
+
+    const stage =
+        document.getElementById(
+            "experience-viewer-stage"
+        );
+
+    const closeButton =
+        document.getElementById(
+            "experience-viewer-close"
+        );
+
+    const previousButton =
+        document.getElementById(
+            "experience-viewer-prev"
+        );
+
+    const nextButton =
+        document.getElementById(
+            "experience-viewer-next"
+        );
+
+    const counter =
+        document.getElementById(
+            "experience-viewer-counter"
+        );
+
+
+    if (
+        !viewer
+        ||
+        !stage
+    ) {
+        return;
+    }
+
+
+    let currentItems = [];
+    let currentIndex = 0;
+
+
+    function stopCurrentVideo() {
+
+        stage
+            .querySelectorAll(
+                "video"
+            )
+            .forEach(
+                (video) => {
+
+                    video.pause();
+
+                }
+            );
+
+    }
+
+
+    function renderMedia() {
+
+        stopCurrentVideo();
+
+        stage.innerHTML = "";
+
+
+        if (!currentItems.length) {
+
+            return;
+        }
+
+
+        currentIndex =
+            Math.max(
+                0,
+                Math.min(
+                    currentIndex,
+                    currentItems.length - 1
+                )
+            );
+
+
+        const current =
+            currentItems[
+                currentIndex
+            ];
+
+
+        const mediaType =
+            (
+                current.type
+                || ""
+            ).toLowerCase();
+
+
+        let element;
+
+
+        if (
+            mediaType === "video"
+            ||
+            mediaType === "reel"
+        ) {
+
+            element =
+                document.createElement(
+                    "video"
+                );
+
+
+            element.className =
+                "experience-viewer-media";
+
+
+            element.controls =
+                true;
+
+            element.autoplay =
+                true;
+
+            element.playsInline =
+                true;
+
+
+            if (current.thumbnail) {
+
+                element.poster =
+                    current.thumbnail;
+            }
+
+
+            const source =
+                document.createElement(
+                    "source"
+                );
+
+
+            source.src =
+                current.url;
+
+
+            element.appendChild(
+                source
+            );
+
+
+        } else {
+
+            element =
+                document.createElement(
+                    "img"
+                );
+
+
+            element.className =
+                "experience-viewer-media";
+
+
+            element.src =
+                current.url;
+
+
+            element.alt =
+                "Customer experience photo";
+
+        }
+
+
+        stage.appendChild(
+            element
+        );
+
+
+        const multiple =
+            currentItems.length > 1;
+
+
+        previousButton.hidden =
+            !multiple;
+
+
+        nextButton.hidden =
+            !multiple;
+
+
+        counter.hidden =
+            !multiple;
+
+
+        if (multiple) {
+
+            counter.textContent =
+                `${
+                    currentIndex + 1
+                } / ${
+                    currentItems.length
+                }`;
+        }
+
+    }
+
+
+    function openExperienceViewer(
+        postId
+    ) {
+
+        const sourceContainer =
+            document.querySelector(
+                `[data-experience-media-source="${postId}"]`
+            );
+
+
+        if (!sourceContainer) {
+
+            console.warn(
+                "[Kalxa Restaurant Experience] Media source not found:",
+                postId
+            );
+
+            return;
+        }
+
+
+        currentItems =
+            Array.from(
+                sourceContainer.querySelectorAll(
+                    "[data-experience-media-item]"
+                )
+            )
+            .map(
+                (element) => ({
+
+                    url:
+                        element.dataset.mediaUrl,
+
+                    type:
+                        element.dataset.mediaType,
+
+                    thumbnail:
+                        element.dataset.thumbnailUrl,
+
+                })
+            )
+            .filter(
+                (item) =>
+                    Boolean(
+                        item.url
+                    )
+            );
+
+
+        if (!currentItems.length) {
+
+            console.warn(
+                "[Kalxa Restaurant Experience] No media available."
+            );
+
+            return;
+        }
+
+
+        currentIndex = 0;
+
+
+        renderMedia();
+
+
+        viewer.classList.add(
+            "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+    }
+
+
+    function closeExperienceViewer() {
+
+        stopCurrentVideo();
+
+
+        stage.innerHTML = "";
+
+
+        viewer.classList.remove(
+            "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+
+        currentItems = [];
+
+        currentIndex = 0;
+
+    }
+
+
+    function showPreviousMedia() {
+
+        if (
+            currentItems.length < 2
+        ) {
+            return;
+        }
+
+
+        currentIndex =
+            (
+                currentIndex - 1
+                + currentItems.length
+            )
+            %
+            currentItems.length;
+
+
+        renderMedia();
+
+    }
+
+
+    function showNextMedia() {
+
+        if (
+            currentItems.length < 2
+        ) {
+            return;
+        }
+
+
+        currentIndex =
+            (
+                currentIndex + 1
+            )
+            %
+            currentItems.length;
+
+
+        renderMedia();
+
+    }
+
+
+    document
+        .querySelectorAll(
+            "[data-experience-open]"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    (event) => {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+
+                        openExperienceViewer(
+                            button.dataset.postId
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    closeButton?.addEventListener(
+        "click",
+        closeExperienceViewer
+    );
+
+
+    previousButton?.addEventListener(
+        "click",
+        showPreviousMedia
+    );
+
+
+    nextButton?.addEventListener(
+        "click",
+        showNextMedia
+    );
+
+
+    viewer.addEventListener(
+        "click",
+        (event) => {
+
+            if (
+                event.target === viewer
+                ||
+                event.target === stage
+            ) {
+
+                closeExperienceViewer();
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                !viewer.classList.contains(
+                    "open"
+                )
+            ) {
+
+                return;
+            }
+
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                closeExperienceViewer();
+
+            } else if (
+                event.key === "ArrowLeft"
+            ) {
+
+                showPreviousMedia();
+
+            } else if (
+                event.key === "ArrowRight"
+            ) {
+
+                showNextMedia();
+
+            }
+
+        }
+    );
+
+})();
+
+</script>
+
+
+
+<!-- =========================================
      ANONYMOUS EXPERIENCE LOVES
 ========================================== -->
 
 <script>
+
 (() => {
 
     const loveButtons =
@@ -1457,7 +2460,12 @@
 
             button.addEventListener(
                 'click',
-                async () => {
+                async (event) => {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
 
                     const postId =
                         Number(
@@ -1467,8 +2475,10 @@
 
                     if (
                         !Number.isInteger(postId)
-                        || postId <= 0
+                        ||
+                        postId <= 0
                     ) {
+
                         return;
                     }
 
@@ -1506,12 +2516,14 @@
 
                         if (
                             !response.ok
-                            || !result.ok
+                            ||
+                            !result.ok
                         ) {
 
                             throw new Error(
                                 result.message
-                                || 'Unable to update love.'
+                                ||
+                                'Unable to update love.'
                             );
                         }
 
@@ -1541,12 +2553,14 @@
                                 );
                         }
 
+
                     } catch (error) {
 
                         console.error(
                             '[Kalxa Experience Love]',
                             error
                         );
+
 
                     } finally {
 
@@ -1561,6 +2575,7 @@
     );
 
 })();
+
 </script>
 
 
