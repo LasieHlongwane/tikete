@@ -4320,6 +4320,24 @@ class RestaurantExperiencePost(db.Model):
         db.Text,
         nullable=False,
     )
+    
+    # ========================================================
+# CUSTOMER RATING
+# ========================================================
+#
+# 1 = Poor
+# 2 = Fair
+# 3 = Good
+# 4 = Very good
+# 5 = Excellent
+# ========================================================
+
+    rating = db.Column(
+        db.Integer,
+        nullable=False,
+        default=5,
+        index=True,
+    )
 
 
     # ========================================================
