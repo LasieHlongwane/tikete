@@ -3274,31 +3274,28 @@
     -webkit-user-select: none;
 }  
 
-    .experience-viewer-media {
-        max-width: 96vw;
-        max-height:
-            calc(
-                100dvh - 255px
-            );
+   .experience-viewer-media {
 
-        width: auto;
-        height: auto;
+    width: 100%;
+    height: 100%;
 
-        display: block;
+    max-width: none;
+    max-height: none;
 
-        object-fit: contain;
+    display: block;
 
-        background: #000000;
+    object-fit: cover;
 
-        border-radius: 10px;
+    background: #000000;
 
-        -webkit-user-drag: none;
+    border-radius: 0;
 
-        user-select: none;
+    -webkit-user-drag: none;
 
-        -webkit-user-select: none;
-    }
+    user-select: none;
 
+    -webkit-user-select: none;
+}
     .experience-viewer-close {
         position: fixed;
 
