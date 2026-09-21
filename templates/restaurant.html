@@ -1,1840 +1,2160 @@
-
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
 
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
+<meta
+    name="theme-color"
+    content="#ffffff"
+>
 
-    <title>
-        {{ advert.business_name }} | Kalxa
-    </title>
-
-
-    <style>
-
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-
-            background: #ffffff;
-            color: #111827;
-
-            font-family:
-                Inter,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Roboto,
-                Helvetica,
-                Arial,
-                sans-serif;
-
-            -webkit-font-smoothing:
-                antialiased;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        a {
-            color: inherit;
-        }
-
-        button {
-            font: inherit;
-        }
+<title>
+    {{ advert.business_name }} | Kalxa
+</title>
 
 
-        /* =====================================================
-           PAGE
-        ===================================================== */
+<style>
 
-        .restaurant-page {
+    /* =====================================================
+       GLOBAL
+    ===================================================== */
 
-            width: min(
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        margin: 0;
+
+        background: #ffffff;
+        color: #111827;
+
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+
+        -webkit-font-smoothing:
+            antialiased;
+    }
+
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    a {
+        color: inherit;
+    }
+
+    button {
+        font: inherit;
+    }
+
+
+    /* =====================================================
+       PAGE
+    ===================================================== */
+
+    .restaurant-page {
+
+        width:
+            min(
                 100% - 28px,
                 680px
             );
 
-            margin: 0 auto;
+        margin:
+            0 auto;
 
-            padding:
-                18px 0
-                110px;
+        padding:
+            18px 0
+            110px;
+    }
+
+
+    /* =====================================================
+       TOP BAR
+    ===================================================== */
+
+    .restaurant-topbar {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 14px;
+
+        margin-bottom: 18px;
+
+        padding-bottom: 13px;
+
+        border-bottom:
+            1px solid #e5e7eb;
+    }
+
+
+    .kalxa-brand {
+
+        color: #111827;
+
+        font-size: 14px;
+        font-weight: 950;
+
+        letter-spacing: .06em;
+
+        text-decoration: none;
+    }
+
+
+    .back-link {
+
+        color: #6b7280;
+
+        font-size: 11px;
+        font-weight: 800;
+
+        text-decoration: none;
+    }
+
+
+    /* =====================================================
+       RESTAURANT CARD
+    ===================================================== */
+
+    .restaurant-card {
+
+        overflow: hidden;
+
+        background: #ffffff;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 22px;
+
+        box-shadow:
+            0 12px 36px
+            rgba(
+                15,
+                23,
+                42,
+                .07
+            );
+    }
+
+
+    /* =====================================================
+       POSTER
+    ===================================================== */
+
+    .poster-shell {
+
+        position: relative;
+
+        width: 100%;
+
+        overflow: hidden;
+
+        background: #f3f4f6;
+    }
+
+
+    .poster-shell img {
+
+        width: 100%;
+        height: auto;
+
+        display: block;
+
+        object-fit: cover;
+    }
+
+
+    .restaurant-type {
+
+        position: absolute;
+
+        top: 13px;
+        left: 13px;
+
+        padding:
+            6px 9px;
+
+        background:
+            rgba(
+                17,
+                24,
+                39,
+                .82
+            );
+
+        color: #ffffff;
+
+        border-radius: 999px;
+
+        font-size: 9px;
+        font-weight: 950;
+
+        letter-spacing: .06em;
+
+        text-transform: uppercase;
+
+        backdrop-filter:
+            blur(8px);
+
+        -webkit-backdrop-filter:
+            blur(8px);
+    }
+
+
+    /* =====================================================
+       CONTENT
+    ===================================================== */
+
+    .restaurant-content {
+
+        padding:
+            22px 20px 24px;
+    }
+
+
+    .eyebrow {
+
+        margin:
+            0 0 7px;
+
+        color: #6b7280;
+
+        font-size: 9px;
+        font-weight: 950;
+
+        letter-spacing: .12em;
+
+        text-transform: uppercase;
+    }
+
+
+    .restaurant-name {
+
+        margin: 0;
+
+        color: #111827;
+
+        font-size:
+            clamp(
+                28px,
+                7vw,
+                40px
+            );
+
+        line-height: 1.02;
+
+        font-weight: 950;
+
+        letter-spacing: -.045em;
+    }
+
+
+    .headline {
+
+        margin:
+            10px 0 0;
+
+        color: #374151;
+
+        font-size: 16px;
+        line-height: 1.35;
+
+        font-weight: 850;
+    }
+
+
+    .description {
+
+        margin:
+            18px 0 0;
+
+        color: #4b5563;
+
+        font-size: 14px;
+        line-height: 1.7;
+
+        white-space: pre-line;
+    }
+
+
+    /* =====================================================
+       LOCATION
+    ===================================================== */
+
+    .location-box {
+
+        margin-top: 22px;
+
+        padding: 15px;
+
+        background: #f8fafc;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 14px;
+    }
+
+
+    .location-label {
+
+        display: block;
+
+        margin-bottom: 5px;
+
+        color: #6b7280;
+
+        font-size: 9px;
+        font-weight: 950;
+
+        letter-spacing: .09em;
+
+        text-transform: uppercase;
+    }
+
+
+    .location-main {
+
+        color: #111827;
+
+        font-size: 13px;
+        line-height: 1.45;
+
+        font-weight: 850;
+    }
+
+
+    .location-area {
+
+        display: block;
+
+        margin-top: 3px;
+
+        color: #6b7280;
+
+        font-size: 11px;
+    }
+
+
+    /* =====================================================
+       CONTACT ACTIONS
+    ===================================================== */
+
+    .actions-title {
+
+        margin:
+            25px 0 10px;
+
+        color: #111827;
+
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+
+    .restaurant-actions {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+
+        gap: 9px;
+    }
+
+
+    .restaurant-action {
+
+        min-height: 48px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 7px;
+
+        padding:
+            10px 12px;
+
+        border: 0;
+
+        border-radius: 11px;
+
+        font-size: 12px;
+        font-weight: 900;
+
+        text-decoration: none;
+
+        cursor: pointer;
+
+        transition:
+            transform .15s ease,
+            background .15s ease;
+    }
+
+
+    .restaurant-action:hover {
+
+        transform:
+            translateY(-1px);
+    }
+
+
+    .action-directions {
+
+        background: #111827;
+        color: #ffffff;
+    }
+
+
+    .action-whatsapp {
+
+        background: #166534;
+        color: #ffffff;
+    }
+
+
+    .action-call {
+
+        background: #f3f4f6;
+        color: #111827;
+
+        border:
+            1px solid #d1d5db;
+    }
+
+
+    .action-share {
+
+        background: #fff4df;
+        color: #111827;
+
+        border:
+            1px solid #ead9bb;
+    }
+
+
+    /* =====================================================
+       SHARE EXPERIENCE CTA
+    ===================================================== */
+
+    .experience-cta {
+
+        margin-top: 22px;
+
+        padding: 17px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #111827,
+                #27272a
+            );
+
+        color: #ffffff;
+
+        border-radius: 16px;
+    }
+
+
+    .experience-cta-kicker {
+
+        display: block;
+
+        color: #d1d5db;
+
+        font-size: 9px;
+        font-weight: 900;
+
+        letter-spacing: .10em;
+
+        text-transform: uppercase;
+    }
+
+
+    .experience-cta h2 {
+
+        margin:
+            6px 0 0;
+
+        font-size: 17px;
+        line-height: 1.2;
+
+        font-weight: 950;
+    }
+
+
+    .experience-cta p {
+
+        margin:
+            7px 0 0;
+
+        color: #d1d5db;
+
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+
+    .experience-cta-link {
+
+        display: inline-flex;
+
+        width: 100%;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 43px;
+
+        margin-top: 13px;
+
+        background: #fff4df;
+        color: #111827;
+
+        border-radius: 10px;
+
+        font-size: 11px;
+        font-weight: 950;
+
+        text-decoration: none;
+    }
+
+
+    /* =====================================================
+       CUSTOMER EXPERIENCES
+    ===================================================== */
+
+    .experience-section {
+
+        margin-top: 28px;
+    }
+
+
+    .experience-section-header {
+
+        display: flex;
+
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        margin-bottom: 13px;
+    }
+
+
+    .experience-section-header h2 {
+
+        margin: 0;
+
+        color: #111827;
+
+        font-size: 20px;
+        line-height: 1.1;
+
+        font-weight: 950;
+
+        letter-spacing: -.03em;
+    }
+
+
+    .experience-section-header p {
+
+        margin:
+            5px 0 0;
+
+        color: #6b7280;
+
+        font-size: 10px;
+    }
+
+
+    .experience-count {
+
+        flex:
+            0 0 auto;
+
+        color: #6b7280;
+
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+
+    .experience-grid {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+
+        gap: 12px;
+    }
+
+
+    .experience-card {
+
+        overflow: hidden;
+
+        background: #f8fafc;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 16px;
+    }
+
+
+    .experience-media {
+
+        position: relative;
+
+        overflow: hidden;
+
+        aspect-ratio: 4 / 5;
+
+        background: #111827;
+    }
+
+
+    .experience-media-open {
+
+        display: block;
+
+        width: 100%;
+        height: 100%;
+
+        padding: 0;
+
+        background: #000000;
+
+        border: 0;
+
+        cursor: zoom-in;
+    }
+
+
+    .experience-media-open img,
+    .experience-media-open video {
+
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+
+        background: #000000;
+
+        pointer-events: none;
+    }
+
+
+    .experience-media-type {
+
+        position: absolute;
+
+        left: 10px;
+        top: 10px;
+
+        z-index: 4;
+
+        padding:
+            5px 7px;
+
+        background:
+            rgba(
+                17,
+                24,
+                39,
+                .80
+            );
+
+        color: #ffffff;
+
+        border-radius: 999px;
+
+        font-size: 9px;
+        font-weight: 900;
+
+        pointer-events: none;
+    }
+
+
+    .experience-media-count {
+
+        position: absolute;
+
+        right: 10px;
+        bottom: 10px;
+
+        z-index: 4;
+
+        padding:
+            5px 7px;
+
+        background:
+            rgba(
+                17,
+                24,
+                39,
+                .80
+            );
+
+        color: #ffffff;
+
+        border-radius: 999px;
+
+        font-size: 9px;
+        font-weight: 900;
+
+        pointer-events: none;
+    }
+
+
+    .experience-love {
+
+        position: absolute;
+
+        top: 10px;
+        right: 10px;
+
+        z-index: 8;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
+
+        min-height: 34px;
+
+        padding:
+            0 10px;
+
+        background:
+            rgba(
+                17,
+                24,
+                39,
+                .80
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .20
+            );
+
+        border-radius: 999px;
+
+        font: inherit;
+
+        font-size: 10px;
+        font-weight: 950;
+
+        cursor: pointer;
+
+        backdrop-filter:
+            blur(10px);
+
+        -webkit-backdrop-filter:
+            blur(10px);
+    }
+
+
+    .experience-love .heart {
+
+        color: #ffffff;
+
+        font-size: 15px;
+    }
+
+
+    .experience-love.loved .heart {
+
+        color: #fb7185;
+    }
+
+
+    .experience-love:disabled {
+
+        opacity: .65;
+    }
+
+
+    .experience-copy {
+
+        padding: 12px;
+    }
+
+
+    .experience-rating {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 2px;
+
+        margin-bottom: 7px;
+    }
+
+
+    .experience-star {
+
+        color: #d1d5db;
+
+        font-size: 12px;
+        line-height: 1;
+    }
+
+
+    .experience-star.filled {
+
+        color: #f5b301;
+    }
+
+
+    .experience-rating-number {
+
+        margin-left: 5px;
+
+        color: #6b7280;
+
+        font-size: 9px;
+        font-weight: 900;
+    }
+
+
+    .experience-name {
+
+        margin: 0;
+
+        color: #111827;
+
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+
+    .experience-text {
+
+        margin:
+            6px 0 0;
+
+        color: #4b5563;
+
+        font-size: 11px;
+        line-height: 1.5;
+
+        white-space: pre-line;
+    }
+
+
+    .experience-date {
+
+        display: block;
+
+        margin-top: 8px;
+
+        color: #9ca3af;
+
+        font-size: 9px;
+        font-weight: 750;
+    }
+
+
+    .experience-empty {
+
+        padding:
+            25px 18px;
+
+        background: #f8fafc;
+
+        color: #6b7280;
+
+        border:
+            1px dashed #cbd5e1;
+
+        border-radius: 15px;
+
+        font-size: 11px;
+        line-height: 1.5;
+
+        text-align: center;
+    }
+
+
+    .experience-media-source {
+
+        display: none !important;
+    }
+
+
+    .experience-missing-media {
+
+        aspect-ratio: 4 / 5;
+
+        display: grid;
+        place-items: center;
+
+        padding: 20px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #1f2937,
+                #030712
+            );
+
+        color: #fff4df;
+
+        text-align: center;
+    }
+
+
+    .experience-missing-media strong {
+
+        display: block;
+
+        font-size: 12px;
+        font-weight: 950;
+
+        letter-spacing: .12em;
+    }
+
+
+    .experience-missing-media span {
+
+        display: block;
+
+        margin-top: 5px;
+
+        color:
+            rgba(
+                255,
+                255,
+                255,
+                .65
+            );
+
+        font-size: 9px;
+    }
+
+
+    /* =====================================================
+       FULLSCREEN EXPERIENCE VIEWER
+    ===================================================== */
+
+    .experience-viewer {
+
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 1000;
+
+        display: none;
+
+        background:
+            rgba(
+                0,
+                0,
+                0,
+                .97
+            );
+    }
+
+
+    .experience-viewer.open {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+    }
+
+
+    .experience-viewer-stage {
+
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        padding:
+            70px
+            18px
+            175px;
+
+        touch-action:
+            pan-y;
+
+        user-select:
+            none;
+
+        -webkit-user-select:
+            none;
+    }
+
+
+    .experience-viewer-media {
+
+        max-width: 96vw;
+
+        max-height:
+            calc(
+                100dvh - 250px
+            );
+
+        width: auto;
+        height: auto;
+
+        display: block;
+
+        object-fit: contain;
+
+        background: #000000;
+
+        border-radius: 10px;
+
+        -webkit-user-drag:
+            none;
+
+        user-select:
+            none;
+    }
+
+
+    .experience-viewer-close {
+
+        position: fixed;
+
+        top:
+            max(
+                14px,
+                env(
+                    safe-area-inset-top
+                )
+            );
+
+        right: 14px;
+
+        z-index: 1015;
+
+        width: 44px;
+        height: 44px;
+
+        display: grid;
+
+        place-items: center;
+
+        padding: 0;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .95
+            );
+
+        color: #111827;
+
+        border: 0;
+
+        border-radius: 999px;
+
+        font-size: 24px;
+        font-weight: 950;
+
+        cursor: pointer;
+    }
+
+
+    .experience-viewer-counter {
+
+        position: fixed;
+
+        left: 50%;
+
+        bottom:
+            max(
+                132px,
+                calc(
+                    env(
+                        safe-area-inset-bottom
+                    )
+                    \+ 118px
+                )
+            );
+
+        z-index: 1010;
+
+        transform:
+            translateX(-50%);
+
+        padding:
+            6px 10px;
+
+        background:
+            rgba(
+                17,
+                24,
+                39,
+                .82
+            );
+
+        color: #ffffff;
+
+        border-radius: 999px;
+
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+
+    .experience-viewer-counter[hidden] {
+
+        display: none;
+    }
+
+
+    .experience-viewer-details {
+
+        position: fixed;
+
+        left: 50%;
+
+        bottom:
+            max(
+                18px,
+                env(
+                    safe-area-inset-bottom
+                )
+            );
+
+        z-index: 1012;
+
+        transform:
+            translateX(-50%);
+
+        width:
+            min(
+                calc(
+                    100% - 28px
+                ),
+                420px
+            );
+
+        display: grid;
+
+        gap: 9px;
+
+        padding: 12px;
+
+        background:
+            rgba(
+                17,
+                24,
+                39,
+                .92
+            );
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .12
+            );
+
+        border-radius: 14px;
+
+        backdrop-filter:
+            blur(12px);
+
+        -webkit-backdrop-filter:
+            blur(12px);
+    }
+
+
+    .viewer-rating {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 2px;
+    }
+
+
+    .viewer-rating[hidden] {
+
+        display: none;
+    }
+
+
+    .viewer-star {
+
+        color:
+            rgba(
+                255,
+                255,
+                255,
+                .28
+            );
+
+        font-size: 14px;
+    }
+
+
+    .viewer-star.filled {
+
+        color: #f5b301;
+    }
+
+
+    .viewer-rating-number {
+
+        margin-left: 6px;
+
+        color: #ffffff;
+
+        font-size: 10px;
+        font-weight: 950;
+    }
+
+
+    .viewer-swipe-hint {
+
+        color:
+            rgba(
+                255,
+                255,
+                255,
+                .55
+            );
+
+        font-size: 9px;
+        font-weight: 850;
+
+        text-align: center;
+
+        text-transform: uppercase;
+
+        letter-spacing: .08em;
+    }
+
+
+    .viewer-swipe-hint[hidden] {
+
+        display: none;
+    }
+
+
+    .viewer-restaurant-link {
+
+        display: flex;
+
+        width: 100%;
+
+        min-height: 43px;
+
+        align-items: center;
+        justify-content: center;
+
+        padding:
+            9px 14px;
+
+        background: #fff4df;
+        color: #111827;
+
+        border-radius: 10px;
+
+        font-size: 11px;
+        font-weight: 950;
+
+        text-decoration: none;
+    }
+
+
+    .viewer-restaurant-link[hidden] {
+
+        display: none;
+    }
+
+
+    /* =====================================================
+       KALXA CREDIT
+    ===================================================== */
+
+    .kalxa-credit {
+
+        margin-top: 22px;
+
+        color: #9ca3af;
+
+        font-size: 9px;
+        line-height: 1.4;
+
+        text-align: center;
+    }
+
+
+    /* =====================================================
+       SHARE MESSAGE
+    ===================================================== */
+
+    .share-status {
+
+        min-height: 15px;
+
+        margin:
+            8px 0 0;
+
+        color: #6b7280;
+
+        font-size: 9px;
+        font-weight: 800;
+
+        text-align: center;
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    .mobile-action-bar {
+        display: none;
+    }
+
+
+    @media (
+        max-width: 620px
+    ) {
+
+        .restaurant-page {
+
+            width:
+                min(
+                    100% - 20px,
+                    680px
+                );
+
+            padding-bottom:
+                105px;
         }
 
-
-        /* =====================================================
-           TOP BAR
-        ===================================================== */
-
-        .restaurant-topbar {
-
-            display: flex;
-
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 14px;
-
-            margin-bottom: 18px;
-
-            padding-bottom: 13px;
-
-            border-bottom:
-                1px solid #e5e7eb;
-        }
-
-
-        .kalxa-brand {
-
-            color: #111827;
-
-            font-size: 14px;
-            font-weight: 950;
-
-            letter-spacing: .06em;
-
-            text-decoration: none;
-        }
-
-
-        .back-link {
-
-            color: #6b7280;
-
-            font-size: 11px;
-            font-weight: 800;
-
-            text-decoration: none;
-        }
-
-
-        /* =====================================================
-           RESTAURANT CARD
-        ===================================================== */
 
         .restaurant-card {
 
-            overflow: hidden;
-
-            background: #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius: 22px;
-
-            box-shadow:
-                0 12px 36px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    .07
-                );
+            border-radius: 18px;
         }
 
-
-        /* =====================================================
-           POSTER
-        ===================================================== */
-
-        .poster-shell {
-
-            position: relative;
-
-            width: 100%;
-
-            overflow: hidden;
-
-            background: #f3f4f6;
-        }
-
-
-        .poster-shell img {
-
-            width: 100%;
-            height: auto;
-
-            display: block;
-
-            object-fit: cover;
-        }
-
-
-        .restaurant-type {
-
-            position: absolute;
-
-            top: 13px;
-            left: 13px;
-
-            padding:
-                6px 9px;
-
-            background:
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .82
-                );
-
-            color: #ffffff;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 950;
-
-            letter-spacing: .06em;
-
-            text-transform: uppercase;
-
-            backdrop-filter:
-                blur(8px);
-
-            -webkit-backdrop-filter:
-                blur(8px);
-        }
-
-
-        /* =====================================================
-           CONTENT
-        ===================================================== */
 
         .restaurant-content {
 
             padding:
-                22px 20px 24px;
-        }
-
-
-        .eyebrow {
-
-            margin: 0 0 7px;
-
-            color: #6b7280;
-
-            font-size: 9px;
-            font-weight: 950;
-
-            letter-spacing: .12em;
-
-            text-transform: uppercase;
-        }
-
-
-        .restaurant-name {
-
-            margin: 0;
-
-            color: #111827;
-
-            font-size:
-                clamp(
-                    28px,
-                    7vw,
-                    40px
-                );
-
-            line-height: 1.02;
-
-            font-weight: 950;
-
-            letter-spacing: -.045em;
-        }
-
-
-        .headline {
-
-            margin: 10px 0 0;
-
-            color: #374151;
-
-            font-size: 16px;
-
-            line-height: 1.35;
-
-            font-weight: 850;
-        }
-
-
-        .description {
-
-            margin: 18px 0 0;
-
-            color: #4b5563;
-
-            font-size: 14px;
-
-            line-height: 1.7;
-
-            white-space: pre-line;
-        }
-
-
-        /* =====================================================
-           LOCATION
-        ===================================================== */
-
-        .location-box {
-
-            margin-top: 22px;
-
-            padding: 15px;
-
-            background: #f8fafc;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius: 14px;
-        }
-
-
-        .location-label {
-
-            display: block;
-
-            margin-bottom: 5px;
-
-            color: #6b7280;
-
-            font-size: 9px;
-            font-weight: 950;
-
-            letter-spacing: .09em;
-
-            text-transform: uppercase;
-        }
-
-
-        .location-main {
-
-            color: #111827;
-
-            font-size: 13px;
-            line-height: 1.45;
-
-            font-weight: 850;
-        }
-
-
-        .location-area {
-
-            display: block;
-
-            margin-top: 3px;
-
-            color: #6b7280;
-
-            font-size: 11px;
-        }
-
-
-        /* =====================================================
-           SHARE EXPERIENCE CTA
-        ===================================================== */
-
-        .experience-cta {
-
-            margin-top: 22px;
-
-            padding: 17px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #111827,
-                    #27272a
-                );
-
-            color: #ffffff;
-
-            border-radius: 16px;
-        }
-
-
-        .experience-cta-kicker {
-
-            display: block;
-
-            color: #d1d5db;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            letter-spacing: .10em;
-
-            text-transform: uppercase;
-        }
-
-
-        .experience-cta h2 {
-
-            margin: 6px 0 0;
-
-            font-size: 17px;
-            line-height: 1.2;
-
-            font-weight: 950;
-        }
-
-
-        .experience-cta p {
-
-            margin: 7px 0 0;
-
-            color: #d1d5db;
-
-            font-size: 11px;
-            line-height: 1.5;
-        }
-
-
-        .experience-cta-link {
-
-            display: inline-flex;
-
-            width: 100%;
-
-            align-items: center;
-            justify-content: center;
-
-            min-height: 43px;
-
-            margin-top: 13px;
-
-            background: #fff4df;
-            color: #111827;
-
-            border-radius: 10px;
-
-            font-size: 11px;
-            font-weight: 950;
-
-            text-decoration: none;
-        }
-
-
-        /* =====================================================
-           CONTACT ACTIONS
-        ===================================================== */
-
-        .actions-title {
-
-            margin: 25px 0 10px;
-
-            color: #111827;
-
-            font-size: 12px;
-            font-weight: 950;
+                19px 16px 20px;
         }
 
 
         .restaurant-actions {
 
-            display: grid;
-
             grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap: 9px;
-        }
-
-
-        .restaurant-action {
-
-            min-height: 48px;
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
-            gap: 7px;
-
-            padding: 10px 12px;
-
-            border-radius: 11px;
-
-            font-size: 12px;
-            font-weight: 900;
-
-            text-decoration: none;
-
-            transition:
-                transform .15s ease,
-                background .15s ease;
-        }
-
-
-        .restaurant-action:hover {
-
-            transform: translateY(-1px);
-        }
-
-
-        .action-directions {
-
-            background: #111827;
-            color: #ffffff;
-        }
-
-
-        .action-whatsapp {
-
-            background: #166534;
-            color: #ffffff;
-        }
-
-
-        .action-call {
-
-            grid-column:
-                1 / -1;
-
-            background: #f3f4f6;
-            color: #111827;
-
-            border:
-                1px solid #d1d5db;
-        }
-
-
-        /* =====================================================
-           CUSTOMER EXPERIENCES
-        ===================================================== */
-
-        .experience-section {
-
-            margin-top: 28px;
-        }
-
-
-        .experience-section-header {
-
-            display: flex;
-
-            align-items: flex-end;
-            justify-content: space-between;
-
-            gap: 12px;
-
-            margin-bottom: 13px;
-        }
-
-
-        .experience-section-header h2 {
-
-            margin: 0;
-
-            color: #111827;
-
-            font-size: 20px;
-            line-height: 1.1;
-
-            font-weight: 950;
-
-            letter-spacing: -.03em;
-        }
-
-
-        .experience-section-header p {
-
-            margin: 5px 0 0;
-
-            color: #6b7280;
-
-            font-size: 10px;
-        }
-
-
-        .experience-count {
-
-            flex: 0 0 auto;
-
-            color: #6b7280;
-
-            font-size: 10px;
-            font-weight: 850;
+                1fr;
         }
 
 
         .experience-grid {
 
+            grid-template-columns:
+                1fr;
+        }
+
+
+        .experience-viewer-stage {
+
+            padding:
+                66px
+                8px
+                170px;
+        }
+
+
+        .experience-viewer-media {
+
+            max-width: 100%;
+
+            max-height:
+                calc(
+                    100dvh - 245px
+                );
+        }
+
+
+        .mobile-action-bar {
+
+            position: fixed;
+
+            left: 10px;
+            right: 10px;
+
+            bottom:
+                max(
+                    10px,
+                    env(
+                        safe-area-inset-bottom
+                    )
+                );
+
+            z-index: 100;
+
             display: grid;
 
             grid-template-columns:
                 repeat(
-                    2,
+                    4,
                     minmax(
                         0,
                         1fr
                     )
                 );
 
-            gap: 12px;
-        }
+            gap: 6px;
 
-
-        .experience-card {
-
-            overflow: hidden;
-
-            background: #f8fafc;
-
-            border:
-                1px solid #e5e7eb;
-
-            border-radius: 16px;
-        }
-
-
-        .experience-media {
-
-            position: relative;
-
-            overflow: hidden;
-
-            aspect-ratio: 4 / 5;
-
-            background: #111827;
-        }
-
-
-        .experience-media-open {
-
-            display: block;
-
-            width: 100%;
-            height: 100%;
-
-            padding: 0;
-
-            background: #000000;
-
-            border: 0;
-
-            cursor: zoom-in;
-        }
-
-
-        .experience-media-open img,
-        .experience-media-open video {
-
-            width: 100%;
-            height: 100%;
-
-            display: block;
-
-            object-fit: cover;
-
-            background: #000000;
-
-            pointer-events: none;
-        }
-
-
-        .experience-media-type {
-
-            position: absolute;
-
-            left: 10px;
-            top: 10px;
-
-            z-index: 4;
-
-            padding:
-                5px 7px;
+            padding: 7px;
 
             background:
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .80
-                );
-
-            color: #ffffff;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            pointer-events: none;
-        }
-
-
-        .experience-media-count {
-
-            position: absolute;
-
-            right: 10px;
-            bottom: 10px;
-
-            z-index: 4;
-
-            padding:
-                5px 7px;
-
-            background:
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .80
-                );
-
-            color: #ffffff;
-
-            border-radius: 999px;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            pointer-events: none;
-        }
-
-
-        .experience-love {
-
-            position: absolute;
-
-            top: 10px;
-            right: 10px;
-
-            z-index: 8;
-
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 5px;
-
-            min-height: 34px;
-
-            padding: 0 10px;
-
-            background:
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .80
-                );
-
-            color: #ffffff;
-
-            border:
-                1px solid
                 rgba(
                     255,
                     255,
                     255,
-                    .20
-                );
-
-            border-radius: 999px;
-
-            font: inherit;
-
-            font-size: 10px;
-            font-weight: 950;
-
-            cursor: pointer;
-
-            backdrop-filter:
-                blur(10px);
-
-            -webkit-backdrop-filter:
-                blur(10px);
-        }
-
-
-        .experience-love .heart {
-
-            color: #ffffff;
-
-            font-size: 15px;
-        }
-
-
-        .experience-love.loved .heart {
-
-            color: #fb7185;
-        }
-
-
-        .experience-love:disabled {
-
-            opacity: .65;
-        }
-
-
-        .experience-copy {
-
-            padding: 12px;
-        }
-
-
-        .experience-name {
-
-            margin: 0;
-
-            color: #111827;
-
-            font-size: 12px;
-            font-weight: 950;
-        }
-
-
-        .experience-text {
-
-            margin: 6px 0 0;
-
-            color: #4b5563;
-
-            font-size: 11px;
-            line-height: 1.5;
-
-            white-space: pre-line;
-        }
-
-
-        .experience-date {
-
-            display: block;
-
-            margin-top: 8px;
-
-            color: #9ca3af;
-
-            font-size: 9px;
-            font-weight: 750;
-        }
-
-
-        .experience-empty {
-
-            padding: 25px 18px;
-
-            background: #f8fafc;
-
-            color: #6b7280;
-
-            border:
-                1px dashed #cbd5e1;
-
-            border-radius: 15px;
-
-            font-size: 11px;
-
-            line-height: 1.5;
-
-            text-align: center;
-        }
-
-
-        .experience-media-source {
-
-            display: none !important;
-        }
-
-
-        /* =====================================================
-           FULLSCREEN EXPERIENCE VIEWER
-        ===================================================== */
-
-        .experience-viewer {
-
-            position: fixed;
-
-            inset: 0;
-
-            z-index: 1000;
-
-            display: none;
-
-            background:
-                rgba(
-                    0,
-                    0,
-                    0,
                     .96
                 );
-        }
-
-
-        .experience-viewer.open {
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-        }
-
-
-        .experience-viewer-stage {
-
-            width: 100%;
-            height: 100%;
-
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
-            padding:
-                70px
-                24px
-                80px;
-        }
-
-
-        .experience-viewer-media {
-
-            max-width: 96vw;
-            max-height: 84vh;
-
-            width: auto;
-            height: auto;
-
-            display: block;
-
-            object-fit: contain;
-
-            background: #000000;
-
-            border-radius: 10px;
-        }
-
-
-        .experience-viewer-close {
-
-            position: fixed;
-
-            top:
-                max(
-                    14px,
-                    env(
-                        safe-area-inset-top
-                    )
-                );
-
-            right: 14px;
-
-            z-index: 1010;
-
-            width: 44px;
-            height: 44px;
-
-            display: grid;
-
-            place-items: center;
-
-            padding: 0;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .95
-                );
-
-            color: #111827;
-
-            border: 0;
-            border-radius: 999px;
-
-            font-size: 24px;
-            font-weight: 950;
-
-            cursor: pointer;
-        }
-
-
-        .experience-viewer-prev,
-        .experience-viewer-next {
-
-            position: fixed;
-
-            top: 50%;
-
-            z-index: 1010;
-
-            width: 46px;
-            height: 46px;
-
-            display: grid;
-
-            place-items: center;
-
-            padding: 0;
-
-            transform:
-                translateY(-50%);
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .15
-                );
-
-            color: #ffffff;
 
             border:
-                1px solid
+                1px solid #d1d5db;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 14px 38px
                 rgba(
-                    255,
-                    255,
-                    255,
-                    .22
+                    15,
+                    23,
+                    42,
+                    .18
                 );
 
-            border-radius: 999px;
+            backdrop-filter:
+                blur(16px);
 
-            font-size: 24px;
+            -webkit-backdrop-filter:
+                blur(16px);
+        }
+
+
+        .mobile-action-bar a,
+        .mobile-action-bar button {
+
+            min-width: 0;
+            min-height: 45px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            flex-direction: column;
+
+            gap: 2px;
+
+            padding: 4px;
+
+            background: transparent;
+            color: #374151;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            font-size: 15px;
+            font-weight: 900;
+
+            text-decoration: none;
 
             cursor: pointer;
         }
 
 
-        .experience-viewer-prev {
+        .mobile-action-bar small {
 
-            left: 12px;
+            max-width: 100%;
+
+            overflow: hidden;
+
+            font-size: 8px;
+
+            white-space: nowrap;
+
+            text-overflow: ellipsis;
         }
 
 
-        .experience-viewer-next {
+        .mobile-action-bar
+        .mobile-whatsapp {
 
-            right: 12px;
-        }
-
-
-        .experience-viewer-prev[hidden],
-        .experience-viewer-next[hidden] {
-
-            display: none;
-        }
-
-
-        .experience-viewer-counter {
-
-            position: fixed;
-
-            left: 50%;
-
-            bottom:
-                max(
-                    20px,
-                    env(
-                        safe-area-inset-bottom
-                    )
-                );
-
-            z-index: 1010;
-
-            transform:
-                translateX(-50%);
-
-            padding:
-                6px 10px;
-
-            background:
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .82
-                );
-
+            background: #166534;
             color: #ffffff;
-
-            border-radius: 999px;
-
-            font-size: 11px;
-            font-weight: 900;
         }
 
+    }
 
-        .experience-viewer-counter[hidden] {
-
-            display: none;
-        }
-
-
-        /* =====================================================
-           KALXA CREDIT
-        ===================================================== */
-
-        .kalxa-credit {
-
-            margin-top: 22px;
-
-            color: #9ca3af;
-
-            font-size: 9px;
-
-            line-height: 1.4;
-
-            text-align: center;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
-
-        .mobile-action-bar {
-            display: none;
-        }
-
-
-        @media (
-            max-width: 620px
-        ) {
-
-            .restaurant-page {
-
-                width:
-                    min(
-                        100% - 20px,
-                        680px
-                    );
-
-                padding-bottom:
-                    105px;
-            }
-
-
-            .restaurant-card {
-
-                border-radius: 18px;
-            }
-
-
-            .restaurant-content {
-
-                padding:
-                    19px 16px 20px;
-            }
-
-
-            .restaurant-actions {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .action-call {
-
-                grid-column: auto;
-            }
-
-
-            .experience-grid {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .experience-viewer-stage {
-
-                padding:
-                    66px
-                    8px
-                    70px;
-            }
-
-
-            .experience-viewer-prev,
-            .experience-viewer-next {
-
-                width: 40px;
-                height: 40px;
-
-                font-size: 21px;
-            }
-
-
-            .experience-viewer-prev {
-
-                left: 6px;
-            }
-
-
-            .experience-viewer-next {
-
-                right: 6px;
-            }
-
-
-            .mobile-action-bar {
-
-                position: fixed;
-
-                left: 10px;
-                right: 10px;
-
-                bottom:
-                    max(
-                        10px,
-                        env(
-                            safe-area-inset-bottom
-                        )
-                    );
-
-                z-index: 100;
-
-                display: grid;
-
-                grid-template-columns:
-                    repeat(
-                        3,
-                        minmax(
-                            0,
-                            1fr
-                        )
-                    );
-
-                gap: 6px;
-
-                padding: 7px;
-
-                background:
-                    rgba(
-                        255,
-                        255,
-                        255,
-                        .96
-                    );
-
-                border:
-                    1px solid #d1d5db;
-
-                border-radius:
-                    16px;
-
-                box-shadow:
-                    0 14px 38px
-                    rgba(
-                        15,
-                        23,
-                        42,
-                        .18
-                    );
-
-                backdrop-filter:
-                    blur(16px);
-
-                -webkit-backdrop-filter:
-                    blur(16px);
-            }
-
-
-            .mobile-action-bar a {
-
-                min-width: 0;
-                min-height: 45px;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                flex-direction: column;
-
-                gap: 2px;
-
-                color: #374151;
-
-                border-radius: 10px;
-
-                font-size: 15px;
-                font-weight: 900;
-
-                text-decoration: none;
-            }
-
-
-            .mobile-action-bar small {
-
-                max-width: 100%;
-
-                overflow: hidden;
-
-                font-size: 8px;
-
-                white-space: nowrap;
-
-                text-overflow: ellipsis;
-            }
-
-
-            .mobile-action-bar
-            .mobile-whatsapp {
-
-                background: #166534;
-                color: #ffffff;
-            }
-
-        }
-
-    </style>
+</style>
+```
 
 </head>
 
-
 <body>
-
 
 <div class="restaurant-page">
 
+```
+<!-- =========================================
+     TOP BAR
+========================================== -->
 
-    <!-- =========================================
-         TOP BAR
-    ========================================== -->
+<header class="restaurant-topbar">
 
-    <header class="restaurant-topbar">
-
-        <a
-            href="{{ url_for('home') }}"
-            class="kalxa-brand"
-        >
-            KALXA
-        </a>
-
-
-        <a
-            href="{{ url_for('home') }}"
-            class="back-link"
-        >
-            ← Discover
-        </a>
-
-    </header>
+    <a
+        href="{{ url_for('home') }}"
+        class="kalxa-brand"
+    >
+        KALXA
+    </a>
 
 
+    <a
+        href="{{ url_for('home') }}"
+        class="back-link"
+    >
+        ← Discover
+    </a>
 
-    <!-- =========================================
-         RESTAURANT ADVERT
-    ========================================== -->
-
-    <article class="restaurant-card">
+</header>
 
 
-        {% if advert.poster_image_url %}
+<!-- =========================================
+     RESTAURANT ADVERT
+========================================== -->
 
-            <div class="poster-shell">
+<article class="restaurant-card">
 
-                <img
-                    src="{{ advert.poster_image_url }}"
-                    alt="{{ advert.business_name }} restaurant advert"
-                >
 
-                <span class="restaurant-type">
-                    🍔 Restaurant
-                </span>
+    {% if advert.poster_image_url %}
 
+        <div class="poster-shell">
+
+            <img
+                src="{{ advert.poster_image_url }}"
+                alt="{{ advert.business_name }} restaurant advert"
+            >
+
+            <span class="restaurant-type">
+                🍔 Restaurant
+            </span>
+
+        </div>
+
+    {% endif %}
+
+
+    <div class="restaurant-content">
+
+
+        <p class="eyebrow">
+            KALXA LOCAL FOOD
+        </p>
+
+
+        <h1 class="restaurant-name">
+            {{ advert.business_name }}
+        </h1>
+
+
+        {% if advert.headline %}
+
+            <p class="headline">
+                {{ advert.headline }}
+            </p>
+
+        {% endif %}
+
+
+        {% if advert.description %}
+
+            <div class="description">
+                {{ advert.description }}
             </div>
 
         {% endif %}
 
 
+        <!-- =================================
+             LOCATION
+        ================================== -->
 
-        <div class="restaurant-content">
+        {% if advert.address or advert.area %}
+
+            <section class="location-box">
+
+                <span class="location-label">
+                    📍 Location
+                </span>
 
 
-            <p class="eyebrow">
-                KALXA LOCAL FOOD
+                {% if advert.address %}
+
+                    <div class="location-main">
+                        {{ advert.address }}
+                    </div>
+
+                {% endif %}
+
+
+                {% if advert.area %}
+
+                    <span class="location-area">
+                        {{ advert.area }}
+                    </span>
+
+                {% endif %}
+
+            </section>
+
+        {% endif %}
+
+
+        <!-- =================================
+             CONTACT & VISIT
+        ================================== -->
+
+        <h2 class="actions-title">
+            Contact & Visit
+        </h2>
+
+
+        <div class="restaurant-actions">
+
+
+            {% if directions_url %}
+
+                <a
+                    href="{{ directions_url }}"
+                    class="
+                        restaurant-action
+                        action-directions
+                    "
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    🧭 Directions
+                </a>
+
+            {% endif %}
+
+
+            {% if whatsapp_url %}
+
+                <a
+                    href="{{ whatsapp_url }}"
+                    class="
+                        restaurant-action
+                        action-whatsapp
+                    "
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    💬 WhatsApp
+                </a>
+
+            {% endif %}
+
+
+            {% if phone_url %}
+
+                <a
+                    href="{{ phone_url }}"
+                    class="
+                        restaurant-action
+                        action-call
+                    "
+                >
+                    ☎ Call
+                </a>
+
+            {% endif %}
+
+
+            <button
+                type="button"
+                class="
+                    restaurant-action
+                    action-share
+                "
+                id="restaurant-share-button"
+            >
+                ↗ Share
+            </button>
+
+        </div>
+
+
+        <div
+            class="share-status"
+            id="restaurant-share-status"
+            aria-live="polite"
+        ></div>
+
+
+        <!-- =================================
+             POST EXPERIENCE
+        ================================== -->
+
+        <section class="experience-cta">
+
+            <span class="experience-cta-kicker">
+                BEEN HERE?
+            </span>
+
+
+            <h2>
+                Share your experience
+            </h2>
+
+
+            <p>
+                Post up to 3 photos or a short reel
+                and tell people what your experience
+                at {{ advert.business_name }} was like.
+                No Kalxa account required.
             </p>
 
 
-            <h1 class="restaurant-name">
-                {{ advert.business_name }}
-            </h1>
+            <a
+                href="{{ url_for(
+                    'create_restaurant_experience',
+                    restaurant_id=advert.id
+                ) }}"
+                class="experience-cta-link"
+            >
+                + Post your experience
+            </a>
+
+        </section>
 
 
-            {% if advert.headline %}
+        <p class="kalxa-credit">
+            Discover local places on Kalxa.
+        </p>
 
-                <p class="headline">
-                    {{ advert.headline }}
-                </p>
 
+    </div>
+
+</article>
+
+
+<!-- =========================================
+     CUSTOMER EXPERIENCES
+========================================== -->
+
+<section class="experience-section">
+
+    <div class="experience-section-header">
+
+        <div>
+
+            <h2>
+                People at {{ advert.business_name }}
+            </h2>
+
+
+            <p>
+                Customer photos, reels and experiences.
+            </p>
+
+        </div>
+
+
+        <span class="experience-count">
+
+            {{ experience_posts|length }}
+
+            {% if experience_posts|length == 1 %}
+                post
+            {% else %}
+                posts
             {% endif %}
 
+        </span>
 
-            {% if advert.description %}
-
-                <div class="description">
-                    {{ advert.description }}
-                </div>
-
-            {% endif %}
+    </div>
 
 
+    {% if experience_posts %}
 
-            {% if advert.address or advert.area %}
+        <div class="experience-grid">
 
-                <section class="location-box">
-
-                    <span class="location-label">
-                        📍 Location
-                    </span>
+            {% for post in experience_posts %}
 
 
-                    {% if advert.address %}
+                {% set experience_media =
+                    post.media_items
+                    if post.media_items
+                    else []
+                %}
 
-                        <div class="location-main">
-                            {{ advert.address }}
+
+                {% set primary_media =
+                    post.primary_media
+                %}
+
+
+                <article
+                    class="experience-card"
+                    data-experience-post="{{ post.id }}"
+                >
+
+
+                    <!-- =================================
+                         HIDDEN MEDIA MANIFEST
+                    ================================== -->
+
+                    {% if experience_media %}
+
+                        <div
+                            class="experience-media-source"
+                            data-experience-media-source="{{ post.id }}"
+                            data-experience-rating="{{ post.rating or '' }}"
+                            data-restaurant-url="{{
+                                url_for(
+                                    'restaurant_page',
+                                    advert_id=advert.id
+                                )
+                            }}"
+                            data-restaurant-name="{{
+                                advert.business_name
+                            }}"
+                        >
+
+                            {% for media in experience_media %}
+
+                                <span
+                                    data-experience-media-item
+                                    data-media-url="{{ media.media_url }}"
+                                    data-media-type="{{ media.media_type }}"
+                                    data-thumbnail-url="{{ media.thumbnail_url or '' }}"
+                                ></span>
+
+                            {% endfor %}
+
                         </div>
 
                     {% endif %}
 
 
-                    {% if advert.area %}
-
-                        <span class="location-area">
-                            {{ advert.area }}
-                        </span>
-
-                    {% endif %}
-
-                </section>
-
-            {% endif %}
-
-
-
-            <!-- =================================
-                 SHARE EXPERIENCE
-            ================================== -->
-
-            <section class="experience-cta">
-
-                <span class="experience-cta-kicker">
-                    BEEN HERE?
-                </span>
-
-                <h2>
-                    Share your experience
-                </h2>
-
-                <p>
-                    Post photos or short reels and tell
-                    people what your experience at
-                    {{ advert.business_name }} was like.
-                    No Kalxa account required.
-                </p>
-
-                <a
-                    href="{{ url_for(
-                        'create_restaurant_experience',
-                        restaurant_id=advert.id
-                    ) }}"
-                    class="experience-cta-link"
-                >
-                    + Post your experience
-                </a>
-
-            </section>
-
-
-
-            {% if
-                directions_url
-                or whatsapp_url
-                or phone_url
-            %}
-
-                <h2 class="actions-title">
-                    Contact & Visit
-                </h2>
-
-
-                <div class="restaurant-actions">
-
-
-                    {% if directions_url %}
-
-                        <a
-                            href="{{ directions_url }}"
-                            class="
-                                restaurant-action
-                                action-directions
-                            "
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            🧭 Directions
-                        </a>
-
-                    {% endif %}
-
-
-                    {% if whatsapp_url %}
-
-                        <a
-                            href="{{ whatsapp_url }}"
-                            class="
-                                restaurant-action
-                                action-whatsapp
-                            "
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            💬 WhatsApp Us
-                        </a>
-
-                    {% endif %}
-
-
-                    {% if phone_url %}
-
-                        <a
-                            href="{{ phone_url }}"
-                            class="
-                                restaurant-action
-                                action-call
-                            "
-                        >
-                            ☎ Call
-                        </a>
-
-                    {% endif %}
-
-
-                </div>
-
-            {% endif %}
-
-
-            <p class="kalxa-credit">
-                Discover local places on Kalxa.
-            </p>
-
-
-        </div>
-
-    </article>
-
-
-
-    <!-- =========================================
-         CUSTOMER EXPERIENCES
-    ========================================== -->
-
-    <section class="experience-section">
-
-        <div class="experience-section-header">
-
-            <div>
-
-                <h2>
-                    People at {{ advert.business_name }}
-                </h2>
-
-                <p>
-                    Customer photos, reels and experiences.
-                </p>
-
-            </div>
-
-
-            <span class="experience-count">
-
-                {{ experience_posts|length }}
-
-                {% if experience_posts|length == 1 %}
-                    post
-                {% else %}
-                    posts
-                {% endif %}
-
-            </span>
-
-        </div>
-
-
-        {% if experience_posts %}
-
-            <div class="experience-grid">
-
-                {% for post in experience_posts %}
-
-                    {% set experience_media =
-                        post.media
-                        if post.media
-                        else []
-                    %}
-
-
-                    {% if experience_media|length > 0 %}
-
-                        {% set primary_media =
-                            experience_media[0]
-                        %}
-
-
-                        <article
-                            class="experience-card"
-                            data-experience-post="{{ post.id }}"
-                        >
-
-
-                            <!-- =================================
-                                 HIDDEN MEDIA MANIFEST
-                            ================================== -->
-
-                            <div
-                                class="experience-media-source"
-                                data-experience-media-source="{{ post.id }}"
+                    {% if primary_media %}
+
+                        <div class="experience-media">
+
+
+                            <!-- =============================
+                                 LOVE
+                            ============================== -->
+
+                            <button
+                                type="button"
+                                class="
+                                    experience-love
+                                    {% if
+                                        post.id
+                                        in loved_experience_post_ids
+                                    %}
+                                        loved
+                                    {% endif %}
+                                "
+                                data-experience-love
+                                data-post-id="{{ post.id }}"
+                                aria-label="Love this experience"
+                                aria-pressed="{{
+                                    'true'
+                                    if
+                                        post.id
+                                        in loved_experience_post_ids
+                                    else
+                                        'false'
+                                }}"
                             >
 
-                                {% for media in experience_media %}
-
-                                    <span
-                                        data-experience-media-item
-                                        data-media-url="{{ media.media_url }}"
-                                        data-media-type="{{ media.media_type }}"
-                                        data-thumbnail-url="{{ media.thumbnail_url or '' }}"
-                                    ></span>
-
-                                {% endfor %}
-
-                            </div>
+                                <span class="heart">
+                                    ♥
+                                </span>
 
 
+                                <span data-love-count>
+                                    {{ post.love_count }}
+                                </span>
 
-                            <div class="experience-media">
+                            </button>
 
 
-                                <!-- =============================
-                                     LOVE
-                                ============================== -->
+                            <!-- =============================
+                                 CLICKABLE MEDIA
+                            ============================== -->
 
-                                <button
-                                    type="button"
-                                    class="
-                                        experience-love
+                            <button
+                                type="button"
+                                class="experience-media-open"
+                                data-experience-open
+                                data-post-id="{{ post.id }}"
+                                aria-label="View experience media"
+                            >
+
+
+                                {% if primary_media.is_video %}
+
+                                    <video
+                                        playsinline
+                                        muted
+                                        loop
+                                        preload="metadata"
+                                        controlslist="nodownload noremoteplayback"
+                                        disablepictureinpicture
+                                        oncontextmenu="return false;"
                                         {% if
-                                            post.id
-                                            in loved_experience_post_ids
+                                            primary_media.thumbnail_url
                                         %}
-                                            loved
-                                        {% endif %}
-                                    "
-                                    data-experience-love
-                                    data-post-id="{{ post.id }}"
-                                    aria-label="Love this experience"
-                                    aria-pressed="{{
-                                        'true'
-                                        if
-                                            post.id
-                                            in loved_experience_post_ids
-                                        else
-                                            'false'
-                                    }}"
-                                >
-
-                                    <span class="heart">
-                                        ♥
-                                    </span>
-
-                                    <span data-love-count>
-                                        {{ post.love_count }}
-                                    </span>
-
-                                </button>
-
-
-
-                                <!-- =============================
-                                     CLICKABLE MEDIA
-                                ============================== -->
-
-                                <button
-                                    type="button"
-                                    class="experience-media-open"
-                                    data-experience-open
-                                    data-post-id="{{ post.id }}"
-                                    aria-label="View experience media"
-                                >
-
-
-                                    {% if
-                                        primary_media.media_type
-                                        in [
-                                            'video',
-                                            'reel'
-                                        ]
-                                    %}
-
-                                        <video
-                                            playsinline
-                                            muted
-                                            loop
-                                            preload="metadata"
-                                            controlslist="nodownload noremoteplayback"
-                                            disablepictureinpicture
-                                            oncontextmenu="return false;"
-                                            {% if
+                                            poster="{{
                                                 primary_media.thumbnail_url
-                                            %}
-                                                poster="{{
-                                                    primary_media.thumbnail_url
-                                                }}"
-                                            {% endif %}
-                                        >
+                                            }}"
+                                        {% endif %}
+                                    >
 
-                                            <source
-                                                src="{{
-                                                    primary_media.media_url
-                                                }}"
-                                            >
-
-                                        </video>
-
-
-                                        <span class="experience-media-type">
-                                            ▶ Reel
-                                        </span>
-
-
-                                    {% else %}
-
-                                        <img
+                                        <source
                                             src="{{
                                                 primary_media.media_url
                                             }}"
-                                            alt="{{ post.poster_name }} at {{ advert.business_name }}"
-                                            loading="lazy"
                                         >
 
-                                    {% endif %}
+                                    </video>
 
 
-
-                                    {% if
-                                        experience_media|length > 1
-                                    %}
-
-                                        <span class="experience-media-count">
-                                            ▣
-                                            {{ experience_media|length }}
-                                        </span>
-
-                                    {% endif %}
+                                    <span class="experience-media-type">
+                                        ▶ Reel
+                                    </span>
 
 
-                                </button>
+                                {% else %}
 
-                            </div>
-
-
-
-                            <div class="experience-copy">
-
-
-                                <p class="experience-name">
-                                    {{ post.poster_name }}
-                                </p>
-
-
-                                {% if post.experience_text %}
-
-                                    <p class="experience-text">
-                                        “{{ post.experience_text }}”
-                                    </p>
+                                    <img
+                                        src="{{
+                                            primary_media.media_url
+                                        }}"
+                                        alt="{{ post.poster_name }} at {{ advert.business_name }}"
+                                        loading="lazy"
+                                    >
 
                                 {% endif %}
 
 
-                                <span class="experience-date">
+                                {% if post.media_count > 1 %}
 
-                                    {% if post.created_at %}
+                                    <span class="experience-media-count">
+                                        ▣ {{ post.media_count }}
+                                    </span>
 
-                                        {{
-                                            post.created_at.strftime(
-                                                '%d %b %Y'
-                                            )
-                                        }}
+                                {% endif %}
 
-                                    {% endif %}
 
+                            </button>
+
+                        </div>
+
+
+                    {% else %}
+
+                        <div class="experience-missing-media">
+
+                            <div>
+
+                                <strong>
+                                    KALXA
+                                </strong>
+
+
+                                <span>
+                                    Experience media unavailable
                                 </span>
-
 
                             </div>
 
-                        </article>
+                        </div>
 
                     {% endif %}
 
-                {% endfor %}
 
-            </div>
+                    <div class="experience-copy">
 
-        {% else %}
 
-            <div class="experience-empty">
+                        <!-- =============================
+                             RATING
+                        ============================== -->
 
-                No customer experiences have been
-                published for {{ advert.business_name }}
-                yet.
+                        {% if post.rating %}
 
-                <br><br>
+                            <div
+                                class="experience-rating"
+                                aria-label="{{ post.rating }} out of 5 stars"
+                            >
 
-                Be the first person to share one.
+                                {% for star in range(1, 6) %}
 
-            </div>
+                                    <span
+                                        class="
+                                            experience-star
+                                            {% if
+                                                star <= post.rating
+                                            %}
+                                                filled
+                                            {% endif %}
+                                        "
+                                    >
+                                        ★
+                                    </span>
 
-        {% endif %}
+                                {% endfor %}
 
-    </section>
 
+                                <span class="experience-rating-number">
+                                    {{ post.rating }}/5
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <p class="experience-name">
+                            {{ post.poster_name }}
+                        </p>
+
+
+                        {% if post.experience_text %}
+
+                            <p class="experience-text">
+                                “{{ post.experience_text }}”
+                            </p>
+
+                        {% endif %}
+
+
+                        {% if post.created_at %}
+
+                            <span class="experience-date">
+
+                                {{
+                                    post.created_at.strftime(
+                                        '%d %b %Y · %H:%M'
+                                    )
+                                }}
+
+                            </span>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+
+    {% else %}
+
+        <div class="experience-empty">
+
+            No customer experiences have been
+            published for {{ advert.business_name }}
+            yet.
+
+            <br><br>
+
+            Be the first person to share one.
+
+        </div>
+
+    {% endif %}
+
+</section>
+```
 
 </div>
-
-
 
 <!-- =========================================
      FULLSCREEN EXPERIENCE VIEWER
@@ -1849,118 +2169,298 @@
     aria-label="Customer experience viewer"
 >
 
-
-    <button
-        type="button"
-        class="experience-viewer-close"
-        id="experience-viewer-close"
-        aria-label="Close media"
-    >
-        ×
-    </button>
-
-
-    <button
-        type="button"
-        class="experience-viewer-prev"
-        id="experience-viewer-prev"
-        aria-label="Previous media"
-        hidden
-    >
-        ‹
-    </button>
+```
+<button
+    type="button"
+    class="experience-viewer-close"
+    id="experience-viewer-close"
+    aria-label="Close media"
+>
+    ×
+</button>
 
 
-    <div
-        class="experience-viewer-stage"
-        id="experience-viewer-stage"
-    ></div>
+<div
+    class="experience-viewer-stage"
+    id="experience-viewer-stage"
+></div>
 
 
-    <button
-        type="button"
-        class="experience-viewer-next"
-        id="experience-viewer-next"
-        aria-label="Next media"
-        hidden
-    >
-        ›
-    </button>
+<div
+    class="experience-viewer-counter"
+    id="experience-viewer-counter"
+    hidden
+></div>
+
+
+<div class="experience-viewer-details">
 
 
     <div
-        class="experience-viewer-counter"
-        id="experience-viewer-counter"
+        class="viewer-rating"
+        id="viewer-rating"
         hidden
-    ></div>
+    >
+
+        <span
+            id="viewer-stars"
+        ></span>
+
+
+        <span
+            class="viewer-rating-number"
+            id="viewer-rating-number"
+        ></span>
+
+    </div>
+
+
+    <div
+        class="viewer-swipe-hint"
+        id="viewer-swipe-hint"
+        hidden
+    >
+        Swipe left or right
+    </div>
+
+
+    <a
+        href="#"
+        class="viewer-restaurant-link"
+        id="viewer-restaurant-link"
+        hidden
+    >
+        View restaurant →
+    </a>
 
 
 </div>
+```
 
-
+</div>
 
 <!-- =========================================
      MOBILE ACTION BAR
 ========================================== -->
 
-{% if
-    directions_url
-    or whatsapp_url
-    or phone_url
-%}
+<nav
+    class="mobile-action-bar"
+    aria-label="Restaurant actions"
+>
 
-    <nav
-        class="mobile-action-bar"
-        aria-label="Restaurant actions"
+```
+{% if directions_url %}
+
+    <a
+        href="{{ directions_url }}"
+        target="_blank"
+        rel="noopener noreferrer"
     >
-
-
-        {% if directions_url %}
-
-            <a
-                href="{{ directions_url }}"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                <span>🧭</span>
-                <small>Directions</small>
-            </a>
-
-        {% endif %}
-
-
-        {% if whatsapp_url %}
-
-            <a
-                href="{{ whatsapp_url }}"
-                class="mobile-whatsapp"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                <span>💬</span>
-                <small>WhatsApp</small>
-            </a>
-
-        {% endif %}
-
-
-        {% if phone_url %}
-
-            <a
-                href="{{ phone_url }}"
-            >
-                <span>☎</span>
-                <small>Call</small>
-            </a>
-
-        {% endif %}
-
-
-    </nav>
+        <span>🧭</span>
+        <small>Directions</small>
+    </a>
 
 {% endif %}
 
 
+{% if whatsapp_url %}
+
+    <a
+        href="{{ whatsapp_url }}"
+        class="mobile-whatsapp"
+        target="_blank"
+        rel="noopener noreferrer"
+    >
+        <span>💬</span>
+        <small>WhatsApp</small>
+    </a>
+
+{% endif %}
+
+
+{% if phone_url %}
+
+    <a
+        href="{{ phone_url }}"
+    >
+        <span>☎</span>
+        <small>Call</small>
+    </a>
+
+{% endif %}
+
+
+<button
+    type="button"
+    id="mobile-restaurant-share"
+>
+    <span>↗</span>
+    <small>Share</small>
+</button>
+```
+
+</nav>
+
+<!-- =========================================
+     RESTAURANT SHARE
+========================================== -->
+
+<script>
+
+(() => {
+
+    const desktopButton =
+        document.getElementById(
+            "restaurant-share-button"
+        );
+
+
+    const mobileButton =
+        document.getElementById(
+            "mobile-restaurant-share"
+        );
+
+
+    const status =
+        document.getElementById(
+            "restaurant-share-status"
+        );
+
+
+    const restaurantName =
+        {{ advert.business_name|tojson }};
+
+
+    async function shareRestaurant() {
+
+        const shareData = {
+
+            title:
+                `${restaurantName} | Kalxa`,
+
+            text:
+                `Check out ${restaurantName} on Kalxa.`,
+
+            url:
+                window.location.href,
+
+        };
+
+
+        try {
+
+            if (
+                navigator.share
+            ) {
+
+                await navigator.share(
+                    shareData
+                );
+
+
+                if (status) {
+
+                    status.textContent =
+                        "";
+
+                }
+
+
+                return;
+
+            }
+
+
+            await navigator.clipboard.writeText(
+                window.location.href
+            );
+
+
+            if (status) {
+
+                status.textContent =
+                    "Restaurant link copied.";
+
+            }
+
+
+            window.setTimeout(
+                () => {
+
+                    if (status) {
+
+                        status.textContent =
+                            "";
+
+                    }
+
+                },
+                2500
+            );
+
+
+        } catch (error) {
+
+            if (
+                error?.name === "AbortError"
+            ) {
+
+                return;
+
+            }
+
+
+            console.error(
+                "[Kalxa Restaurant Share]",
+                error
+            );
+
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    window.location.href
+                );
+
+
+                if (status) {
+
+                    status.textContent =
+                        "Restaurant link copied.";
+
+                }
+
+
+            } catch {
+
+                if (status) {
+
+                    status.textContent =
+                        "Unable to share this page.";
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    desktopButton?.addEventListener(
+        "click",
+        shareRestaurant
+    );
+
+
+    mobileButton?.addEventListener(
+        "click",
+        shareRestaurant
+    );
+
+})();
+
+</script>
 
 <!-- =========================================
      EXPERIENCE MEDIA VIEWER
@@ -1975,29 +2475,52 @@
             "experience-viewer"
         );
 
+
     const stage =
         document.getElementById(
             "experience-viewer-stage"
         );
+
 
     const closeButton =
         document.getElementById(
             "experience-viewer-close"
         );
 
-    const previousButton =
-        document.getElementById(
-            "experience-viewer-prev"
-        );
-
-    const nextButton =
-        document.getElementById(
-            "experience-viewer-next"
-        );
 
     const counter =
         document.getElementById(
             "experience-viewer-counter"
+        );
+
+
+    const viewerRating =
+        document.getElementById(
+            "viewer-rating"
+        );
+
+
+    const viewerStars =
+        document.getElementById(
+            "viewer-stars"
+        );
+
+
+    const viewerRatingNumber =
+        document.getElementById(
+            "viewer-rating-number"
+        );
+
+
+    const viewerRestaurantLink =
+        document.getElementById(
+            "viewer-restaurant-link"
+        );
+
+
+    const swipeHint =
+        document.getElementById(
+            "viewer-swipe-hint"
         );
 
 
@@ -2006,12 +2529,38 @@
         ||
         !stage
     ) {
+
         return;
+
     }
 
 
-    let currentItems = [];
-    let currentIndex = 0;
+    let currentItems =
+        [];
+
+
+    let currentIndex =
+        0;
+
+
+    let touchStartX =
+        0;
+
+
+    let touchStartY =
+        0;
+
+
+    let touchEndX =
+        0;
+
+
+    let touchEndY =
+        0;
+
+
+    const SWIPE_THRESHOLD =
+        45;
 
 
     function stopCurrentVideo() {
@@ -2023,7 +2572,15 @@
             .forEach(
                 (video) => {
 
-                    video.pause();
+                    try {
+
+                        video.pause();
+
+                    } catch {
+
+                        /* Ignore */
+
+                    }
 
                 }
             );
@@ -2035,12 +2592,17 @@
 
         stopCurrentVideo();
 
-        stage.innerHTML = "";
+
+        stage.innerHTML =
+            "";
 
 
-        if (!currentItems.length) {
+        if (
+            !currentItems.length
+        ) {
 
             return;
+
         }
 
 
@@ -2063,8 +2625,10 @@
         const mediaType =
             (
                 current.type
-                || ""
-            ).toLowerCase();
+                ||
+                ""
+            )
+            .toLowerCase();
 
 
         let element;
@@ -2089,17 +2653,28 @@
             element.controls =
                 true;
 
+
             element.autoplay =
                 true;
+
 
             element.playsInline =
                 true;
 
 
-            if (current.thumbnail) {
+            element.setAttribute(
+                "controlslist",
+                "nodownload noremoteplayback"
+            );
+
+
+            if (
+                current.thumbnail
+            ) {
 
                 element.poster =
                     current.thumbnail;
+
             }
 
 
@@ -2149,27 +2724,187 @@
             currentItems.length > 1;
 
 
-        previousButton.hidden =
-            !multiple;
+        if (counter) {
+
+            counter.hidden =
+                !multiple;
 
 
-        nextButton.hidden =
-            !multiple;
+            if (multiple) {
 
+                counter.textContent =
+                    `${currentIndex + 1} / ${currentItems.length}`;
 
-        counter.hidden =
-            !multiple;
+            }
 
-
-        if (multiple) {
-
-            counter.textContent =
-                `${
-                    currentIndex + 1
-                } / ${
-                    currentItems.length
-                }`;
         }
+
+
+        if (swipeHint) {
+
+            swipeHint.hidden =
+                !multiple;
+
+        }
+
+    }
+
+
+    function renderRating(
+        rawRating
+    ) {
+
+        if (
+            !viewerRating
+            ||
+            !viewerStars
+            ||
+            !viewerRatingNumber
+        ) {
+
+            return;
+
+        }
+
+
+        const rating =
+            Number(
+                rawRating
+            );
+
+
+        if (
+            !Number.isInteger(
+                rating
+            )
+            ||
+            rating < 1
+            ||
+            rating > 5
+        ) {
+
+            viewerRating.hidden =
+                true;
+
+
+            viewerStars.innerHTML =
+                "";
+
+
+            viewerRatingNumber.textContent =
+                "";
+
+
+            return;
+
+        }
+
+
+        viewerStars.innerHTML =
+            "";
+
+
+        for (
+            let star = 1;
+            star <= 5;
+            star += 1
+        ) {
+
+            const element =
+                document.createElement(
+                    "span"
+                );
+
+
+            element.className =
+                "viewer-star";
+
+
+            if (
+                star <= rating
+            ) {
+
+                element.classList.add(
+                    "filled"
+                );
+
+            }
+
+
+            element.textContent =
+                "★";
+
+
+            viewerStars.appendChild(
+                element
+            );
+
+        }
+
+
+        viewerRatingNumber.textContent =
+            `${rating}/5`;
+
+
+        viewerRating.hidden =
+            false;
+
+    }
+
+
+    function renderRestaurantLink(
+        sourceContainer
+    ) {
+
+        if (
+            !viewerRestaurantLink
+        ) {
+
+            return;
+
+        }
+
+
+        const url =
+            sourceContainer.dataset.restaurantUrl
+            ||
+            "";
+
+
+        const restaurantName =
+            sourceContainer.dataset.restaurantName
+            ||
+            "";
+
+
+        if (!url) {
+
+            viewerRestaurantLink.hidden =
+                true;
+
+
+            viewerRestaurantLink.removeAttribute(
+                "href"
+            );
+
+
+            return;
+
+        }
+
+
+        viewerRestaurantLink.href =
+            url;
+
+
+        viewerRestaurantLink.textContent =
+            restaurantName
+                ? `View ${restaurantName} →`
+                : "View restaurant →";
+
+
+        viewerRestaurantLink.hidden =
+            false;
 
     }
 
@@ -2184,14 +2919,18 @@
             );
 
 
-        if (!sourceContainer) {
+        if (
+            !sourceContainer
+        ) {
 
             console.warn(
                 "[Kalxa Restaurant Experience] Media source not found:",
                 postId
             );
 
+
             return;
+
         }
 
 
@@ -2223,17 +2962,32 @@
             );
 
 
-        if (!currentItems.length) {
+        if (
+            !currentItems.length
+        ) {
 
             console.warn(
                 "[Kalxa Restaurant Experience] No media available."
             );
 
+
             return;
+
         }
 
 
-        currentIndex = 0;
+        currentIndex =
+            0;
+
+
+        renderRating(
+            sourceContainer.dataset.experienceRating
+        );
+
+
+        renderRestaurantLink(
+            sourceContainer
+        );
 
 
         renderMedia();
@@ -2262,7 +3016,8 @@
         stopCurrentVideo();
 
 
-        stage.innerHTML = "";
+        stage.innerHTML =
+            "";
 
 
         viewer.classList.remove(
@@ -2281,9 +3036,85 @@
         );
 
 
-        currentItems = [];
+        currentItems =
+            [];
 
-        currentIndex = 0;
+
+        currentIndex =
+            0;
+
+
+        if (counter) {
+
+            counter.hidden =
+                true;
+
+
+            counter.textContent =
+                "";
+
+        }
+
+
+        if (viewerRating) {
+
+            viewerRating.hidden =
+                true;
+
+        }
+
+
+        if (viewerStars) {
+
+            viewerStars.innerHTML =
+                "";
+
+        }
+
+
+        if (viewerRatingNumber) {
+
+            viewerRatingNumber.textContent =
+                "";
+
+        }
+
+
+        if (viewerRestaurantLink) {
+
+            viewerRestaurantLink.hidden =
+                true;
+
+
+            viewerRestaurantLink.removeAttribute(
+                "href"
+            );
+
+        }
+
+
+        if (swipeHint) {
+
+            swipeHint.hidden =
+                true;
+
+        }
+
+
+        touchStartX =
+            0;
+
+
+        touchStartY =
+            0;
+
+
+        touchEndX =
+            0;
+
+
+        touchEndY =
+            0;
 
     }
 
@@ -2293,14 +3124,17 @@
         if (
             currentItems.length < 2
         ) {
+
             return;
+
         }
 
 
         currentIndex =
             (
                 currentIndex - 1
-                + currentItems.length
+                +
+                currentItems.length
             )
             %
             currentItems.length;
@@ -2316,7 +3150,9 @@
         if (
             currentItems.length < 2
         ) {
+
             return;
+
         }
 
 
@@ -2333,6 +3169,165 @@
     }
 
 
+    function handleSwipe() {
+
+        if (
+            currentItems.length < 2
+        ) {
+
+            return;
+
+        }
+
+
+        const horizontalDistance =
+            touchEndX
+            -
+            touchStartX;
+
+
+        const verticalDistance =
+            touchEndY
+            -
+            touchStartY;
+
+
+        if (
+            Math.abs(
+                horizontalDistance
+            )
+            <
+            SWIPE_THRESHOLD
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            Math.abs(
+                verticalDistance
+            )
+            >
+            Math.abs(
+                horizontalDistance
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            horizontalDistance < 0
+        ) {
+
+            showNextMedia();
+
+
+        } else {
+
+            showPreviousMedia();
+
+        }
+
+    }
+
+
+    stage.addEventListener(
+        "touchstart",
+        (event) => {
+
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+
+                return;
+
+            }
+
+
+            touchStartX =
+                event.touches[0].clientX;
+
+
+            touchStartY =
+                event.touches[0].clientY;
+
+
+            touchEndX =
+                touchStartX;
+
+
+            touchEndY =
+                touchStartY;
+
+        },
+        {
+            passive: true,
+        }
+    );
+
+
+    stage.addEventListener(
+        "touchmove",
+        (event) => {
+
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+
+                return;
+
+            }
+
+
+            touchEndX =
+                event.touches[0].clientX;
+
+
+            touchEndY =
+                event.touches[0].clientY;
+
+        },
+        {
+            passive: true,
+        }
+    );
+
+
+    stage.addEventListener(
+        "touchend",
+        () => {
+
+            handleSwipe();
+
+
+            touchStartX =
+                0;
+
+
+            touchStartY =
+                0;
+
+
+            touchEndX =
+                0;
+
+
+            touchEndY =
+                0;
+
+        }
+    );
+
+
     document
         .querySelectorAll(
             "[data-experience-open]"
@@ -2345,6 +3340,7 @@
                     (event) => {
 
                         event.preventDefault();
+
 
                         event.stopPropagation();
 
@@ -2366,15 +3362,13 @@
     );
 
 
-    previousButton?.addEventListener(
+    viewerRestaurantLink?.addEventListener(
         "click",
-        showPreviousMedia
-    );
+        (event) => {
 
+            event.stopPropagation();
 
-    nextButton?.addEventListener(
-        "click",
-        showNextMedia
+        }
     );
 
 
@@ -2407,6 +3401,7 @@
             ) {
 
                 return;
+
             }
 
 
@@ -2416,11 +3411,13 @@
 
                 closeExperienceViewer();
 
+
             } else if (
                 event.key === "ArrowLeft"
             ) {
 
                 showPreviousMedia();
+
 
             } else if (
                 event.key === "ArrowRight"
@@ -2437,8 +3434,6 @@
 
 </script>
 
-
-
 <!-- =========================================
      ANONYMOUS EXPERIENCE LOVES
 ========================================== -->
@@ -2450,7 +3445,7 @@
     const loveButtons =
         Array.from(
             document.querySelectorAll(
-                '[data-experience-love]'
+                "[data-experience-love]"
             )
         );
 
@@ -2459,10 +3454,11 @@
         (button) => {
 
             button.addEventListener(
-                'click',
+                "click",
                 async (event) => {
 
                     event.preventDefault();
+
 
                     event.stopPropagation();
 
@@ -2474,18 +3470,21 @@
 
 
                     if (
-                        !Number.isInteger(postId)
+                        !Number.isInteger(
+                            postId
+                        )
                         ||
                         postId <= 0
                     ) {
 
                         return;
+
                     }
 
 
                     const countElement =
                         button.querySelector(
-                            '[data-love-count]'
+                            "[data-love-count]"
                         );
 
 
@@ -2500,18 +3499,29 @@
                                 `/experiences/${postId}/love`,
                                 {
                                     method:
-                                        'POST',
+                                        "POST",
 
                                     headers: {
-                                        'Accept':
-                                            'application/json'
-                                    }
+                                        "Accept":
+                                            "application/json",
+                                    },
                                 }
                             );
 
 
-                        const result =
-                            await response.json();
+                        let result = {};
+
+
+                        try {
+
+                            result =
+                                await response.json();
+
+                        } catch {
+
+                            result = {};
+
+                        }
 
 
                         if (
@@ -2523,13 +3533,16 @@
                             throw new Error(
                                 result.message
                                 ||
-                                'Unable to update love.'
+                                result.error
+                                ||
+                                "Unable to update love."
                             );
+
                         }
 
 
                         button.classList.toggle(
-                            'loved',
+                            "loved",
                             Boolean(
                                 result.loved
                             )
@@ -2537,27 +3550,31 @@
 
 
                         button.setAttribute(
-                            'aria-pressed',
+                            "aria-pressed",
                             result.loved
-                                ? 'true'
-                                : 'false'
+                                ? "true"
+                                : "false"
                         );
 
 
-                        if (countElement) {
+                        if (
+                            countElement
+                        ) {
 
                             countElement.textContent =
                                 String(
                                     result.love_count
-                                    ?? 0
+                                    ??
+                                    0
                                 );
+
                         }
 
 
                     } catch (error) {
 
                         console.error(
-                            '[Kalxa Experience Love]',
+                            "[Kalxa Experience Love]",
                             error
                         );
 
@@ -2566,6 +3583,7 @@
 
                         button.disabled =
                             false;
+
                     }
 
                 }
@@ -2577,7 +3595,6 @@
 })();
 
 </script>
-
 
 </body>
 
