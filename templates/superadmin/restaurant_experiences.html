@@ -2353,41 +2353,61 @@
 
     }
 
+    
     function closeViewer() {
 
-        stopVideo();
+      stopVideo();
 
 
-        stage.innerHTML =
-            "";
+      stage.innerHTML =
+        "";
 
 
-        viewer.classList.remove(
-            "open"
+      viewer.classList.remove(
+        "open"
+      );
+
+
+      viewer.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
+
+      document.body.classList.remove(
+        "modal-open"
+      );
+
+
+      if (restaurantAction) {
+
+        restaurantAction.hidden =
+            true;
+
+      }
+
+
+      if (restaurantLink) {
+
+        restaurantLink.removeAttribute(
+            "href"
         );
 
+        restaurantLink.textContent =
+            "View restaurant →";
 
-        viewer.setAttribute(
-            "aria-hidden",
-            "true"
-        );
-
-
-        document.body.classList.remove(
-            "modal-open"
-        );
+      }
 
 
-        items =
-            [];
+      items =
+        [];
 
 
-        index =
-            0;
+      index =
+        0;
 
     }
-
-
+    
     function previous() {
 
         if (
