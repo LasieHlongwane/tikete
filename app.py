@@ -14528,6 +14528,43 @@ def create_restaurant_experience():
             .strip()
         )
 
+        rating_raw = request.form.get(
+          "rating",
+          ""
+        ).strip()
+
+
+        try:
+
+         rating = int(
+          rating_raw
+         )
+
+        except (
+         TypeError,
+         ValueError,
+        ):
+
+         rating = 0
+
+
+        if rating not in {
+         1,
+         2,
+         3,
+         4,
+         5,
+        }:
+
+         flash(
+          "Please choose a rating between 1 and 5 stars.",
+          "error",
+         )
+
+         return redirect(
+          request.url
+         )
+
 
         experience_text = (
             request.form.get(
