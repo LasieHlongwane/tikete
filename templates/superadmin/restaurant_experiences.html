@@ -1645,8 +1645,21 @@
                         {% if post.media_items %}
 
                             <div
-                                class="media-source"
-                                data-media-source="{{ post.id }}"
+                             class="media-source"
+                             data-media-source="{{ post.id }}"
+                             data-restaurant-url="{{
+                              url_for(
+                               'restaurant_page',
+                               advert_id=post.restaurant_advert.id
+                              )
+                              if post.restaurant_advert
+                              else ''
+                             }}"
+                             data-restaurant-name="{{
+                              post.restaurant_advert.business_name
+                              if post.restaurant_advert
+                              else ''
+                             }}"
                             >
 
                                 {% for media_item in post.media_items %}
