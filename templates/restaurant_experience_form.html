@@ -114,7 +114,8 @@
 
         .eyebrow {
 
-            margin: 0 0 7px;
+            margin:
+                0 0 7px;
 
             color: #6b7280;
 
@@ -274,6 +275,117 @@
         }
 
 
+        /* =====================================================
+           STAR RATING
+        ===================================================== */
+
+        .rating-field {
+
+            margin-bottom: 20px;
+        }
+
+
+        .rating-title {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #111827;
+
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+
+        .star-rating {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            width: max-content;
+
+            max-width: 100%;
+
+            padding:
+                9px 11px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 12px;
+        }
+
+
+        .star-rating input {
+
+            position: absolute;
+
+            width: 1px;
+            height: 1px;
+
+            opacity: 0;
+
+            pointer-events: none;
+        }
+
+
+        .star-rating label {
+
+            width: 38px;
+            height: 38px;
+
+            display: grid;
+            place-items: center;
+
+            margin: 0;
+
+            color: #d1d5db;
+
+            font-size: 30px;
+            line-height: 1;
+
+            cursor: pointer;
+
+            user-select: none;
+
+            transition:
+                color .15s ease,
+                transform .15s ease;
+        }
+
+
+        .star-rating label:hover {
+
+            transform:
+                scale(1.08);
+        }
+
+
+        .star-rating label.selected {
+
+            color: #f5b301;
+        }
+
+
+        .rating-feedback {
+
+            min-height: 18px;
+
+            margin-top: 6px;
+
+            color: #6b7280;
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+
         .submit-button {
 
             width: 100%;
@@ -394,6 +506,24 @@
                 border-radius: 16px;
             }
 
+
+            .star-rating {
+
+                width: 100%;
+
+                justify-content:
+                    space-between;
+            }
+
+
+            .star-rating label {
+
+                width: 42px;
+                height: 42px;
+
+                font-size: 31px;
+            }
+
         }
 
     </style>
@@ -454,14 +584,17 @@
             KALXA EXPERIENCES
         </p>
 
+
         <h1>
             Share your experience.
         </h1>
 
+
         <p>
             Been somewhere worth talking about?
-            Tag the restaurant, add a photo or short reel,
-            and tell people what your experience was like.
+            Tag the restaurant, rate your experience,
+            add photos or a short reel and tell people
+            what your experience was like.
             You do not need a Kalxa account.
         </p>
 
@@ -488,6 +621,7 @@
                     Your name
                 </label>
 
+
                 <input
                     id="poster_name"
                     name="poster_name"
@@ -500,6 +634,7 @@
                         ''
                     ) }}"
                 >
+
 
                 <span class="field-help">
                     This name will appear publicly with your post.
@@ -519,6 +654,7 @@
                     Tag a restaurant
                 </label>
 
+
                 {% set selected_restaurant =
                     request.form.get(
                         'restaurant_advert_id'
@@ -527,6 +663,7 @@
                         'restaurant_id'
                     )
                 %}
+
 
                 <select
                     id="restaurant_advert_id"
@@ -545,8 +682,9 @@
                             value="{{ restaurant.id }}"
                             {% if
                                 selected_restaurant
-                                and selected_restaurant|string
-                                    == restaurant.id|string
+                                and
+                                selected_restaurant|string
+                                == restaurant.id|string
                             %}
                                 selected
                             {% endif %}
@@ -564,9 +702,96 @@
 
                 </select>
 
+
                 <span class="field-help">
                     Only restaurants with an active Kalxa
                     subscription can be tagged.
+                </span>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 STAR RATING
+            ====================================== -->
+
+            <div class="rating-field">
+
+                <span class="rating-title">
+                    Rate your experience
+                </span>
+
+
+                {% set selected_rating =
+                    request.form.get(
+                        'rating',
+                        ''
+                    )
+                %}
+
+
+                <div
+                    class="star-rating"
+                    id="star-rating"
+                    role="radiogroup"
+                    aria-label="Rate your restaurant experience"
+                >
+
+                    {% for value in range(1, 6) %}
+
+                        <input
+                            type="radio"
+                            id="rating-{{ value }}"
+                            name="rating"
+                            value="{{ value }}"
+                            {% if
+                                selected_rating|string
+                                == value|string
+                            %}
+                                checked
+                            {% endif %}
+                            {% if value == 1 %}
+                                required
+                            {% endif %}
+                        >
+
+
+                        <label
+                            for="rating-{{ value }}"
+                            data-rating-value="{{ value }}"
+                            aria-label="{{ value }} out of 5 stars"
+                        >
+                            ★
+                        </label>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div
+                    class="rating-feedback"
+                    id="rating-feedback"
+                    aria-live="polite"
+                >
+
+                    {% if selected_rating %}
+
+                        {{ selected_rating }} out of 5 stars
+
+                    {% else %}
+
+                        Choose between 1 and 5 stars.
+
+                    {% endif %}
+
+                </div>
+
+
+                <span class="field-help">
+                    1 star is the lowest rating and
+                    5 stars is the highest.
                 </span>
 
             </div>
@@ -583,6 +808,7 @@
                     How was your experience?
                 </label>
 
+
                 <textarea
                     id="experience_text"
                     name="experience_text"
@@ -593,6 +819,7 @@
                     'experience_text',
                     ''
                 ) }}</textarea>
+
 
                 <span class="field-help">
                     Maximum 2,000 characters.
@@ -609,8 +836,9 @@
             <div class="field">
 
                 <label for="experience_media">
-                    Add a photo or short reel
+                    Add photos or a short reel
                 </label>
+
 
                 <input
                     id="experience_media"
@@ -624,11 +852,14 @@
                         video/quicktime,
                         video/webm
                     "
+                    multiple
                     required
                 >
 
+
                 <span class="field-help">
-                    Photos: JPG, PNG or WebP up to 8 MB.
+                    Upload up to 3 photos OR 1 short reel.
+                    Photos: JPG, PNG or WebP up to 8 MB each.
                     Videos: MP4, MOV, M4V or WebM,
                     maximum 30 seconds and 80 MB.
                 </span>
@@ -646,9 +877,11 @@
 
 
             <p class="submission-note">
+
                 Posts are reviewed before appearing publicly
                 on Kalxa. By submitting media, you confirm
                 that you have permission to share it.
+
             </p>
 
         </form>
@@ -671,6 +904,202 @@
 
 
 </div>
+
+
+
+<!-- =====================================================
+     STAR RATING
+====================================================== -->
+
+<script>
+
+(() => {
+
+    const container =
+        document.getElementById(
+            "star-rating"
+        );
+
+
+    const feedback =
+        document.getElementById(
+            "rating-feedback"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const inputs =
+        Array.from(
+            container.querySelectorAll(
+                'input[name="rating"]'
+            )
+        );
+
+
+    const labels =
+        Array.from(
+            container.querySelectorAll(
+                "[data-rating-value]"
+            )
+        );
+
+
+    function ratingText(
+        rating
+    ) {
+
+        const descriptions = {
+            1: "1 out of 5 · Poor",
+            2: "2 out of 5 · Fair",
+            3: "3 out of 5 · Good",
+            4: "4 out of 5 · Very good",
+            5: "5 out of 5 · Excellent",
+        };
+
+
+        return (
+            descriptions[rating]
+            ||
+            "Choose between 1 and 5 stars."
+        );
+
+    }
+
+
+    function paint(
+        rating
+    ) {
+
+        labels.forEach(
+            (label) => {
+
+                const value =
+                    Number(
+                        label.dataset.ratingValue
+                    );
+
+
+                label.classList.toggle(
+                    "selected",
+                    value <= rating
+                );
+
+            }
+        );
+
+
+        if (feedback) {
+
+            feedback.textContent =
+                ratingText(
+                    rating
+                );
+
+        }
+
+    }
+
+
+    function selectedRating() {
+
+        const checked =
+            inputs.find(
+                (input) =>
+                    input.checked
+            );
+
+
+        return checked
+            ? Number(
+                checked.value
+            )
+            : 0;
+
+    }
+
+
+    labels.forEach(
+        (label) => {
+
+            label.addEventListener(
+                "mouseenter",
+                () => {
+
+                    paint(
+                        Number(
+                            label.dataset.ratingValue
+                        )
+                    );
+
+                }
+            );
+
+
+            label.addEventListener(
+                "click",
+                () => {
+
+                    window.setTimeout(
+                        () => {
+
+                            paint(
+                                selectedRating()
+                            );
+
+                        },
+                        0
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    container.addEventListener(
+        "mouseleave",
+        () => {
+
+            paint(
+                selectedRating()
+            );
+
+        }
+    );
+
+
+    inputs.forEach(
+        (input) => {
+
+            input.addEventListener(
+                "change",
+                () => {
+
+                    paint(
+                        Number(
+                            input.value
+                        )
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    paint(
+        selectedRating()
+    );
+
+})();
+
+</script>
 
 
 </body>
