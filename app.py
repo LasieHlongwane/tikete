@@ -15035,6 +15035,8 @@ def create_restaurant_experience():
                     experience_text=
                         experience_text,
 
+                    rating=rating,
+
                     moderation_status=
                         "pending",
 
