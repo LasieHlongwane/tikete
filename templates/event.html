@@ -16,6 +16,7 @@
         content="#ffffff"
     >
 
+
     <!-- =========================================
          PWA
     ========================================== -->
@@ -54,7 +55,9 @@
         content="Kalxa"
     >
 
+
     <title>Kalxa Tickets</title>
+
 
     <link
         rel="stylesheet"
@@ -92,6 +95,7 @@
 
         body {
             margin: 0;
+
             background: #ffffff;
             color: #111827;
 
@@ -145,8 +149,12 @@
         .page-shell {
             width: 100%;
             max-width: 1100px;
+
             margin: 0 auto;
-            padding: 24px 18px 70px;
+
+            padding:
+                24px 18px
+                70px;
         }
 
 
@@ -156,6 +164,7 @@
 
         .topbar {
             display: flex;
+
             align-items: center;
             justify-content: space-between;
 
@@ -164,19 +173,24 @@
             margin-bottom: 20px;
             padding-bottom: 14px;
 
-            border-bottom: 1px solid #eef2f7;
+            border-bottom:
+                1px solid #eef2f7;
         }
 
         .brand {
             color: #111111;
+
             font-size: 15px;
             font-weight: 900;
+
             letter-spacing: -0.02em;
+
             text-decoration: none;
         }
 
         .topbar-actions {
             display: flex;
+
             align-items: center;
             justify-content: flex-end;
 
@@ -187,11 +201,14 @@
 
         .topbar-link {
             display: inline-flex;
+
             align-items: center;
             justify-content: center;
 
             min-height: 38px;
-            padding: 8px 11px;
+
+            padding:
+                8px 11px;
 
             color: #334155;
 
@@ -215,7 +232,9 @@
         .topbar-link.track-link {
             background: #111111;
             color: #ffffff;
-            border: 1px solid #111111;
+
+            border:
+                1px solid #111111;
         }
 
         .topbar-link.track-link:hover {
@@ -229,23 +248,32 @@
         ===================================================== */
 
         .eyebrow {
-            margin: 0 0 8px;
+            margin:
+                0 0 8px;
 
             color: #64748b;
 
             font-size: 11px;
             font-weight: 850;
+
             letter-spacing: .14em;
 
             text-transform: uppercase;
         }
 
         h1 {
-            margin: 0 0 14px;
+            margin:
+                0 0 14px;
 
             color: #111827;
 
-            font-size: clamp(34px, 7vw, 54px);
+            font-size:
+                clamp(
+                    34px,
+                    7vw,
+                    54px
+                );
+
             line-height: 1.02;
 
             font-weight: 900;
@@ -277,12 +305,19 @@
             width: 100%;
             max-width: 680px;
 
-            margin: 10px auto 24px;
-            padding: 12px 14px 11px;
+            margin:
+                10px auto
+                24px;
+
+            padding:
+                12px 14px
+                11px;
 
             background: #e5e7eb;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 12px;
 
             transition:
@@ -295,7 +330,10 @@
 
         #updates .notification-heading {
             width: 100%;
-            margin: 0 0 9px;
+
+            margin:
+                0 0 9px;
+
             text-align: center;
         }
 
@@ -308,6 +346,7 @@
             line-height: 1.2;
 
             font-weight: 950;
+
             letter-spacing: .06em;
 
             text-align: center;
@@ -333,12 +372,15 @@
 
             height: 42px;
 
-            padding: 0 13px;
+            padding:
+                0 13px;
 
             background: #f8fafc;
             color: #111827;
 
-            border: 1px solid #cbd5e1;
+            border:
+                1px solid #cbd5e1;
+
             border-radius: 9px;
 
             outline: none;
@@ -348,9 +390,15 @@
 
         #updates .notification-form input:focus {
             border-color: #64748b;
+
             box-shadow:
                 0 0 0 3px
-                rgba(100, 116, 139, .12);
+                rgba(
+                    100,
+                    116,
+                    139,
+                    .12
+                );
         }
 
         #updates .notification-form input::placeholder {
@@ -360,16 +408,17 @@
 
         #updates .notification-actions {
             display: flex;
+
             gap: 6px;
         }
 
         #updates .cream-button,
         #updates .quiet-button {
             width: auto;
-
             height: 42px;
 
-            padding: 0 18px;
+            padding:
+                0 18px;
 
             border-radius: 9px;
 
@@ -387,7 +436,8 @@
             background: #111827;
             color: #ffffff;
 
-            border: 1px solid #111827;
+            border:
+                1px solid #111827;
         }
 
         #updates .cream-button:hover {
@@ -397,6 +447,7 @@
         #updates .cream-button:disabled,
         #updates .quiet-button:disabled {
             opacity: .55;
+
             cursor: wait;
         }
 
@@ -406,15 +457,18 @@
             background: #f8fafc;
             color: #111827;
 
-            border: 1px solid #cbd5e1;
+            border:
+                1px solid #cbd5e1;
         }
 
         #updates .notification-status {
-            grid-column: 1 / -1;
+            grid-column:
+                1 / -1;
 
             min-height: 12px;
 
             margin: 0;
+
             padding-top: 2px;
 
             color: #6b7280;
@@ -427,11 +481,13 @@
 
         #updates .notification-status.success {
             color: #166534;
+
             font-weight: 900;
         }
 
         #updates .notification-status.error {
             color: #b91c1c;
+
             font-weight: 850;
         }
 
@@ -440,7 +496,6 @@
             place-items: center;
 
             min-height: 58px;
-
             max-width: 680px;
 
             padding: 14px;
@@ -460,6 +515,7 @@
         #updates.notification-strip.confirmation-only
         .notification-form {
             display: block;
+
             width: 100%;
         }
 
@@ -502,17 +558,23 @@
             width: 100%;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
             gap: 10px;
 
-            margin: 34px auto 10px;
-            padding: 12px 14px;
+            margin:
+                34px auto
+                10px;
+
+            padding:
+                12px 14px;
 
             color: #6b7280;
 
-            border-top: 1px solid #e5e7eb;
+            border-top:
+                1px solid #e5e7eb;
 
             font-size: 11px;
             font-weight: 750;
@@ -525,12 +587,15 @@
         .bottom-notification-off {
             min-height: 34px;
 
-            padding: 7px 11px;
+            padding:
+                7px 11px;
 
             background: #f3f4f6;
             color: #374151;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 8px;
 
             font-size: 10px;
@@ -563,12 +628,19 @@
 
             background: #ffffff;
 
-            border: 1px solid #e5e7eb;
+            border:
+                1px solid #e5e7eb;
+
             border-radius: 24px;
 
             box-shadow:
                 0 12px 40px
-                rgba(15, 23, 42, .06);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .06
+                );
         }
 
         .event-detail-image-wrap {
@@ -612,10 +684,16 @@
             right: 12px;
             bottom: 12px;
 
-            padding: 7px 10px;
+            padding:
+                7px 10px;
 
             background:
-                rgba(17, 24, 39, .82);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .82
+                );
 
             color: #ffffff;
 
@@ -632,7 +710,8 @@
         }
 
         .event-description {
-            margin: 0 0 22px;
+            margin:
+                0 0 22px;
 
             color: #475569;
 
@@ -653,12 +732,16 @@
 
             gap: 14px;
 
-            margin: 0 0 22px;
+            margin:
+                0 0 22px;
+
             padding: 14px;
 
             background: #ffffff;
 
-            border: 1px solid #e2e8f0;
+            border:
+                1px solid #e2e8f0;
+
             border-radius: 14px;
         }
 
@@ -699,23 +782,29 @@
 
         .event-meta-list {
             display: grid;
+
             gap: 10px;
 
-            margin: 24px 0;
+            margin:
+                24px 0;
         }
 
         .event-meta {
             display: flex;
+
             align-items: center;
 
             gap: 10px;
 
-            padding: 12px 14px;
+            padding:
+                12px 14px;
 
             background: #f8fafc;
             color: #334155;
 
-            border: 1px solid #e2e8f0;
+            border:
+                1px solid #e2e8f0;
+
             border-radius: 12px;
 
             font-size: 13px;
@@ -742,7 +831,12 @@
             padding: 18px;
 
             background:
-                rgba(0, 0, 0, .94);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .94
+                );
         }
 
         .poster-modal.open {
@@ -764,7 +858,12 @@
 
             box-shadow:
                 0 20px 60px
-                rgba(0, 0, 0, .45);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .45
+                );
         }
 
         .poster-modal-close {
@@ -783,6 +882,7 @@
             color: #111827;
 
             border: 0;
+
             border-radius: 999px;
 
             font-size: 24px;
@@ -798,11 +898,14 @@
 
         .ticket-box {
             margin-top: 24px;
+
             padding: 22px;
 
             background: #f8fafc;
 
-            border: 1px solid #e2e8f0;
+            border:
+                1px solid #e2e8f0;
+
             border-radius: 18px;
         }
 
@@ -825,7 +928,11 @@
             color: #111827;
 
             font-size:
-                clamp(32px, 6vw, 42px);
+                clamp(
+                    32px,
+                    6vw,
+                    42px
+                );
 
             line-height: 1;
 
@@ -835,7 +942,8 @@
         }
 
         .ticket-availability {
-            margin: 10px 0 0;
+            margin:
+                10px 0 0;
 
             color: #64748b;
 
@@ -853,12 +961,16 @@
 
         .sales-note {
             margin-top: 12px;
-            padding: 11px 12px;
+
+            padding:
+                11px 12px;
 
             background: #fff7ed;
             color: #9a3412;
 
-            border: 1px solid #fed7aa;
+            border:
+                1px solid #fed7aa;
+
             border-radius: 10px;
 
             font-size: 12px;
@@ -875,12 +987,16 @@
             min-height: 52px;
 
             margin-top: 18px;
-            padding: 12px 18px;
+
+            padding:
+                12px 18px;
 
             background: #111111;
             color: #ffffff;
 
-            border: 1px solid #111111;
+            border:
+                1px solid #111111;
+
             border-radius: 12px;
 
             text-decoration: none;
@@ -912,8 +1028,11 @@
         .kalxa-discovery {
             max-width: 1180px;
 
-            margin: 0 auto;
-            padding: 0 0 92px;
+            margin:
+                0 auto;
+
+            padding:
+                0 0 92px;
         }
 
         .discovery-section {
@@ -922,6 +1041,7 @@
 
         .section-heading {
             display: flex;
+
             align-items: flex-end;
             justify-content: space-between;
 
@@ -934,7 +1054,11 @@
             margin: 0;
 
             font-size:
-                clamp(1.2rem, 3vw, 1.65rem);
+                clamp(
+                    1.2rem,
+                    3vw,
+                    1.65rem
+                );
 
             letter-spacing: -.025em;
         }
@@ -942,6 +1066,7 @@
         .section-note,
         .results-count {
             color: #6b7280;
+
             font-size: .72rem;
         }
 
@@ -982,12 +1107,19 @@
 
             background: #f3f4f6;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 20px;
 
             box-shadow:
                 0 10px 30px
-                rgba(15, 23, 42, .08);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .08
+                );
         }
 
         .featured-media {
@@ -1019,7 +1151,8 @@
         }
 
         .featured-slide {
-            flex: 0 0 100%;
+            flex:
+                0 0 100%;
 
             width: 100%;
             height: 100%;
@@ -1082,10 +1215,16 @@
             top: 14px;
             left: 14px;
 
-            padding: 5px 8px;
+            padding:
+                5px 8px;
 
             background:
-                rgba(11, 12, 14, .82);
+                rgba(
+                    11,
+                    12,
+                    14,
+                    .82
+                );
 
             color: #f5c451;
 
@@ -1096,10 +1235,16 @@
             top: 14px;
             right: 14px;
 
-            padding: 5px 8px;
+            padding:
+                5px 8px;
 
             background:
-                rgba(11, 12, 14, .82);
+                rgba(
+                    11,
+                    12,
+                    14,
+                    .82
+                );
 
             color: #ffffff;
 
@@ -1124,7 +1269,11 @@
             color: #ffffff;
 
             font-size:
-                clamp(1.25rem, 3.5vw, 1.8rem);
+                clamp(
+                    1.25rem,
+                    3.5vw,
+                    1.8rem
+                );
 
             line-height: 1.04;
 
@@ -1135,6 +1284,7 @@
 
         .featured-meta-line {
             display: flex;
+
             flex-wrap: wrap;
 
             gap: 4px;
@@ -1142,7 +1292,12 @@
             margin-top: 7px;
 
             color:
-                rgba(255, 255, 255, .82);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .82
+                );
 
             font-size: .68rem;
         }
@@ -1170,10 +1325,16 @@
 
             align-items: center;
 
-            padding: 4px 7px;
+            padding:
+                4px 7px;
 
             background:
-                rgba(255, 244, 223, .16);
+                rgba(
+                    255,
+                    244,
+                    223,
+                    .16
+                );
 
             color: #f8d780;
 
@@ -1202,7 +1363,8 @@
 
             gap: 5px;
 
-            transform: translateX(-50%);
+            transform:
+                translateX(-50%);
         }
 
         .featured-dot {
@@ -1212,14 +1374,21 @@
             padding: 0;
 
             background:
-                rgba(255,255,255,.46);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .46
+                );
 
             border: 0;
+
             border-radius: 999px;
         }
 
         .featured-dot.active {
             width: 18px;
+
             background: #ffffff;
         }
 
@@ -1254,7 +1423,8 @@
             background: #ffffff;
             color: #111827;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
         }
 
         .featured-buy {
@@ -1275,13 +1445,18 @@
             grid-auto-flow: column;
 
             grid-auto-columns:
-                minmax(190px, 230px);
+                minmax(
+                    190px,
+                    230px
+                );
 
             gap: 10px;
 
             overflow-x: auto;
 
-            padding: 2px 2px 10px;
+            padding:
+                2px 2px
+                10px;
 
             scroll-snap-type: x proximity;
             scrollbar-width: none;
@@ -1297,7 +1472,9 @@
             background: #f3f4f6;
             color: #111827;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 16px;
 
             text-decoration: none;
@@ -1306,7 +1483,12 @@
 
             box-shadow:
                 0 6px 18px
-                rgba(15, 23, 42, .055);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .055
+                );
         }
 
         .rail-poster {
@@ -1332,10 +1514,16 @@
             top: 10px;
             left: 10px;
 
-            padding: 4px 6px;
+            padding:
+                4px 6px;
 
             background:
-                rgba(11, 12, 14, .8);
+                rgba(
+                    11,
+                    12,
+                    14,
+                    .8
+                );
 
             color: #ffffff;
 
@@ -1346,7 +1534,8 @@
             left: 9px;
             bottom: 9px;
 
-            padding: 4px 6px;
+            padding:
+                4px 6px;
 
             background: #fff4df;
             color: #0b0c0e;
@@ -1355,7 +1544,9 @@
         }
 
         .rail-copy {
-            padding: 10px 11px 11px;
+            padding:
+                10px 11px
+                11px;
         }
 
         .rail-copy h3 {
@@ -1377,14 +1568,17 @@
         }
 
         .rail-copy p {
-            margin: 5px 0 0;
+            margin:
+                5px 0 0;
 
             color: #6b7280;
 
             font-size: .62rem;
 
             white-space: nowrap;
+
             overflow: hidden;
+
             text-overflow: ellipsis;
         }
 
@@ -1432,7 +1626,9 @@
             background: #f3f4f6;
             color: #111827;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 14px;
 
             text-decoration: none;
@@ -1486,7 +1682,10 @@
                 repeat(
                     auto-fit,
                     minmax(
-                        min(100%, 230px),
+                        min(
+                            100%,
+                            230px
+                        ),
                         1fr
                     )
                 );
@@ -1499,12 +1698,19 @@
 
             background: #f3f4f6;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 18px;
 
             box-shadow:
                 0 7px 22px
-                rgba(15, 23, 42, .06);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .06
+                );
         }
 
         .poster-link {
@@ -1532,6 +1738,7 @@
 
         .poster-fallback {
             display: grid;
+
             place-items: center;
 
             width: 100%;
@@ -1545,9 +1752,15 @@
                 );
 
             color:
-                rgba(255,244,223,.65);
+                rgba(
+                    255,
+                    244,
+                    223,
+                    .65
+                );
 
             font-weight: 1000;
+
             letter-spacing: .12em;
         }
 
@@ -1555,10 +1768,16 @@
             top: 9px;
             left: 9px;
 
-            padding: 4px 6px;
+            padding:
+                4px 6px;
 
             background:
-                rgba(17,24,39,.82);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .82
+                );
 
             color: #ffffff;
 
@@ -1569,7 +1788,8 @@
             top: 9px;
             right: 9px;
 
-            padding: 4px 6px;
+            padding:
+                4px 6px;
 
             background: #991b1b;
             color: #ffffff;
@@ -1578,7 +1798,9 @@
         }
 
         .premium-card-copy {
-            padding: 12px 12px 11px;
+            padding:
+                12px 12px
+                11px;
         }
 
         .card-title {
@@ -1621,6 +1843,7 @@
 
         .card-meta span {
             overflow: hidden;
+
             text-overflow: ellipsis;
         }
 
@@ -1638,7 +1861,8 @@
         .price-eyebrow {
             display: block;
 
-            margin: 5px 0 2px;
+            margin:
+                5px 0 2px;
 
             color: #6b7280;
 
@@ -1671,7 +1895,8 @@
 
             min-height: 35px;
 
-            padding: 0 10px;
+            padding:
+                0 10px;
 
             background: #111827;
             color: #ffffff;
@@ -1697,7 +1922,9 @@
         ===================================================== */
 
         .discovery-hero {
-            padding: 34px 0 20px;
+            padding:
+                34px 0
+                20px;
         }
 
         .search-shell {
@@ -1710,18 +1937,23 @@
             max-width: 720px;
 
             margin-top: 26px;
-            padding: 0 14px;
+
+            padding:
+                0 14px;
 
             min-height: 54px;
 
             background: #e5e7eb;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 16px;
         }
 
         .search-shell span {
             color: #4b5563;
+
             font-size: 1.2rem;
         }
 
@@ -1773,14 +2005,18 @@
         }
 
         .filter-chip {
-            flex: 0 0 auto;
+            flex:
+                0 0 auto;
 
-            padding: 9px 13px;
+            padding:
+                9px 13px;
 
             background: #f3f4f6;
             color: #374151;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 999px;
 
             font-size: .78rem;
@@ -1809,7 +2045,9 @@
 
             color: #6b7280;
 
-            border: 1px dashed #d1d5db;
+            border:
+                1px dashed #d1d5db;
+
             border-radius: 18px;
 
             text-align: center;
@@ -1826,7 +2064,8 @@
 
         .vibe-section,
         .food-vibe-section {
-            margin: 4px 0 30px;
+            margin:
+                4px 0 30px;
         }
 
         .vibe-heading,
@@ -1874,13 +2113,18 @@
             grid-auto-flow: column;
 
             grid-auto-columns:
-                minmax(154px, 184px);
+                minmax(
+                    154px,
+                    184px
+                );
 
             gap: 11px;
 
             overflow-x: auto;
 
-            padding: 2px 2px 10px;
+            padding:
+                2px 2px
+                10px;
 
             scroll-snap-type: x proximity;
             scrollbar-width: none;
@@ -1906,12 +2150,19 @@
             background: #111827;
             color: #ffffff;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 18px;
 
             box-shadow:
                 0 8px 24px
-                rgba(15, 23, 42, .10);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .10
+                );
 
             scroll-snap-align: start;
 
@@ -1969,10 +2220,16 @@
 
             z-index: 4;
 
-            padding: 5px 7px;
+            padding:
+                5px 7px;
 
             background:
-                rgba(17,24,39,.70);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .70
+                );
 
             color: #ffffff;
 
@@ -2000,13 +2257,23 @@
             padding: 0;
 
             background:
-                rgba(17,24,39,.72);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .72
+                );
 
             color: #ffffff;
 
             border:
                 1px solid
-                rgba(255,255,255,.24);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .24
+                );
 
             border-radius: 999px;
 
@@ -2054,11 +2321,17 @@
             overflow: hidden;
 
             color:
-                rgba(255,255,255,.72);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .72
+                );
 
             font-size: .57rem;
 
             white-space: nowrap;
+
             text-overflow: ellipsis;
         }
 
@@ -2072,7 +2345,9 @@
             min-height: 30px;
 
             margin-top: 8px;
-            padding: 0 9px;
+
+            padding:
+                0 9px;
 
             background: #fff4df;
             color: #111827;
@@ -2163,10 +2438,10 @@
             background:
                 linear-gradient(
                     to top,
-                    rgba(0,0,0,.90) 0%,
-                    rgba(0,0,0,.34) 30%,
-                    rgba(0,0,0,.04) 60%,
-                    rgba(0,0,0,.18) 100%
+                    rgba(0, 0, 0, .90) 0%,
+                    rgba(0, 0, 0, .34) 30%,
+                    rgba(0, 0, 0, .04) 60%,
+                    rgba(0, 0, 0, .18) 100%
                 );
 
             pointer-events: none;
@@ -2211,13 +2486,23 @@
             place-items: center;
 
             background:
-                rgba(17,24,39,.72);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .72
+                );
 
             color: #ffffff;
 
             border:
                 1px solid
-                rgba(255,255,255,.24);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .24
+                );
 
             border-radius: 999px;
 
@@ -2248,13 +2533,23 @@
             place-items: center;
 
             background:
-                rgba(17,24,39,.72);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .72
+                );
 
             color: #ffffff;
 
             border:
                 1px solid
-                rgba(255,255,255,.24);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .24
+                );
 
             border-radius: 999px;
 
@@ -2313,7 +2608,12 @@
             margin-top: 6px;
 
             color:
-                rgba(255,255,255,.72);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .72
+                );
 
             font-size: .72rem;
         }
@@ -2328,7 +2628,9 @@
             min-height: 38px;
 
             margin-top: 11px;
-            padding: 0 13px;
+
+            padding:
+                0 13px;
 
             background: #fff4df;
             color: #111827;
@@ -2361,7 +2663,12 @@
                 translateX(-50%);
 
             color:
-                rgba(255,255,255,.58);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .58
+                );
 
             font-size: .58rem;
             font-weight: 850;
@@ -2379,7 +2686,8 @@
         ===================================================== */
 
         .restaurant-experience-section {
-            margin: 6px 0 34px;
+            margin:
+                6px 0 34px;
         }
 
         .restaurant-experience-heading {
@@ -2414,7 +2722,11 @@
             color: #111827;
 
             font-size:
-                clamp(1.28rem, 3vw, 1.72rem);
+                clamp(
+                    1.28rem,
+                    3vw,
+                    1.72rem
+                );
 
             font-weight: 950;
 
@@ -2422,7 +2734,8 @@
         }
 
         .restaurant-experience-heading p {
-            margin: 6px 0 0;
+            margin:
+                6px 0 0;
 
             color: #6b7280;
 
@@ -2436,11 +2749,13 @@
             align-items: center;
             justify-content: center;
 
-            flex: 0 0 auto;
+            flex:
+                0 0 auto;
 
             min-height: 38px;
 
-            padding: 0 12px;
+            padding:
+                0 12px;
 
             background: #111827;
             color: #ffffff;
@@ -2459,13 +2774,18 @@
             grid-auto-flow: column;
 
             grid-auto-columns:
-                minmax(230px, 280px);
+                minmax(
+                    230px,
+                    280px
+                );
 
             gap: 13px;
 
             overflow-x: auto;
 
-            padding: 2px 2px 12px;
+            padding:
+                2px 2px
+                12px;
 
             scroll-snap-type: x proximity;
             scrollbar-width: none;
@@ -2485,12 +2805,19 @@
 
             background: #f3f4f6;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
+
             border-radius: 19px;
 
             box-shadow:
                 0 7px 22px
-                rgba(15,23,42,.07);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .07
+                );
 
             scroll-snap-align: start;
         }
@@ -2540,10 +2867,16 @@
 
             z-index: 7;
 
-            padding: 5px 8px;
+            padding:
+                5px 8px;
 
             background:
-                rgba(17,24,39,.78);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .78
+                );
 
             color: #ffffff;
 
@@ -2581,16 +2914,27 @@
 
             min-height: 34px;
 
-            padding: 0 10px;
+            padding:
+                0 10px;
 
             background:
-                rgba(17,24,39,.78);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .78
+                );
 
             color: #ffffff;
 
             border:
                 1px solid
-                rgba(255,255,255,.20);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .20
+                );
 
             border-radius: 999px;
 
@@ -2614,7 +2958,14 @@
         .heart {
             color: #fb7185;
 
-            transform: scale(1.12);
+            transform:
+                scale(1.12);
+        }
+
+        .restaurant-experience-love:disabled {
+            opacity: .65;
+
+            cursor: wait;
         }
 
         .restaurant-experience-tag {
@@ -2628,10 +2979,16 @@
             max-width:
                 calc(100% - 22px);
 
-            padding: 6px 9px;
+            padding:
+                6px 9px;
 
             background:
-                rgba(17,24,39,.78);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .78
+                );
 
             color: #ffffff;
 
@@ -2643,6 +3000,7 @@
             overflow: hidden;
 
             white-space: nowrap;
+
             text-overflow: ellipsis;
 
             pointer-events: none;
@@ -2669,7 +3027,8 @@
         .restaurant-experience-text {
             display: -webkit-box;
 
-            margin: 7px 0 0;
+            margin:
+                7px 0 0;
 
             overflow: hidden;
 
@@ -2682,8 +3041,20 @@
             -webkit-box-orient: vertical;
         }
 
+        .restaurant-experience-date {
+            display: block;
+
+            margin-top: 8px;
+
+            color: #9ca3af;
+
+            font-size: .58rem;
+            font-weight: 750;
+        }
+
         .restaurant-experience-actions {
             margin-top: auto;
+
             padding-top: 13px;
         }
 
@@ -2697,7 +3068,8 @@
 
             min-height: 38px;
 
-            padding: 0 10px;
+            padding:
+                0 10px;
 
             background: #111827;
             color: #ffffff;
@@ -2720,7 +3092,8 @@
 
             min-height: 38px;
 
-            padding: 0 10px;
+            padding:
+                0 10px;
 
             background: #e5e7eb;
             color: #6b7280;
@@ -2739,7 +3112,9 @@
             background: #f8fafc;
             color: #6b7280;
 
-            border: 1px dashed #cbd5e1;
+            border:
+                1px dashed #cbd5e1;
+
             border-radius: 15px;
 
             font-size: .78rem;
@@ -2749,6 +3124,61 @@
 
         .experience-media-source {
             display: none !important;
+        }
+
+
+        /*
+         * IMPORTANT:
+         *
+         * A missing media row must NOT cause the entire
+         * customer experience post to disappear.
+         */
+        .experience-missing-media {
+            width: 100%;
+            height: 100%;
+
+            display: grid;
+            place-items: center;
+
+            padding: 20px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1f2937,
+                    #030712
+                );
+
+            color: #fff4df;
+
+            text-align: center;
+        }
+
+        .experience-missing-media-inner {
+            display: grid;
+
+            gap: 7px;
+
+            place-items: center;
+        }
+
+        .experience-missing-media-brand {
+            font-size: .82rem;
+            font-weight: 950;
+
+            letter-spacing: .16em;
+        }
+
+        .experience-missing-media-copy {
+            color:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .65
+                );
+
+            font-size: .62rem;
         }
 
 
@@ -2766,7 +3196,12 @@
             display: none;
 
             background:
-                rgba(0,0,0,.96);
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .96
+                );
         }
 
         .experience-viewer.open {
@@ -2812,7 +3247,9 @@
             top:
                 max(
                     14px,
-                    env(safe-area-inset-top)
+                    env(
+                        safe-area-inset-top
+                    )
                 );
 
             right: 14px;
@@ -2826,11 +3263,17 @@
             place-items: center;
 
             background:
-                rgba(255,255,255,.95);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .95
+                );
 
             color: #111827;
 
             border: 0;
+
             border-radius: 999px;
 
             font-size: 24px;
@@ -2857,13 +3300,23 @@
                 translateY(-50%);
 
             background:
-                rgba(255,255,255,.14);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .14
+                );
 
             color: #ffffff;
 
             border:
                 1px solid
-                rgba(255,255,255,.22);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .22
+                );
 
             border-radius: 999px;
 
@@ -2893,7 +3346,9 @@
             bottom:
                 max(
                     20px,
-                    env(safe-area-inset-bottom)
+                    env(
+                        safe-area-inset-bottom
+                    )
                 );
 
             z-index: 1510;
@@ -2901,10 +3356,16 @@
             transform:
                 translateX(-50%);
 
-            padding: 6px 10px;
+            padding:
+                6px 10px;
 
             background:
-                rgba(17,24,39,.8);
+                rgba(
+                    17,
+                    24,
+                    39,
+                    .8
+                );
 
             color: #ffffff;
 
@@ -2912,6 +3373,10 @@
 
             font-size: 11px;
             font-weight: 850;
+        }
+
+        .experience-viewer-counter[hidden] {
+            display: none;
         }
 
 
@@ -2942,13 +3407,23 @@
 
             border:
                 1px solid
-                rgba(255,255,255,.12);
+                rgba(
+                    255,
+                    255,
+                    255,
+                    .12
+                );
 
             border-radius: 16px;
 
             box-shadow:
                 0 18px 50px
-                rgba(15,23,42,.28);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .28
+                );
         }
 
         .pwa-install-card.show {
@@ -2956,14 +3431,16 @@
         }
 
         .pwa-install-title {
-            margin: 0 0 5px;
+            margin:
+                0 0 5px;
 
             font-size: 14px;
             font-weight: 900;
         }
 
         .pwa-install-copy {
-            margin: 0 0 12px;
+            margin:
+                0 0 12px;
 
             color: #cbd5e1;
 
@@ -2981,12 +3458,14 @@
         .pwa-install-button {
             min-height: 38px;
 
-            padding: 8px 12px;
+            padding:
+                8px 12px;
 
             background: #fff4df;
             color: #0b0c0e;
 
             border: 0;
+
             border-radius: 9px;
 
             font-size: 12px;
@@ -2998,12 +3477,15 @@
         .pwa-install-dismiss {
             min-height: 38px;
 
-            padding: 8px 12px;
+            padding:
+                8px 12px;
 
             background: transparent;
             color: #cbd5e1;
 
-            border: 1px solid #475569;
+            border:
+                1px solid #475569;
+
             border-radius: 9px;
 
             font-size: 12px;
@@ -3013,7 +3495,9 @@
         }
 
         .pwa-ios-steps {
-            margin: 10px 0 0;
+            margin:
+                10px 0 0;
+
             padding-left: 18px;
 
             color: #e2e8f0;
@@ -3044,6 +3528,7 @@
             .event-detail-image {
                 min-height: 280px;
             }
+
         }
 
 
@@ -3055,7 +3540,13 @@
 
             .premium-event-grid {
                 grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
+                    repeat(
+                        2,
+                        minmax(
+                            0,
+                            1fr
+                        )
+                    );
 
                 gap: 9px;
             }
@@ -3089,7 +3580,9 @@
                 bottom:
                     max(
                         10px,
-                        env(safe-area-inset-bottom)
+                        env(
+                            safe-area-inset-bottom
+                        )
                     );
 
                 z-index: 80;
@@ -3097,19 +3590,34 @@
                 display: grid;
 
                 grid-template-columns:
-                    repeat(4, 1fr);
+                    repeat(
+                        4,
+                        1fr
+                    );
 
                 padding: 7px;
 
                 background:
-                    rgba(243,244,246,.96);
+                    rgba(
+                        243,
+                        244,
+                        246,
+                        .96
+                    );
 
-                border: 1px solid #d1d5db;
+                border:
+                    1px solid #d1d5db;
+
                 border-radius: 18px;
 
                 box-shadow:
                     0 18px 50px
-                    rgba(0,0,0,.20);
+                    rgba(
+                        0,
+                        0,
+                        0,
+                        .20
+                    );
             }
 
             .mobile-bottom-nav a {
@@ -3122,7 +3630,8 @@
 
                 gap: 3px;
 
-                padding: 6px 2px;
+                padding:
+                    6px 2px;
 
                 color: #6b7280;
 
@@ -3145,6 +3654,7 @@
             body {
                 padding-bottom: 82px;
             }
+
         }
 
 
@@ -3153,7 +3663,10 @@
             #updates.notification-strip {
                 max-width: 100%;
 
-                margin: 8px auto 16px;
+                margin:
+                    8px auto
+                    16px;
+
                 padding: 10px;
             }
 
@@ -3178,7 +3691,6 @@
             #updates .cream-button,
             #updates .quiet-button {
                 width: 100%;
-
                 min-width: 0;
 
                 height: 44px;
@@ -3194,7 +3706,10 @@
 
             .restaurant-experience-rail {
                 grid-auto-columns:
-                    minmax(205px, 235px);
+                    minmax(
+                        205px,
+                        235px
+                    );
 
                 gap: 10px;
             }
@@ -3202,7 +3717,10 @@
             .vibe-rail,
             .food-vibe-rail {
                 grid-auto-columns:
-                    minmax(138px, 158px);
+                    minmax(
+                        138px,
+                        158px
+                    );
 
                 gap: 9px;
             }
@@ -3228,6 +3746,7 @@
             .experience-viewer-next {
                 right: 6px;
             }
+
         }
 
 
@@ -3235,7 +3754,8 @@
 
             .page-shell {
                 padding:
-                    18px 14px 50px;
+                    18px 14px
+                    50px;
             }
 
             .topbar {
@@ -3269,6 +3789,7 @@
 
                 padding-bottom: 78px;
             }
+
         }
 
     </style>
@@ -3277,6 +3798,7 @@
 
 
 <body>
+
 
 <div class="page-shell">
 
@@ -3304,6 +3826,7 @@
                 Track My Ticket
             </a>
 
+
             <a
                 href="{{ url_for(
                     'create_restaurant_experience'
@@ -3325,6 +3848,7 @@
                     Organizer Dashboard
                 </a>
 
+
                 <a
                     href="{{ url_for(
                         'organizer_logout'
@@ -3344,6 +3868,7 @@
                 >
                     Create Events
                 </a>
+
 
                 <a
                     href="{{ url_for(
@@ -3401,6 +3926,7 @@
                         Enable notifications
                     </button>
 
+
                     <button
                         type="button"
                         id="home-disable-notifications"
@@ -3437,8 +3963,6 @@
 
         <div class="event-detail">
 
-
-            <!-- EVENT POSTER -->
 
             {% if
                 event.poster_image_mimetype
@@ -3478,13 +4002,12 @@
             {% endif %}
 
 
-            <!-- EVENT CONTENT -->
-
             <div class="event-detail-content">
 
                 <p class="eyebrow">
                     KALXA EVENT
                 </p>
+
 
                 <h1>
                     {{ event.title }}
@@ -3503,6 +4026,7 @@
                             <span class="organizer-label">
                                 Hosted by
                             </span>
+
 
                             <div class="organizer-name">
 
@@ -3529,6 +4053,7 @@
                             >
                                 {{ event.organizer_phone }}
                             </a>
+
 
                         {% elif
                             event.organizer
@@ -3563,7 +4088,10 @@
                     {% if event.event_date %}
 
                         <div class="event-meta">
-                            <span>📅</span>
+
+                            <span>
+                                📅
+                            </span>
 
                             <span>
                                 {{
@@ -3572,6 +4100,7 @@
                                     )
                                 }}
                             </span>
+
                         </div>
 
                     {% endif %}
@@ -3580,7 +4109,10 @@
                     {% if event.event_time %}
 
                         <div class="event-meta">
-                            <span>🕒</span>
+
+                            <span>
+                                🕒
+                            </span>
 
                             <span>
                                 {{
@@ -3589,6 +4121,7 @@
                                     )
                                 }}
                             </span>
+
                         </div>
 
                     {% endif %}
@@ -3597,11 +4130,15 @@
                     {% if event.venue %}
 
                         <div class="event-meta">
-                            <span>📍</span>
+
+                            <span>
+                                📍
+                            </span>
 
                             <span>
                                 {{ event.venue }}
                             </span>
+
                         </div>
 
                     {% endif %}
@@ -3624,9 +4161,9 @@
 
                         <div
                             style="
-                                display:grid;
-                                gap:10px;
-                                margin:14px 0 18px;
+                                display: grid;
+                                gap: 10px;
+                                margin: 14px 0 18px;
                             "
                         >
 
@@ -3636,11 +4173,11 @@
 
                                 <div
                                     style="
-                                        display:flex;
-                                        justify-content:space-between;
-                                        gap:14px;
-                                        padding:10px 0;
-                                        border-bottom:1px solid #e2e8f0;
+                                        display: flex;
+                                        justify-content: space-between;
+                                        gap: 14px;
+                                        padding: 10px 0;
+                                        border-bottom: 1px solid #e2e8f0;
                                     "
                                 >
 
@@ -3653,17 +4190,16 @@
 
                                         {% if
                                             ticket_type.active_sale_phases
-                                            and not ticket_type.current_sale_phase
+                                            and
+                                            not ticket_type.current_sale_phase
                                         %}
 
-                                            {% if
-                                                ticket_type.next_sale_phase
-                                            %}
+                                            {% if ticket_type.next_sale_phase %}
 
                                                 <small
                                                     style="
-                                                        display:block;
-                                                        color:#b45309;
+                                                        display: block;
+                                                        color: #b45309;
                                                     "
                                                 >
                                                     Sales phase has not started yet
@@ -3673,8 +4209,8 @@
 
                                                 <small
                                                     style="
-                                                        display:block;
-                                                        color:#b91c1c;
+                                                        display: block;
+                                                        color: #b91c1c;
                                                     "
                                                 >
                                                     No sales phase is currently active
@@ -3692,12 +4228,10 @@
 
                                             <div
                                                 class="ticket-availability"
-                                                style="margin-top:3px;"
+                                                style="margin-top: 3px;"
                                             >
 
-                                                {% if
-                                                    ticket_type.is_sold_out
-                                                %}
+                                                {% if ticket_type.is_sold_out %}
 
                                                     SOLD OUT
 
@@ -3718,7 +4252,7 @@
 
 
                                     <strong
-                                        style="text-align:right;"
+                                        style="text-align: right;"
                                     >
 
                                         {% if
@@ -3742,12 +4276,13 @@
 
                                             {% endif %}
 
+
                                             <small
                                                 style="
-                                                    display:block;
-                                                    color:#b45309;
-                                                    font-weight:700;
-                                                    margin-top:2px;
+                                                    display: block;
+                                                    color: #b45309;
+                                                    font-weight: 700;
+                                                    margin-top: 2px;
                                                 "
                                             >
                                                 {{
@@ -3755,38 +4290,43 @@
                                                 }}
                                             </small>
 
+
                                         {% elif
                                             ticket_type.active_sale_phases
-                                            and ticket_type.next_sale_phase
+                                            and
+                                            ticket_type.next_sale_phase
                                         %}
 
                                             <span
                                                 style="
-                                                    font-size:.78rem;
-                                                    color:#b45309;
+                                                    font-size: .78rem;
+                                                    color: #b45309;
                                                 "
                                             >
                                                 UPCOMING
                                             </span>
 
+
                                         {% elif
                                             ticket_type.active_sale_phases
                                         %}
 
                                             <span
                                                 style="
-                                                    font-size:.78rem;
-                                                    color:#b91c1c;
+                                                    font-size: .78rem;
+                                                    color: #b91c1c;
                                                 "
                                             >
                                                 NOT ON SALE
                                             </span>
+
 
                                         {% elif
                                             ticket_type.price == 0
                                         %}
 
                                             FREE
+
 
                                         {% else %}
 
@@ -3848,6 +4388,7 @@
                                     SOLD OUT
                                 </p>
 
+
                             {% elif
                                 event.remaining_tickets
                                 <= 10
@@ -3866,13 +4407,16 @@
                                     ticket(s) remaining
                                 </p>
 
+
                             {% else %}
 
                                 <p class="ticket-availability">
+
                                     {{
                                         event.remaining_tickets
                                     }}
                                     ticket(s) remaining
+
                                 </p>
 
                             {% endif %}
@@ -3908,9 +4452,12 @@
                             Ticket Sales Paused
                         </button>
 
+
                         <div class="sales-note">
+
                             This event is published,
                             but ticket sales are not open yet.
+
                         </div>
 
 
@@ -3926,9 +4473,12 @@
                             Buy Ticket
                         </a>
 
+
                         <div class="sales-note">
+
                             Secure payment by Paystack.
                             Kalxa adds no ticket commission.
+
                         </div>
 
                     {% endif %}
@@ -3970,6 +4520,7 @@
                             </span>
 
                         </div>
+
 
                         <span class="vibe-heading-note">
                             Tap · then swipe ↑
@@ -4042,6 +4593,7 @@
                                             {{ reel.event.title }}
                                         </strong>
 
+
                                         <small>
 
                                             {% if
@@ -4056,9 +4608,8 @@
 
                                             {% endif %}
 
-                                            {% if
-                                                reel.event.venue
-                                            %}
+
+                                            {% if reel.event.venue %}
 
                                                 {% if
                                                     reel.event.event_date
@@ -4066,9 +4617,7 @@
                                                     ·
                                                 {% endif %}
 
-                                                {{
-                                                    reel.event.venue
-                                                }}
+                                                {{ reel.event.venue }}
 
                                             {% endif %}
 
@@ -4118,6 +4667,7 @@
 
                         </div>
 
+
                         <span class="food-vibe-heading-note">
                             Tap · then swipe ↑
                         </span>
@@ -4149,7 +4699,9 @@
                                         oncontextmenu="return false;"
                                         {% if reel.thumbnail_url %}
                                             poster="{{ reel.thumbnail_url }}"
-                                        {% elif reel.advert.poster_image_url %}
+                                        {% elif
+                                            reel.advert.poster_image_url
+                                        %}
                                             poster="{{ reel.advert.poster_image_url }}"
                                         {% endif %}
                                     >
@@ -4179,6 +4731,7 @@
                                     <button
                                         type="button"
                                         class="food-vibe-sound-toggle"
+                                        aria-label="Toggle sound"
                                     >
                                         🔇
                                     </button>
@@ -4192,11 +4745,10 @@
                                             }}
                                         </strong>
 
+
                                         <small>
 
-                                            {% if
-                                                reel.advert.headline
-                                            %}
+                                            {% if reel.advert.headline %}
 
                                                 {{
                                                     reel.advert.headline
@@ -4260,9 +4812,11 @@
                             PEOPLE ARE HERE
                         </span>
 
+
                         <h2 id="restaurant-experience-title">
                             Real experiences
                         </h2>
+
 
                         <p>
                             See what people are sharing from
@@ -4296,12 +4850,19 @@
                             {#
                                 IMPORTANT:
 
-                                Multiple experience media now lives in
-                                post.media.
+                                The actual SQLAlchemy relationship
+                                is:
 
-                                restaurant_experience_media is expected
-                                to be ordered by media_order.
+                                    post.media_items
+
+                                The model helper is:
+
+                                    post.primary_media
+
+                                Do NOT use post.media,
+                                post.media_url or post.thumbnail_url.
                             #}
+
 
                             {% set experience_media =
                                 post.media_items
@@ -4309,20 +4870,23 @@
                                 else []
                             %}
 
-                            {% if experience_media|length > 0 %}
 
-                                {% set primary_media =
-                                    experience_media[0]
-                                %}
-
-
-                                <article
-                                    class="restaurant-experience-card"
-                                    data-experience-post="{{ post.id }}"
-                                >
+                            {% set primary_media =
+                                post.primary_media
+                            %}
 
 
-                                    <!-- Hidden media manifest -->
+                            <article
+                                class="restaurant-experience-card"
+                                data-experience-post="{{ post.id }}"
+                            >
+
+
+                                <!-- =================================
+                                     HIDDEN MULTI-MEDIA MANIFEST
+                                ================================== -->
+
+                                {% if experience_media %}
 
                                     <div
                                         class="experience-media-source"
@@ -4342,46 +4906,57 @@
 
                                     </div>
 
+                                {% endif %}
 
-                                    <div class="restaurant-experience-media">
+
+                                <div class="restaurant-experience-media">
 
 
-                                        <!-- LOVE -->
+                                    <!-- =================================
+                                         LOVE
+                                    ================================== -->
 
-                                        <button
-                                            type="button"
-                                            class="
-                                                restaurant-experience-love
-                                                {% if
-                                                    post.id
-                                                    in loved_experience_post_ids
-                                                %}
-                                                    loved
-                                                {% endif %}
-                                            "
-                                            data-experience-love
-                                            data-post-id="{{ post.id }}"
-                                            aria-label="Love this experience"
-                                            aria-pressed="{{
-                                                'true'
-                                                if post.id
+                                    <button
+                                        type="button"
+                                        class="
+                                            restaurant-experience-love
+                                            {% if
+                                                post.id
                                                 in loved_experience_post_ids
-                                                else 'false'
-                                            }}"
-                                        >
+                                            %}
+                                                loved
+                                            {% endif %}
+                                        "
+                                        data-experience-love
+                                        data-post-id="{{ post.id }}"
+                                        aria-label="Love this experience"
+                                        aria-pressed="{{
+                                            'true'
+                                            if
+                                                post.id
+                                                in loved_experience_post_ids
+                                            else
+                                                'false'
+                                        }}"
+                                    >
 
-                                            <span class="heart">
-                                                ♥
-                                            </span>
-
-                                            <span data-love-count>
-                                                {{ post.love_count }}
-                                            </span>
-
-                                        </button>
+                                        <span class="heart">
+                                            ♥
+                                        </span>
 
 
-                                        <!-- CLICKABLE MEDIA -->
+                                        <span data-love-count>
+                                            {{ post.love_count }}
+                                        </span>
+
+                                    </button>
+
+
+                                    <!-- =================================
+                                         MEDIA
+                                    ================================== -->
+
+                                    {% if primary_media %}
 
                                         <button
                                             type="button"
@@ -4393,11 +4968,7 @@
 
 
                                             {% if
-                                                primary_media.media_type
-                                                in [
-                                                    'video',
-                                                    'reel'
-                                                ]
+                                                primary_media.is_video
                                             %}
 
                                                 <video
@@ -4405,6 +4976,9 @@
                                                     muted
                                                     loop
                                                     preload="metadata"
+                                                    controlslist="nodownload noremoteplayback"
+                                                    disablepictureinpicture
+                                                    oncontextmenu="return false;"
                                                     {% if
                                                         primary_media.thumbnail_url
                                                     %}
@@ -4422,6 +4996,7 @@
 
                                                 </video>
 
+
                                                 <span class="experience-media-type">
                                                     ▶ Reel
                                                 </span>
@@ -4435,24 +5010,23 @@
                                                     }}"
                                                     alt="{{
                                                         post.poster_name
-                                                    }} experience"
+                                                    }} at {{
+                                                        post.restaurant_advert.business_name
+                                                        if post.restaurant_advert
+                                                        else 'Kalxa'
+                                                    }}"
                                                     loading="lazy"
                                                 >
 
                                             {% endif %}
 
 
-                                            {% if
-                                                experience_media|length
-                                                > 1
-                                            %}
+                                            {% if post.media_count > 1 %}
 
                                                 <span class="experience-photo-count">
 
                                                     ▣
-                                                    {{
-                                                        experience_media|length
-                                                    }}
+                                                    {{ post.media_count }}
 
                                                 </span>
 
@@ -4461,71 +5035,126 @@
                                         </button>
 
 
-                                        {% if post.restaurant_advert %}
+                                    {% else %}
 
-                                            <span class="restaurant-experience-tag">
+                                        <!--
+                                            Never hide the complete post just
+                                            because its media child row is missing.
+                                        -->
 
-                                                📍
-                                                {{
-                                                    post.restaurant_advert.business_name
-                                                }}
+                                        <div class="experience-missing-media">
 
+                                            <div class="experience-missing-media-inner">
+
+                                                <span class="experience-missing-media-brand">
+                                                    KALXA
+                                                </span>
+
+                                                <span class="experience-missing-media-copy">
+                                                    Experience media unavailable
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if post.restaurant_advert %}
+
+                                        <span class="restaurant-experience-tag">
+
+                                            📍
+                                            {{
+                                                post.restaurant_advert.business_name
+                                            }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="restaurant-experience-copy">
+
+                                    <p class="restaurant-experience-name">
+                                        {{ post.poster_name }}
+                                    </p>
+
+
+                                    {% if post.experience_text %}
+
+                                        <p class="restaurant-experience-text">
+                                            “{{ post.experience_text }}”
+                                        </p>
+
+                                    {% endif %}
+
+
+                                    {% if post.created_at %}
+
+                                        <span class="restaurant-experience-date">
+
+                                            {{
+                                                post.created_at.strftime(
+                                                    '%d %b %Y'
+                                                )
+                                            }}
+
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    <div class="restaurant-experience-actions">
+
+                                        {% if
+                                            post.restaurant_advert
+                                            and
+                                            post.restaurant_is_available
+                                        %}
+
+                                            <a
+                                                href="{{ url_for(
+                                                    'restaurant_page',
+                                                    advert_id=post.restaurant_advert.id
+                                                ) }}"
+                                                class="restaurant-experience-restaurant"
+                                            >
+                                                View restaurant →
+                                            </a>
+
+
+                                        {% elif post.restaurant_advert %}
+
+                                            <a
+                                                href="{{ url_for(
+                                                    'restaurant_page',
+                                                    advert_id=post.restaurant_advert.id
+                                                ) }}"
+                                                class="restaurant-experience-restaurant"
+                                            >
+                                                View restaurant →
+                                            </a>
+
+
+                                        {% else %}
+
+                                            <span
+                                                class="restaurant-experience-unavailable"
+                                            >
+                                                Restaurant unavailable
                                             </span>
 
                                         {% endif %}
 
                                     </div>
 
+                                </div>
 
-                                    <div class="restaurant-experience-copy">
-
-                                        <p class="restaurant-experience-name">
-                                            {{ post.poster_name }}
-                                        </p>
-
-
-                                        {% if post.experience_text %}
-
-                                            <p class="restaurant-experience-text">
-                                                “{{ post.experience_text }}”
-                                            </p>
-
-                                        {% endif %}
-
-
-                                        <div class="restaurant-experience-actions">
-
-                                            {% if
-                                                post.restaurant_advert
-                                                and post.restaurant_is_available
-                                            %}
-
-                                                <a
-                                                    href="{{ url_for(
-                                                        'restaurant_page',
-                                                        advert_id=
-                                                            post.restaurant_advert.id
-                                                    ) }}"
-                                                    class="restaurant-experience-restaurant"
-                                                >
-                                                    View restaurant →
-                                                </a>
-
-                                            {% else %}
-
-                                                <span class="restaurant-experience-unavailable">
-                                                    Restaurant currently unavailable
-                                                </span>
-
-                                            {% endif %}
-
-                                        </div>
-
-                                    </div>
-
-                                </article>
-
-                            {% endif %}
+                            </article>
 
                         {% endfor %}
 
@@ -4538,6 +5167,8 @@
 
                         No customer experiences have been
                         published yet.
+
+                        <br><br>
 
                         Be the first to share one.
 
@@ -4567,6 +5198,7 @@
                             <h2>⭐</h2>
                         </div>
 
+
                         <span class="section-note">
                             Swipe posters
                         </span>
@@ -4578,7 +5210,10 @@
 
                         {% for featured in featured_events %}
 
-                            {% set item = featured.event %}
+                            {% set item =
+                                featured.event
+                            %}
+
 
                             {% set ns =
                                 namespace(
@@ -4592,14 +5227,15 @@
 
                                 {% if
                                     tt.active
-                                    and tt.current_price
+                                    and
+                                    tt.current_price
                                     is not none
                                 %}
 
                                     {% if
                                         ns.price is none
-                                        or tt.current_price
-                                        < ns.price
+                                        or
+                                        tt.current_price < ns.price
                                     %}
 
                                         {% set ns.price =
@@ -4611,7 +5247,8 @@
 
                                     {% if
                                         ns.phase is none
-                                        and tt.current_sale_phase
+                                        and
+                                        tt.current_sale_phase
                                     %}
 
                                         {% set ns.phase =
@@ -4661,8 +5298,7 @@
                                     if
                                         ns.phase
                                         and
-                                        'early'
-                                        in ns.phase|lower
+                                        'early' in ns.phase|lower
                                     else
                                         'false'
                                 }}"
@@ -4710,7 +5346,8 @@
 
                                         {% elif
                                             item.poster_image_mimetype
-                                            or item.image_url
+                                            or
+                                            item.image_url
                                         %}
 
                                             <div
@@ -4734,6 +5371,7 @@
 
                                             </div>
 
+
                                         {% else %}
 
                                             <div
@@ -4741,6 +5379,7 @@
                                                     featured-slide
                                                     poster-fallback
                                                 "
+                                                data-featured-slide
                                             >
                                                 <span>
                                                     KALXA
@@ -4754,9 +5393,11 @@
 
                                     <div class="poster-gradient"></div>
 
+
                                     <div class="featured-badge">
                                         ⭐
                                     </div>
+
 
                                     <div
                                         class="
@@ -4770,8 +5411,9 @@
 
 
                                     {% if
-                                        featured.images|length
-                                        > 1
+                                        featured.images
+                                        and
+                                        featured.images|length > 1
                                     %}
 
                                         <div
@@ -4794,6 +5436,7 @@
                                                     data-featured-dot="{{
                                                         loop.index0
                                                     }}"
+                                                    aria-label="Show featured image {{ loop.index }}"
                                                 ></button>
 
                                             {% endfor %}
@@ -4809,6 +5452,7 @@
                                             {{ item.title }}
                                         </h3>
 
+
                                         <div class="featured-meta-line">
 
                                             {% if item.event_date %}
@@ -4823,24 +5467,30 @@
 
                                             {% endif %}
 
+
                                             {% if item.event_time %}
 
                                                 <span>
+
                                                     ·
                                                     {{
                                                         item.event_time.strftime(
                                                             '%H:%M'
                                                         )
                                                     }}
+
                                                 </span>
 
                                             {% endif %}
 
+
                                             {% if item.venue %}
 
                                                 <span>
+
                                                     ·
                                                     {{ item.venue }}
+
                                                 </span>
 
                                             {% endif %}
@@ -4865,7 +5515,10 @@
                                                     SOLD OUT
                                                 </strong>
 
-                                            {% elif ns.price is not none %}
+
+                                            {% elif
+                                                ns.price is not none
+                                            %}
 
                                                 <strong>
 
@@ -4885,6 +5538,7 @@
 
                                                 </strong>
 
+
                                             {% elif
                                                 item.ticket_price == 0
                                             %}
@@ -4893,14 +5547,17 @@
                                                     FREE
                                                 </strong>
 
+
                                             {% else %}
 
                                                 <strong>
+
                                                     R{{
                                                         '%.2f'|format(
                                                             item.ticket_price
                                                         )
                                                     }}
+
                                                 </strong>
 
                                             {% endif %}
@@ -4927,7 +5584,8 @@
 
                                     {% if
                                         not item.is_sold_out
-                                        and item.sales_open
+                                        and
+                                        item.sales_open
                                     %}
 
                                         <a
@@ -4972,6 +5630,7 @@
                             Events
                         </h2>
 
+
                         <button
                             type="button"
                             class="text-button"
@@ -4999,27 +5658,34 @@
 
                                 {% if
                                     tt.active
-                                    and tt.current_price
+                                    and
+                                    tt.current_price
                                     is not none
                                 %}
 
                                     {% if
                                         ns.price is none
-                                        or tt.current_price
-                                        < ns.price
+                                        or
+                                        tt.current_price < ns.price
                                     %}
+
                                         {% set ns.price =
                                             tt.current_price
                                         %}
+
                                     {% endif %}
+
 
                                     {% if
                                         ns.phase is none
-                                        and tt.current_sale_phase
+                                        and
+                                        tt.current_sale_phase
                                     %}
+
                                         {% set ns.phase =
                                             tt.current_sale_phase.name
                                         %}
+
                                     {% endif %}
 
                                 {% endif %}
@@ -5039,7 +5705,8 @@
 
                                     {% if
                                         item.poster_image_mimetype
-                                        or item.image_url
+                                        or
+                                        item.image_url
                                     %}
 
                                         <img
@@ -5057,6 +5724,7 @@
                                             loading="lazy"
                                         >
 
+
                                     {% else %}
 
                                         <div class="poster-fallback">
@@ -5064,6 +5732,7 @@
                                         </div>
 
                                     {% endif %}
+
 
                                     <div class="poster-gradient small"></div>
 
@@ -5100,6 +5769,7 @@
                                         {{ item.title }}
                                     </h3>
 
+
                                     <p>
 
                                         {% if item.event_date %}
@@ -5111,6 +5781,7 @@
                                             }}
 
                                         {% endif %}
+
 
                                         {% if item.venue %}
 
@@ -5139,7 +5810,10 @@
 
                                                 SOLD OUT
 
-                                            {% elif ns.price is not none %}
+
+                                            {% elif
+                                                ns.price is not none
+                                            %}
 
                                                 {% if ns.price == 0 %}
 
@@ -5155,11 +5829,13 @@
 
                                                 {% endif %}
 
+
                                             {% elif
                                                 item.ticket_price == 0
                                             %}
 
                                                 FREE
+
 
                                             {% else %}
 
@@ -5197,6 +5873,7 @@
                             Around you
                         </h2>
 
+
                         <span class="section-note">
                             Current Kalxa listings
                         </span>
@@ -5218,7 +5895,8 @@
 
                                 {% if
                                     item.poster_image_mimetype
-                                    or item.image_url
+                                    or
+                                    item.image_url
                                 %}
 
                                     <img
@@ -5236,6 +5914,7 @@
                                         loading="lazy"
                                     >
 
+
                                 {% else %}
 
                                     <div class="poster-fallback">
@@ -5251,12 +5930,17 @@
                                         {{ item.title }}
                                     </strong>
 
+
                                     <small>
 
                                         {% if item.venue %}
+
                                             {{ item.venue }}
+
                                         {% else %}
+
                                             Local event
+
                                         {% endif %}
 
                                     </small>
@@ -5282,6 +5966,7 @@
                         <h2>
                             Discover events
                         </h2>
+
 
                         <span
                             class="results-count"
@@ -5312,27 +5997,34 @@
 
                                 {% if
                                     tt.active
-                                    and tt.current_price
+                                    and
+                                    tt.current_price
                                     is not none
                                 %}
 
                                     {% if
                                         ns.price is none
-                                        or tt.current_price
-                                        < ns.price
+                                        or
+                                        tt.current_price < ns.price
                                     %}
+
                                         {% set ns.price =
                                             tt.current_price
                                         %}
+
                                     {% endif %}
+
 
                                     {% if
                                         ns.phase is none
-                                        and tt.current_sale_phase
+                                        and
+                                        tt.current_sale_phase
                                     %}
+
                                         {% set ns.phase =
                                             tt.current_sale_phase.name
                                         %}
+
                                     {% endif %}
 
                                 {% endif %}
@@ -5343,8 +6035,10 @@
                             {% set fast =
                                 item.ticket_capacity
                                 is not none
-                                and item.remaining_tickets <= 20
-                                and item.remaining_tickets > 0
+                                and
+                                item.remaining_tickets <= 20
+                                and
+                                item.remaining_tickets > 0
                             %}
 
 
@@ -5384,8 +6078,7 @@
                                     if
                                         ns.phase
                                         and
-                                        'early'
-                                        in ns.phase|lower
+                                        'early' in ns.phase|lower
                                     else
                                         'false'
                                 }}"
@@ -5408,7 +6101,8 @@
 
                                         {% if
                                             item.poster_image_mimetype
-                                            or item.image_url
+                                            or
+                                            item.image_url
                                         %}
 
                                             <img
@@ -5426,6 +6120,7 @@
                                                 loading="lazy"
                                             >
 
+
                                         {% else %}
 
                                             <div class="poster-fallback">
@@ -5436,6 +6131,7 @@
 
 
                                         <div class="poster-gradient"></div>
+
 
                                         <span
                                             class="
@@ -5451,10 +6147,12 @@
                                         {% if fast %}
 
                                             <span class="scarcity-pill">
+
                                                 {{
                                                     item.remaining_tickets
                                                 }}
                                                 LEFT
+
                                             </span>
 
                                         {% endif %}
@@ -5482,26 +6180,32 @@
                                         {% if item.event_date %}
 
                                             <span>
+
                                                 {{
                                                     item.event_date.strftime(
                                                         '%d %b'
                                                     )|upper
                                                 }}
+
                                             </span>
 
                                         {% endif %}
 
+
                                         {% if item.event_time %}
 
                                             <span>
+
                                                 {{
                                                     item.event_time.strftime(
                                                         '%H:%M'
                                                     )
                                                 }}
+
                                             </span>
 
                                         {% endif %}
+
 
                                         {% if item.venue %}
 
@@ -5532,7 +6236,9 @@
                                             {% endif %}
 
 
-                                            {% if not item.is_sold_out %}
+                                            {% if
+                                                not item.is_sold_out
+                                            %}
 
                                                 <span class="price-eyebrow">
                                                     From
@@ -5547,9 +6253,14 @@
 
                                                     SOLD OUT
 
-                                                {% elif ns.price is not none %}
 
-                                                    {% if ns.price == 0 %}
+                                                {% elif
+                                                    ns.price is not none
+                                                %}
+
+                                                    {% if
+                                                        ns.price == 0
+                                                    %}
 
                                                         FREE
 
@@ -5563,11 +6274,13 @@
 
                                                     {% endif %}
 
+
                                                 {% elif
                                                     item.ticket_price == 0
                                                 %}
 
                                                     FREE
+
 
                                                 {% else %}
 
@@ -5586,7 +6299,8 @@
 
                                         {% if
                                             not item.is_sold_out
-                                            and item.sales_open
+                                            and
+                                            item.sales_open
                                         %}
 
                                             <a
@@ -5598,6 +6312,7 @@
                                             >
                                                 Get Tickets
                                             </a>
+
 
                                         {% else %}
 
@@ -5628,13 +6343,16 @@
                         id="no-results"
                         hidden
                     >
+
                         <strong>
                             No matching events
                         </strong>
 
+
                         <span>
                             Try another search or filter.
                         </span>
+
                     </div>
 
                 </section>
@@ -5648,6 +6366,7 @@
                         No events yet
                     </strong>
 
+
                     <span>
                         New Kalxa experiences will appear here.
                     </span>
@@ -5657,7 +6376,9 @@
             {% endif %}
 
 
-            <!-- SEARCH -->
+            <!-- =====================================
+                 SEARCH
+            ====================================== -->
 
             <section class="discovery-hero">
 
@@ -5667,6 +6388,7 @@
                         ⌕
                     </span>
 
+
                     <input
                         type="search"
                         id="event-search"
@@ -5674,9 +6396,11 @@
                         autocomplete="off"
                     >
 
+
                     <button
                         type="button"
                         id="clear-search"
+                        aria-label="Clear search"
                         hidden
                     >
                         ×
@@ -5698,6 +6422,7 @@
                         All
                     </button>
 
+
                     <button
                         type="button"
                         class="filter-chip"
@@ -5705,6 +6430,7 @@
                     >
                         Today
                     </button>
+
 
                     <button
                         type="button"
@@ -5714,6 +6440,7 @@
                         This Weekend
                     </button>
 
+
                     <button
                         type="button"
                         class="filter-chip"
@@ -5721,6 +6448,7 @@
                     >
                         Early Bird
                     </button>
+
 
                     <button
                         type="button"
@@ -5750,21 +6478,30 @@
                 <small>Home</small>
             </a>
 
+
             <a href="#discover">
+
                 <span>⌕</span>
                 <small>Discover</small>
+
             </a>
 
+
             <a href="{{ url_for('track_ticket') }}">
+
                 <span>🎟</span>
                 <small>My Tickets</small>
+
             </a>
+
 
             {% if firebase_push_configured %}
 
                 <a href="#updates">
+
                     <span>🔔</span>
                     <small>Updates</small>
+
                 </a>
 
             {% endif %}
@@ -5786,6 +6523,7 @@
                 🔔 Notifications enabled
             </span>
 
+
             <button
                 type="button"
                 id="home-bottom-disable-notifications"
@@ -5797,6 +6535,7 @@
         </section>
 
     {% endif %}
+
 
 </div>
 
@@ -5811,6 +6550,7 @@
     aria-hidden="true"
     role="dialog"
     aria-modal="true"
+    aria-label="Customer experience media"
 >
 
     <button
@@ -5883,6 +6623,7 @@
             type="button"
             class="poster-modal-close"
             id="close-poster"
+            aria-label="Close poster"
         >
             ×
         </button>
@@ -5910,7 +6651,10 @@
      EVENT REEL MODAL
 ====================================================== -->
 
-{% if not event and reels %}
+{% if
+    not event
+    and reels
+%}
 
     <div
         class="vibe-modal"
@@ -5922,6 +6666,7 @@
             type="button"
             class="vibe-modal-close"
             id="vibe-modal-close"
+            aria-label="Close event reels"
         >
             ×
         </button>
@@ -5964,6 +6709,7 @@
                         <button
                             type="button"
                             class="vibe-modal-slide-sound"
+                            aria-label="Toggle sound"
                         >
                             🔇
                         </button>
@@ -5974,6 +6720,7 @@
                             <strong class="vibe-modal-slide-title">
                                 {{ reel.event.title }}
                             </strong>
+
 
                             <span class="vibe-modal-slide-meta">
 
@@ -5986,6 +6733,7 @@
                                     }}
 
                                 {% endif %}
+
 
                                 {% if reel.event.venue %}
 
@@ -6035,7 +6783,10 @@
      RESTAURANT REEL MODAL
 ====================================================== -->
 
-{% if not event and restaurant_reels %}
+{% if
+    not event
+    and restaurant_reels
+%}
 
     <div
         class="food-modal"
@@ -6047,6 +6798,7 @@
             type="button"
             class="food-modal-close"
             id="food-modal-close"
+            aria-label="Close restaurant reels"
         >
             ×
         </button>
@@ -6075,7 +6827,9 @@
                             preload="metadata"
                             {% if reel.thumbnail_url %}
                                 poster="{{ reel.thumbnail_url }}"
-                            {% elif reel.advert.poster_image_url %}
+                            {% elif
+                                reel.advert.poster_image_url
+                            %}
                                 poster="{{ reel.advert.poster_image_url }}"
                             {% endif %}
                         >
@@ -6090,6 +6844,7 @@
                         <button
                             type="button"
                             class="food-modal-sound"
+                            aria-label="Toggle sound"
                         >
                             🔇
                         </button>
@@ -6171,6 +6926,7 @@
         Install Kalxa
     </div>
 
+
     <p
         class="pwa-install-copy"
         id="pwa-install-copy"
@@ -6178,6 +6934,7 @@
         Add Kalxa to your phone for faster access
         and event notifications.
     </p>
+
 
     <div
         class="pwa-install-actions"
@@ -6192,6 +6949,7 @@
             Install Kalxa
         </button>
 
+
         <button
             type="button"
             class="pwa-install-dismiss"
@@ -6201,6 +6959,7 @@
         </button>
 
     </div>
+
 
     <ol
         class="pwa-ios-steps"
@@ -6228,6 +6987,7 @@
     >
         {{ firebase_config|tojson }}
     </script>
+
 
     <script
         id="home-firebase-vapid-key"
@@ -6280,12 +7040,14 @@
                     registration.scope
                 );
 
+
             } catch (error) {
 
                 console.error(
                     "[Kalxa PWA] Service worker failed:",
                     error
                 );
+
             }
 
         }
@@ -6297,7 +7059,7 @@
 
 
 <!-- =====================================================
-     FIXED FIREBASE PUSH NOTIFICATIONS
+     FIREBASE PUSH NOTIFICATIONS
 ====================================================== -->
 
 {% if firebase_push_configured %}
@@ -6325,30 +7087,36 @@
             "home-enable-notifications"
         );
 
+
     const disableButton =
         document.getElementById(
             "home-disable-notifications"
         );
+
 
     const bottomDisableButton =
         document.getElementById(
             "home-bottom-disable-notifications"
         );
 
+
     const areaInput =
         document.getElementById(
             "home-notification-area"
         );
+
 
     const statusElement =
         document.getElementById(
             "home-notification-status"
         );
 
+
     const notificationCard =
         document.getElementById(
             "updates"
         );
+
 
     const bottomControl =
         document.getElementById(
@@ -6390,8 +7158,10 @@
         let messaging =
             null;
 
+
         let serviceWorkerRegistration =
             null;
+
 
         let hideTimer =
             null;
@@ -6413,6 +7183,7 @@
 
             areaInput.value =
                 savedArea;
+
         }
 
 
@@ -6424,15 +7195,19 @@
             statusElement.textContent =
                 message;
 
+
             statusElement.className =
                 "notification-status";
+
 
             if (type) {
 
                 statusElement.classList.add(
                     type
                 );
+
             }
+
         }
 
 
@@ -6444,9 +7219,12 @@
                     hideTimer
                 );
 
+
                 hideTimer =
                     null;
+
             }
+
         }
 
 
@@ -6456,7 +7234,9 @@
 
                 bottomControl.hidden =
                     false;
+
             }
+
         }
 
 
@@ -6466,7 +7246,9 @@
 
                 bottomControl.hidden =
                     true;
+
             }
+
         }
 
 
@@ -6474,14 +7256,17 @@
 
             clearHideTimer();
 
+
             if (!notificationCard) {
                 return;
             }
+
 
             notificationCard.classList.remove(
                 "confirmation-only",
                 "notification-card-hidden"
             );
+
         }
 
 
@@ -6492,9 +7277,12 @@
                 notificationCard.classList.add(
                     "notification-card-hidden"
                 );
+
             }
 
+
             showBottomControl();
+
         }
 
 
@@ -6515,6 +7303,7 @@
 
                 disableButton.hidden =
                     true;
+
             }
 
 
@@ -6535,9 +7324,11 @@
                         "notification-card-hidden"
                     );
 
+
                     notificationCard.classList.add(
                         "confirmation-only"
                     );
+
                 }
 
 
@@ -6551,16 +7342,20 @@
                         3000
                     );
 
+
             } else {
 
                 hideNotificationCard();
+
             }
+
         }
 
 
         function setDisabledUi() {
 
             restoreNotificationCard();
+
 
             enableButton.hidden =
                 false;
@@ -6570,6 +7365,7 @@
 
                 disableButton.hidden =
                     true;
+
             }
 
 
@@ -6579,6 +7375,7 @@
             setStatus(
                 "Notifications are currently off."
             );
+
         }
 
 
@@ -6594,12 +7391,14 @@
                 throw new Error(
                     "This browser does not support service workers."
                 );
+
             }
 
 
             if (serviceWorkerRegistration) {
 
                 return serviceWorkerRegistration;
+
             }
 
 
@@ -6616,6 +7415,7 @@
 
 
             return serviceWorkerRegistration;
+
         }
 
 
@@ -6624,16 +7424,16 @@
             if (messaging) {
 
                 return true;
+
             }
 
 
-            if (
-                !window.isSecureContext
-            ) {
+            if (!window.isSecureContext) {
 
                 throw new Error(
                     "Notifications require HTTPS."
                 );
+
             }
 
 
@@ -6647,6 +7447,7 @@
                 throw new Error(
                     "Notifications are not supported by this browser."
                 );
+
             }
 
 
@@ -6659,6 +7460,7 @@
                 throw new Error(
                     "Firebase push notifications are not supported by this browser."
                 );
+
             }
 
 
@@ -6676,11 +7478,6 @@
                 );
 
 
-            /*
-             * Foreground notification handler.
-             *
-             * The service worker handles background messages.
-             */
             onMessage(
                 messaging,
                 (payload) => {
@@ -6690,14 +7487,17 @@
                         payload
                     );
 
+
                     const title =
                         payload?.notification?.title
-                        || payload?.data?.title;
+                        ||
+                        payload?.data?.title;
 
 
                     const body =
                         payload?.notification?.body
-                        || payload?.data?.body;
+                        ||
+                        payload?.data?.body;
 
 
                     if (
@@ -6714,10 +7514,12 @@
                                 {
                                     body:
                                         body || "",
+
                                     icon:
                                         "/static/icons/kalxa-192.png",
                                 }
                             );
+
 
                         } catch (error) {
 
@@ -6725,13 +7527,17 @@
                                 "[Kalxa Push] Foreground notification:",
                                 error
                             );
+
                         }
+
                     }
+
                 }
             );
 
 
             return true;
+
         }
 
 
@@ -6753,6 +7559,7 @@
                         headers: {
                             "Content-Type":
                                 "application/json",
+
                             "Accept":
                                 "application/json",
                         },
@@ -6760,12 +7567,6 @@
                         body:
                             JSON.stringify(
                                 {
-                                    /*
-                                     * Keep installation_id for compatibility
-                                     * with your current Flask route.
-                                     *
-                                     * The value is now the real FCM token.
-                                     */
                                     installation_id:
                                         token,
 
@@ -6785,6 +7586,7 @@
 
             let result = {};
 
+
             try {
 
                 result =
@@ -6793,6 +7595,7 @@
             } catch {
 
                 result = {};
+
             }
 
 
@@ -6809,6 +7612,7 @@
                     ||
                     "Unable to save notification preference."
                 );
+
             }
 
 
@@ -6822,10 +7626,6 @@
             );
 
 
-            /*
-             * Keep old storage key temporarily so that other
-             * existing Kalxa code does not break.
-             */
             localStorage.setItem(
                 "kalxa_firebase_installation_id",
                 token
@@ -6847,6 +7647,7 @@
             setEnabledUi({
                 confirmation: true,
             });
+
         }
 
 
@@ -6861,6 +7662,7 @@
                 throw new Error(
                     "Enter your area or town before enabling notifications."
                 );
+
             }
 
 
@@ -6883,6 +7685,7 @@
 
                 permission =
                     await Notification.requestPermission();
+
             }
 
 
@@ -6899,12 +7702,14 @@
                     throw new Error(
                         "Notifications are blocked in your browser. Allow notifications for Kalxa in your browser settings and try again."
                     );
+
                 }
 
 
                 throw new Error(
                     "Notification permission was not granted."
                 );
+
             }
 
 
@@ -6935,6 +7740,7 @@
                 throw new Error(
                     "Firebase did not return a notification token."
                 );
+
             }
 
 
@@ -6946,6 +7752,7 @@
             await saveSubscription(
                 token
             );
+
         }
 
 
@@ -6968,6 +7775,7 @@
                         headers: {
                             "Content-Type":
                                 "application/json",
+
                             "Accept":
                                 "application/json",
                         },
@@ -6995,7 +7803,9 @@
                     "[Kalxa Push] Server unsubscribe returned:",
                     response.status
                 );
+
             }
+
         }
 
 
@@ -7005,6 +7815,7 @@
 
                 disableButton.disabled =
                     true;
+
             }
 
 
@@ -7012,6 +7823,7 @@
 
                 bottomDisableButton.disabled =
                     true;
+
             }
 
 
@@ -7035,18 +7847,11 @@
                     );
 
 
-                /*
-                 * Tell Kalxa server first so that the token
-                 * no longer receives targeted notifications.
-                 */
                 await notifyServerOfUnsubscribe(
                     tokenToDelete
                 );
 
 
-                /*
-                 * Remove the Firebase token from this browser.
-                 */
                 if (messaging) {
 
                     try {
@@ -7055,13 +7860,16 @@
                             messaging
                         );
 
+
                     } catch (error) {
 
                         console.warn(
                             "[Kalxa Push] Firebase token deletion:",
                             error
                         );
+
                     }
+
                 }
 
 
@@ -7069,9 +7877,11 @@
                     "kalxa_fcm_token"
                 );
 
+
                 localStorage.removeItem(
                     "kalxa_firebase_installation_id"
                 );
+
 
                 localStorage.removeItem(
                     "kalxa_notifications_enabled"
@@ -7110,6 +7920,7 @@
 
                     disableButton.disabled =
                         false;
+
                 }
 
 
@@ -7117,8 +7928,11 @@
 
                     bottomDisableButton.disabled =
                         false;
+
                 }
+
             }
+
         }
 
 
@@ -7133,6 +7947,7 @@
                 try {
 
                     await enableNotifications();
+
 
                 } catch (error) {
 
@@ -7149,11 +7964,14 @@
                         "error"
                     );
 
+
                 } finally {
 
                     enableButton.disabled =
                         false;
+
                 }
+
             }
         );
 
@@ -7164,6 +7982,7 @@
                 "click",
                 turnOffNotifications
             );
+
         }
 
 
@@ -7173,12 +7992,10 @@
                 "click",
                 turnOffNotifications
             );
+
         }
 
 
-        /*
-         * Restore the visible state immediately.
-         */
         const storedEnabled =
             localStorage.getItem(
                 "kalxa_notifications_enabled"
@@ -7197,15 +8014,14 @@
                 confirmation: false,
             });
 
+
         } else {
 
             setDisabledUi();
+
         }
 
 
-        /*
-         * Validate the environment without asking permission.
-         */
         initializeMessaging()
             .catch(
                 (error) => {
@@ -7225,7 +8041,9 @@
                             error.message,
                             "error"
                         );
+
                     }
+
                 }
             );
 
@@ -7249,25 +8067,30 @@
             "experience-viewer"
         );
 
+
     const stage =
         document.getElementById(
             "experience-viewer-stage"
         );
+
 
     const closeButton =
         document.getElementById(
             "experience-viewer-close"
         );
 
+
     const previousButton =
         document.getElementById(
             "experience-viewer-prev"
         );
 
+
     const nextButton =
         document.getElementById(
             "experience-viewer-next"
         );
+
 
     const counter =
         document.getElementById(
@@ -7297,19 +8120,22 @@
             .forEach(
                 (video) => {
 
-                    video.pause();
+                    try {
+                        video.pause();
+                    } catch {
+                        /* ignore */
+                    }
 
-                    video.removeAttribute(
-                        "src"
-                    );
                 }
             );
+
     }
 
 
     function renderCurrentMedia() {
 
         stopCurrentMedia();
+
 
         stage.innerHTML =
             "";
@@ -7340,7 +8166,8 @@
             (
                 item.type
                 || ""
-            ).toLowerCase();
+            )
+            .toLowerCase();
 
 
         let element;
@@ -7361,20 +8188,30 @@
             element.controls =
                 true;
 
+
             element.playsInline =
                 true;
+
 
             element.autoplay =
                 true;
 
+
             element.className =
                 "experience-viewer-media";
+
+
+            element.setAttribute(
+                "controlslist",
+                "nodownload noremoteplayback"
+            );
 
 
             if (item.thumbnail) {
 
                 element.poster =
                     item.thumbnail;
+
             }
 
 
@@ -7404,11 +8241,14 @@
             element.src =
                 item.url;
 
+
             element.alt =
                 "Kalxa customer experience";
 
+
             element.className =
                 "experience-viewer-media";
+
         }
 
 
@@ -7424,8 +8264,10 @@
         previousButton.hidden =
             !multiple;
 
+
         nextButton.hidden =
             !multiple;
+
 
         counter.hidden =
             !multiple;
@@ -7434,12 +8276,10 @@
         if (multiple) {
 
             counter.textContent =
-                `${
-                    currentIndex + 1
-                } / ${
-                    currentItems.length
-                }`;
+                `${currentIndex + 1} / ${currentItems.length}`;
+
         }
+
     }
 
 
@@ -7461,6 +8301,7 @@
             );
 
             return;
+
         }
 
 
@@ -7497,6 +8338,7 @@
             );
 
             return;
+
         }
 
 
@@ -7521,12 +8363,14 @@
         document.body.classList.add(
             "modal-open"
         );
+
     }
 
 
     function closeViewer() {
 
         stopCurrentMedia();
+
 
         stage.innerHTML =
             "";
@@ -7551,8 +8395,10 @@
         currentItems =
             [];
 
+
         currentIndex =
             0;
+
     }
 
 
@@ -7570,10 +8416,12 @@
                 currentIndex - 1
                 + currentItems.length
             )
-            % currentItems.length;
+            %
+            currentItems.length;
 
 
         renderCurrentMedia();
+
     }
 
 
@@ -7590,10 +8438,12 @@
             (
                 currentIndex + 1
             )
-            % currentItems.length;
+            %
+            currentItems.length;
 
 
         renderCurrentMedia();
+
     }
 
 
@@ -7609,13 +8459,16 @@
                     (event) => {
 
                         event.preventDefault();
+                        event.stopPropagation();
 
 
                         openViewer(
                             button.dataset.postId
                         );
+
                     }
                 );
+
             }
         );
 
@@ -7649,7 +8502,9 @@
             ) {
 
                 closeViewer();
+
             }
+
         }
     );
 
@@ -7673,18 +8528,22 @@
 
                 closeViewer();
 
+
             } else if (
                 event.key === "ArrowLeft"
             ) {
 
                 previous();
 
+
             } else if (
                 event.key === "ArrowRight"
             ) {
 
                 next();
+
             }
+
         }
     );
 
@@ -7733,7 +8592,9 @@
                         ||
                         postId <= 0
                     ) {
+
                         return;
+
                     }
 
 
@@ -7764,8 +8625,19 @@
                             );
 
 
-                        const result =
-                            await response.json();
+                        let result = {};
+
+
+                        try {
+
+                            result =
+                                await response.json();
+
+                        } catch {
+
+                            result = {};
+
+                        }
 
 
                         if (
@@ -7777,8 +8649,11 @@
                             throw new Error(
                                 result.message
                                 ||
+                                result.error
+                                ||
                                 "Unable to update love."
                             );
+
                         }
 
 
@@ -7793,8 +8668,8 @@
                         button.setAttribute(
                             "aria-pressed",
                             result.loved
-                            ? "true"
-                            : "false"
+                                ? "true"
+                                : "false"
                         );
 
 
@@ -7805,6 +8680,7 @@
                                     result.love_count
                                     ?? 0
                                 );
+
                         }
 
 
@@ -7820,6 +8696,7 @@
 
                         button.disabled =
                             false;
+
                     }
 
                 }
@@ -7855,10 +8732,12 @@
             "open-poster"
         );
 
+
     const closeButton =
         document.getElementById(
             "close-poster"
         );
+
 
     const modal =
         document.getElementById(
@@ -7877,14 +8756,17 @@
             "open"
         );
 
+
         modal.setAttribute(
             "aria-hidden",
             "false"
         );
 
+
         document.body.classList.add(
             "modal-open"
         );
+
     }
 
 
@@ -7894,14 +8776,17 @@
             "open"
         );
 
+
         modal.setAttribute(
             "aria-hidden",
             "true"
         );
 
+
         document.body.classList.remove(
             "modal-open"
         );
+
     }
 
 
@@ -7926,7 +8811,9 @@
             ) {
 
                 hidePoster();
+
             }
+
         }
     );
 
@@ -7944,7 +8831,9 @@
             ) {
 
                 hidePoster();
+
             }
+
         }
     );
 
@@ -8013,7 +8902,8 @@ document
                             slides.length - 1,
                             Math.round(
                                 track.scrollLeft
-                                / width
+                                /
+                                width
                             )
                         )
                     );
@@ -8026,8 +8916,10 @@ document
                             "active",
                             dotIndex === index
                         );
+
                     }
                 );
+
             }
 
 
@@ -8053,14 +8945,17 @@ document
 
                             updateDots();
 
+
                             ticking =
                                 false;
+
                         }
                     );
 
                 },
                 {
-                    passive: true,
+                    passive:
+                        true,
                 }
             );
 
@@ -8075,13 +8970,16 @@ document
                             track.scrollTo({
                                 left:
                                     track.clientWidth
-                                    * index,
+                                    *
+                                    index,
 
                                 behavior:
                                     "smooth",
                             });
+
                         }
                     );
+
                 }
             );
 
@@ -8104,20 +9002,24 @@ document
             "event-search"
         );
 
+
     const clearButton =
         document.getElementById(
             "clear-search"
         );
+
 
     const resultCount =
         document.getElementById(
             "results-count"
         );
 
+
     const noResults =
         document.getElementById(
             "no-results"
         );
+
 
     const chips =
         Array.from(
@@ -8171,16 +9073,21 @@ document
                         part.type
                     ] =
                         part.value;
+
                 }
+
             }
         );
 
 
         return (
             `${result.year}-`
-            + `${result.month}-`
-            + `${result.day}`
+            +
+            `${result.month}-`
+            +
+            `${result.day}`
         );
+
     }
 
 
@@ -8201,13 +9108,10 @@ document
         return new Date(
             `${date}T${time}+02:00`
         );
+
     }
 
 
-    /*
-     * Remove events whose Johannesburg calendar date
-     * has already passed.
-     */
     document
         .querySelectorAll(
             ".event-searchable[data-date]"
@@ -8226,7 +9130,9 @@ document
                 ) {
 
                     card.remove();
+
                 }
+
             }
         );
 
@@ -8272,6 +9178,7 @@ document
                 second
             )
         );
+
     }
 
 
@@ -8308,7 +9215,8 @@ document
             (
                 6 - day + 7
             )
-            % 7;
+            %
+            7;
 
 
         const saturday =
@@ -8340,7 +9248,8 @@ document
 
         monday.setDate(
             saturday.getDate()
-            + 2
+            +
+            2
         );
 
 
@@ -8349,6 +9258,7 @@ document
             &&
             date < monday
         );
+
     }
 
 
@@ -8376,6 +9286,7 @@ document
                     new Date()
                 )
             );
+
         }
 
 
@@ -8387,6 +9298,7 @@ document
             return thisWeekend(
                 date
             );
+
         }
 
 
@@ -8399,6 +9311,7 @@ document
                 card.dataset.earlybird
                 === "true"
             );
+
         }
 
 
@@ -8411,10 +9324,12 @@ document
                 card.dataset.sellingfast
                 === "true"
             );
+
         }
 
 
         return true;
+
     }
 
 
@@ -8476,7 +9391,9 @@ document
                 if (visible) {
 
                     shown += 1;
+
                 }
+
             }
         );
 
@@ -8486,9 +9403,10 @@ document
             resultCount.textContent =
                 `${shown} event${
                     shown === 1
-                    ? ""
-                    : "s"
+                        ? ""
+                        : "s"
                 }`;
+
         }
 
 
@@ -8496,6 +9414,7 @@ document
 
             noResults.hidden =
                 shown !== 0;
+
         }
 
 
@@ -8503,7 +9422,9 @@ document
 
             clearButton.hidden =
                 !query;
+
         }
+
     }
 
 
@@ -8517,12 +9438,20 @@ document
         "click",
         () => {
 
+            if (!search) {
+                return;
+            }
+
+
             search.value =
                 "";
 
+
             search.focus();
 
+
             applyFilters();
+
         }
     );
 
@@ -8545,6 +9474,7 @@ document
                                 "active",
                                 item === chip
                             );
+
                         }
                     );
 
@@ -8563,8 +9493,10 @@ document
                             block:
                                 "start",
                         });
+
                 }
             );
+
         }
     );
 
@@ -8588,8 +9520,10 @@ document
                                 behavior:
                                     "smooth",
                             });
+
                     }
                 );
+
             }
         );
 
@@ -8638,13 +9572,15 @@ document
 
         const hours =
             difference
-            / 3600000;
+            /
+            3600000;
 
 
         const days =
             Math.ceil(
                 difference
-                / 86400000
+                /
+                86400000
             );
 
 
@@ -8659,6 +9595,7 @@ document
             element.textContent =
                 "🔴 HAPPENING NOW";
 
+
         } else if (
             difference
             <=
@@ -8668,6 +9605,7 @@ document
             element.textContent =
                 "TODAY";
 
+
         } else if (
             hours <= 8
         ) {
@@ -8675,12 +9613,14 @@ document
             element.textContent =
                 "🔥 TONIGHT";
 
+
         } else if (
             days === 1
         ) {
 
             element.textContent =
                 "TOMORROW";
+
 
         } else if (
             days > 1
@@ -8690,6 +9630,7 @@ document
 
             element.textContent =
                 `${days} DAYS TO GO`;
+
 
         } else {
 
@@ -8711,7 +9652,9 @@ document
                     start
                 )
                 .toUpperCase();
+
         }
+
     }
 
 
@@ -8724,10 +9667,12 @@ document
             .forEach(
                 updateCountdown
             );
+
     }
 
 
     updateAllCountdowns();
+
 
     applyFilters();
 
@@ -8768,10 +9713,12 @@ document
             "vibe-modal"
         );
 
+
     const feed =
         document.getElementById(
             "vibe-modal-feed"
         );
+
 
     const closeButton =
         document.getElementById(
@@ -8800,9 +9747,6 @@ document
             );
 
 
-    let activeInline =
-        null;
-
     let activeSlide =
         null;
 
@@ -8814,14 +9758,13 @@ document
 
                 video.pause();
 
+
                 video.muted =
                     true;
+
             }
         );
 
-
-        activeInline =
-            null;
     }
 
 
@@ -8849,9 +9792,12 @@ document
 
                     other.pause();
 
+
                     other.muted =
                         true;
+
                 }
+
             }
         );
 
@@ -8859,15 +9805,13 @@ document
         video.muted =
             true;
 
-        activeInline =
-            video;
-
 
         video
             .play()
             .catch(
                 () => {}
             );
+
     }
 
 
@@ -8894,7 +9838,9 @@ document
                 ) {
 
                     video?.pause();
+
                 }
+
             }
         );
 
@@ -8911,18 +9857,26 @@ document
 
         if (video) {
 
-            video.play().catch(
-                () => {
+            video
+                .play()
+                .catch(
+                    () => {
 
-                    video.muted =
-                        true;
+                        video.muted =
+                            true;
 
-                    video.play().catch(
-                        () => {}
-                    );
-                }
-            );
+
+                        video
+                            .play()
+                            .catch(
+                                () => {}
+                            );
+
+                    }
+                );
+
         }
+
     }
 
 
@@ -8989,6 +9943,7 @@ document
                     slide
                 )
         );
+
     }
 
 
@@ -9007,12 +9962,16 @@ document
 
                     video.pause();
 
+
                     video.currentTime =
                         0;
 
+
                     video.muted =
                         true;
+
                 }
+
             }
         );
 
@@ -9035,6 +9994,7 @@ document
 
         activeSlide =
             null;
+
     }
 
 
@@ -9046,10 +10006,12 @@ document
                     ".vibe-card-video"
                 );
 
+
             const sound =
                 card.querySelector(
                     ".vibe-sound-toggle"
                 );
+
 
             const link =
                 card.querySelector(
@@ -9064,9 +10026,11 @@ document
                     event.preventDefault();
                     event.stopPropagation();
 
+
                     openModal(
                         card
                     );
+
                 }
             );
 
@@ -9091,6 +10055,7 @@ document
                     openModal(
                         card
                     );
+
                 }
             );
 
@@ -9114,8 +10079,8 @@ document
 
                     sound.textContent =
                         video.muted
-                        ? "🔇"
-                        : "🔊";
+                            ? "🔇"
+                            : "🔊";
 
 
                     if (video.paused) {
@@ -9123,7 +10088,9 @@ document
                         playInline(
                             video
                         );
+
                     }
+
                 }
             );
 
@@ -9133,8 +10100,10 @@ document
                 (event) => {
 
                     event.stopPropagation();
+
                 }
             );
+
         }
     );
 
@@ -9146,6 +10115,7 @@ document
                 slide.querySelector(
                     ".vibe-modal-slide-video"
                 );
+
 
             const sound =
                 slide.querySelector(
@@ -9159,14 +10129,19 @@ document
 
                     if (video.paused) {
 
-                        video.play().catch(
-                            () => {}
-                        );
+                        video
+                            .play()
+                            .catch(
+                                () => {}
+                            );
+
 
                     } else {
 
                         video.pause();
+
                     }
+
                 }
             );
 
@@ -9190,18 +10165,23 @@ document
 
                     sound.textContent =
                         video.muted
-                        ? "🔇"
-                        : "🔊";
+                            ? "🔇"
+                            : "🔊";
 
 
                     if (video.paused) {
 
-                        video.play().catch(
-                            () => {}
-                        );
+                        video
+                            .play()
+                            .catch(
+                                () => {}
+                            );
+
                     }
+
                 }
             );
+
         }
     );
 
@@ -9242,8 +10222,7 @@ document
                     if (
                         visible[0]
                         &&
-                        visible[0].intersectionRatio
-                        >= .70
+                        visible[0].intersectionRatio >= .70
                         &&
                         visible[0].target
                         !== activeSlide
@@ -9252,6 +10231,7 @@ document
                         activateSlide(
                             visible[0].target
                         );
+
                     }
 
                 },
@@ -9275,6 +10255,7 @@ document
                     slide
                 )
         );
+
     }
 
 
@@ -9308,13 +10289,13 @@ document
                 if (
                     visible[0]
                     &&
-                    visible[0].intersectionRatio
-                    >= .65
+                    visible[0].intersectionRatio >= .65
                 ) {
 
                     playInline(
                         visible[0].target
                     );
+
                 }
 
             },
@@ -9356,7 +10337,9 @@ document
             ) {
 
                 closeModal();
+
             }
+
         }
     );
 
@@ -9391,10 +10374,12 @@ document
             "food-modal"
         );
 
+
     const feed =
         document.getElementById(
             "food-modal-feed"
         );
+
 
     const closeButton =
         document.getElementById(
@@ -9434,10 +10419,13 @@ document
 
                 video.pause();
 
+
                 video.muted =
                     true;
+
             }
         );
+
     }
 
 
@@ -9465,9 +10453,12 @@ document
 
                     other.pause();
 
+
                     other.muted =
                         true;
+
                 }
+
             }
         );
 
@@ -9476,9 +10467,12 @@ document
             true;
 
 
-        video.play().catch(
-            () => {}
-        );
+        video
+            .play()
+            .catch(
+                () => {}
+            );
+
     }
 
 
@@ -9503,7 +10497,9 @@ document
                             ".food-modal-video"
                         )
                         ?.pause();
+
                 }
+
             }
         );
 
@@ -9518,17 +10514,24 @@ document
             );
 
 
-        video?.play().catch(
-            () => {
+        video
+            ?.play()
+            .catch(
+                () => {
 
-                video.muted =
-                    true;
+                    video.muted =
+                        true;
 
-                video.play().catch(
-                    () => {}
-                );
-            }
-        );
+
+                    video
+                        .play()
+                        .catch(
+                            () => {}
+                        );
+
+                }
+            );
+
     }
 
 
@@ -9595,6 +10598,7 @@ document
                     slide
                 )
         );
+
     }
 
 
@@ -9613,12 +10617,16 @@ document
 
                     video.pause();
 
+
                     video.currentTime =
                         0;
 
+
                     video.muted =
                         true;
+
                 }
+
             }
         );
 
@@ -9641,6 +10649,7 @@ document
 
         activeSlide =
             null;
+
     }
 
 
@@ -9652,10 +10661,12 @@ document
                     ".food-vibe-card-video"
                 );
 
+
             const sound =
                 card.querySelector(
                     ".food-vibe-sound-toggle"
                 );
+
 
             const link =
                 card.querySelector(
@@ -9670,9 +10681,11 @@ document
                     event.preventDefault();
                     event.stopPropagation();
 
+
                     openModal(
                         card
                     );
+
                 }
             );
 
@@ -9697,6 +10710,7 @@ document
                     openModal(
                         card
                     );
+
                 }
             );
 
@@ -9720,8 +10734,8 @@ document
 
                     sound.textContent =
                         video.muted
-                        ? "🔇"
-                        : "🔊";
+                            ? "🔇"
+                            : "🔊";
 
 
                     if (video.paused) {
@@ -9729,16 +10743,22 @@ document
                         playInline(
                             video
                         );
+
                     }
+
                 }
             );
 
 
             link?.addEventListener(
                 "click",
-                (event) =>
-                    event.stopPropagation()
+                (event) => {
+
+                    event.stopPropagation();
+
+                }
             );
+
         }
     );
 
@@ -9750,6 +10770,7 @@ document
                 slide.querySelector(
                     ".food-modal-video"
                 );
+
 
             const sound =
                 slide.querySelector(
@@ -9763,14 +10784,19 @@ document
 
                     if (video.paused) {
 
-                        video.play().catch(
-                            () => {}
-                        );
+                        video
+                            .play()
+                            .catch(
+                                () => {}
+                            );
+
 
                     } else {
 
                         video.pause();
+
                     }
+
                 }
             );
 
@@ -9794,10 +10820,23 @@ document
 
                     sound.textContent =
                         video.muted
-                        ? "🔇"
-                        : "🔊";
+                            ? "🔇"
+                            : "🔊";
+
+
+                    if (video.paused) {
+
+                        video
+                            .play()
+                            .catch(
+                                () => {}
+                            );
+
+                    }
+
                 }
             );
+
         }
     );
 
@@ -9838,8 +10877,7 @@ document
                     if (
                         visible[0]
                         &&
-                        visible[0].intersectionRatio
-                        >= .70
+                        visible[0].intersectionRatio >= .70
                         &&
                         visible[0].target
                         !== activeSlide
@@ -9848,6 +10886,7 @@ document
                         activateSlide(
                             visible[0].target
                         );
+
                     }
 
                 },
@@ -9871,6 +10910,7 @@ document
                     slide
                 )
         );
+
     }
 
 
@@ -9904,13 +10944,13 @@ document
                 if (
                     visible[0]
                     &&
-                    visible[0].intersectionRatio
-                    >= .65
+                    visible[0].intersectionRatio >= .65
                 ) {
 
                     playInline(
                         visible[0].target
                     );
+
                 }
 
             },
@@ -9952,7 +10992,9 @@ document
             ) {
 
                 closeModal();
+
             }
+
         }
     );
 
@@ -9974,25 +11016,30 @@ document
             "pwa-install-card"
         );
 
+
     const installButton =
         document.getElementById(
             "pwa-install-button"
         );
+
 
     const dismissButton =
         document.getElementById(
             "pwa-install-dismiss"
         );
 
+
     const title =
         document.getElementById(
             "pwa-install-title"
         );
 
+
     const copy =
         document.getElementById(
             "pwa-install-copy"
         );
+
 
     const iosSteps =
         document.getElementById(
@@ -10041,7 +11088,8 @@ document
         (
             navigator.userAgent
             || ""
-        ).toLowerCase();
+        )
+        .toLowerCase();
 
 
     const isIos =
@@ -10065,6 +11113,7 @@ document
         card.classList.add(
             "show"
         );
+
     }
 
 
@@ -10081,11 +11130,13 @@ document
         installButton.hidden =
             true;
 
+
         iosSteps.hidden =
             false;
 
 
         showCard();
+
     }
 
 
@@ -10100,14 +11151,17 @@ document
             copy.innerHTML =
                 "Open the browser menu <strong>⋮</strong> and choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.";
 
+
         } else {
 
             copy.innerHTML =
                 "Open your browser menu and choose <strong>Install app</strong> or <strong>Install this site as an app</strong>.";
+
         }
 
 
         showCard();
+
     }
 
 
@@ -10127,6 +11181,7 @@ document
 
 
             showCard();
+
         }
     );
 
@@ -10138,10 +11193,13 @@ document
 
                 showIosInstructions();
 
+
             } else {
 
                 showCard();
+
             }
+
         },
         700
     );
@@ -10156,6 +11214,7 @@ document
                 showManualInstructions();
 
                 return;
+
             }
 
 
@@ -10166,11 +11225,14 @@ document
 
                 await deferredPrompt.userChoice;
 
+
             } finally {
 
                 deferredPrompt =
                     null;
+
             }
+
         }
     );
 
@@ -10188,6 +11250,7 @@ document
             card.classList.remove(
                 "show"
             );
+
         }
     );
 
@@ -10204,6 +11267,7 @@ document
             card.classList.remove(
                 "show"
             );
+
         }
     );
 
@@ -10211,7 +11275,7 @@ document
 
 </script>
 
+
 </body>
 
 </html>
-
