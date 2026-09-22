@@ -251,7 +251,7 @@ def parse_restaurant_time(
 raw_value,
 ):
 
-```
+
 """
 Convert HTML <input type="time"> values such as:
 
@@ -286,7 +286,7 @@ except ValueError:
     raise ValueError(
         f"Invalid time value: {raw_value}"
     )
-```
+
 
 # ============================================================
 
@@ -298,7 +298,7 @@ def build_restaurant_hours_payload(
 advert,
 ):
 
-```
+
 """
 Converts RestaurantOpeningHour rows into the structure
 expected by restaurant.html.
@@ -365,7 +365,7 @@ for day in RESTAURANT_WEEKDAYS:
 
 
 return payload
-```
+
 
 # ============================================================
 
@@ -398,7 +398,7 @@ return (
     ==
     organizer_id
 )
-```
+
 
 # ============================================================
 
@@ -410,7 +410,7 @@ def restaurant_has_active_subscription(
 advert,
 ):
 
-```
+
 organizer = (
     advert.organizer
 )
@@ -424,7 +424,7 @@ if not organizer:
 return bool(
     organizer.is_subscription_active
 )
-```
+
 
 # ============================================================
 
