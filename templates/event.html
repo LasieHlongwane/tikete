@@ -8734,20 +8734,40 @@ and restaurant_reels
 
             }
 
-
             if (
-                slide === activeSlide
-                &&
-                media.tagName === "VIDEO"
+             slide === activeSlide
+             &&
+             media.tagName === "VIDEO"
             ) {
 
-                media
+             media.muted =
+              false;
+
+
+             media.volume =
+              1;
+
+
+             media
+              .play()
+              .catch(
+                () => {
+
+                  media.muted =
+                    true;
+
+
+                  media
                     .play()
                     .catch(
                         () => {}
                     );
 
-            }
+                }
+              );
+
+           }
+            
 
         }
 
