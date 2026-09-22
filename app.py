@@ -10548,6 +10548,117 @@ def home():
         firebase_push_configured=
             firebase_web_push_configured(),
     )
+
+
+# ============================================================
+# RESTAURANT GALLERY
+# ============================================================
+
+
+RESTAURANT_GALLERY_MAX_IMAGES = 5
+
+RESTAURANT_GALLERY_MAX_FILE_BYTES = 8 * 1024 * 1024
+
+
+def get_restaurant_gallery_files():
+    files = request.files.getlist("gallery_images")
+
+    return [
+        file
+        for file in files
+        if file and file.filename
+    ]
+
+
+def validate_restaurant_gallery_files(
+    files,
+    existing_count=0,
+):
+    total_after_upload = existing_count + len(files)
+
+    if total_after_upload > RESTAURANT_GALLERY_MAX_IMAGES:
+        remaining = max(
+            RESTAURANT_GALLERY_MAX_IMAGES - existing_count,
+            0,
+        )
+
+        return (
+            False,
+            (
+                "A restaurant can have a maximum "
+                "of 5 gallery photos. "
+                f"You can upload {remaining} more."
+            ),
+        )
+
+    for image in files:
+        if not allowed_restaurant_poster_filename(
+            image.filename
+        ):
+            return (
+                False,
+                (
+                    "Gallery photos must be JPG, "
+                    "JPEG, PNG or WebP."
+                ),
+            )
+
+        image.stream.seek(0, os.SEEK_END)
+        file_size = image.stream.tell()
+        image.stream.seek(0)
+
+        if file_size > RESTAURANT_GALLERY_MAX_FILE_BYTES:
+            return (
+                False,
+                (
+                    f"{image.filename} is too large. "
+                    "Maximum size is 8 MB per photo."
+                ),
+            )
+
+    return True, None
+
+
+def upload_restaurant_gallery_image(
+    image,
+    organizer_id,
+    advert_id,
+):
+    image.stream.seek(0, os.SEEK_END)
+    file_bytes = image.stream.tell()
+    image.stream.seek(0)
+
+    result = cloudinary.uploader.upload(
+        image,
+        resource_type="image",
+        folder=(
+            "kalxa/"
+            f"organizers/{organizer_id}/"
+            f"restaurants/{advert_id}/"
+            "gallery"
+        ),
+        use_filename=True,
+        unique_filename=True,
+        overwrite=False,
+    )
+
+    public_id = result.get("public_id")
+    secure_url = result.get("secure_url")
+
+    if not public_id or not secure_url:
+        raise RuntimeError(
+            "Cloudinary did not return "
+            "the restaurant gallery image."
+        )
+
+    return {
+        "public_id": public_id,
+        "secure_url": secure_url,
+        "width": result.get("width"),
+        "height": result.get("height"),
+        "file_bytes": file_bytes,
+    }
+
 # ============================================================
 # PUBLIC EVENT POSTER
 # ============================================================
