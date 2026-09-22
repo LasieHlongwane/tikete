@@ -2392,17 +2392,17 @@ content="#d7d9dd"
 
 <body>
 
-{% set rating_ns =
-namespace(
-total=0,
-count=0
-)
-%}
+  {% set rating_ns =
+   namespace(
+    total=0,
+    count=0
+   )
+  %}
 
-{% for rating_post in experience_posts %}
+  {% for rating_post in experience_posts %}
 
 
-{% if rating_post.rating %}
+   {% if rating_post.rating %}
 
     {% set rating_ns.total =
         rating_ns.total
@@ -2414,30 +2414,30 @@ count=0
         + 1
     %}
 
-{% endif %}
+   {% endif %}
 
 
-{% endfor %}
+  {% endfor %}
 
-{% if rating_ns.count > 0 %}
+  {% if rating_ns.count > 0 %}
 
 
-{% set restaurant_average_rating =
+   {% set restaurant_average_rating =
     rating_ns.total
     /
     rating_ns.count
-%}
+  %}
 
 
-{% else %}
+  {% else %}
 
 
-{% set restaurant_average_rating =
+   {% set restaurant_average_rating =
     none
-%}
+   %}
 
 
-{% endif %}
+  {% endif %}
 
 <div class="restaurant-page">
 
