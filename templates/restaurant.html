@@ -1117,6 +1117,31 @@
     }
 
 
+    .restaurant-brand {
+
+     display: inline-flex;
+
+     align-items: center;
+
+     color: #0f4cbd;
+
+     font-size: 18px;
+     font-weight: 950;
+
+     line-height: 1.1;
+
+     letter-spacing: -0.03em;
+
+     text-decoration: none;
+    }
+
+
+    .restaurant-brand:hover {
+
+     color: #0b3b91;
+    }
+
+
     .experience-viewer-counter {
 
         position: fixed;
@@ -1578,9 +1603,9 @@
 
     <a
         href="{{ url_for('home') }}"
-        class="kalxa-brand"
+        class="restaurant-brand"
     >
-        KALXA
+        {{ advert.business_name }}
     </a>
 
 
