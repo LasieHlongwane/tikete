@@ -2401,7 +2401,7 @@ count=0
 
 {% for rating_post in experience_posts %}
 
-```
+
 {% if rating_post.rating %}
 
     {% set rating_ns.total =
@@ -2411,17 +2411,17 @@ count=0
 
     {% set rating_ns.count =
         rating_ns.count
-        \+ 1
+        + 1
     %}
 
 {% endif %}
-```
+
 
 {% endfor %}
 
 {% if rating_ns.count > 0 %}
 
-```
+
 {% set restaurant_average_rating =
     rating_ns.total
     /
@@ -2447,7 +2447,7 @@ count=0
 
 <div class="topbar">
 
-```
+
 <a
     href="{{ url_for('home') }}"
     class="restaurant-brand"
@@ -2472,7 +2472,7 @@ count=0
 
 <article class="restaurant-card">
 
-```
+
 {% if advert.poster_image_url %}
 
     <div class="poster-shell">
@@ -3002,7 +3002,7 @@ count=0
 
 
 </div>
-```
+
 
 </article>
 
