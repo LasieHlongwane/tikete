@@ -367,28 +367,13 @@ Example:
 
 # ============================================================
 
-def restaurant_can_be_managed_by_current_organizer(
-    advert,
-):
-
-    """
-    Only the organizer that owns this RestaurantAdvert
-    may manage it.
-    """
-
-    organizer_id = (
-        get_ticketing_organizer_id()
-    )
+def restaurant_can_be_managed_by_current_organizer(advert):
+    organizer_id = get_ticketing_organizer_id()
 
     if not organizer_id:
-
         return False
 
-    return (
-        advert.organizer_id
-        ==
-        organizer_id
-    )
+    return advert.organizer_id == organizer_id
 
 
 # ============================================================
