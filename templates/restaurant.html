@@ -157,104 +157,108 @@ content="#f3f4f6"
        TOP BAR
     ===================================================== */
 
-    .topbar {
- 
-     display: flex;
+   
+     .topbar {
 
-     align-items: center;
-     justify-content: space-between;
- 
-     width: 100%;
+      display: flex;
 
-     gap: 16px;
+      align-items: center;
+      justify-content: space-between;
 
-     margin-bottom: 20px;
+      width: 100%;
 
-     padding:
+      gap: 16px;
+
+      margin-bottom: 20px;
+
+      padding:
         15px 18px;
 
-     background:
+      background:
         linear-gradient(
             135deg,
-            #d9d9d9,
-            #eeeeee
+            #0b0c0e 0%,
+            #181a1f 55%,
+            #272a30 100%
         );
 
-     border:
-        1px solid #cfcfcf;
+      border:
+        1px solid #303238;
 
-     border-radius: 16px;
+      border-radius: 16px;
 
-     box-shadow:
-        0 10px 30px
+      box-shadow:
+        0 12px 32px
         rgba(
-            15,
-            23,
-            42,
-            .08
+            0,
+            0,
+            0,
+            .22
         );
-    }
+      }
 
 
-    .restaurant-brand {
+     .restaurant-brand {
 
-        display: inline-flex;
+      display: inline-flex;
 
-        align-items: center;
+      align-items: center;
 
-        color: var(--blue);
+      color: #d1d5db;
 
-        font-size: 19px;
-        font-weight: 950;
+      font-size: 19px;
+      font-weight: 950;
 
-        line-height: 1.1;
+      line-height: 1.1;
 
-        letter-spacing: -.035em;
+      letter-spacing: -.035em;
 
-        text-decoration: none;
-    }
-
-
-    .restaurant-brand:hover {
-
-        color: var(--blue-hover);
-    }
+      text-decoration: none;
+ 
+      transition:
+        color .15s ease;
+     }
 
 
-    .topbar-link {
+     .restaurant-brand:hover {
 
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        margin-left: auto;
-
-        color: #171717;
-
-        font-size: 13px;
-        font-weight: 950;
-
-        letter-spacing: -.01em;
-
-        text-decoration: none;
-
-        white-space: nowrap;
-
-        transition:
-            color .16s ease,
-            transform .16s ease;
-    }
+      color: #ffffff;
+     }
 
 
-    .topbar-link:hover {
+     .topbar-link {
 
-        color: var(--blue);
+      display: inline-flex;
+ 
+      align-items: center;
+      justify-content: center;
 
-        transform:
-            translateX(-1px);
-    }
+      margin-left: auto;
 
+      color: #b8bec7;
+
+      font-size: 13px;
+      font-weight: 950;
+
+      letter-spacing: -.01em;
+
+      text-decoration: none;
+
+      white-space: nowrap;
+
+      transition:
+        color .15s ease,
+        transform .15s ease;
+     }
+
+
+     .topbar-link:hover {
+
+      color: #ffffff;
+
+      transform:
+        translateX(-2px);
+     }
 
     /* =====================================================
        RESTAURANT CARD
