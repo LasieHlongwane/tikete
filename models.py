@@ -1,8 +1,7 @@
 # ============================================================
 # KALXA TICKETING - MODELS
 # ============================================================
-
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from datetime import timezone
 from flask_sqlalchemy import SQLAlchemy
