@@ -1007,6 +1007,58 @@ content="#d7d9dd"
         text-transform: uppercase;
     }
 
+    .restaurant-story {
+    margin-top: 22px;
+    padding: 20px 22px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f7f7f5 0%,
+            #ecece8 100%
+        );
+
+    border:
+        1px solid #d9d9d4;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 12px 28px
+        rgba(
+            0,
+            0,
+            0,
+            .05
+        );
+}
+
+.restaurant-story-eyebrow {
+    margin: 0 0 9px;
+
+    color: #7a756d;
+
+    font-size: 9px;
+    font-weight: 900;
+
+    letter-spacing: .18em;
+
+    text-transform: uppercase;
+}
+
+.restaurant-story-copy {
+    max-width: 680px;
+
+    color: #2b2b2b;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    line-height: 1.75;
+
+    letter-spacing: -.01em;
+}
+
     .restaurant-actions {
         display: grid;
 
@@ -2641,9 +2693,17 @@ content="#d7d9dd"
 
     {% if advert.description %}
 
-        <div class="description">
+     <section class="restaurant-story">
+
+        <p class="restaurant-story-eyebrow">
+            ABOUT THIS PLACE
+        </p>
+
+        <div class="restaurant-story-copy">
             {{ advert.description }}
         </div>
+
+     </section>
 
     {% endif %}
 
