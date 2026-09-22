@@ -4,23 +4,23 @@
 
 <head>
 
-
 <meta charset="UTF-8">
 
 <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
+name="viewport"
+content="width=device-width, initial-scale=1"
+
 >
 
 <meta
-    name="theme-color"
-    content="#ffffff"
+name="theme-color"
+content="#f3f4f6"
+
 >
 
 <title>
     {{ advert.business_name }} | Kalxa
 </title>
-
 
 <style>
 
@@ -32,6 +32,58 @@
         box-sizing: border-box;
     }
 
+    :root {
+        --page-bg: #f2f3f5;
+
+        --surface: #ffffff;
+        --surface-soft: #f8f8f7;
+        --surface-warm: #f4ede4;
+
+        --border: #dedede;
+        --border-soft: #e8e8e8;
+
+        --text: #16181d;
+        --text-soft: #4f5560;
+        --muted: #7b8089;
+
+        --blue: #123f8c;
+        --blue-hover: #0c3170;
+
+        --brown: #d9c3a6;
+        --brown-light: #eee2d3;
+        --brown-dark: #8c6e4d;
+
+        --cream: #fff4df;
+        --gold: #d6ab52;
+
+        --shadow-soft:
+            0 10px 28px
+            rgba(
+                15,
+                23,
+                42,
+                .07
+            );
+
+        --shadow-card:
+            0 18px 45px
+            rgba(
+                15,
+                23,
+                42,
+                .09
+            );
+
+        --shadow-luxury:
+            0 20px 65px
+            rgba(
+                43,
+                34,
+                26,
+                .10
+            );
+    }
+
     html {
         scroll-behavior: smooth;
     }
@@ -39,8 +91,14 @@
     body {
         margin: 0;
 
-        background: #ffffff;
-        color: #111827;
+        background:
+            linear-gradient(
+                180deg,
+                #f5f6f7 0%,
+                #eeeeef 100%
+            );
+
+        color: var(--text);
 
         font-family:
             Inter,
@@ -52,8 +110,13 @@
             Arial,
             sans-serif;
 
+        line-height: 1.6;
+
         -webkit-font-smoothing:
             antialiased;
+
+        text-rendering:
+            optimizeLegibility;
     }
 
     body.modal-open {
@@ -77,16 +140,16 @@
 
         width:
             min(
-                100% - 28px,
-                680px
+                100% - 30px,
+                700px
             );
 
         margin:
             0 auto;
 
         padding:
-            18px 0
-            110px;
+            22px 0
+            120px;
     }
 
 
@@ -94,45 +157,102 @@
        TOP BAR
     ===================================================== */
 
-    .restaurant-topbar {
+    .topbar {
 
         display: flex;
 
         align-items: center;
         justify-content: space-between;
 
-        gap: 14px;
+        width: 100%;
 
-        margin-bottom: 18px;
+        gap: 16px;
 
-        padding-bottom: 13px;
+        margin-bottom: 20px;
 
-        border-bottom:
-            1px solid #e5e7eb;
+        padding:
+            15px 18px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #ead8c0,
+                #f1e5d6
+            );
+
+        border:
+            1px solid #d8c1a5;
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 10px 30px
+            rgba(
+                112,
+                82,
+                50,
+                .10
+            );
     }
 
 
-    .kalxa-brand {
+    .restaurant-brand {
 
-        color: #111827;
+        display: inline-flex;
 
-        font-size: 14px;
+        align-items: center;
+
+        color: var(--blue);
+
+        font-size: 19px;
         font-weight: 950;
 
-        letter-spacing: .06em;
+        line-height: 1.1;
+
+        letter-spacing: -.035em;
 
         text-decoration: none;
     }
 
 
-    .back-link {
+    .restaurant-brand:hover {
 
-        color: #6b7280;
+        color: var(--blue-hover);
+    }
 
-        font-size: 11px;
-        font-weight: 800;
+
+    .topbar-link {
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        margin-left: auto;
+
+        color: #171717;
+
+        font-size: 13px;
+        font-weight: 950;
+
+        letter-spacing: -.01em;
 
         text-decoration: none;
+
+        white-space: nowrap;
+
+        transition:
+            color .16s ease,
+            transform .16s ease;
+    }
+
+
+    .topbar-link:hover {
+
+        color: var(--blue);
+
+        transform:
+            translateX(-1px);
     }
 
 
@@ -144,21 +264,27 @@
 
         overflow: hidden;
 
-        background: #ffffff;
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .98
+            );
 
         border:
-            1px solid #e5e7eb;
+            1px solid
+            rgba(
+                208,
+                208,
+                208,
+                .85
+            );
 
-        border-radius: 22px;
+        border-radius: 26px;
 
         box-shadow:
-            0 12px 36px
-            rgba(
-                15,
-                23,
-                42,
-                .07
-            );
+            var(--shadow-luxury);
     }
 
 
@@ -174,7 +300,38 @@
 
         overflow: hidden;
 
-        background: #f3f4f6;
+        background:
+            linear-gradient(
+                135deg,
+                #e8e8e8,
+                #d9d9d9
+            );
+    }
+
+
+    .poster-shell::after {
+
+        content: "";
+
+        position: absolute;
+
+        inset: auto 0 0;
+
+        height: 72px;
+
+        background:
+            linear-gradient(
+                to top,
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .14
+                ),
+                transparent
+            );
+
+        pointer-events: none;
     }
 
 
@@ -189,43 +346,6 @@
     }
 
 
-    .restaurant-type {
-
-        position: absolute;
-
-        top: 13px;
-        left: 13px;
-
-        padding:
-            6px 9px;
-
-        background:
-            rgba(
-                17,
-                24,
-                39,
-                .82
-            );
-
-        color: #ffffff;
-
-        border-radius: 999px;
-
-        font-size: 9px;
-        font-weight: 950;
-
-        letter-spacing: .06em;
-
-        text-transform: uppercase;
-
-        backdrop-filter:
-            blur(8px);
-
-        -webkit-backdrop-filter:
-            blur(8px);
-    }
-
-
     /* =====================================================
        CONTENT
     ===================================================== */
@@ -233,23 +353,7 @@
     .restaurant-content {
 
         padding:
-            22px 20px 24px;
-    }
-
-
-    .eyebrow {
-
-        margin:
-            0 0 7px;
-
-        color: #6b7280;
-
-        font-size: 9px;
-        font-weight: 950;
-
-        letter-spacing: .12em;
-
-        text-transform: uppercase;
+            26px 22px 28px;
     }
 
 
@@ -257,13 +361,13 @@
 
         margin: 0;
 
-        color: #111827;
+        color: #111318;
 
         font-size:
             clamp(
-                28px,
+                30px,
                 7vw,
-                40px
+                42px
             );
 
         line-height: 1.02;
@@ -277,12 +381,12 @@
     .headline {
 
         margin:
-            10px 0 0;
+            11px 0 0;
 
-        color: #374151;
+        color: #363b44;
 
         font-size: 16px;
-        line-height: 1.35;
+        line-height: 1.4;
 
         font-weight: 850;
     }
@@ -293,10 +397,10 @@
         margin:
             18px 0 0;
 
-        color: #4b5563;
+        color: #555b65;
 
         font-size: 14px;
-        line-height: 1.7;
+        line-height: 1.75;
 
         white-space: pre-line;
     }
@@ -308,16 +412,30 @@
 
     .location-box {
 
-        margin-top: 22px;
+        margin-top: 24px;
 
-        padding: 15px;
+        padding: 16px;
 
-        background: #f8fafc;
+        background:
+            linear-gradient(
+                135deg,
+                #faf9f7,
+                #f2eee9
+            );
 
         border:
-            1px solid #e5e7eb;
+            1px solid #e1d8cd;
 
-        border-radius: 14px;
+        border-radius: 16px;
+
+        box-shadow:
+            inset 0 1px 0
+            rgba(
+                255,
+                255,
+                255,
+                .8
+            );
     }
 
 
@@ -325,14 +443,14 @@
 
         display: block;
 
-        margin-bottom: 5px;
+        margin-bottom: 6px;
 
-        color: #6b7280;
+        color: var(--brown-dark);
 
         font-size: 9px;
         font-weight: 950;
 
-        letter-spacing: .09em;
+        letter-spacing: .11em;
 
         text-transform: uppercase;
     }
@@ -340,12 +458,12 @@
 
     .location-main {
 
-        color: #111827;
+        color: #1d1f24;
 
         font-size: 13px;
         line-height: 1.45;
 
-        font-weight: 850;
+        font-weight: 900;
     }
 
 
@@ -353,9 +471,9 @@
 
         display: block;
 
-        margin-top: 3px;
+        margin-top: 4px;
 
-        color: #6b7280;
+        color: #777d86;
 
         font-size: 11px;
     }
@@ -368,12 +486,16 @@
     .actions-title {
 
         margin:
-            25px 0 10px;
+            28px 0 11px;
 
-        color: #111827;
+        color: #202227;
 
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 950;
+
+        letter-spacing: .08em;
+
+        text-transform: uppercase;
     }
 
 
@@ -390,13 +512,13 @@
                 )
             );
 
-        gap: 9px;
+        gap: 10px;
     }
 
 
     .restaurant-action {
 
-        min-height: 48px;
+        min-height: 50px;
 
         display: flex;
 
@@ -406,124 +528,95 @@
         gap: 7px;
 
         padding:
-            10px 12px;
+            10px 13px;
 
-        border: 0;
-
-        border-radius: 11px;
+        border-radius: 13px;
 
         font-size: 12px;
-        font-weight: 900;
+        font-weight: 950;
 
         text-decoration: none;
 
         cursor: pointer;
 
         transition:
-            transform .15s ease,
-            background .15s ease;
+            transform .16s ease,
+            box-shadow .16s ease,
+            background .16s ease;
     }
 
 
     .restaurant-action:hover {
 
         transform:
-            translateY(-1px);
-    }
+            translateY(-2px);
 
-    
-    .topbar {
-
-     display: flex;
-
-     align-items: center;
-     justify-content: space-between;
-
-     width: 100%;
-
-     gap: 16px;
-
-     margin-bottom: 20px;
-
-     padding:
-        14px 16px;
-
-     background: #ead7bd;
-
-     border:
-        1px solid #dcc3a1;
-
-     border-radius: 14px;
-
-     box-shadow:
-        0 4px 14px
-        rgba(
-            120,
-            84,
-            48,
-            .08
-        );
-    }
-    .topbar-link {
-
-     display: inline-flex;
-
-     align-items: center;
-     justify-content: center;
-
-     margin-left: auto;
-
-     color: #111827;
-
-     font-size: 14px;
-
-     font-weight: 950;
-
-     letter-spacing: -0.01em;
-
-     text-decoration: none;
-
-     white-space: nowrap;
-    }
-
-
-    .topbar-link:hover {
-
-     color: #0f4cbd;
+        box-shadow:
+            0 8px 20px
+            rgba(
+                15,
+                23,
+                42,
+                .10
+            );
     }
 
 
     .action-directions {
 
-        background: #111827;
+        background:
+            linear-gradient(
+                135deg,
+                #16191f,
+                #2b2f37
+            );
+
         color: #ffffff;
+
+        border:
+            1px solid #16191f;
     }
 
 
     .action-whatsapp {
 
-        background: #166534;
+        background:
+            linear-gradient(
+                135deg,
+                #176c3c,
+                #0f542e
+            );
+
         color: #ffffff;
+
+        border:
+            1px solid #155e38;
     }
 
 
     .action-call {
 
-        background: #f3f4f6;
-        color: #111827;
+        background: #f6f6f6;
+        color: #1c1f24;
 
         border:
-            1px solid #d1d5db;
+            1px solid #d8d8d8;
     }
 
 
     .action-share {
 
-        background: #fff4df;
-        color: #111827;
+        background:
+            linear-gradient(
+                135deg,
+                #fff7ea,
+                #f3e5cc
+            );
+
+        color: #27231d;
 
         border:
-            1px solid #ead9bb;
+            1px solid #dfc8a4;
     }
 
 
@@ -533,20 +626,38 @@
 
     .experience-cta {
 
-        margin-top: 22px;
+        margin-top: 26px;
 
-        padding: 17px;
+        padding: 20px;
 
         background:
             linear-gradient(
-                135deg,
-                #111827,
-                #27272a
+                145deg,
+                #17191e,
+                #2f3138
             );
 
         color: #ffffff;
 
-        border-radius: 16px;
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .06
+            );
+
+        border-radius: 18px;
+
+        box-shadow:
+            0 16px 35px
+            rgba(
+                0,
+                0,
+                0,
+                .16
+            );
     }
 
 
@@ -554,12 +665,12 @@
 
         display: block;
 
-        color: #d1d5db;
+        color: #d5c0a3;
 
         font-size: 9px;
-        font-weight: 900;
+        font-weight: 950;
 
-        letter-spacing: .10em;
+        letter-spacing: .13em;
 
         text-transform: uppercase;
     }
@@ -568,24 +679,32 @@
     .experience-cta h2 {
 
         margin:
-            6px 0 0;
+            7px 0 0;
 
-        font-size: 17px;
+        font-size: 18px;
         line-height: 1.2;
 
         font-weight: 950;
+
+        letter-spacing: -.02em;
     }
 
 
     .experience-cta p {
 
         margin:
-            7px 0 0;
+            8px 0 0;
 
-        color: #d1d5db;
+        color:
+            rgba(
+                255,
+                255,
+                255,
+                .72
+            );
 
         font-size: 11px;
-        line-height: 1.5;
+        line-height: 1.55;
     }
 
 
@@ -598,19 +717,37 @@
         align-items: center;
         justify-content: center;
 
-        min-height: 43px;
+        min-height: 46px;
 
-        margin-top: 13px;
+        margin-top: 15px;
 
-        background: #fff4df;
-        color: #111827;
+        background:
+            linear-gradient(
+                135deg,
+                #fff5e3,
+                #ead8b7
+            );
 
-        border-radius: 10px;
+        color: #171717;
+
+        border:
+            1px solid #e3c998;
+
+        border-radius: 12px;
 
         font-size: 11px;
         font-weight: 950;
 
         text-decoration: none;
+
+        box-shadow:
+            0 7px 18px
+            rgba(
+                0,
+                0,
+                0,
+                .13
+            );
     }
 
 
@@ -620,7 +757,32 @@
 
     .experience-section {
 
-        margin-top: 28px;
+        margin-top: 34px;
+
+        padding:
+            22px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .72
+            );
+
+        border:
+            1px solid #dedede;
+
+        border-radius: 22px;
+
+        box-shadow:
+            var(--shadow-soft);
+
+        backdrop-filter:
+            blur(10px);
+
+        -webkit-backdrop-filter:
+            blur(10px);
     }
 
 
@@ -633,7 +795,7 @@
 
         gap: 12px;
 
-        margin-bottom: 13px;
+        margin-bottom: 16px;
     }
 
 
@@ -641,23 +803,23 @@
 
         margin: 0;
 
-        color: #111827;
+        color: #17191d;
 
-        font-size: 20px;
-        line-height: 1.1;
+        font-size: 21px;
+        line-height: 1.12;
 
         font-weight: 950;
 
-        letter-spacing: -.03em;
+        letter-spacing: -.035em;
     }
 
 
     .experience-section-header p {
 
         margin:
-            5px 0 0;
+            6px 0 0;
 
-        color: #6b7280;
+        color: #747a83;
 
         font-size: 10px;
     }
@@ -668,10 +830,16 @@
         flex:
             0 0 auto;
 
-        color: #6b7280;
+        padding:
+            5px 8px;
 
-        font-size: 10px;
-        font-weight: 850;
+        background: #eee8df;
+        color: #66543e;
+
+        border-radius: 999px;
+
+        font-size: 9px;
+        font-weight: 900;
     }
 
 
@@ -688,7 +856,7 @@
                 )
             );
 
-        gap: 12px;
+        gap: 14px;
     }
 
 
@@ -696,12 +864,41 @@
 
         overflow: hidden;
 
-        background: #f8fafc;
+        background: #ffffff;
 
         border:
-            1px solid #e5e7eb;
+            1px solid #dddddd;
 
-        border-radius: 16px;
+        border-radius: 18px;
+
+        box-shadow:
+            0 9px 24px
+            rgba(
+                15,
+                23,
+                42,
+                .07
+            );
+
+        transition:
+            transform .16s ease,
+            box-shadow .16s ease;
+    }
+
+
+    .experience-card:hover {
+
+        transform:
+            translateY(-2px);
+
+        box-shadow:
+            0 14px 30px
+            rgba(
+                15,
+                23,
+                42,
+                .10
+            );
     }
 
 
@@ -760,14 +957,14 @@
         z-index: 4;
 
         padding:
-            5px 7px;
+            5px 8px;
 
         background:
             rgba(
-                17,
+                18,
+                20,
                 24,
-                39,
-                .80
+                .78
             );
 
         color: #ffffff;
@@ -778,6 +975,12 @@
         font-weight: 900;
 
         pointer-events: none;
+
+        backdrop-filter:
+            blur(9px);
+
+        -webkit-backdrop-filter:
+            blur(9px);
     }
 
 
@@ -791,14 +994,14 @@
         z-index: 4;
 
         padding:
-            5px 7px;
+            5px 8px;
 
         background:
             rgba(
-                17,
+                18,
+                20,
                 24,
-                39,
-                .80
+                .78
             );
 
         color: #ffffff;
@@ -834,9 +1037,9 @@
 
         background:
             rgba(
-                17,
-                24,
-                39,
+                20,
+                21,
+                25,
                 .80
             );
 
@@ -848,7 +1051,7 @@
                 255,
                 255,
                 255,
-                .20
+                .18
             );
 
         border-radius: 999px;
@@ -890,7 +1093,7 @@
 
     .experience-copy {
 
-        padding: 12px;
+        padding: 14px;
     }
 
 
@@ -902,7 +1105,7 @@
 
         gap: 2px;
 
-        margin-bottom: 7px;
+        margin-bottom: 8px;
     }
 
 
@@ -917,7 +1120,7 @@
 
     .experience-star.filled {
 
-        color: #f5b301;
+        color: var(--gold);
     }
 
 
@@ -925,7 +1128,7 @@
 
         margin-left: 5px;
 
-        color: #6b7280;
+        color: #777d85;
 
         font-size: 9px;
         font-weight: 900;
@@ -936,7 +1139,7 @@
 
         margin: 0;
 
-        color: #111827;
+        color: #1b1d22;
 
         font-size: 12px;
         font-weight: 950;
@@ -948,10 +1151,10 @@
         margin:
             6px 0 0;
 
-        color: #4b5563;
+        color: #535860;
 
         font-size: 11px;
-        line-height: 1.5;
+        line-height: 1.55;
 
         white-space: pre-line;
     }
@@ -961,9 +1164,9 @@
 
         display: block;
 
-        margin-top: 8px;
+        margin-top: 9px;
 
-        color: #9ca3af;
+        color: #989da5;
 
         font-size: 9px;
         font-weight: 750;
@@ -973,19 +1176,24 @@
     .experience-empty {
 
         padding:
-            25px 18px;
+            28px 20px;
 
-        background: #f8fafc;
+        background:
+            linear-gradient(
+                135deg,
+                #fafafa,
+                #f1f1f1
+            );
 
-        color: #6b7280;
+        color: #6f747c;
 
         border:
-            1px dashed #cbd5e1;
+            1px dashed #c9c9c9;
 
-        border-radius: 15px;
+        border-radius: 16px;
 
         font-size: 11px;
-        line-height: 1.5;
+        line-height: 1.55;
 
         text-align: center;
     }
@@ -1009,8 +1217,8 @@
         background:
             linear-gradient(
                 135deg,
-                #1f2937,
-                #030712
+                #25272d,
+                #090a0d
             );
 
         color: #fff4df;
@@ -1067,7 +1275,7 @@
                 0,
                 0,
                 0,
-                .97
+                .98
             );
     }
 
@@ -1083,54 +1291,61 @@
 
     .experience-viewer-stage {
 
-    position: absolute;
+        position: absolute;
 
-    inset: 0;
+        inset: 0;
 
-    width: 100%;
-    height: 100dvh;
+        width: 100%;
+        height: 100dvh;
 
-    display: flex;
+        display: flex;
 
-    align-items: center;
-    justify-content: center;
+        align-items: center;
+        justify-content: center;
 
-    padding: 0;
+        padding: 0;
 
-    overflow: hidden;
+        overflow: hidden;
 
-    background: #000000;
+        background: #000000;
 
-    touch-action: pan-y;
+        touch-action: pan-y;
 
-    user-select: none;
+        user-select: none;
 
-    -webkit-user-select: none;
-}
+        -webkit-user-select: none;
+    }
 
 
-   .experience-viewer-media {
+    .experience-viewer-media {
 
-    width: 100%;
-    height: 100%;
+        width: 100%;
+        height: 100%;
 
-    max-width: none;
-    max-height: none;
+        max-width: none;
+        max-height: none;
 
-    display: block;
+        display: block;
 
-    object-fit: cover;
+        object-fit: cover;
 
-    background: #000000;
+        background: #000000;
 
-    border-radius: 0;
+        border-radius: 0;
 
-    -webkit-user-drag: none;
+        -webkit-user-drag: none;
 
-    user-select: none;
+        user-select: none;
 
-    -webkit-user-select: none;
-}
+        -webkit-user-select: none;
+    }
+
+
+    .experience-viewer-stage video {
+
+        object-fit: contain;
+    }
+
 
     .experience-viewer-close {
 
@@ -1162,7 +1377,7 @@
                 255,
                 255,
                 255,
-                .95
+                .94
             );
 
         color: #111827;
@@ -1175,30 +1390,15 @@
         font-weight: 950;
 
         cursor: pointer;
-    }
 
-
-    .restaurant-brand {
-
-     display: inline-flex;
-
-     align-items: center;
-
-     color: #0f4cbd;
-
-     font-size: 18px;
-     font-weight: 950;
-
-     line-height: 1.1;
-
-     letter-spacing: -0.03em;
-
-     text-decoration: none;
-    }
-
-    .restaurant-brand:hover {
-
-     color: #0b3b91;
+        box-shadow:
+            0 7px 20px
+            rgba(
+                0,
+                0,
+                0,
+                .28
+            );
     }
 
 
@@ -1206,32 +1406,29 @@
 
         position: fixed;
 
-        left: 50%;
-
-        bottom:
+        top:
             max(
-                132px,
+                72px,
                 calc(
                     env(
-                        safe-area-inset-bottom
+                        safe-area-inset-top
                     )
-                    \+ 118px
+                    \+ 58px
                 )
             );
 
-        z-index: 1010;
+        right: 14px;
 
-        transform:
-            translateX(-50%);
+        z-index: 1010;
 
         padding:
             6px 10px;
 
         background:
             rgba(
-                17,
-                24,
-                39,
+                20,
+                21,
+                25,
                 .82
             );
 
@@ -1281,14 +1478,14 @@
 
         gap: 9px;
 
-        padding: 12px;
+        padding: 13px;
 
         background:
             rgba(
-                17,
                 24,
-                39,
-                .92
+                25,
+                30,
+                .90
             );
 
         border:
@@ -1297,16 +1494,25 @@
                 255,
                 255,
                 255,
-                .12
+                .13
             );
 
-        border-radius: 14px;
+        border-radius: 15px;
+
+        box-shadow:
+            0 15px 40px
+            rgba(
+                0,
+                0,
+                0,
+                .30
+            );
 
         backdrop-filter:
-            blur(12px);
+            blur(14px);
 
         -webkit-backdrop-filter:
-            blur(12px);
+            blur(14px);
     }
 
 
@@ -1343,7 +1549,7 @@
 
     .viewer-star.filled {
 
-        color: #f5b301;
+        color: var(--gold);
     }
 
 
@@ -1391,7 +1597,7 @@
 
         width: 100%;
 
-        min-height: 43px;
+        min-height: 44px;
 
         align-items: center;
         justify-content: center;
@@ -1399,10 +1605,16 @@
         padding:
             9px 14px;
 
-        background: #fff4df;
-        color: #111827;
+        background:
+            linear-gradient(
+                135deg,
+                #fff5e3,
+                #ecd7b3
+            );
 
-        border-radius: 10px;
+        color: #161616;
+
+        border-radius: 11px;
 
         font-size: 11px;
         font-weight: 950;
@@ -1418,23 +1630,6 @@
 
 
     /* =====================================================
-       KALXA CREDIT
-    ===================================================== */
-
-    .kalxa-credit {
-
-        margin-top: 22px;
-
-        color: #9ca3af;
-
-        font-size: 9px;
-        line-height: 1.4;
-
-        text-align: center;
-    }
-
-
-    /* =====================================================
        SHARE MESSAGE
     ===================================================== */
 
@@ -1445,7 +1640,7 @@
         margin:
             8px 0 0;
 
-        color: #6b7280;
+        color: #777c84;
 
         font-size: 9px;
         font-weight: 800;
@@ -1471,25 +1666,47 @@
 
             width:
                 min(
-                    100% - 20px,
-                    680px
+                    100% - 18px,
+                    700px
                 );
 
-            padding-bottom:
-                105px;
+            padding:
+                12px 0
+                110px;
+        }
+
+
+        .topbar {
+
+            border-radius: 14px;
+
+            padding:
+                13px 14px;
+        }
+
+
+        .restaurant-brand {
+
+            font-size: 17px;
+        }
+
+
+        .topbar-link {
+
+            font-size: 12px;
         }
 
 
         .restaurant-card {
 
-            border-radius: 18px;
+            border-radius: 20px;
         }
 
 
         .restaurant-content {
 
             padding:
-                19px 16px 20px;
+                21px 17px 22px;
         }
 
 
@@ -1500,30 +1717,18 @@
         }
 
 
+        .experience-section {
+
+            padding: 16px;
+
+            border-radius: 18px;
+        }
+
+
         .experience-grid {
 
             grid-template-columns:
                 1fr;
-        }
-
-
-        .experience-viewer-stage {
-
-            padding:
-                66px
-                8px
-                170px;
-        }
-
-
-        .experience-viewer-media {
-
-            max-width: 100%;
-
-            max-height:
-                calc(
-                    100dvh - 245px
-                );
         }
 
 
@@ -1557,35 +1762,35 @@
 
             gap: 6px;
 
-            padding: 7px;
+            padding: 8px;
 
             background:
                 rgba(
-                    255,
-                    255,
-                    255,
-                    .96
+                    252,
+                    252,
+                    252,
+                    .94
                 );
 
             border:
-                1px solid #d1d5db;
+                1px solid #d7d7d7;
 
-            border-radius: 16px;
+            border-radius: 18px;
 
             box-shadow:
-                0 14px 38px
+                0 18px 46px
                 rgba(
                     15,
                     23,
                     42,
-                    .18
+                    .20
                 );
 
             backdrop-filter:
-                blur(16px);
+                blur(18px);
 
             -webkit-backdrop-filter:
-                blur(16px);
+                blur(18px);
         }
 
 
@@ -1593,7 +1798,7 @@
         .mobile-action-bar button {
 
             min-width: 0;
-            min-height: 45px;
+            min-height: 46px;
 
             display: flex;
 
@@ -1607,11 +1812,11 @@
             padding: 4px;
 
             background: transparent;
-            color: #374151;
+            color: #333840;
 
             border: 0;
 
-            border-radius: 10px;
+            border-radius: 11px;
 
             font-size: 15px;
             font-weight: 900;
@@ -1639,7 +1844,13 @@
         .mobile-action-bar
         .mobile-whatsapp {
 
-            background: #166534;
+            background:
+                linear-gradient(
+                    135deg,
+                    #176c3c,
+                    #10572f
+                );
+
             color: #ffffff;
         }
 
@@ -1647,13 +1858,11 @@
 
 </style>
 
-
 </head>
 
 <body>
 
 <div class="restaurant-page">
-
 
 <!-- =========================================
      TOP BAR
@@ -1661,23 +1870,24 @@
 
 <div class="topbar">
 
-    <a
-        href="{{ url_for('home') }}"
-        class="restaurant-brand"
-    >
-        {{ advert.business_name }}
-    </a>
+```
+<a
+    href="{{ url_for('home') }}"
+    class="restaurant-brand"
+>
+    {{ advert.business_name }}
+</a>
 
 
-    <a
-        href="{{ url_for('home') }}"
-        class="topbar-link"
-    >
-        ← Discover
-    </a>
+<a
+    href="{{ url_for('home') }}"
+    class="topbar-link"
+>
+    ← Discover
+</a>
+```
 
 </div>
-
 
 <!-- =========================================
      RESTAURANT ADVERT
@@ -1685,209 +1895,205 @@
 
 <article class="restaurant-card">
 
+```
+{% if advert.poster_image_url %}
 
-    {% if advert.poster_image_url %}
+    <div class="poster-shell">
 
-        <div class="poster-shell">
+        <img
+            src="{{ advert.poster_image_url }}"
+            alt="{{ advert.business_name }} restaurant advert"
+        >
 
-            <img
-                src="{{ advert.poster_image_url }}"
-                alt="{{ advert.business_name }} restaurant advert"
-            >
+    </div>
+
+{% endif %}
 
 
+<div class="restaurant-content">
+
+
+    <h1 class="restaurant-name">
+        {{ advert.business_name }}
+    </h1>
+
+
+    {% if advert.headline %}
+
+        <p class="headline">
+            {{ advert.headline }}
+        </p>
+
+    {% endif %}
+
+
+    {% if advert.description %}
+
+        <div class="description">
+            {{ advert.description }}
         </div>
 
     {% endif %}
 
 
-    <div class="restaurant-content">
+    <!-- =================================
+         LOCATION
+    ================================== -->
 
+    {% if advert.address or advert.area %}
 
-        <h1 class="restaurant-name">
-            {{ advert.business_name }}
-        </h1>
+        <section class="location-box">
 
-
-        {% if advert.headline %}
-
-            <p class="headline">
-                {{ advert.headline }}
-            </p>
-
-        {% endif %}
-
-
-        {% if advert.description %}
-
-            <div class="description">
-                {{ advert.description }}
-            </div>
-
-        {% endif %}
-
-
-        <!-- =================================
-             LOCATION
-        ================================== -->
-
-        {% if advert.address or advert.area %}
-
-            <section class="location-box">
-
-                <span class="location-label">
-                    📍 Location
-                </span>
-
-
-                {% if advert.address %}
-
-                    <div class="location-main">
-                        {{ advert.address }}
-                    </div>
-
-                {% endif %}
-
-
-                {% if advert.area %}
-
-                    <span class="location-area">
-                        {{ advert.area }}
-                    </span>
-
-                {% endif %}
-
-            </section>
-
-        {% endif %}
-
-
-        <!-- =================================
-             CONTACT & VISIT
-        ================================== -->
-
-        <h2 class="actions-title">
-            CONTACT & VISIT
-        </h2>
-
-
-        <div class="restaurant-actions">
-
-
-            {% if directions_url %}
-
-                <a
-                    href="{{ directions_url }}"
-                    class="
-                        restaurant-action
-                        action-directions
-                    "
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    🧭 Directions
-                </a>
-
-            {% endif %}
-
-
-            {% if whatsapp_url %}
-
-                <a
-                    href="{{ whatsapp_url }}"
-                    class="
-                        restaurant-action
-                        action-whatsapp
-                    "
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    💬 WhatsApp
-                </a>
-
-            {% endif %}
-
-
-            {% if phone_url %}
-
-                <a
-                    href="{{ phone_url }}"
-                    class="
-                        restaurant-action
-                        action-call
-                    "
-                >
-                    ☎ Call
-                </a>
-
-            {% endif %}
-
-
-            <button
-                type="button"
-                class="
-                    restaurant-action
-                    action-share
-                "
-                id="restaurant-share-button"
-            >
-                ↗ Share
-            </button>
-
-        </div>
-
-
-        <div
-            class="share-status"
-            id="restaurant-share-status"
-            aria-live="polite"
-        ></div>
-
-
-        <!-- =================================
-             POST EXPERIENCE
-        ================================== -->
-
-        <section class="experience-cta">
-
-            <span class="experience-cta-kicker">
-                BEEN HERE?
+            <span class="location-label">
+                📍 Location
             </span>
 
 
-            <h2>
-                Share your experience
-            </h2>
+            {% if advert.address %}
+
+                <div class="location-main">
+                    {{ advert.address }}
+                </div>
+
+            {% endif %}
 
 
-            <p>
-                Post up to 3 photos or a short reel
-                and tell people what your experience
-                at {{ advert.business_name }} was like.
-                No Kalxa account required.
-            </p>
+            {% if advert.area %}
 
+                <span class="location-area">
+                    {{ advert.area }}
+                </span>
 
-            <a
-                href="{{ url_for(
-                    'create_restaurant_experience',
-                    restaurant_id=advert.id
-                ) }}"
-                class="experience-cta-link"
-            >
-                + Post your experience
-            </a>
+            {% endif %}
 
         </section>
 
+    {% endif %}
 
-  
 
+    <!-- =================================
+         CONTACT & VISIT
+    ================================== -->
+
+    <h2 class="actions-title">
+        CONTACT & VISIT
+    </h2>
+
+
+    <div class="restaurant-actions">
+
+
+        {% if directions_url %}
+
+            <a
+                href="{{ directions_url }}"
+                class="
+                    restaurant-action
+                    action-directions
+                "
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                🧭 Directions
+            </a>
+
+        {% endif %}
+
+
+        {% if whatsapp_url %}
+
+            <a
+                href="{{ whatsapp_url }}"
+                class="
+                    restaurant-action
+                    action-whatsapp
+                "
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                💬 WhatsApp
+            </a>
+
+        {% endif %}
+
+
+        {% if phone_url %}
+
+            <a
+                href="{{ phone_url }}"
+                class="
+                    restaurant-action
+                    action-call
+                "
+            >
+                ☎ Call
+            </a>
+
+        {% endif %}
+
+
+        <button
+            type="button"
+            class="
+                restaurant-action
+                action-share
+            "
+            id="restaurant-share-button"
+        >
+            ↗ Share
+        </button>
 
     </div>
 
-</article>
 
+    <div
+        class="share-status"
+        id="restaurant-share-status"
+        aria-live="polite"
+    ></div>
+
+
+    <!-- =================================
+         POST EXPERIENCE
+    ================================== -->
+
+    <section class="experience-cta">
+
+        <span class="experience-cta-kicker">
+            BEEN HERE?
+        </span>
+
+
+        <h2>
+            Share your experience
+        </h2>
+
+
+        <p>
+            Post up to 3 photos or a short reel
+            and tell people what your experience
+            at {{ advert.business_name }} was like.
+            No Kalxa account required.
+        </p>
+
+
+        <a
+            href="{{ url_for(
+                'create_restaurant_experience',
+                restaurant_id=advert.id
+            ) }}"
+            class="experience-cta-link"
+        >
+            + Post your experience
+        </a>
+
+    </section>
+
+
+</div>
+```
+
+</article>
 
 <!-- =========================================
      CUSTOMER EXPERIENCES
@@ -1895,336 +2101,337 @@
 
 <section class="experience-section">
 
-    <div class="experience-section-header">
+```
+<div class="experience-section-header">
 
-        <div>
+    <div>
 
-            <h2>
-                What People Love About {{ advert.business_name }}
-            </h2>
-
-
-            <p>
-                ratings and experiences from people who’ve been here.
-            </p>
-
-        </div>
+        <h2>
+            What People Love About {{ advert.business_name }}
+        </h2>
 
 
-        <span class="experience-count">
-
-            {{ experience_posts|length }}
-
-            {% if experience_posts|length == 1 %}
-                post
-            {% else %}
-                posts
-            {% endif %}
-
-        </span>
+        <p>
+            Ratings and experiences from people who’ve been here.
+        </p>
 
     </div>
 
 
-    {% if experience_posts %}
+    <span class="experience-count">
 
-        <div class="experience-grid">
+        {{ experience_posts|length }}
 
-            {% for post in experience_posts %}
+        {% if experience_posts|length == 1 %}
+            post
+        {% else %}
+            posts
+        {% endif %}
 
+    </span>
 
-                {% set experience_media =
-                    post.media_items
-                    if post.media_items
-                    else []
-                %}
+</div>
 
 
-                {% set primary_media =
-                    post.primary_media
-                %}
+{% if experience_posts %}
 
+    <div class="experience-grid">
 
-                <article
-                    class="experience-card"
-                    data-experience-post="{{ post.id }}"
-                >
+        {% for post in experience_posts %}
 
 
-                    <!-- =================================
-                         HIDDEN MEDIA MANIFEST
-                    ================================== -->
+            {% set experience_media =
+                post.media_items
+                if post.media_items
+                else []
+            %}
 
-                    {% if experience_media %}
 
-                        <div
-                            class="experience-media-source"
-                            data-experience-media-source="{{ post.id }}"
-                            data-experience-rating="{{ post.rating or '' }}"
-                            data-restaurant-url="{{
-                                url_for(
-                                    'restaurant_page',
-                                    advert_id=advert.id
-                                )
-                            }}"
-                            data-restaurant-name="{{
-                                advert.business_name
-                            }}"
-                        >
-
-                            {% for media in experience_media %}
-
-                                <span
-                                    data-experience-media-item
-                                    data-media-url="{{ media.media_url }}"
-                                    data-media-type="{{ media.media_type }}"
-                                    data-thumbnail-url="{{ media.thumbnail_url or '' }}"
-                                ></span>
+            {% set primary_media =
+                post.primary_media
+            %}
 
-                            {% endfor %}
 
-                        </div>
+            <article
+                class="experience-card"
+                data-experience-post="{{ post.id }}"
+            >
 
-                    {% endif %}
 
-
-                    {% if primary_media %}
+                <!-- =================================
+                     HIDDEN MEDIA MANIFEST
+                ================================== -->
 
-                        <div class="experience-media">
+                {% if experience_media %}
 
+                    <div
+                        class="experience-media-source"
+                        data-experience-media-source="{{ post.id }}"
+                        data-experience-rating="{{ post.rating or '' }}"
+                        data-restaurant-url="{{
+                            url_for(
+                                'restaurant_page',
+                                advert_id=advert.id
+                            )
+                        }}"
+                        data-restaurant-name="{{
+                            advert.business_name
+                        }}"
+                    >
 
-                            <!-- =============================
-                                 LOVE
-                            ============================== -->
+                        {% for media in experience_media %}
 
-                            <button
-                                type="button"
-                                class="
-                                    experience-love
-                                    {% if
-                                        post.id
-                                        in loved_experience_post_ids
-                                    %}
-                                        loved
-                                    {% endif %}
-                                "
-                                data-experience-love
-                                data-post-id="{{ post.id }}"
-                                aria-label="Love this experience"
-                                aria-pressed="{{
-                                    'true'
-                                    if
-                                        post.id
-                                        in loved_experience_post_ids
-                                    else
-                                        'false'
-                                }}"
-                            >
+                            <span
+                                data-experience-media-item
+                                data-media-url="{{ media.media_url }}"
+                                data-media-type="{{ media.media_type }}"
+                                data-thumbnail-url="{{ media.thumbnail_url or '' }}"
+                            ></span>
 
-                                <span class="heart">
-                                    ♥
-                                </span>
-
-
-                                <span data-love-count>
-                                    {{ post.love_count }}
-                                </span>
-
-                            </button>
-
-
-                            <!-- =============================
-                                 CLICKABLE MEDIA
-                            ============================== -->
-
-                            <button
-                                type="button"
-                                class="experience-media-open"
-                                data-experience-open
-                                data-post-id="{{ post.id }}"
-                                aria-label="View experience media"
-                            >
-
-
-                                {% if primary_media.is_video %}
-
-                                    <video
-                                        playsinline
-                                        muted
-                                        loop
-                                        preload="metadata"
-                                        controlslist="nodownload noremoteplayback"
-                                        disablepictureinpicture
-                                        oncontextmenu="return false;"
-                                        {% if
-                                            primary_media.thumbnail_url
-                                        %}
-                                            poster="{{
-                                                primary_media.thumbnail_url
-                                            }}"
-                                        {% endif %}
-                                    >
-
-                                        <source
-                                            src="{{
-                                                primary_media.media_url
-                                            }}"
-                                        >
-
-                                    </video>
-
-
-                                    <span class="experience-media-type">
-                                        ▶ Reel
-                                    </span>
-
-
-                                {% else %}
-
-                                    <img
-                                        src="{{
-                                            primary_media.media_url
-                                        }}"
-                                        alt="{{ post.poster_name }} at {{ advert.business_name }}"
-                                        loading="lazy"
-                                    >
-
-                                {% endif %}
-
-
-                                {% if post.media_count > 1 %}
-
-                                    <span class="experience-media-count">
-                                        ▣ {{ post.media_count }}
-                                    </span>
-
-                                {% endif %}
-
-
-                            </button>
-
-                        </div>
-
-
-                    {% else %}
-
-                        <div class="experience-missing-media">
-
-                            <div>
-
-                                <strong>
-                                    KALXA
-                                </strong>
-
-
-                                <span>
-                                    Experience media unavailable
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    {% endif %}
-
-
-                    <div class="experience-copy">
-
-
-                        <!-- =============================
-                             RATING
-                        ============================== -->
-
-                        {% if post.rating %}
-
-                            <div
-                                class="experience-rating"
-                                aria-label="{{ post.rating }} out of 5 stars"
-                            >
-
-                                {% for star in range(1, 6) %}
-
-                                    <span
-                                        class="
-                                            experience-star
-                                            {% if
-                                                star <= post.rating
-                                            %}
-                                                filled
-                                            {% endif %}
-                                        "
-                                    >
-                                        ★
-                                    </span>
-
-                                {% endfor %}
-
-
-                                <span class="experience-rating-number">
-                                    {{ post.rating }}/5
-                                </span>
-
-                            </div>
-
-                        {% endif %}
-
-
-                        <p class="experience-name">
-                            {{ post.poster_name }}
-                        </p>
-
-
-                        {% if post.experience_text %}
-
-                            <p class="experience-text">
-                                “{{ post.experience_text }}”
-                            </p>
-
-                        {% endif %}
-
-
-                        {% if post.created_at_johannesburg %}
-
-                            <span class="experience-date">
-
-                                {{
-                                    post.created_at_johannesburg.strftime(
-                                        '%d %b %Y · %H:%M'
-                                    )
-                                }}
-
-                            </span>
-
-                        {% endif %}
-
+                        {% endfor %}
 
                     </div>
 
-                </article>
-
-            {% endfor %}
-
-        </div>
+                {% endif %}
 
 
-    {% else %}
+                {% if primary_media %}
 
-        <div class="experience-empty">
+                    <div class="experience-media">
 
-            No customer experiences have been
-            published for {{ advert.business_name }}
-            yet.
 
-            <br><br>
+                        <!-- =============================
+                             LOVE
+                        ============================== -->
 
-            Be the first person to share one.
+                        <button
+                            type="button"
+                            class="
+                                experience-love
+                                {% if
+                                    post.id
+                                    in loved_experience_post_ids
+                                %}
+                                    loved
+                                {% endif %}
+                            "
+                            data-experience-love
+                            data-post-id="{{ post.id }}"
+                            aria-label="Love this experience"
+                            aria-pressed="{{
+                                'true'
+                                if
+                                    post.id
+                                    in loved_experience_post_ids
+                                else
+                                    'false'
+                            }}"
+                        >
 
-        </div>
+                            <span class="heart">
+                                ♥
+                            </span>
 
-    {% endif %}
+
+                            <span data-love-count>
+                                {{ post.love_count }}
+                            </span>
+
+                        </button>
+
+
+                        <!-- =============================
+                             CLICKABLE MEDIA
+                        ============================== -->
+
+                        <button
+                            type="button"
+                            class="experience-media-open"
+                            data-experience-open
+                            data-post-id="{{ post.id }}"
+                            aria-label="View experience media"
+                        >
+
+
+                            {% if primary_media.is_video %}
+
+                                <video
+                                    playsinline
+                                    muted
+                                    loop
+                                    preload="metadata"
+                                    controlslist="nodownload noremoteplayback"
+                                    disablepictureinpicture
+                                    oncontextmenu="return false;"
+                                    {% if
+                                        primary_media.thumbnail_url
+                                    %}
+                                        poster="{{
+                                            primary_media.thumbnail_url
+                                        }}"
+                                    {% endif %}
+                                >
+
+                                    <source
+                                        src="{{
+                                            primary_media.media_url
+                                        }}"
+                                    >
+
+                                </video>
+
+
+                                <span class="experience-media-type">
+                                    ▶ Reel
+                                </span>
+
+
+                            {% else %}
+
+                                <img
+                                    src="{{
+                                        primary_media.media_url
+                                    }}"
+                                    alt="{{ post.poster_name }} at {{ advert.business_name }}"
+                                    loading="lazy"
+                                >
+
+                            {% endif %}
+
+
+                            {% if post.media_count > 1 %}
+
+                                <span class="experience-media-count">
+                                    ▣ {{ post.media_count }}
+                                </span>
+
+                            {% endif %}
+
+
+                        </button>
+
+                    </div>
+
+
+                {% else %}
+
+                    <div class="experience-missing-media">
+
+                        <div>
+
+                            <strong>
+                                KALXA
+                            </strong>
+
+
+                            <span>
+                                Experience media unavailable
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="experience-copy">
+
+
+                    <!-- =============================
+                         RATING
+                    ============================== -->
+
+                    {% if post.rating %}
+
+                        <div
+                            class="experience-rating"
+                            aria-label="{{ post.rating }} out of 5 stars"
+                        >
+
+                            {% for star in range(1, 6) %}
+
+                                <span
+                                    class="
+                                        experience-star
+                                        {% if
+                                            star <= post.rating
+                                        %}
+                                            filled
+                                        {% endif %}
+                                    "
+                                >
+                                    ★
+                                </span>
+
+                            {% endfor %}
+
+
+                            <span class="experience-rating-number">
+                                {{ post.rating }}/5
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <p class="experience-name">
+                        {{ post.poster_name }}
+                    </p>
+
+
+                    {% if post.experience_text %}
+
+                        <p class="experience-text">
+                            “{{ post.experience_text }}”
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if post.created_at_johannesburg %}
+
+                        <span class="experience-date">
+
+                            {{
+                                post.created_at_johannesburg.strftime(
+                                    '%d %b %Y · %H:%M'
+                                )
+                            }}
+
+                        </span>
+
+                    {% endif %}
+
+
+                </div>
+
+            </article>
+
+        {% endfor %}
+
+    </div>
+
+
+{% else %}
+
+    <div class="experience-empty">
+
+        No customer experiences have been
+        published for {{ advert.business_name }}
+        yet.
+
+        <br><br>
+
+        Be the first person to share one.
+
+    </div>
+
+{% endif %}
+```
 
 </section>
-
 
 </div>
 
@@ -2242,20 +2449,23 @@
 >
 
 <button
-    type="button"
-    class="experience-viewer-close"
-    id="experience-viewer-close"
-    aria-label="Close media"
->
-    ×
-</button>
+type="button"
+class="experience-viewer-close"
+id="experience-viewer-close"
+aria-label="Close media"
 
+>
+
+```
+×
+```
+
+</button>
 
 <div
     class="experience-viewer-stage"
     id="experience-viewer-stage"
 ></div>
-
 
 <div
     class="experience-viewer-counter"
@@ -2263,50 +2473,48 @@
     hidden
 ></div>
 
-
 <div class="experience-viewer-details">
 
+```
+<div
+    class="viewer-rating"
+    id="viewer-rating"
+    hidden
+>
 
-    <div
-        class="viewer-rating"
-        id="viewer-rating"
-        hidden
-    >
-
-        <span
-            id="viewer-stars"
-        ></span>
-
-
-        <span
-            class="viewer-rating-number"
-            id="viewer-rating-number"
-        ></span>
-
-    </div>
+    <span
+        id="viewer-stars"
+    ></span>
 
 
-    <div
-        class="viewer-swipe-hint"
-        id="viewer-swipe-hint"
-        hidden
-    >
-        Swipe left or right
-    </div>
-
-
-    <a
-        href="#"
-        class="viewer-restaurant-link"
-        id="viewer-restaurant-link"
-        hidden
-    >
-        View restaurant →
-    </a>
-
+    <span
+        class="viewer-rating-number"
+        id="viewer-rating-number"
+    ></span>
 
 </div>
 
+
+<div
+    class="viewer-swipe-hint"
+    id="viewer-swipe-hint"
+    hidden
+>
+    Swipe left or right
+</div>
+
+
+<a
+    href="#"
+    class="viewer-restaurant-link"
+    id="viewer-restaurant-link"
+    hidden
+>
+    View restaurant →
+</a>
+```
+
+</div>
 
 </div>
 
@@ -2319,56 +2527,65 @@
     aria-label="Restaurant actions"
 >
 
-
 {% if directions_url %}
 
-    <a
-        href="{{ directions_url }}"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        <span>🧭</span>
-        <small>Directions</small>
-    </a>
+```
+<a
+    href="{{ directions_url }}"
+    target="_blank"
+    rel="noopener noreferrer"
+>
+    <span>🧭</span>
+    <small>Directions</small>
+</a>
+```
 
 {% endif %}
-
 
 {% if whatsapp_url %}
 
-    <a
-        href="{{ whatsapp_url }}"
-        class="mobile-whatsapp"
-        target="_blank"
-        rel="noopener noreferrer"
-    >
-        <span>💬</span>
-        <small>WhatsApp</small>
-    </a>
+```
+<a
+    href="{{ whatsapp_url }}"
+    class="mobile-whatsapp"
+    target="_blank"
+    rel="noopener noreferrer"
+>
+    <span>💬</span>
+    <small>WhatsApp</small>
+</a>
+```
 
 {% endif %}
-
 
 {% if phone_url %}
 
-    <a
-        href="{{ phone_url }}"
-    >
-        <span>☎</span>
-        <small>Call</small>
-    </a>
+```
+<a
+    href="{{ phone_url }}"
+>
+    <span>☎</span>
+    <small>Call</small>
+</a>
+```
 
 {% endif %}
 
-
 <button
-    type="button"
-    id="mobile-restaurant-share"
->
-    <span>↗</span>
-    <small>Share</small>
-</button>
+type="button"
+id="mobile-restaurant-share"
 
+>
+
+```
+<span>↗</span>
+```
+
+```
+<small>Share</small>
+```
+
+</button>
 
 </nav>
 
@@ -2733,6 +2950,18 @@
                 true;
 
 
+            /*
+             * User clicked the experience,
+             * so try playback with sound.
+             */
+            element.muted =
+                false;
+
+
+            element.volume =
+                1;
+
+
             element.setAttribute(
                 "controlslist",
                 "nodownload noremoteplayback"
@@ -2789,6 +3018,36 @@
         stage.appendChild(
             element
         );
+
+
+        if (
+            element.tagName === "VIDEO"
+        ) {
+
+            element
+                .play()
+                .catch(
+                    () => {
+
+                        /*
+                         * Browser fallback:
+                         * continue playing muted
+                         * if sound autoplay is blocked.
+                         */
+                        element.muted =
+                            true;
+
+
+                        element
+                            .play()
+                            .catch(
+                                () => {}
+                            );
+
+                    }
+                );
+
+        }
 
 
         const multiple =
@@ -3061,9 +3320,6 @@
         );
 
 
-        renderMedia();
-
-
         viewer.classList.add(
             "open"
         );
@@ -3078,6 +3334,14 @@
         document.body.classList.add(
             "modal-open"
         );
+
+
+        /*
+         * Render after the viewer has opened.
+         * This keeps playback tied closely to
+         * the user's click.
+         */
+        renderMedia();
 
     }
 
@@ -3438,24 +3702,6 @@
         (event) => {
 
             event.stopPropagation();
-
-        }
-    );
-
-
-    viewer.addEventListener(
-        "click",
-        (event) => {
-
-            if (
-                event.target === viewer
-                ||
-                event.target === stage
-            ) {
-
-                closeExperienceViewer();
-
-            }
 
         }
     );
