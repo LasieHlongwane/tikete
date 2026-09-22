@@ -3739,11 +3739,13 @@ class EventReelAnalytics(db.Model):
 # ============================================================
 # RESTAURANT ADVERT
 # ============================================================
+# ============================================================
+# RESTAURANT ADVERT
+# ============================================================
+
 
 class RestaurantAdvert(db.Model):
-
     __tablename__ = "restaurant_adverts"
-
 
     # ========================================================
     # PRIMARY KEY
@@ -3753,7 +3755,6 @@ class RestaurantAdvert(db.Model):
         db.Integer,
         primary_key=True,
     )
-
 
     # ========================================================
     # OWNER
@@ -3768,7 +3769,6 @@ class RestaurantAdvert(db.Model):
         nullable=False,
         index=True,
     )
-
 
     # ========================================================
     # BUSINESS DETAILS
@@ -3790,13 +3790,10 @@ class RestaurantAdvert(db.Model):
         nullable=True,
     )
 
-    # Kept for database compatibility.
-    # Not currently exposed in restaurant advertising UI.
     price_text = db.Column(
         db.String(80),
         nullable=True,
     )
-
 
     # ========================================================
     # LOCATION
@@ -3818,7 +3815,6 @@ class RestaurantAdvert(db.Model):
         nullable=True,
     )
 
-
     # ========================================================
     # CONTACT
     # ========================================================
@@ -3833,9 +3829,8 @@ class RestaurantAdvert(db.Model):
         nullable=True,
     )
 
-
     # ========================================================
-    # BUSINESS / PROMOTION IMAGE
+    # MAIN BUSINESS / PROMOTION IMAGE
     # ========================================================
 
     poster_image_url = db.Column(
@@ -3847,7 +3842,6 @@ class RestaurantAdvert(db.Model):
         db.String(255),
         nullable=True,
     )
-
 
     # ========================================================
     # CAMPAIGN DATES
@@ -3865,7 +3859,6 @@ class RestaurantAdvert(db.Model):
         index=True,
     )
 
-
     # ========================================================
     # STATUS
     # ========================================================
@@ -3876,7 +3869,6 @@ class RestaurantAdvert(db.Model):
         default=True,
         index=True,
     )
-
 
     # ========================================================
     # TIMESTAMPS
@@ -3895,7 +3887,6 @@ class RestaurantAdvert(db.Model):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
-
 
     # ========================================================
     # RELATIONSHIPS
@@ -3920,6 +3911,16 @@ class RestaurantAdvert(db.Model):
         order_by="RestaurantExperiencePost.created_at.desc()",
     )
 
+    gallery_images = db.relationship(
+        "RestaurantGalleryImage",
+        back_populates="restaurant_advert",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by=(
+            "RestaurantGalleryImage.image_order.asc(), "
+            "RestaurantGalleryImage.id.asc()"
+        ),
+    )
 
     # ========================================================
     # CAMPAIGN STATUS
@@ -3927,35 +3928,18 @@ class RestaurantAdvert(db.Model):
 
     @property
     def campaign_status(self):
-
-        now = (
-            datetime.utcnow()
-        )
-
+        now = datetime.utcnow()
 
         if not self.active:
-
             return "paused"
 
-
-        if (
-            self.starts_at
-            and self.starts_at > now
-        ):
-
+        if self.starts_at and self.starts_at > now:
             return "scheduled"
 
-
-        if (
-            self.ends_at
-            and self.ends_at <= now
-        ):
-
+        if self.ends_at and self.ends_at <= now:
             return "expired"
 
-
         return "live"
-
 
     # ========================================================
     # DAYS REMAINING
@@ -3963,49 +3947,24 @@ class RestaurantAdvert(db.Model):
 
     @property
     def days_remaining(self):
-
         if not self.ends_at:
-
             return None
 
+        now = datetime.utcnow()
 
-        now = (
-            datetime.utcnow()
-        )
-
-
-        if (
-            self.ends_at
-            <= now
-        ):
-
+        if self.ends_at <= now:
             return 0
 
-
-        remaining = (
-            self.ends_at
-            - now
-        )
-
-
-        days = (
-            remaining.days
-        )
-
+        remaining = self.ends_at - now
+        days = remaining.days
 
         if (
             remaining.seconds > 0
             or remaining.microseconds > 0
         ):
-
             days += 1
 
-
-        return max(
-            days,
-            0,
-        )
-
+        return max(days, 0)
 
     # ========================================================
     # DISPLAY START DATE
@@ -4013,47 +3972,23 @@ class RestaurantAdvert(db.Model):
 
     @property
     def campaign_start_date(self):
-
         if not self.starts_at:
-
             return None
 
-
-        return (
-            self.starts_at.date()
-        )
-
+        return self.starts_at.date()
 
     # ========================================================
     # DISPLAY END DATE
-    #
-    # ends_at is stored as an exclusive ending timestamp.
-    #
-    # Example:
-    #
-    # Campaign visible through 30 September
-    # ends_at = 1 October 00:00
-    #
     # ========================================================
 
     @property
     def campaign_end_date(self):
-
         if not self.ends_at:
-
             return None
 
-
         return (
-            (
-                self.ends_at
-                - timedelta(
-                    microseconds=1
-                )
-            )
-            .date()
-        )
-
+            self.ends_at - timedelta(microseconds=1)
+        ).date()
 
     # ========================================================
     # STATUS HELPERS
@@ -4061,48 +3996,156 @@ class RestaurantAdvert(db.Model):
 
     @property
     def is_live_campaign(self):
-
-        return (
-            self.campaign_status
-            == "live"
-        )
-
+        return self.campaign_status == "live"
 
     @property
     def is_scheduled_campaign(self):
-
-        return (
-            self.campaign_status
-            == "scheduled"
-        )
-
+        return self.campaign_status == "scheduled"
 
     @property
     def is_expired_campaign(self):
-
-        return (
-            self.campaign_status
-            == "expired"
-        )
-
+        return self.campaign_status == "expired"
 
     @property
     def is_paused_campaign(self):
+        return self.campaign_status == "paused"
 
-        return (
-            self.campaign_status
-            == "paused"
-        )
+    # ========================================================
+    # GALLERY HELPERS
+    # ========================================================
 
+    @property
+    def gallery_count(self):
+        return len(self.gallery_images)
+
+    @property
+    def gallery_slots_remaining(self):
+        return max(5 - self.gallery_count, 0)
 
     def __repr__(self):
-
         return (
             "<RestaurantAdvert "
             f"id={self.id} "
             f"business_name={self.business_name} "
             f"status={self.campaign_status}>"
         )
+
+
+# ============================================================
+# RESTAURANT GALLERY IMAGE
+# ============================================================
+
+
+class RestaurantGalleryImage(db.Model):
+    __tablename__ = "restaurant_gallery_images"
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    # ========================================================
+    # CLOUDINARY
+    # ========================================================
+
+    cloudinary_public_id = db.Column(
+        db.String(255),
+        nullable=False,
+        unique=True,
+    )
+
+    image_url = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    # ========================================================
+    # DISPLAY ORDER
+    # ========================================================
+
+    image_order = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+    )
+
+    # ========================================================
+    # METADATA
+    # ========================================================
+
+    width = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    height = db.Column(
+        db.Integer,
+        nullable=True,
+    )
+
+    file_bytes = db.Column(
+        db.BigInteger,
+        nullable=True,
+    )
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    # ========================================================
+    # RELATIONSHIP
+    # ========================================================
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
+        back_populates="gallery_images",
+    )
+
+    # ========================================================
+    # CONSTRAINTS
+    # ========================================================
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "restaurant_advert_id",
+            "image_order",
+            name="uq_restaurant_gallery_image_order",
+        ),
+    )
+
+    def __repr__(self):
+        return (
+            "<RestaurantGalleryImage "
+            f"id={self.id} "
+            f"restaurant_advert_id={self.restaurant_advert_id} "
+            f"image_order={self.image_order}>"
+        )
+
 # ============================================================
 # RESTAURANT REEL
 # ============================================================
