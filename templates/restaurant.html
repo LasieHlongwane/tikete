@@ -5048,6 +5048,469 @@ id="mobile-restaurant-share"
 
 </script>
 
+
+
+<!-- =========================================
+     RESTAURANT GALLERY
+========================================== -->
+
+<script>
+
+(() => {
+
+    const viewer =
+        document.getElementById(
+            "restaurant-gallery-viewer"
+        );
+
+
+    const stage =
+        document.getElementById(
+            "restaurant-gallery-viewer-stage"
+        );
+
+
+    const closeButton =
+        document.getElementById(
+            "restaurant-gallery-viewer-close"
+        );
+
+
+    const previousButton =
+        document.getElementById(
+            "restaurant-gallery-prev"
+        );
+
+
+    const nextButton =
+        document.getElementById(
+            "restaurant-gallery-next"
+        );
+
+
+    const counter =
+        document.getElementById(
+            "restaurant-gallery-viewer-counter"
+        );
+
+
+    const galleryData =
+        document.getElementById(
+            "restaurant-gallery-data"
+        );
+
+
+    if (
+        !viewer
+        ||
+        !stage
+        ||
+        !galleryData
+    ) {
+
+        return;
+
+    }
+
+
+    const images =
+        Array.from(
+            galleryData.querySelectorAll(
+                "[data-gallery-image]"
+            )
+        )
+        .map(
+            (element) =>
+                element.dataset.galleryUrl
+        )
+        .filter(Boolean);
+
+
+    let currentIndex =
+        0;
+
+
+    let touchStartX =
+        0;
+
+
+    let touchEndX =
+        0;
+
+
+    function renderImage() {
+
+        if (!images.length) {
+            return;
+        }
+
+
+        currentIndex =
+            (
+                currentIndex
+                +
+                images.length
+            )
+            %
+            images.length;
+
+
+        stage.innerHTML =
+            "";
+
+
+        const image =
+            document.createElement(
+                "img"
+            );
+
+
+        image.className =
+            "restaurant-gallery-viewer-image";
+
+
+        image.src =
+            images[
+                currentIndex
+            ];
+
+
+        image.alt =
+            "Restaurant gallery photo "
+            +
+            (
+                currentIndex
+                +
+                1
+            );
+
+
+        stage.appendChild(
+            image
+        );
+
+
+        if (counter) {
+
+            counter.textContent =
+                (
+                    currentIndex
+                    +
+                    1
+                )
+                +
+                " / "
+                +
+                images.length;
+
+        }
+
+
+        const multiple =
+            images.length > 1;
+
+
+        if (previousButton) {
+
+            previousButton.hidden =
+                !multiple;
+
+        }
+
+
+        if (nextButton) {
+
+            nextButton.hidden =
+                !multiple;
+
+        }
+
+    }
+
+
+    function openGallery(
+        index
+    ) {
+
+        currentIndex =
+            Number.isInteger(
+                index
+            )
+                ? index
+                : 0;
+
+
+        renderImage();
+
+
+        viewer.classList.add(
+            "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+    }
+
+
+    function closeGallery() {
+
+        viewer.classList.remove(
+            "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+
+        stage.innerHTML =
+            "";
+
+    }
+
+
+    function showPrevious() {
+
+        currentIndex -= 1;
+
+        renderImage();
+
+    }
+
+
+    function showNext() {
+
+        currentIndex += 1;
+
+        renderImage();
+
+    }
+
+
+    document
+        .querySelectorAll(
+            "[data-restaurant-gallery-open]"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const index =
+                            Number(
+                                button.dataset.galleryIndex
+                            );
+
+
+                        openGallery(
+                            Number.isInteger(
+                                index
+                            )
+                                ? index
+                                : 0
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    closeButton
+        ?.addEventListener(
+            "click",
+            closeGallery
+        );
+
+
+    previousButton
+        ?.addEventListener(
+            "click",
+            showPrevious
+        );
+
+
+    nextButton
+        ?.addEventListener(
+            "click",
+            showNext
+        );
+
+
+    stage.addEventListener(
+        "touchstart",
+        (event) => {
+
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+
+                return;
+
+            }
+
+
+            touchStartX =
+                event.touches[
+                    0
+                ].clientX;
+
+
+            touchEndX =
+                touchStartX;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    stage.addEventListener(
+        "touchmove",
+        (event) => {
+
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+
+                return;
+
+            }
+
+
+            touchEndX =
+                event.touches[
+                    0
+                ].clientX;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    stage.addEventListener(
+        "touchend",
+        () => {
+
+            const distance =
+                touchEndX
+                -
+                touchStartX;
+
+
+            if (
+                Math.abs(
+                    distance
+                )
+                >=
+                45
+            ) {
+
+                if (
+                    distance < 0
+                ) {
+
+                    showNext();
+
+                } else {
+
+                    showPrevious();
+
+                }
+
+            }
+
+
+            touchStartX =
+                0;
+
+
+            touchEndX =
+                0;
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                !viewer.classList.contains(
+                    "open"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                event.key
+                ===
+                "Escape"
+            ) {
+
+                closeGallery();
+
+            }
+
+
+            if (
+                event.key
+                ===
+                "ArrowLeft"
+            ) {
+
+                showPrevious();
+
+            }
+
+
+            if (
+                event.key
+                ===
+                "ArrowRight"
+            ) {
+
+                showNext();
+
+            }
+
+        }
+    );
+
+})();
+
+</script>
 <!-- =========================================
      RESTAURANT SHARE
 ========================================== -->
