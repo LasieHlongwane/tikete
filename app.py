@@ -377,7 +377,7 @@ def restaurant_can_be_managed_by_current_organizer(
 advert,
 ):
 
-```
+
 """
 Only the organizer that owns this RestaurantAdvert
 may manage it.
