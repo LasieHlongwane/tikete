@@ -15003,9 +15003,6 @@ def restaurant_page(
         advert=
             advert,
 
-        restaurant_hours_update_url=
-            restaurant_hours_update_url,
-
         whatsapp_url=
             whatsapp_url,
 
