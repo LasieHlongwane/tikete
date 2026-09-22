@@ -3158,6 +3158,34 @@ def update_restaurant_hours(
 
         return None
 
+
+
+
+def parse_restaurant_campaign_date(value):
+    """
+    Parse a restaurant campaign date from an HTML date input.
+
+    Expected format:
+        YYYY-MM-DD
+
+    Returns:
+        datetime.date or None
+    """
+
+    value = str(value or "").strip()
+
+    if not value:
+        return None
+
+    try:
+        return datetime.strptime(
+            value,
+            "%Y-%m-%d",
+        ).date()
+
+    except (TypeError, ValueError):
+        return None
+
 def build_restaurant_campaign_schedule(
     form,
     organizer,
