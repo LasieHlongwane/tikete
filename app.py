@@ -293,20 +293,6 @@ def build_restaurant_hours_payload(
 ):
 
 
-"""
-Converts RestaurantOpeningHour rows into the structure
-expected by restaurant.html.
-
-Example:
-
-{
-    "monday": {
-        "open": "09:00",
-        "close": "21:00",
-        "closed": False,
-    }
-}
-"""
 
   payload = {}
 
