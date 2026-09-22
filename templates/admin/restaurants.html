@@ -1,9 +1,9 @@
+```html
 <!DOCTYPE html>
 
 <html lang="en">
 
 <head>
-
 
 <meta charset="UTF-8">
 
@@ -167,22 +167,22 @@
 
 
     /* =====================================================
-       PAGE
+       APP
     ===================================================== */
 
-    .page {
+    .app-shell {
 
         width:
             min(
                 100% - 28px,
-                1180px
+                1380px
             );
 
         margin:
             0 auto;
 
         padding:
-            22px 0
+            18px 0
             80px;
     }
 
@@ -200,7 +200,7 @@
 
         gap: 16px;
 
-        margin-bottom: 20px;
+        margin-bottom: 16px;
 
         padding:
             15px 18px;
@@ -256,7 +256,7 @@
 
         color: #b7bdc6;
 
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 850;
 
         text-decoration: none;
@@ -265,6 +265,488 @@
 
     .nav-link:hover {
         color: #ffffff;
+    }
+
+
+    /* =====================================================
+       DESKTOP MANAGEMENT LAYOUT
+    ===================================================== */
+
+    .control-layout {
+
+        display: grid;
+
+        grid-template-columns:
+            250px
+            minmax(
+                0,
+                1fr
+            );
+
+        gap: 18px;
+
+        align-items: start;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+
+        position: sticky;
+
+        top: 18px;
+
+        overflow: hidden;
+
+        background:
+            linear-gradient(
+                180deg,
+                #17191d 0%,
+                #22262b 100%
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid #34383f;
+
+        border-radius: 20px;
+
+        box-shadow:
+            0 16px 38px
+            rgba(
+                15,
+                23,
+                42,
+                .15
+            );
+    }
+
+
+    .sidebar-header {
+
+        padding:
+            20px 18px
+            17px;
+
+        border-bottom:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .08
+            );
+    }
+
+
+    .sidebar-eyebrow {
+
+        margin: 0 0 5px;
+
+        color: #8f969f;
+
+        font-size: 8px;
+        font-weight: 950;
+
+        letter-spacing: .14em;
+
+        text-transform: uppercase;
+    }
+
+
+    .sidebar-title {
+
+        margin: 0;
+
+        color: #f4f5f6;
+
+        font-size: 17px;
+        font-weight: 950;
+
+        letter-spacing: -.025em;
+    }
+
+
+    .sidebar-status {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
+
+        margin-top: 10px;
+
+        padding:
+            5px 8px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .07
+            );
+
+        color: #c9ced5;
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .08
+            );
+
+        border-radius: 999px;
+
+        font-size: 8px;
+        font-weight: 900;
+    }
+
+
+    .sidebar-status.active {
+        color: #a9e1bf;
+    }
+
+
+    .sidebar-nav {
+
+        display: grid;
+
+        gap: 5px;
+
+        padding:
+            14px 11px;
+    }
+
+
+    .sidebar-section-label {
+
+        margin:
+            12px 7px
+            4px;
+
+        color: #777f89;
+
+        font-size: 7px;
+        font-weight: 950;
+
+        letter-spacing: .14em;
+
+        text-transform: uppercase;
+    }
+
+
+    .sidebar-link {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        min-height: 40px;
+
+        padding:
+            8px 10px;
+
+        color: #c4c9d0;
+
+        border:
+            1px solid transparent;
+
+        border-radius: 10px;
+
+        font-size: 10px;
+        font-weight: 850;
+
+        text-decoration: none;
+
+        transition:
+            background .15s ease,
+            color .15s ease,
+            border-color .15s ease;
+    }
+
+
+    .sidebar-link:hover {
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .07
+            );
+
+        color: #ffffff;
+
+        border-color:
+            rgba(
+                255,
+                255,
+                255,
+                .06
+            );
+    }
+
+
+    .sidebar-link-primary {
+
+        background:
+            linear-gradient(
+                135deg,
+                #eceef1,
+                #d9dce0
+            );
+
+        color: #1d2025;
+
+        border-color: #d1d4d8;
+    }
+
+
+    .sidebar-link-primary:hover {
+
+        background: #ffffff;
+
+        color: #111318;
+    }
+
+
+    .sidebar-icon {
+
+        flex:
+            0 0 auto;
+
+        width: 20px;
+
+        text-align: center;
+
+        font-size: 12px;
+    }
+
+
+    .sidebar-restaurant {
+
+        margin:
+            0 11px
+            11px;
+
+        padding:
+            11px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .045
+            );
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .07
+            );
+
+        border-radius: 12px;
+    }
+
+
+    .sidebar-restaurant-name {
+
+        margin: 0;
+
+        color: #f1f2f4;
+
+        font-size: 10px;
+        font-weight: 950;
+    }
+
+
+    .sidebar-restaurant-area {
+
+        display: block;
+
+        margin-top: 2px;
+
+        color: #858d97;
+
+        font-size: 8px;
+    }
+
+
+    .sidebar-restaurant-actions {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+
+        gap: 5px;
+
+        margin-top: 9px;
+    }
+
+
+    .sidebar-mini-link {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 30px;
+
+        padding:
+            4px 6px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .06
+            );
+
+        color: #c7ccd3;
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .07
+            );
+
+        border-radius: 7px;
+
+        font-size: 7px;
+        font-weight: 900;
+
+        text-decoration: none;
+
+        text-align: center;
+    }
+
+
+    .sidebar-mini-link:hover {
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .11
+            );
+
+        color: #ffffff;
+    }
+
+
+    .main-content {
+        min-width: 0;
+    }
+
+
+    /* =====================================================
+       MOBILE MANAGEMENT NAV
+    ===================================================== */
+
+    .mobile-management-nav {
+
+        display: none;
+
+        margin-bottom: 14px;
+
+        padding:
+            8px;
+
+        overflow-x: auto;
+
+        background: #ffffff;
+
+        border:
+            1px solid var(--border);
+
+        border-radius: 13px;
+
+        box-shadow:
+            var(--shadow-soft);
+
+        scrollbar-width: none;
+    }
+
+
+    .mobile-management-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    .mobile-management-nav-inner {
+
+        display: flex;
+
+        gap: 6px;
+
+        width: max-content;
+    }
+
+
+    .mobile-management-link {
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 36px;
+
+        padding:
+            0 11px;
+
+        background: #f3f4f6;
+
+        color: #30343a;
+
+        border:
+            1px solid #dde0e4;
+
+        border-radius: 9px;
+
+        font-size: 8px;
+        font-weight: 900;
+
+        text-decoration: none;
+
+        white-space: nowrap;
+    }
+
+
+    .mobile-management-link.primary {
+
+        background: #202328;
+
+        color: #ffffff;
+
+        border-color: #202328;
     }
 
 
@@ -306,7 +788,6 @@
 
 
     .hero-copy {
-
         min-width: 0;
     }
 
@@ -662,7 +1143,6 @@
     ===================================================== */
 
     .section {
-
         margin-top: 24px;
     }
 
@@ -731,7 +1211,7 @@
 
 
     /* =====================================================
-       TABLE WRAPPER
+       TABLE
     ===================================================== */
 
     .table-card {
@@ -771,7 +1251,7 @@
             collapse;
 
         min-width:
-            900px;
+            980px;
     }
 
 
@@ -826,15 +1306,12 @@
 
 
     tbody tr:last-child td {
-
         border-bottom: 0;
     }
 
 
     tbody tr:hover {
-
-        background:
-            #fafbfc;
+        background: #fafbfc;
     }
 
 
@@ -995,7 +1472,7 @@
 
         gap: 6px;
 
-        min-width: 180px;
+        min-width: 250px;
     }
 
 
@@ -1032,6 +1509,19 @@
     }
 
 
+    .table-action-edit {
+
+        background:
+            #ffffff;
+
+        color:
+            #24282d;
+
+        border:
+            1px solid #cfd3d8;
+    }
+
+
     .table-action-secondary {
 
         background:
@@ -1059,11 +1549,10 @@
 
 
     /* =====================================================
-       WORKING HOURS MANAGEMENT
+       WORKING HOURS
     ===================================================== */
 
     .hours-management {
-
         margin-top: 28px;
     }
 
@@ -1137,6 +1626,16 @@
     }
 
 
+    .hours-card-actions {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+    }
+
+
     .hours-public-link {
 
         flex:
@@ -1144,6 +1643,20 @@
 
         color:
             var(--blue);
+
+        font-size: 9px;
+        font-weight: 900;
+
+        text-decoration: none;
+    }
+
+
+    .hours-edit-link {
+
+        flex:
+            0 0 auto;
+
+        color: #34383e;
 
         font-size: 9px;
         font-weight: 900;
@@ -1170,9 +1683,7 @@
 
 
     .hours-table th {
-
-        color:
-            #69707a;
+        color: #69707a;
     }
 
 
@@ -1351,12 +1862,57 @@
 
 
     /* =====================================================
-       MOBILE
+       RESPONSIVE
     ===================================================== */
+
+    @media (
+        max-width: 1050px
+    ) {
+
+        .control-layout {
+
+            grid-template-columns:
+                215px
+                minmax(
+                    0,
+                    1fr
+                );
+        }
+
+
+        .metrics {
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+        }
+
+    }
+
 
     @media (
         max-width: 820px
     ) {
+
+        .control-layout {
+            display: block;
+        }
+
+
+        .sidebar {
+            display: none;
+        }
+
+
+        .mobile-management-nav {
+            display: block;
+        }
+
 
         .metrics {
 
@@ -1377,16 +1933,16 @@
         max-width: 620px
     ) {
 
-        .page {
+        .app-shell {
 
             width:
                 min(
                     100% - 18px,
-                    1180px
+                    1380px
                 );
 
             padding-top:
-                12px;
+                10px;
         }
 
 
@@ -1397,6 +1953,18 @@
 
             border-radius:
                 14px;
+        }
+
+
+        .nav-actions {
+
+            gap: 8px;
+        }
+
+
+        .nav-link {
+
+            font-size: 9px;
         }
 
 
@@ -1417,9 +1985,7 @@
 
 
         .hero > .button {
-
-            width:
-                100%;
+            width: 100%;
         }
 
 
@@ -1466,6 +2032,12 @@
         }
 
 
+        .hours-card-actions {
+
+            flex-wrap: wrap;
+        }
+
+
         .hours-footer {
 
             align-items:
@@ -1477,9 +2049,7 @@
 
 
         .save-hours {
-
-            width:
-                100%;
+            width: 100%;
         }
 
     }
@@ -1489,1267 +2059,1861 @@
 
 </head>
 
+
 <body>
 
-<div class="page">
+
+<div class="app-shell">
 
 
-<!-- =====================================================
-     NAV
-====================================================== -->
+    <!-- =====================================================
+         TOP NAV
+    ====================================================== -->
 
-<div class="nav">
+    <div class="nav">
 
-    <a
-        href="{{ url_for('home') }}"
-        class="brand"
-    >
-        KALXA RESTAURANT
-    </a>
-
-
-    <div class="nav-actions">
 
         <a
-            href="{{ url_for(
-                'admin_subscription'
-            ) }}"
-            class="nav-link"
+            href="{{ url_for('home') }}"
+            class="brand"
         >
-            Subscription
+            KALXA RESTAURANT
         </a>
 
-    </div>
 
-</div>
-
-
-<!-- =====================================================
-     HERO
-====================================================== -->
-
-<section class="hero">
-
-    <div class="hero-copy">
-
-        <p class="eyebrow">
-            RESTAURANT CONTROL CENTRE
-        </p>
+        <div class="nav-actions">
 
 
-        <h1>
-            Restaurant Management
-        </h1>
+            <a
+                href="https://lac-local-access.onrender.com/"
+                class="nav-link"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Local Deals
+            </a>
 
 
-        <p class="subtitle">
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="nav-link"
+            >
+                Subscription
+            </a>
 
-            Manage your restaurant campaigns,
-            public pages, working hours,
-            reels and subscription from one place.
-
-        </p>
-
-    </div>
-
-
-    {% if subscription_active %}
-
-        <a
-            href="{{ url_for(
-                'admin_create_restaurant'
-            ) }}"
-            class="button"
-        >
-            + Create Campaign
-        </a>
-
-    {% else %}
-
-        <a
-            href="{{ url_for(
-                'admin_subscription'
-            ) }}"
-            class="button"
-        >
-            🔒 Activate Subscription
-        </a>
-
-    {% endif %}
-
-</section>
-
-
-<!-- =====================================================
-     FLASH MESSAGES
-====================================================== -->
-
-{% with messages =
-    get_flashed_messages(
-        with_categories=true
-    )
-%}
-
-    {% if messages %}
-
-        <div class="flash-stack">
-
-            {% for category, message in messages %}
-
-                <div
-                    class="
-                        flash
-                        {% if category == 'success' %}
-                            flash-success
-                        {% elif category == 'error' %}
-                            flash-error
-                        {% endif %}
-                    "
-                >
-                    {{ message }}
-                </div>
-
-            {% endfor %}
 
         </div>
 
-    {% endif %}
 
-{% endwith %}
+    </div>
 
 
-<!-- =====================================================
-     SUBSCRIPTION
-====================================================== -->
+    <!-- =====================================================
+         MOBILE MANAGEMENT NAV
+    ====================================================== -->
 
-{% if subscription_active %}
-
-    <div
-        class="
-            subscription
-            subscription-active
-        "
+    <nav
+        class="mobile-management-nav"
+        aria-label="Restaurant management"
     >
 
-        <div>
-
-            <strong>
-                ✅ Restaurant subscription active
-            </strong>
-
-
-            <p>
-
-                Your restaurant management tools
-                are currently unlocked.
-
-                {% if subscription_expires_at %}
-
-                    Subscription valid until
-                    {{ subscription_expires_at.strftime('%d %B %Y') }}.
-
-                {% endif %}
-
-            </p>
-
-        </div>
-
-
-        <a
-            href="{{ url_for(
-                'admin_subscription'
-            ) }}"
-            class="subscription-link"
-        >
-            Manage subscription →
-        </a>
-
-    </div>
-
-
-{% else %}
-
-    <div
-        class="
-            subscription
-            subscription-locked
-        "
-    >
-
-        <div>
-
-            <strong>
-                🔒 Restaurant management locked
-            </strong>
-
-
-            <p>
-
-                Activate your subscription to create campaigns,
-                edit restaurant details and manage working hours.
-
-            </p>
-
-        </div>
-
-
-        <a
-            href="{{ url_for(
-                'admin_subscription'
-            ) }}"
-            class="subscription-link"
-        >
-            Activate subscription →
-        </a>
-
-    </div>
-
-{% endif %}
-
-
-<!-- =====================================================
-     METRICS
-====================================================== -->
-
-<div class="metrics">
-
-
-    <div class="metric">
-
-        <span class="metric-label">
-            Total Restaurants
-        </span>
-
-        <span class="metric-value">
-            {{ adverts|length }}
-        </span>
-
-    </div>
-
-
-    <div class="metric">
-
-        <span class="metric-label">
-            Live
-        </span>
-
-        <span class="metric-value">
-            {{ live_adverts }}
-        </span>
-
-    </div>
-
-
-    <div class="metric">
-
-        <span class="metric-label">
-            Scheduled
-        </span>
-
-        <span class="metric-value">
-            {{ scheduled_adverts }}
-        </span>
-
-    </div>
-
-
-    <div class="metric">
-
-        <span class="metric-label">
-            Paused / Expired
-        </span>
-
-        <span class="metric-value">
-            {{ paused_adverts + expired_adverts }}
-        </span>
-
-    </div>
-
-
-    <div class="metric">
-
-        <span class="metric-label">
-            Live Reels
-        </span>
-
-        <span class="metric-value">
-            {{ live_reels }}
-        </span>
-
-    </div>
-
-
-</div>
-
-
-<!-- =====================================================
-     RESTAURANT CAMPAIGN TABLE
-====================================================== -->
-
-<section class="section">
-
-    <div class="section-header">
-
-        <div>
-
-            <h2>
-                Restaurant Campaigns
-            </h2>
-
-
-            <p>
-                Review campaign status,
-                schedules, locations and actions.
-            </p>
-
-        </div>
-
-
-        <span class="section-count">
-
-            {{ adverts|length }}
-
-            {% if adverts|length == 1 %}
-                restaurant
-            {% else %}
-                restaurants
-            {% endif %}
-
-        </span>
-
-    </div>
-
-
-    {% if adverts %}
-
-        <div class="table-card">
-
-            <div class="table-scroll">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Restaurant
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Area
-                            </th>
-
-                            <th>
-                                Campaign Start
-                            </th>
-
-                            <th>
-                                Campaign End
-                            </th>
-
-                            <th>
-                                Reel
-                            </th>
-
-                            <th>
-                                Remaining
-                            </th>
-
-                            <th>
-                                Actions
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-
-                        {% for advert in adverts %}
-
-                            <tr>
-
-
-                                <td>
-
-                                    <div class="restaurant-cell">
-
-                                        <div class="restaurant-thumb">
-
-                                            {% if advert.poster_image_url %}
-
-                                                <img
-                                                    src="{{ advert.poster_image_url }}"
-                                                    alt="{{ advert.business_name }}"
-                                                    loading="lazy"
-                                                >
-
-                                            {% endif %}
-
-                                        </div>
-
-
-                                        <div>
-
-                                            <strong>
-                                                {{ advert.business_name }}
-                                            </strong>
-
-
-                                            {% if advert.headline %}
-
-                                                <span>
-                                                    {{ advert.headline }}
-                                                </span>
-
-                                            {% endif %}
-
-                                        </div>
-
-                                    </div>
-
-                                </td>
-
-
-                                <td>
-
-                                    {% if advert.campaign_status == "live" %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-live
-                                        ">
-                                            ● LIVE
-                                        </span>
-
-
-                                    {% elif advert.campaign_status == "scheduled" %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-scheduled
-                                        ">
-                                            ● SCHEDULED
-                                        </span>
-
-
-                                    {% elif advert.campaign_status == "expired" %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-expired
-                                        ">
-                                            ● EXPIRED
-                                        </span>
-
-
-                                    {% else %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-paused
-                                        ">
-                                            ● PAUSED
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
-
-
-                                <td>
-
-                                    {% if advert.area %}
-
-                                        {{ advert.area }}
-
-                                    {% else %}
-
-                                        —
-
-                                    {% endif %}
-
-                                </td>
-
-
-                                <td>
-
-                                    {% if advert.campaign_start_date %}
-
-                                        {{ advert.campaign_start_date.strftime('%d %b %Y') }}
-
-                                    {% else %}
-
-                                        —
-
-                                    {% endif %}
-
-                                </td>
-
-
-                                <td>
-
-                                    {% if advert.campaign_end_date %}
-
-                                        {{ advert.campaign_end_date.strftime('%d %b %Y') }}
-
-                                    {% else %}
-
-                                        —
-
-                                    {% endif %}
-
-                                </td>
-
-
-                                <td>
-
-                                    {% if advert.reel %}
-
-                                        <span class="yes-badge">
-                                            ✓ Yes
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="no-badge">
-                                            No
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
-
-
-                                <td>
-
-                                    {% if advert.campaign_status == "live" %}
-
-                                        {{ advert.days_remaining }}
-
-                                        day{% if advert.days_remaining != 1 %}s{% endif %}
-
-
-                                    {% elif advert.campaign_status == "scheduled" %}
-
-                                        Starts soon
-
-
-                                    {% elif advert.campaign_status == "expired" %}
-
-                                        Ended
-
-
-                                    {% else %}
-
-                                        Paused
-
-                                    {% endif %}
-
-                                </td>
-
-
-                                <td>
-
-                                    <div class="table-actions">
-
-
-                                        <a
-                                            href="{{ url_for(
-                                                'admin_manage_restaurant',
-                                                advert_id=advert.id
-                                            ) }}"
-                                            class="
-                                                table-action
-                                                table-action-primary
-                                            "
-                                        >
-                                            Manage
-                                        </a>
-
-
-                                        {% if subscription_active %}
-
-                                            <a
-                                                href="#hours-{{ advert.id }}"
-                                                class="
-                                                    table-action
-                                                    table-action-hours
-                                                "
-                                            >
-                                                Working Hours
-                                            </a>
-
-                                        {% endif %}
-
-
-                                        <a
-                                            href="{{ url_for(
-                                                'restaurant_page',
-                                                advert_id=advert.id
-                                            ) }}"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="
-                                                table-action
-                                                table-action-secondary
-                                            "
-                                        >
-                                            Public Page
-                                        </a>
-
-
-                                    </div>
-
-                                </td>
-
-
-                            </tr>
-
-                        {% endfor %}
-
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-    {% else %}
-
-        <div class="empty">
-
-            <strong>
-                No restaurant campaigns yet.
-            </strong>
-
-            <br><br>
+        <div class="mobile-management-nav-inner">
+
+
+            <a
+                href="#overview"
+                class="
+                    mobile-management-link
+                    primary
+                "
+            >
+                Overview
+            </a>
+
+
+            <a
+                href="{{ url_for(
+                    'admin_subscription'
+                ) }}"
+                class="mobile-management-link"
+            >
+                Subscription
+            </a>
 
 
             {% if subscription_active %}
-
-                Create your first campaign
-                and start building your restaurant presence on Kalxa.
-
-                <br><br>
 
                 <a
                     href="{{ url_for(
                         'admin_create_restaurant'
                     ) }}"
-                    class="button"
+                    class="mobile-management-link"
                 >
-                    + Create First Campaign
+                    + Campaign
                 </a>
 
+            {% endif %}
 
-            {% else %}
 
-                Activate your subscription before
-                creating your first restaurant campaign.
+            <a
+                href="#campaigns"
+                class="mobile-management-link"
+            >
+                Campaigns
+            </a>
 
-                <br><br>
+
+            {% if subscription_active and adverts %}
+
+                <a
+                    href="#working-hours"
+                    class="mobile-management-link"
+                >
+                    Working Hours
+                </a>
+
+            {% endif %}
+
+
+            {% for advert in adverts %}
+
+                {% if subscription_active %}
+
+                    <a
+                        href="{{ url_for(
+                            'admin_edit_restaurant',
+                            advert_id=advert.id
+                        ) }}"
+                        class="mobile-management-link"
+                    >
+                        Edit {{ advert.business_name }}
+                    </a>
+
+                {% endif %}
+
+            {% endfor %}
+
+
+        </div>
+
+    </nav>
+
+
+    <!-- =====================================================
+         CONTROL LAYOUT
+    ====================================================== -->
+
+    <div class="control-layout">
+
+
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
+
+        <aside class="sidebar">
+
+
+            <div class="sidebar-header">
+
+
+                <p class="sidebar-eyebrow">
+                    MANAGEMENT
+                </p>
+
+
+                <h2 class="sidebar-title">
+                    Restaurant Control
+                </h2>
+
+
+                <span
+                    class="
+                        sidebar-status
+                        {% if subscription_active %}
+                            active
+                        {% endif %}
+                    "
+                >
+
+                    {% if subscription_active %}
+
+                        ● Subscription active
+
+                    {% else %}
+
+                        ● Subscription locked
+
+                    {% endif %}
+
+                </span>
+
+
+            </div>
+
+
+            <nav
+                class="sidebar-nav"
+                aria-label="Restaurant control centre"
+            >
+
+
+                <a
+                    href="#overview"
+                    class="
+                        sidebar-link
+                        sidebar-link-primary
+                    "
+                >
+
+                    <span class="sidebar-icon">
+                        ◫
+                    </span>
+
+                    Overview
+
+                </a>
+
 
                 <a
                     href="{{ url_for(
                         'admin_subscription'
                     ) }}"
-                    class="button"
+                    class="sidebar-link"
                 >
-                    Activate Subscription
+
+                    <span class="sidebar-icon">
+                        ◈
+                    </span>
+
+                    Subscription
+
                 </a>
 
-            {% endif %}
 
-        </div>
+                {% if subscription_active %}
 
-    {% endif %}
+                    <a
+                        href="{{ url_for(
+                            'admin_create_restaurant'
+                        ) }}"
+                        class="sidebar-link"
+                    >
 
-</section>
+                        <span class="sidebar-icon">
+                            ＋
+                        </span>
 
+                        Create Campaign
 
-<!-- =====================================================
-     WORKING HOURS MANAGEMENT
-====================================================== -->
+                    </a>
 
-{% if subscription_active and adverts %}
-
-    <section class="
-        section
-        hours-management
-    ">
-
-
-        <div class="section-header">
-
-            <div>
-
-                <h2>
-                    Working Hours
-                </h2>
+                {% endif %}
 
 
-                <p>
+                <a
+                    href="#campaigns"
+                    class="sidebar-link"
+                >
 
-                    Set the normal weekly opening
-                    and closing times for each restaurant.
+                    <span class="sidebar-icon">
+                        ▤
+                    </span>
 
-                </p>
+                    Campaigns
 
-            </div>
-
-
-            <span class="section-count">
-                Owner controls
-            </span>
-
-        </div>
+                </a>
 
 
-        {% for advert in adverts %}
+                {% if subscription_active and adverts %}
 
+                    <a
+                        href="#working-hours"
+                        class="sidebar-link"
+                    >
+
+                        <span class="sidebar-icon">
+                            ◷
+                        </span>
+
+                        Working Hours
+
+                    </a>
+
+
+                    <a
+                        href="#setup-checklist"
+                        class="sidebar-link"
+                    >
+
+                        <span class="sidebar-icon">
+                            ✓
+                        </span>
+
+                        Setup Checklist
+
+                    </a>
+
+                {% endif %}
+
+
+                {% if adverts %}
+
+                    <div class="sidebar-section-label">
+                        Restaurants
+                    </div>
+
+                {% endif %}
+
+
+            </nav>
+
+
+            {% for advert in adverts %}
+
+
+                <div class="sidebar-restaurant">
+
+
+                    <p class="sidebar-restaurant-name">
+                        {{ advert.business_name }}
+                    </p>
+
+
+                    {% if advert.area %}
+
+                        <span class="sidebar-restaurant-area">
+                            📍 {{ advert.area }}
+                        </span>
+
+                    {% endif %}
+
+
+                    <div class="sidebar-restaurant-actions">
+
+
+                        <a
+                            href="{{ url_for(
+                                'admin_manage_restaurant',
+                                advert_id=advert.id
+                            ) }}"
+                            class="sidebar-mini-link"
+                        >
+                            Manage
+                        </a>
+
+
+                        {% if subscription_active %}
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_edit_restaurant',
+                                    advert_id=advert.id
+                                ) }}"
+                                class="sidebar-mini-link"
+                            >
+                                Edit Campaign
+                            </a>
+
+
+                            <a
+                                href="#hours-{{ advert.id }}"
+                                class="sidebar-mini-link"
+                            >
+                                Hours
+                            </a>
+
+                        {% endif %}
+
+
+                        <a
+                            href="{{ url_for(
+                                'restaurant_page',
+                                advert_id=advert.id
+                            ) }}"
+                            class="sidebar-mini-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Public Page
+                        </a>
+
+
+                    </div>
+
+
+                </div>
+
+
+            {% endfor %}
+
+
+        </aside>
+
+
+        <!-- =================================================
+             MAIN CONTENT
+        ================================================== -->
+
+        <main class="main-content">
+
+
+            <!-- =================================================
+                 HERO
+            ================================================== -->
 
             <section
-                class="hours-card"
-                id="hours-{{ advert.id }}"
+                class="hero"
+                id="overview"
             >
 
 
-                <div class="hours-card-header">
+                <div class="hero-copy">
+
+
+                    <p class="eyebrow">
+                        RESTAURANT CONTROL CENTRE
+                    </p>
+
+
+                    <h1>
+                        Restaurant Management
+                    </h1>
+
+
+                    <p class="subtitle">
+
+                        Manage restaurant campaigns,
+                        public profiles, gallery photos,
+                        working hours, reels and
+                        subscription from one place.
+
+                    </p>
+
+
+                </div>
+
+
+                {% if subscription_active %}
+
+                    <a
+                        href="{{ url_for(
+                            'admin_create_restaurant'
+                        ) }}"
+                        class="button"
+                    >
+                        + Create Campaign
+                    </a>
+
+
+                {% else %}
+
+
+                    <a
+                        href="{{ url_for(
+                            'admin_subscription'
+                        ) }}"
+                        class="button"
+                    >
+                        🔒 Activate Subscription
+                    </a>
+
+
+                {% endif %}
+
+
+            </section>
+
+
+            <!-- =================================================
+                 FLASH
+            ================================================== -->
+
+            {% with messages =
+                get_flashed_messages(
+                    with_categories=true
+                )
+            %}
+
+                {% if messages %}
+
+                    <div class="flash-stack">
+
+
+                        {% for category, message in messages %}
+
+                            <div
+                                class="
+                                    flash
+                                    {% if category == 'success' %}
+                                        flash-success
+                                    {% elif category == 'error' %}
+                                        flash-error
+                                    {% endif %}
+                                "
+                            >
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <!-- =================================================
+                 SUBSCRIPTION
+            ================================================== -->
+
+            {% if subscription_active %}
+
+                <div
+                    class="
+                        subscription
+                        subscription-active
+                    "
+                >
+
 
                     <div>
 
-                        <h3>
-                            {{ advert.business_name }}
-                        </h3>
+
+                        <strong>
+                            ✅ Restaurant subscription active
+                        </strong>
 
 
                         <p>
 
-                            These hours are shown
-                            on the public restaurant page.
+                            Your restaurant management tools
+                            are currently unlocked.
+
+                            {% if subscription_expires_at %}
+
+                                Subscription valid until
+                                {{ subscription_expires_at.strftime('%d %B %Y') }}.
+
+                            {% endif %}
 
                         </p>
+
 
                     </div>
 
 
                     <a
                         href="{{ url_for(
-                            'restaurant_page',
-                            advert_id=advert.id
+                            'admin_subscription'
                         ) }}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="hours-public-link"
+                        class="subscription-link"
                     >
-                        View public page →
+                        Manage subscription →
                     </a>
+
 
                 </div>
 
 
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'update_restaurant_hours',
-                        advert_id=advert.id
-                    ) }}"
+            {% else %}
+
+
+                <div
+                    class="
+                        subscription
+                        subscription-locked
+                    "
                 >
 
 
-                    <div class="table-scroll">
-
-                        <table class="hours-table">
-
-                            <thead>
-
-                                <tr>
-
-                                    <th>
-                                        Day
-                                    </th>
-
-                                    <th>
-                                        Opening Time
-                                    </th>
-
-                                    <th>
-                                        Closing Time
-                                    </th>
-
-                                    <th>
-                                        Closed
-                                    </th>
-
-                                    <th>
-                                        Public Status
-                                    </th>
-
-                                </tr>
-
-                            </thead>
+                    <div>
 
 
-                            <tbody>
+                        <strong>
+                            🔒 Restaurant management locked
+                        </strong>
 
 
-                                {% for day in [
-                                    'monday',
-                                    'tuesday',
-                                    'wednesday',
-                                    'thursday',
-                                    'friday',
-                                    'saturday',
-                                    'sunday'
-                                ] %}
+                        <p>
+
+                            Activate your subscription
+                            to create campaigns,
+                            edit restaurant details,
+                            gallery photos and
+                            working hours.
+
+                        </p>
 
 
-                                    {% set hour_ns =
-                                        namespace(
-                                            found=false,
-                                            open_time='',
-                                            close_time='',
-                                            is_closed=true
-                                        )
-                                    %}
+                    </div>
 
 
-                                    {% for opening_hour in advert.opening_hours %}
+                    <a
+                        href="{{ url_for(
+                            'admin_subscription'
+                        ) }}"
+                        class="subscription-link"
+                    >
+                        Activate subscription →
+                    </a>
 
-                                        {% if opening_hour.day_of_week == day %}
 
-                                            {% set hour_ns.found = true %}
+                </div>
 
-                                            {% set hour_ns.open_time =
-                                                opening_hour.open_time.strftime('%H:%M')
-                                                if opening_hour.open_time
-                                                else ''
-                                            %}
 
-                                            {% set hour_ns.close_time =
-                                                opening_hour.close_time.strftime('%H:%M')
-                                                if opening_hour.close_time
-                                                else ''
-                                            %}
+            {% endif %}
 
-                                            {% set hour_ns.is_closed =
-                                                opening_hour.is_closed
-                                            %}
 
-                                        {% endif %}
+            <!-- =================================================
+                 METRICS
+            ================================================== -->
+
+            <div class="metrics">
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Total Restaurants
+                    </span>
+
+                    <span class="metric-value">
+                        {{ adverts|length }}
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Live
+                    </span>
+
+                    <span class="metric-value">
+                        {{ live_adverts }}
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Scheduled
+                    </span>
+
+                    <span class="metric-value">
+                        {{ scheduled_adverts }}
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Paused / Expired
+                    </span>
+
+                    <span class="metric-value">
+                        {{ paused_adverts + expired_adverts }}
+                    </span>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Live Reels
+                    </span>
+
+                    <span class="metric-value">
+                        {{ live_reels }}
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =================================================
+                 RESTAURANT CAMPAIGNS
+            ================================================== -->
+
+            <section
+                class="section"
+                id="campaigns"
+            >
+
+
+                <div class="section-header">
+
+
+                    <div>
+
+
+                        <h2>
+                            Restaurant Campaigns
+                        </h2>
+
+
+                        <p>
+                            Review campaign status,
+                            schedules and edit existing campaigns.
+                        </p>
+
+
+                    </div>
+
+
+                    <span class="section-count">
+
+                        {{ adverts|length }}
+
+                        {% if adverts|length == 1 %}
+                            restaurant
+                        {% else %}
+                            restaurants
+                        {% endif %}
+
+                    </span>
+
+
+                </div>
+
+
+                {% if adverts %}
+
+
+                    <div class="table-card">
+
+                        <div class="table-scroll">
+
+
+                            <table>
+
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Restaurant
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+                                        <th>
+                                            Area
+                                        </th>
+
+                                        <th>
+                                            Campaign Start
+                                        </th>
+
+                                        <th>
+                                            Campaign End
+                                        </th>
+
+                                        <th>
+                                            Reel
+                                        </th>
+
+                                        <th>
+                                            Remaining
+                                        </th>
+
+                                        <th>
+                                            Actions
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+
+                                    {% for advert in adverts %}
+
+
+                                        <tr>
+
+
+                                            <td>
+
+
+                                                <div class="restaurant-cell">
+
+
+                                                    <div class="restaurant-thumb">
+
+                                                        {% if advert.poster_image_url %}
+
+                                                            <img
+                                                                src="{{ advert.poster_image_url }}"
+                                                                alt="{{ advert.business_name }}"
+                                                                loading="lazy"
+                                                            >
+
+                                                        {% endif %}
+
+                                                    </div>
+
+
+                                                    <div>
+
+
+                                                        <strong>
+                                                            {{ advert.business_name }}
+                                                        </strong>
+
+
+                                                        {% if advert.headline %}
+
+                                                            <span>
+                                                                {{ advert.headline }}
+                                                            </span>
+
+                                                        {% endif %}
+
+
+                                                    </div>
+
+
+                                                </div>
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.campaign_status == "live" %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-live
+                                                    ">
+                                                        ● LIVE
+                                                    </span>
+
+
+                                                {% elif advert.campaign_status == "scheduled" %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-scheduled
+                                                    ">
+                                                        ● SCHEDULED
+                                                    </span>
+
+
+                                                {% elif advert.campaign_status == "expired" %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-expired
+                                                    ">
+                                                        ● EXPIRED
+                                                    </span>
+
+
+                                                {% else %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-paused
+                                                    ">
+                                                        ● PAUSED
+                                                    </span>
+
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.area %}
+
+                                                    {{ advert.area }}
+
+                                                {% else %}
+
+                                                    —
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.campaign_start_date %}
+
+                                                    {{ advert.campaign_start_date.strftime('%d %b %Y') }}
+
+                                                {% else %}
+
+                                                    —
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.campaign_end_date %}
+
+                                                    {{ advert.campaign_end_date.strftime('%d %b %Y') }}
+
+                                                {% else %}
+
+                                                    —
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.reel %}
+
+                                                    <span class="yes-badge">
+                                                        ✓ Yes
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="no-badge">
+                                                        No
+                                                    </span>
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.campaign_status == "live" %}
+
+                                                    {{ advert.days_remaining }}
+
+                                                    day{% if advert.days_remaining != 1 %}s{% endif %}
+
+
+                                                {% elif advert.campaign_status == "scheduled" %}
+
+                                                    Starts soon
+
+
+                                                {% elif advert.campaign_status == "expired" %}
+
+                                                    Ended
+
+
+                                                {% else %}
+
+                                                    Paused
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                <div class="table-actions">
+
+
+                                                    <a
+                                                        href="{{ url_for(
+                                                            'admin_manage_restaurant',
+                                                            advert_id=advert.id
+                                                        ) }}"
+                                                        class="
+                                                            table-action
+                                                            table-action-primary
+                                                        "
+                                                    >
+                                                        Manage
+                                                    </a>
+
+
+                                                    {% if subscription_active %}
+
+
+                                                        <a
+                                                            href="{{ url_for(
+                                                                'admin_edit_restaurant',
+                                                                advert_id=advert.id
+                                                            ) }}"
+                                                            class="
+                                                                table-action
+                                                                table-action-edit
+                                                            "
+                                                        >
+                                                            ✏ Edit Campaign
+                                                        </a>
+
+
+                                                        <a
+                                                            href="#hours-{{ advert.id }}"
+                                                            class="
+                                                                table-action
+                                                                table-action-hours
+                                                            "
+                                                        >
+                                                            Working Hours
+                                                        </a>
+
+
+                                                    {% endif %}
+
+
+                                                    <a
+                                                        href="{{ url_for(
+                                                            'restaurant_page',
+                                                            advert_id=advert.id
+                                                        ) }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="
+                                                            table-action
+                                                            table-action-secondary
+                                                        "
+                                                    >
+                                                        Public Page
+                                                    </a>
+
+
+                                                </div>
+
+
+                                            </td>
+
+
+                                        </tr>
+
 
                                     {% endfor %}
 
 
-                                    <tr>
+                                </tbody>
 
 
-                                        <td>
+                            </table>
 
-                                            <span class="hours-day">
-                                                {{ day|capitalize }}
-                                            </span>
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <input
-                                                type="time"
-                                                name="{{ day }}_open"
-                                                value="{{ hour_ns.open_time }}"
-                                                class="time-input"
-                                                aria-label="{{ day|capitalize }} opening time"
-                                            >
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <input
-                                                type="time"
-                                                name="{{ day }}_close"
-                                                value="{{ hour_ns.close_time }}"
-                                                class="time-input"
-                                                aria-label="{{ day|capitalize }} closing time"
-                                            >
-
-                                        </td>
-
-
-                                        <td>
-
-                                            <label class="closed-label">
-
-                                                <input
-                                                    type="checkbox"
-                                                    name="{{ day }}_closed"
-                                                    value="1"
-                                                    {% if hour_ns.is_closed %}
-                                                        checked
-                                                    {% endif %}
-                                                >
-
-                                                Closed
-
-                                            </label>
-
-                                        </td>
-
-
-                                        <td>
-
-                                            {% if hour_ns.is_closed %}
-
-                                                <span class="
-                                                    status-badge
-                                                    badge-paused
-                                                ">
-                                                    Closed
-                                                </span>
-
-
-                                            {% elif hour_ns.open_time and hour_ns.close_time %}
-
-                                                <span class="
-                                                    status-badge
-                                                    badge-live
-                                                ">
-
-                                                    {{
-                                                        hour_ns.open_time
-                                                    }}
-
-                                                    –
-
-                                                    {{
-                                                        hour_ns.close_time
-                                                    }}
-
-                                                </span>
-
-
-                                            {% else %}
-
-                                                <span class="
-                                                    status-badge
-                                                    badge-scheduled
-                                                ">
-                                                    Not configured
-                                                </span>
-
-                                            {% endif %}
-
-                                        </td>
-
-
-                                    </tr>
-
-
-                                {% endfor %}
-
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-
-                    <div class="hours-footer">
-
-                        <div class="hours-footer-note">
-
-                            Tick <strong>Closed</strong>
-                            for days the restaurant does not operate.
-                            Overnight hours such as
-                            18:00 → 02:00 are supported.
 
                         </div>
 
+                    </div>
 
-                        <button
-                            type="submit"
-                            class="save-hours"
-                        >
-                            Save Working Hours
-                        </button>
+
+                {% else %}
+
+
+                    <div class="empty">
+
+
+                        <strong>
+                            No restaurant campaigns yet.
+                        </strong>
+
+
+                        <br><br>
+
+
+                        {% if subscription_active %}
+
+
+                            Create your first campaign
+                            and start building your restaurant
+                            presence on Kalxa.
+
+
+                            <br><br>
+
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_create_restaurant'
+                                ) }}"
+                                class="button"
+                            >
+                                + Create First Campaign
+                            </a>
+
+
+                        {% else %}
+
+
+                            Activate your subscription
+                            before creating your first
+                            restaurant campaign.
+
+
+                            <br><br>
+
+
+                            <a
+                                href="{{ url_for(
+                                    'admin_subscription'
+                                ) }}"
+                                class="button"
+                            >
+                                Activate Subscription
+                            </a>
+
+
+                        {% endif %}
+
 
                     </div>
 
 
-                </form>
+                {% endif %}
+
 
             </section>
 
 
-        {% endfor %}
+            <!-- =================================================
+                 WORKING HOURS
+            ================================================== -->
+
+            {% if subscription_active and adverts %}
 
 
-    </section>
-
-{% endif %}
-
-
-<!-- =====================================================
-     PROFESSIONAL QUICK GUIDE
-====================================================== -->
-
-{% if subscription_active and adverts %}
-
-    <section class="section">
-
-        <div class="section-header">
-
-            <div>
-
-                <h2>
-                    Restaurant Setup Checklist
-                </h2>
+                <section
+                    class="
+                        section
+                        hours-management
+                    "
+                    id="working-hours"
+                >
 
 
-                <p>
-                    Keep each restaurant profile complete
-                    so customers have useful information.
-                </p>
-
-            </div>
-
-        </div>
+                    <div class="section-header">
 
 
-        <div class="table-card">
+                        <div>
 
-            <div class="table-scroll">
 
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Restaurant
-                            </th>
-
-                            <th>
-                                Poster
-                            </th>
-
-                            <th>
-                                Location
-                            </th>
-
-                            <th>
-                                Reel
-                            </th>
-
-                            <th>
+                            <h2>
                                 Working Hours
-                            </th>
-
-                            <th>
-                                Campaign
-                            </th>
-
-                        </tr>
-
-                    </thead>
+                            </h2>
 
 
-                    <tbody>
+                            <p>
+                                Set the normal weekly opening
+                                and closing times for each restaurant.
+                            </p>
 
 
-                        {% for advert in adverts %}
+                        </div>
 
 
-                            {% set setup_ns =
-                                namespace(
-                                    has_hours=false
-                                )
-                            %}
+                        <span class="section-count">
+                            Owner controls
+                        </span>
 
 
-                            {% for opening_hour in advert.opening_hours %}
-
-                                {% if
-                                    opening_hour.open_time
-                                    or
-                                    opening_hour.is_closed
-                                %}
-
-                                    {% set setup_ns.has_hours =
-                                        true
-                                    %}
-
-                                {% endif %}
-
-                            {% endfor %}
+                    </div>
 
 
-                            <tr>
+                    {% for advert in adverts %}
 
 
-                                <td>
+                        <section
+                            class="hours-card"
+                            id="hours-{{ advert.id }}"
+                        >
 
-                                    <strong>
+
+                            <div class="hours-card-header">
+
+
+                                <div>
+
+
+                                    <h3>
                                         {{ advert.business_name }}
-                                    </strong>
-
-                                </td>
+                                    </h3>
 
 
-                                <td>
-
-                                    {% if advert.poster_image_url %}
-
-                                        <span class="yes-badge">
-                                            ✓ Added
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="no-badge">
-                                            Missing
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
+                                    <p>
+                                        These hours appear
+                                        on the public restaurant page.
+                                    </p>
 
 
-                                <td>
-
-                                    {% if advert.address or advert.area %}
-
-                                        <span class="yes-badge">
-                                            ✓ Added
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="no-badge">
-                                            Missing
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
+                                </div>
 
 
-                                <td>
-
-                                    {% if advert.reel %}
-
-                                        <span class="yes-badge">
-                                            ✓ Added
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="no-badge">
-                                            Optional
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
+                                <div class="hours-card-actions">
 
 
-                                <td>
-
-                                    {% if setup_ns.has_hours %}
-
-                                        <span class="yes-badge">
-                                            ✓ Configured
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="no-badge">
-                                            Not configured
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
+                                    <a
+                                        href="{{ url_for(
+                                            'admin_edit_restaurant',
+                                            advert_id=advert.id
+                                        ) }}"
+                                        class="hours-edit-link"
+                                    >
+                                        Edit Campaign
+                                    </a>
 
 
-                                <td>
-
-                                    {% if advert.campaign_status == "live" %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-live
-                                        ">
-                                            Live
-                                        </span>
-
-                                    {% elif advert.campaign_status == "scheduled" %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-scheduled
-                                        ">
-                                            Scheduled
-                                        </span>
-
-                                    {% elif advert.campaign_status == "expired" %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-expired
-                                        ">
-                                            Expired
-                                        </span>
-
-                                    {% else %}
-
-                                        <span class="
-                                            status-badge
-                                            badge-paused
-                                        ">
-                                            Paused
-                                        </span>
-
-                                    {% endif %}
-
-                                </td>
+                                    <a
+                                        href="{{ url_for(
+                                            'restaurant_page',
+                                            advert_id=advert.id
+                                        ) }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="hours-public-link"
+                                    >
+                                        Public Page →
+                                    </a>
 
 
-                            </tr>
+                                </div>
 
 
-                        {% endfor %}
+                            </div>
 
 
-                    </tbody>
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'update_restaurant_hours',
+                                    advert_id=advert.id
+                                ) }}"
+                            >
 
-                </table>
 
-            </div>
+                                <div class="table-scroll">
 
-        </div>
 
-    </section>
+                                    <table class="hours-table">
 
-{% endif %}
+
+                                        <thead>
+
+
+                                            <tr>
+
+                                                <th>
+                                                    Day
+                                                </th>
+
+                                                <th>
+                                                    Opening Time
+                                                </th>
+
+                                                <th>
+                                                    Closing Time
+                                                </th>
+
+                                                <th>
+                                                    Closed
+                                                </th>
+
+                                                <th>
+                                                    Public Status
+                                                </th>
+
+                                            </tr>
+
+
+                                        </thead>
+
+
+                                        <tbody>
+
+
+                                            {% for day in [
+                                                'monday',
+                                                'tuesday',
+                                                'wednesday',
+                                                'thursday',
+                                                'friday',
+                                                'saturday',
+                                                'sunday'
+                                            ] %}
+
+
+                                                {% set hour_ns =
+                                                    namespace(
+                                                        found=false,
+                                                        open_time='',
+                                                        close_time='',
+                                                        is_closed=true
+                                                    )
+                                                %}
+
+
+                                                {% for opening_hour in advert.opening_hours %}
+
+
+                                                    {% if opening_hour.day_of_week == day %}
+
+
+                                                        {% set hour_ns.found = true %}
+
+
+                                                        {% set hour_ns.open_time =
+                                                            opening_hour.open_time.strftime('%H:%M')
+                                                            if opening_hour.open_time
+                                                            else ''
+                                                        %}
+
+
+                                                        {% set hour_ns.close_time =
+                                                            opening_hour.close_time.strftime('%H:%M')
+                                                            if opening_hour.close_time
+                                                            else ''
+                                                        %}
+
+
+                                                        {% set hour_ns.is_closed =
+                                                            opening_hour.is_closed
+                                                        %}
+
+
+                                                    {% endif %}
+
+
+                                                {% endfor %}
+
+
+                                                <tr>
+
+
+                                                    <td>
+
+                                                        <span class="hours-day">
+                                                            {{ day|capitalize }}
+                                                        </span>
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <input
+                                                            type="time"
+                                                            name="{{ day }}_open"
+                                                            value="{{ hour_ns.open_time }}"
+                                                            class="time-input"
+                                                            aria-label="{{ day|capitalize }} opening time"
+                                                        >
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <input
+                                                            type="time"
+                                                            name="{{ day }}_close"
+                                                            value="{{ hour_ns.close_time }}"
+                                                            class="time-input"
+                                                            aria-label="{{ day|capitalize }} closing time"
+                                                        >
+
+                                                    </td>
+
+
+                                                    <td>
+
+                                                        <label class="closed-label">
+
+                                                            <input
+                                                                type="checkbox"
+                                                                name="{{ day }}_closed"
+                                                                value="1"
+                                                                {% if hour_ns.is_closed %}
+                                                                    checked
+                                                                {% endif %}
+                                                            >
+
+                                                            Closed
+
+                                                        </label>
+
+                                                    </td>
+
+
+                                                    <td>
+
+
+                                                        {% if hour_ns.is_closed %}
+
+                                                            <span class="
+                                                                status-badge
+                                                                badge-paused
+                                                            ">
+                                                                Closed
+                                                            </span>
+
+
+                                                        {% elif hour_ns.open_time and hour_ns.close_time %}
+
+                                                            <span class="
+                                                                status-badge
+                                                                badge-live
+                                                            ">
+
+                                                                {{ hour_ns.open_time }}
+                                                                –
+                                                                {{ hour_ns.close_time }}
+
+                                                            </span>
+
+
+                                                        {% else %}
+
+                                                            <span class="
+                                                                status-badge
+                                                                badge-scheduled
+                                                            ">
+                                                                Not configured
+                                                            </span>
+
+
+                                                        {% endif %}
+
+
+                                                    </td>
+
+
+                                                </tr>
+
+
+                                            {% endfor %}
+
+
+                                        </tbody>
+
+
+                                    </table>
+
+
+                                </div>
+
+
+                                <div class="hours-footer">
+
+
+                                    <div class="hours-footer-note">
+
+                                        Tick <strong>Closed</strong>
+                                        for days the restaurant does not operate.
+
+                                        Overnight hours such as
+                                        18:00 → 02:00 are supported.
+
+                                    </div>
+
+
+                                    <button
+                                        type="submit"
+                                        class="save-hours"
+                                    >
+                                        Save Working Hours
+                                    </button>
+
+
+                                </div>
+
+
+                            </form>
+
+
+                        </section>
+
+
+                    {% endfor %}
+
+
+                </section>
+
+
+            {% endif %}
+
+
+            <!-- =================================================
+                 SETUP CHECKLIST
+            ================================================== -->
+
+            {% if subscription_active and adverts %}
+
+
+                <section
+                    class="section"
+                    id="setup-checklist"
+                >
+
+
+                    <div class="section-header">
+
+
+                        <div>
+
+
+                            <h2>
+                                Restaurant Setup Checklist
+                            </h2>
+
+
+                            <p>
+                                Keep each restaurant profile complete
+                                so customers have useful information.
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="table-card">
+
+
+                        <div class="table-scroll">
+
+
+                            <table>
+
+
+                                <thead>
+
+
+                                    <tr>
+
+                                        <th>
+                                            Restaurant
+                                        </th>
+
+                                        <th>
+                                            Poster
+                                        </th>
+
+                                        <th>
+                                            Gallery
+                                        </th>
+
+                                        <th>
+                                            Location
+                                        </th>
+
+                                        <th>
+                                            Reel
+                                        </th>
+
+                                        <th>
+                                            Working Hours
+                                        </th>
+
+                                        <th>
+                                            Campaign
+                                        </th>
+
+                                        <th>
+                                            Edit
+                                        </th>
+
+                                    </tr>
+
+
+                                </thead>
+
+
+                                <tbody>
+
+
+                                    {% for advert in adverts %}
+
+
+                                        {% set setup_ns =
+                                            namespace(
+                                                has_hours=false
+                                            )
+                                        %}
+
+
+                                        {% for opening_hour in advert.opening_hours %}
+
+
+                                            {% if
+                                                opening_hour.open_time
+                                                or
+                                                opening_hour.is_closed
+                                            %}
+
+                                                {% set setup_ns.has_hours =
+                                                    true
+                                                %}
+
+                                            {% endif %}
+
+
+                                        {% endfor %}
+
+
+                                        <tr>
+
+
+                                            <td>
+
+                                                <strong>
+                                                    {{ advert.business_name }}
+                                                </strong>
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.poster_image_url %}
+
+                                                    <span class="yes-badge">
+                                                        ✓ Added
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="no-badge">
+                                                        Missing
+                                                    </span>
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.gallery_images %}
+
+                                                    <span class="yes-badge">
+
+                                                        ✓
+                                                        {{ advert.gallery_images|length }}
+                                                        / 5
+
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="no-badge">
+                                                        No photos
+                                                    </span>
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.address or advert.area %}
+
+                                                    <span class="yes-badge">
+                                                        ✓ Added
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="no-badge">
+                                                        Missing
+                                                    </span>
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.reel %}
+
+                                                    <span class="yes-badge">
+                                                        ✓ Added
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="no-badge">
+                                                        Optional
+                                                    </span>
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if setup_ns.has_hours %}
+
+                                                    <span class="yes-badge">
+                                                        ✓ Configured
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="no-badge">
+                                                        Not configured
+                                                    </span>
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                {% if advert.campaign_status == "live" %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-live
+                                                    ">
+                                                        Live
+                                                    </span>
+
+
+                                                {% elif advert.campaign_status == "scheduled" %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-scheduled
+                                                    ">
+                                                        Scheduled
+                                                    </span>
+
+
+                                                {% elif advert.campaign_status == "expired" %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-expired
+                                                    ">
+                                                        Expired
+                                                    </span>
+
+
+                                                {% else %}
+
+                                                    <span class="
+                                                        status-badge
+                                                        badge-paused
+                                                    ">
+                                                        Paused
+                                                    </span>
+
+
+                                                {% endif %}
+
+
+                                            </td>
+
+
+                                            <td>
+
+
+                                                <a
+                                                    href="{{ url_for(
+                                                        'admin_edit_restaurant',
+                                                        advert_id=advert.id
+                                                    ) }}"
+                                                    class="
+                                                        table-action
+                                                        table-action-edit
+                                                    "
+                                                >
+                                                    Edit Campaign
+                                                </a>
+
+
+                                            </td>
+
+
+                                        </tr>
+
+
+                                    {% endfor %}
+
+
+                                </tbody>
+
+
+                            </table>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+            {% endif %}
+
+
+        </main>
+
+
+    </div>
+
 
 </div>
+
 
 </body>
 
