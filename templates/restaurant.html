@@ -3071,6 +3071,90 @@ content="#d7d9dd"
     {% endif %}
 
 
+
+    <!-- =================================
+     RESTAURANT GALLERY
+================================== -->
+
+    {% if advert.gallery_images %}
+
+      <section class="restaurant-gallery">
+
+        <div class="restaurant-gallery-header">
+
+            <div>
+
+                <span class="restaurant-gallery-eyebrow">
+                    INSIDE THE PLACE
+                </span>
+
+                <h2 class="restaurant-gallery-title">
+                    See {{ advert.business_name }}
+                </h2>
+
+            </div>
+
+
+            <span class="restaurant-gallery-count">
+
+                {{ advert.gallery_images|length }}
+
+                photo{% if advert.gallery_images|length != 1 %}s{% endif %}
+
+            </span>
+
+        </div>
+
+
+        <div class="restaurant-gallery-grid">
+
+            {% for image in advert.gallery_images %}
+
+                <button
+                    type="button"
+                    class="restaurant-gallery-item"
+                    data-restaurant-gallery-open
+                    data-gallery-index="{{ loop.index0 }}"
+                    aria-label="View restaurant photo {{ loop.index }}"
+                >
+
+                    <img
+                        src="{{ image.image_url }}"
+                        alt="{{ advert.business_name }} photo {{ loop.index }}"
+                        loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
+                    >
+
+
+                    <span class="restaurant-gallery-number">
+                        {{ loop.index }}
+                    </span>
+
+                </button>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div
+            id="restaurant-gallery-data"
+            hidden
+        >
+
+            {% for image in advert.gallery_images %}
+
+                <span
+                    data-gallery-image
+                    data-gallery-url="{{ image.image_url }}"
+                ></span>
+
+            {% endfor %}
+
+        </div>
+
+      </section>
+
+    {% endif %}
     <!-- =================================
          VISIT
     ================================== -->
