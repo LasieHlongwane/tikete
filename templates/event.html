@@ -8313,29 +8313,34 @@ and restaurant_reels
             slide.querySelector(
                 "video"
             );
+          if (activeVideo) {
+
+  
+           activeVideo.muted =
+            false;
+           activeVideo.volume =
+            1;
+  
+           activeVideo
+            .play()
+            .catch(
+              () => {
+                      activeVideo.muted =
+                        true;
 
 
-        if (activeVideo) {
+                      activeVideo
+                       .play()
+                       .catch(
+                        () => {}
+                       );
 
-            activeVideo
-                .play()
-                .catch(
-                    () => {
+              }
+            );
 
-                        activeVideo.muted =
-                            true;
+          }
 
-
-                        activeVideo
-                            .play()
-                            .catch(
-                                () => {}
-                            );
-
-                    }
-                );
-
-        }
+       
 
     }
 
