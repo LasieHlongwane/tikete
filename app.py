@@ -93,6 +93,7 @@ from models import (
     RestaurantExperienceLove,
     RestaurantExperienceMedia,
     RestaurantOpeningHour,
+    RestaurantGalleryImage,
 )
 
 # ============================================================
