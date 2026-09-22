@@ -4962,3 +4962,194 @@ class RestaurantExperienceLove(db.Model):
             f"id={self.id} "
             f"post_id={self.post_id}>"
         )
+
+# ============================================================
+
+# RESTAURANT OPENING HOURS
+
+# ============================================================
+
+from datetime import datetime
+
+class RestaurantOpeningHour(db.Model):
+
+
+    __tablename__ = "restaurant_opening_hours"
+
+# ========================================================
+# PRIMARY KEY
+# ========================================================
+
+    id = db.Column(
+      db.Integer,
+      primary_key=True,
+    )
+
+# ========================================================
+# RESTAURANT
+# ========================================================
+
+    restaurant_advert_id = db.Column(
+      db.Integer,
+      db.ForeignKey(
+        "restaurant_adverts.id",
+        ondelete="CASCADE",
+      ),
+      nullable=False,
+      index=True,
+    )
+
+# ========================================================
+# DAY
+# ========================================================
+
+# Stored as:
+#
+# monday
+# tuesday
+# wednesday
+# thursday
+# friday
+# saturday
+# sunday
+
+    day_of_week = db.Column(
+      db.String(10),
+      nullable=False,
+    )
+
+# ========================================================
+# OPEN / CLOSE TIMES
+# ========================================================
+
+    open_time = db.Column(
+      db.Time,
+      nullable=True,
+    )
+
+    close_time = db.Column(
+      db.Time,
+      nullable=True,
+    )
+
+# ========================================================
+# CLOSED
+# ========================================================
+
+    is_closed = db.Column(
+      db.Boolean,
+      nullable=False,
+      default=False,
+      server_default=db.false(),
+    )
+
+# ========================================================
+# TIMESTAMPS
+# ========================================================
+
+    created_at = db.Column(
+      db.DateTime,
+      nullable=False,
+      default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+      db.DateTime,
+      nullable=False,
+      default=datetime.utcnow,
+      onupdate=datetime.utcnow,
+    )
+
+# ========================================================
+# RELATIONSHIP
+# ========================================================
+
+    restaurant_advert = db.relationship(
+      "RestaurantAdvert",
+      backref=db.backref(
+        "opening_hours",
+        lazy=True,
+        cascade="all, delete-orphan",
+      ),
+    )
+
+# ========================================================
+# CONSTRAINTS
+# ========================================================
+
+    __table_args__ = (
+
+      db.UniqueConstraint(
+        "restaurant_advert_id",
+        "day_of_week",
+        name="uq_restaurant_opening_hour_day",
+      ),
+
+      db.CheckConstraint(
+        """
+        day_of_week IN (
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+            'sunday'
+        )
+        """,
+        name="ck_restaurant_opening_hour_day",
+      ),
+
+)
+
+# ========================================================
+# HELPERS
+# ========================================================
+
+    @property
+    def open_time_string(self):
+
+      if not self.open_time:
+
+        return None
+
+      return self.open_time.strftime(
+        "%H:%M"
+      )
+
+    @property
+    def close_time_string(self):
+
+      if not self.close_time:
+
+        return None
+
+      return self.close_time.strftime(
+        "%H:%M"
+      )
+
+    def to_public_dict(self):
+
+      return {
+
+        "open":
+            self.open_time_string,
+
+        "close":
+            self.close_time_string,
+
+        "closed":
+            bool(
+                self.is_closed
+            ),
+
+      }
+ 
+    def __repr__(self):
+
+      return (
+        f"<RestaurantOpeningHour "
+        f"restaurant={self.restaurant_advert_id} "
+        f"day={self.day_of_week}>"
+      )
+
