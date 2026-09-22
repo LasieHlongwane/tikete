@@ -14995,6 +14995,33 @@ def restaurant_page(
         )
     )
 
+    restaurant_hours_payload = (
+      build_restaurant_hours_payload(
+        advert
+      )
+    )
+
+    current_organizer_id = (
+      get_ticketing_organizer_id()
+    )
+
+    can_manage_restaurant = False
+
+
+    if (
+      current_organizer_id
+      and
+      advert.organizer_id
+      ==
+      current_organizer_id
+      and
+      advert.organizer
+      and
+      advert.organizer.is_subscription_active
+    ):
+
+      can_manage_restaurant = True
+
 
     return render_template(
         "restaurant.html",
@@ -15010,6 +15037,21 @@ def restaurant_page(
 
         directions_url=
             directions_url,
+
+        restaurant_hours_payload=
+            restaurant_hours_payload,
+
+        can_manage_restaurant=
+            can_manage_restaurant,
+
+        restaurant_hours_update_url=(
+            url_for(
+              "update_restaurant_hours",
+              advert_id=advert.id,
+            )
+            if can_manage_restaurant
+            else ""
+        ),
 
         # NEW
         experience_posts=
