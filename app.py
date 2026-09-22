@@ -11052,161 +11052,107 @@ def admin_restaurants():
 
 @app.route(
     "/admin/restaurants/new",
-    methods=[
-        "GET",
-        "POST",
-    ],
+    methods=["GET", "POST"],
 )
 def admin_create_restaurant():
-
-    auth = (
-        require_ticketing_organizer()
-    )
-
+    auth = require_ticketing_organizer()
 
     if auth:
         return auth
 
-
-    subscription_auth = (
-        require_restaurant_subscription()
-    )
-
+    subscription_auth = require_restaurant_subscription()
 
     if subscription_auth:
         return subscription_auth
 
+    organizer = get_current_organizer()
 
-    organizer = (
-        get_current_organizer()
-    )
-
-
-    today_iso = (
-        datetime.utcnow()
-        .date()
-        .isoformat()
-    )
-
+    today_iso = datetime.utcnow().date().isoformat()
 
     subscription_end_iso = (
-        organizer.subscription_expires_at
-        .date()
-        .isoformat()
+        organizer.subscription_expires_at.date().isoformat()
         if organizer.subscription_expires_at
         else ""
     )
 
-
     if request.method == "POST":
-
-        business_name = (
-            request.form.get(
-                "business_name",
-                "",
-            )
-            .strip()
-        )
-
+        business_name = request.form.get(
+            "business_name",
+            "",
+        ).strip()
 
         headline = (
             request.form.get(
                 "headline",
                 "",
-            )
-            .strip()
+            ).strip()
             or None
         )
-
 
         description = (
             request.form.get(
                 "description",
                 "",
-            )
-            .strip()
+            ).strip()
             or None
         )
-
 
         area = (
             request.form.get(
                 "area",
                 "",
-            )
-            .strip()
+            ).strip()
             or None
         )
-
 
         address = (
             request.form.get(
                 "address",
                 "",
-            )
-            .strip()
+            ).strip()
             or None
         )
-
 
         whatsapp_number = (
             request.form.get(
                 "whatsapp_number",
                 "",
-            )
-            .strip()
+            ).strip()
             or None
         )
-
 
         phone_number = (
             request.form.get(
                 "phone_number",
                 "",
-            )
-            .strip()
+            ).strip()
             or None
         )
 
-
-        directions_url = (
-            valid_restaurant_directions_url(
-                request.form.get(
-                    "directions_url",
-                    "",
-                )
+        directions_url = valid_restaurant_directions_url(
+            request.form.get(
+                "directions_url",
+                "",
             )
         )
 
-
         # ====================================================
-        # BUSINESS NAME REQUIRED
+        # BUSINESS NAME
         # ====================================================
 
         if not business_name:
-
             flash(
                 "Business name is required.",
                 "error",
             )
 
-
             return render_template(
                 "admin/restaurant_form.html",
-
-                organizer=
-                    organizer,
-
-                advert=
-                    None,
-
-                today_iso=
-                    today_iso,
-
-                subscription_end_iso=
-                    subscription_end_iso,
+                organizer=organizer,
+                advert=None,
+                today_iso=today_iso,
+                subscription_end_iso=subscription_end_iso,
             )
-
 
         # ====================================================
         # CAMPAIGN SCHEDULE
@@ -11216,408 +11162,282 @@ def admin_create_restaurant():
             starts_at,
             ends_at,
             schedule_error,
-        ) = (
-            build_restaurant_campaign_schedule(
-                request.form,
-                organizer,
-            )
+        ) = build_restaurant_campaign_schedule(
+            request.form,
+            organizer,
         )
 
-
         if schedule_error:
-
             flash(
                 schedule_error,
                 "error",
             )
 
-
             return render_template(
                 "admin/restaurant_form.html",
-
-                organizer=
-                    organizer,
-
-                advert=
-                    None,
-
-                today_iso=
-                    today_iso,
-
-                subscription_end_iso=
-                    subscription_end_iso,
+                organizer=organizer,
+                advert=None,
+                today_iso=today_iso,
+                subscription_end_iso=subscription_end_iso,
             )
 
-
         # ====================================================
-        # POSTER
+        # MAIN POSTER
         # ====================================================
 
-        poster = (
-            request.files.get(
-                "poster"
-            )
-        )
+        poster = request.files.get("poster")
 
-
-        if (
-            not poster
-            or not poster.filename
-        ):
-
+        if not poster or not poster.filename:
             flash(
                 "Upload a restaurant poster.",
                 "error",
             )
 
-
             return render_template(
                 "admin/restaurant_form.html",
-
-                organizer=
-                    organizer,
-
-                advert=
-                    None,
-
-                today_iso=
-                    today_iso,
-
-                subscription_end_iso=
-                    subscription_end_iso,
+                organizer=organizer,
+                advert=None,
+                today_iso=today_iso,
+                subscription_end_iso=subscription_end_iso,
             )
-
 
         if not allowed_restaurant_poster_filename(
             poster.filename
         ):
-
             flash(
-                (
-                    "Use a JPG, JPEG, PNG "
-                    "or WebP poster."
-                ),
+                "Use a JPG, JPEG, PNG or WebP poster.",
                 "error",
             )
 
-
             return render_template(
                 "admin/restaurant_form.html",
-
-                organizer=
-                    organizer,
-
-                advert=
-                    None,
-
-                today_iso=
-                    today_iso,
-
-                subscription_end_iso=
-                    subscription_end_iso,
+                organizer=organizer,
+                advert=None,
+                today_iso=today_iso,
+                subscription_end_iso=subscription_end_iso,
             )
 
-
-        # ====================================================
-        # POSTER FILE SIZE
-        # ====================================================
-
-        poster.stream.seek(
-            0,
-            os.SEEK_END,
-        )
-
-
-        file_size = (
-            poster.stream.tell()
-        )
-
-
+        poster.stream.seek(0, os.SEEK_END)
+        poster_file_size = poster.stream.tell()
         poster.stream.seek(0)
 
-
-        if (
-            file_size
-            > RESTAURANT_POSTER_MAX_FILE_BYTES
-        ):
-
+        if poster_file_size > RESTAURANT_POSTER_MAX_FILE_BYTES:
             flash(
-                (
-                    "The poster is too large. "
-                    "Maximum size is 8 MB."
-                ),
+                "The poster is too large. Maximum size is 8 MB.",
                 "error",
             )
 
+            return render_template(
+                "admin/restaurant_form.html",
+                organizer=organizer,
+                advert=None,
+                today_iso=today_iso,
+                subscription_end_iso=subscription_end_iso,
+            )
+
+        # ====================================================
+        # GALLERY PHOTOS
+        # ====================================================
+
+        gallery_files = get_restaurant_gallery_files()
+
+        gallery_valid, gallery_error = (
+            validate_restaurant_gallery_files(
+                gallery_files,
+                existing_count=0,
+            )
+        )
+
+        if not gallery_valid:
+            flash(
+                gallery_error,
+                "error",
+            )
 
             return render_template(
                 "admin/restaurant_form.html",
-
-                organizer=
-                    organizer,
-
-                advert=
-                    None,
-
-                today_iso=
-                    today_iso,
-
-                subscription_end_iso=
-                    subscription_end_iso,
+                organizer=organizer,
+                advert=None,
+                today_iso=today_iso,
+                subscription_end_iso=subscription_end_iso,
             )
 
-
-        uploaded_public_id = None
-
+        poster_public_id = None
+        gallery_public_ids = []
 
         try:
-
             # =================================================
-            # CLOUDINARY POSTER UPLOAD
+            # UPLOAD POSTER
             # =================================================
 
-            upload_result = (
-                cloudinary.uploader.upload(
-                    poster,
-
-                    resource_type=
-                        "image",
-
-                    folder=(
-                        "kalxa/"
-                        f"organizers/{organizer.id}/"
-                        "restaurants/posters"
-                    ),
-
-                    use_filename=
-                        True,
-
-                    unique_filename=
-                        True,
-
-                    overwrite=
-                        False,
-                )
+            upload_result = cloudinary.uploader.upload(
+                poster,
+                resource_type="image",
+                folder=(
+                    "kalxa/"
+                    f"organizers/{organizer.id}/"
+                    "restaurants/posters"
+                ),
+                use_filename=True,
+                unique_filename=True,
+                overwrite=False,
             )
 
+            poster_public_id = upload_result.get("public_id")
+            poster_secure_url = upload_result.get("secure_url")
 
-            uploaded_public_id = (
-                upload_result.get(
-                    "public_id"
-                )
-            )
-
-
-            secure_url = (
-                upload_result.get(
-                    "secure_url"
-                )
-            )
-
-
-            if (
-                not uploaded_public_id
-                or not secure_url
-            ):
-
+            if not poster_public_id or not poster_secure_url:
                 raise RuntimeError(
-                    (
-                        "Cloudinary did not "
-                        "return the uploaded poster."
-                    )
+                    "Cloudinary did not return the uploaded poster."
                 )
 
-
             # =================================================
-            # CREATE RESTAURANT ADVERT
+            # CREATE RESTAURANT
             # =================================================
 
             advert = RestaurantAdvert(
+                organizer_id=organizer.id,
+                business_name=business_name,
+                headline=headline,
+                description=description,
+                area=area,
+                address=address,
+                directions_url=directions_url,
+                whatsapp_number=whatsapp_number,
+                phone_number=phone_number,
+                poster_image_url=poster_secure_url,
+                poster_cloudinary_public_id=poster_public_id,
+                starts_at=starts_at,
+                ends_at=ends_at,
+                active=True,
+            )
 
-                organizer_id=
+            db.session.add(advert)
+
+            # The advert ID is required before creating gallery rows.
+            db.session.flush()
+
+            # =================================================
+            # UPLOAD GALLERY
+            # =================================================
+
+            for image_order, image in enumerate(
+                gallery_files,
+                start=1,
+            ):
+                gallery_result = upload_restaurant_gallery_image(
+                    image,
                     organizer.id,
+                    advert.id,
+                )
 
-                business_name=
-                    business_name,
+                gallery_public_ids.append(
+                    gallery_result["public_id"]
+                )
 
-                headline=
-                    headline,
+                gallery_image = RestaurantGalleryImage(
+                    restaurant_advert_id=advert.id,
+                    cloudinary_public_id=gallery_result[
+                        "public_id"
+                    ],
+                    image_url=gallery_result["secure_url"],
+                    image_order=image_order,
+                    width=gallery_result["width"],
+                    height=gallery_result["height"],
+                    file_bytes=gallery_result["file_bytes"],
+                )
 
-                description=
-                    description,
-
-                area=
-                    area,
-
-                address=
-                    address,
-
-                directions_url=
-                    directions_url,
-
-                whatsapp_number=
-                    whatsapp_number,
-
-                phone_number=
-                    phone_number,
-
-                poster_image_url=
-                    secure_url,
-
-                poster_cloudinary_public_id=
-                    uploaded_public_id,
-
-                starts_at=
-                    starts_at,
-
-                ends_at=
-                    ends_at,
-
-                active=
-                    True,
-            )
-
-
-            db.session.add(
-                advert
-            )
-
+                db.session.add(gallery_image)
 
             db.session.commit()
 
-
         except Exception as error:
-
             db.session.rollback()
 
+            # =================================================
+            # REMOVE FAILED POSTER UPLOAD
+            # =================================================
 
-            if uploaded_public_id:
-
+            if poster_public_id:
                 try:
-
                     cloudinary.uploader.destroy(
-                        uploaded_public_id,
-
-                        resource_type=
-                            "image",
+                        poster_public_id,
+                        resource_type="image",
                     )
-
-
                 except Exception:
-
                     current_app.logger.exception(
-                        (
-                            "[Restaurant Advert] "
-                            "Unable to remove failed "
-                            "poster upload."
-                        )
+                        "[Restaurant Advert] Unable to remove "
+                        "failed poster upload."
                     )
 
+            # =================================================
+            # REMOVE FAILED GALLERY UPLOADS
+            # =================================================
+
+            for public_id in gallery_public_ids:
+                try:
+                    cloudinary.uploader.destroy(
+                        public_id,
+                        resource_type="image",
+                    )
+                except Exception:
+                    current_app.logger.exception(
+                        "[Restaurant Gallery] Unable to remove "
+                        "failed gallery upload."
+                    )
 
             current_app.logger.exception(
                 (
-                    "[Restaurant Advert] "
-                    "Create failed "
-                    "organizer_id=%s "
-                    "error=%s"
+                    "[Restaurant Advert] Create failed "
+                    "organizer_id=%s error=%s"
                 ),
                 organizer.id,
                 error,
             )
 
-
             flash(
-                (
-                    "Restaurant advert could "
-                    "not be created."
-                ),
+                "Restaurant advert could not be created.",
                 "error",
             )
 
-
             return redirect(
-                url_for(
-                    "admin_create_restaurant"
-                )
+                url_for("admin_create_restaurant")
             )
-
 
         # ====================================================
         # AUTOMATIC RESTAURANT PUSH
         # ====================================================
-        #
-        # Important:
-        #
-        # The advert has already been safely committed.
-        #
-        # Push notification failure must NEVER delete or
-        # roll back the restaurant advert.
-        #
-        # ====================================================
 
         if organizer.is_subscription_active:
-
             try:
-
-                send_automatic_restaurant_push(
-                    advert
-                )
-
-
+                send_automatic_restaurant_push(advert)
             except Exception as error:
-
                 current_app.logger.exception(
                     (
-                        "[Restaurant Advert] "
-                        "Advert created but automatic "
-                        "push notification failed "
-                        "advert_id=%s "
-                        "organizer_id=%s "
-                        "error=%s"
+                        "[Restaurant Advert] Advert created "
+                        "but automatic push notification failed "
+                        "advert_id=%s organizer_id=%s error=%s"
                     ),
                     advert.id,
                     organizer.id,
                     error,
                 )
 
-
-        else:
-
-            current_app.logger.info(
-                (
-                    "[Restaurant Advert] "
-                    "Automatic push skipped because "
-                    "subscription is inactive "
-                    "advert_id=%s "
-                    "organizer_id=%s"
-                ),
-                advert.id,
-                organizer.id,
-            )
-
-
         # ====================================================
         # SUCCESS
         # ====================================================
 
         flash(
-            (
-                "Restaurant campaign created "
-                "successfully."
-            ),
+            "Restaurant campaign created successfully.",
             "success",
         )
-
 
         return redirect(
             url_for(
                 "admin_manage_restaurant",
-
-                advert_id=
-                    advert.id,
+                advert_id=advert.id,
             )
         )
-
 
     # ========================================================
     # GET
@@ -11625,18 +11445,10 @@ def admin_create_restaurant():
 
     return render_template(
         "admin/restaurant_form.html",
-
-        organizer=
-            organizer,
-
-        advert=
-            None,
-
-        today_iso=
-            today_iso,
-
-        subscription_end_iso=
-            subscription_end_iso,
+        organizer=organizer,
+        advert=None,
+        today_iso=today_iso,
+        subscription_end_iso=subscription_end_iso,
     )
 
 
