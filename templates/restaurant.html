@@ -14,7 +14,7 @@ content="width=device-width, initial-scale=1"
 
 <meta
 name="theme-color"
-content="#f3f4f6"
+content="#d7d9dd"
 
 >
 
@@ -33,28 +33,33 @@ content="#f3f4f6"
     }
 
     :root {
-        --page-bg: #f2f3f5;
+        --page-bg-top: #dfe1e4;
+        --page-bg-bottom: #cfd2d6;
 
         --surface: #ffffff;
-        --surface-soft: #f8f8f7;
-        --surface-warm: #f4ede4;
+        --surface-soft: #f5f6f7;
+        --surface-muted: #eceef0;
 
-        --border: #dedede;
-        --border-soft: #e8e8e8;
+        --border: #d4d6da;
+        --border-soft: #e5e7ea;
 
-        --text: #16181d;
-        --text-soft: #4f5560;
-        --muted: #7b8089;
+        --text: #15171b;
+        --text-soft: #4f555e;
+        --muted: #777d86;
 
-        --blue: #123f8c;
-        --blue-hover: #0c3170;
+        --black: #0c0d0f;
+        --charcoal: #25282d;
+        --charcoal-soft: #34373d;
 
-        --brown: #d9c3a6;
-        --brown-light: #eee2d3;
-        --brown-dark: #8c6e4d;
+        --silver: #d8dbe0;
+        --silver-light: #eff1f3;
 
-        --cream: #fff4df;
-        --gold: #d6ab52;
+        --blue: #244f93;
+        --blue-hover: #183a70;
+
+        --green: #26734a;
+        --red: #a33b3b;
+        --gold: #d1aa56;
 
         --shadow-soft:
             0 10px 28px
@@ -66,21 +71,21 @@ content="#f3f4f6"
             );
 
         --shadow-card:
-            0 18px 45px
+            0 18px 44px
             rgba(
                 15,
                 23,
                 42,
-                .09
+                .10
             );
 
         --shadow-luxury:
-            0 20px 65px
+            0 26px 70px
             rgba(
-                43,
-                34,
-                26,
-                .10
+                24,
+                27,
+                31,
+                .13
             );
     }
 
@@ -94,8 +99,8 @@ content="#f3f4f6"
         background:
             linear-gradient(
                 180deg,
-                #e3e5e8 0%,
-                #d7d9dd 100%
+                var(--page-bg-top) 0%,
+                var(--page-bg-bottom) 100%
             );
 
         color: var(--text);
@@ -127,8 +132,15 @@ content="#f3f4f6"
         color: inherit;
     }
 
-    button {
+    button,
+    input,
+    select {
         font: inherit;
+    }
+
+    button {
+        -webkit-tap-highlight-color:
+            transparent;
     }
 
 
@@ -137,11 +149,10 @@ content="#f3f4f6"
     ===================================================== */
 
     .restaurant-page {
-
         width:
             min(
                 100% - 30px,
-                700px
+                720px
             );
 
         margin:
@@ -149,7 +160,7 @@ content="#f3f4f6"
 
         padding:
             22px 0
-            120px;
+            125px;
     }
 
 
@@ -157,115 +168,116 @@ content="#f3f4f6"
        TOP BAR
     ===================================================== */
 
-   
-     .topbar {
+    .topbar {
+        display: flex;
 
-      display: flex;
+        align-items: center;
+        justify-content: space-between;
 
-      align-items: center;
-      justify-content: space-between;
+        width: 100%;
 
-      width: 100%;
+        gap: 16px;
 
-      gap: 16px;
+        margin-bottom: 22px;
 
-      margin-bottom: 20px;
+        padding:
+            15px 18px;
 
-      padding:
-        15px 18px;
+        background:
+            linear-gradient(
+                135deg,
+                #090a0c 0%,
+                #17191d 52%,
+                #292c31 100%
+            );
 
-      background:
-        linear-gradient(
-            135deg,
-            #0b0c0e 0%,
-            #181a1f 55%,
-            #272a30 100%
-        );
+        border:
+            1px solid #33363b;
 
-      border:
-        1px solid #303238;
+        border-radius: 17px;
 
-      border-radius: 16px;
+        box-shadow:
+            0 14px 34px
+            rgba(
+                0,
+                0,
+                0,
+                .24
+            );
+    }
 
-      box-shadow:
-        0 12px 32px
-        rgba(
-            0,
-            0,
-            0,
-            .22
-        );
-      }
+    .restaurant-brand {
+        display: inline-flex;
 
+        align-items: center;
 
-     .restaurant-brand {
+        min-width: 0;
 
-      display: inline-flex;
+        color: #d1d5db;
 
-      align-items: center;
+        font-size: 19px;
+        font-weight: 950;
 
-      color: #d1d5db;
+        line-height: 1.1;
 
-      font-size: 19px;
-      font-weight: 950;
+        letter-spacing: -.035em;
 
-      line-height: 1.1;
+        text-decoration: none;
 
-      letter-spacing: -.035em;
+        overflow: hidden;
 
-      text-decoration: none;
- 
-      transition:
-        color .15s ease;
-     }
+        white-space: nowrap;
 
+        text-overflow: ellipsis;
 
-     .restaurant-brand:hover {
+        transition:
+            color .15s ease;
+    }
 
-      color: #ffffff;
-     }
+    .restaurant-brand:hover {
+        color: #ffffff;
+    }
 
+    .topbar-link {
+        display: inline-flex;
 
-     .topbar-link {
+        align-items: center;
+        justify-content: center;
 
-      display: inline-flex;
- 
-      align-items: center;
-      justify-content: center;
+        flex:
+            0 0 auto;
 
-      margin-left: auto;
+        margin-left: auto;
 
-      color: #b8bec7;
+        color: #b9bec6;
 
-      font-size: 13px;
-      font-weight: 950;
+        font-size: 13px;
+        font-weight: 950;
 
-      letter-spacing: -.01em;
+        letter-spacing: -.01em;
 
-      text-decoration: none;
+        text-decoration: none;
 
-      white-space: nowrap;
+        white-space: nowrap;
 
-      transition:
-        color .15s ease,
-        transform .15s ease;
-     }
+        transition:
+            color .15s ease,
+            transform .15s ease;
+    }
 
+    .topbar-link:hover {
+        color: #ffffff;
 
-     .topbar-link:hover {
+        transform:
+            translateX(-2px);
+    }
 
-      color: #ffffff;
-
-      transform:
-        translateX(-2px);
-     }
 
     /* =====================================================
        RESTAURANT CARD
     ===================================================== */
 
     .restaurant-card {
-
         overflow: hidden;
 
         background:
@@ -279,13 +291,13 @@ content="#f3f4f6"
         border:
             1px solid
             rgba(
-                208,
-                208,
-                208,
-                .85
+                210,
+                212,
+                216,
+                .95
             );
 
-        border-radius: 26px;
+        border-radius: 28px;
 
         box-shadow:
             var(--shadow-luxury);
@@ -293,11 +305,10 @@ content="#f3f4f6"
 
 
     /* =====================================================
-       POSTER
+       HERO / POSTER
     ===================================================== */
 
     .poster-shell {
-
         position: relative;
 
         width: 100%;
@@ -307,21 +318,21 @@ content="#f3f4f6"
         background:
             linear-gradient(
                 135deg,
-                #e8e8e8,
-                #d9d9d9
+                #d8dade,
+                #bfc2c7
             );
+
+        isolation: isolate;
     }
 
-
     .poster-shell::after {
-
         content: "";
 
         position: absolute;
 
-        inset: auto 0 0;
+        inset: 0;
 
-        height: 72px;
+        z-index: 2;
 
         background:
             linear-gradient(
@@ -330,17 +341,21 @@ content="#f3f4f6"
                     0,
                     0,
                     0,
-                    .14
-                ),
-                transparent
+                    .44
+                ) 0%,
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .10
+                ) 28%,
+                transparent 55%
             );
 
         pointer-events: none;
     }
 
-
     .poster-shell img {
-
         width: 100%;
         height: auto;
 
@@ -349,41 +364,104 @@ content="#f3f4f6"
         object-fit: cover;
     }
 
+    .poster-brand-strip {
+        position: absolute;
+
+        left: 16px;
+        right: 16px;
+        bottom: 15px;
+
+        z-index: 4;
+
+        display: flex;
+
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        color: #ffffff;
+    }
+
+    .poster-brand-copy {
+        min-width: 0;
+    }
+
+    .poster-brand-name {
+        display: block;
+
+        overflow: hidden;
+
+        font-size: 13px;
+        font-weight: 950;
+
+        white-space: nowrap;
+
+        text-overflow: ellipsis;
+    }
+
+    .poster-brand-area {
+        display: block;
+
+        margin-top: 2px;
+
+        color:
+            rgba(
+                255,
+                255,
+                255,
+                .72
+            );
+
+        font-size: 9px;
+        font-weight: 750;
+    }
+
 
     /* =====================================================
        CONTENT
     ===================================================== */
 
     .restaurant-content {
-
         padding:
-            26px 22px 28px;
+            30px 24px 30px;
     }
 
+    .section-kicker {
+        display: block;
+
+        margin-bottom: 8px;
+
+        color: #777d85;
+
+        font-size: 9px;
+        font-weight: 950;
+
+        letter-spacing: .15em;
+
+        text-transform: uppercase;
+    }
 
     .restaurant-name {
-
         margin: 0;
 
         color: #111318;
 
         font-size:
             clamp(
-                30px,
+                32px,
                 7vw,
-                42px
+                44px
             );
 
-        line-height: 1.02;
+        line-height: 1;
 
         font-weight: 950;
 
-        letter-spacing: -.045em;
+        letter-spacing: -.048em;
     }
 
-
     .headline {
-
         margin:
             11px 0 0;
 
@@ -395,42 +473,214 @@ content="#f3f4f6"
         font-weight: 850;
     }
 
-
     .description {
-
         margin:
-            18px 0 0;
+            20px 0 0;
 
         color: #555b65;
 
         font-size: 14px;
-        line-height: 1.75;
+        line-height: 1.78;
 
         white-space: pre-line;
     }
 
 
     /* =====================================================
-       LOCATION
+       RATING SUMMARY
     ===================================================== */
 
-    .location-box {
+    .restaurant-summary {
+        display: flex;
 
-        margin-top: 24px;
+        align-items: center;
 
-        padding: 16px;
+        flex-wrap: wrap;
+
+        gap: 9px;
+
+        margin-top: 17px;
+    }
+
+    .rating-summary {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        min-height: 34px;
+
+        padding:
+            0 11px;
+
+        background: #f1f2f4;
+
+        border:
+            1px solid #d9dce0;
+
+        border-radius: 999px;
+    }
+
+    .rating-summary-star {
+        color: var(--gold);
+
+        font-size: 14px;
+        line-height: 1;
+    }
+
+    .rating-summary-score {
+        color: #17191d;
+
+        font-size: 11px;
+        font-weight: 950;
+    }
+
+    .rating-summary-count {
+        color: #7a8088;
+
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+
+    /* =====================================================
+       OPEN STATUS
+    ===================================================== */
+
+    .open-status-pill {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        min-height: 34px;
+
+        padding:
+            0 11px;
+
+        background: #eceef1;
+
+        color: #5b616a;
+
+        border:
+            1px solid #d5d8dd;
+
+        border-radius: 999px;
+
+        font-size: 10px;
+        font-weight: 950;
+    }
+
+    .open-status-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 999px;
+
+        background: #8f949d;
+    }
+
+    .open-status-pill.open {
+        background: #e8f5ed;
+        color: #24613f;
+
+        border-color: #c6e5d2;
+    }
+
+    .open-status-pill.open
+    .open-status-dot {
+        background: #2d8b58;
+
+        box-shadow:
+            0 0 0 4px
+            rgba(
+                45,
+                139,
+                88,
+                .12
+            );
+    }
+
+    .open-status-pill.closed {
+        background: #f5eaea;
+        color: #8a3434;
+
+        border-color: #ead0d0;
+    }
+
+    .open-status-pill.closed
+    .open-status-dot {
+        background: #b84d4d;
+    }
+
+
+    /* =====================================================
+       CATEGORY TAGS
+    ===================================================== */
+
+    .restaurant-tags {
+        display: flex;
+
+        align-items: center;
+
+        flex-wrap: wrap;
+
+        gap: 7px;
+
+        margin-top: 15px;
+    }
+
+    .restaurant-tag {
+        display: inline-flex;
+
+        align-items: center;
+
+        min-height: 30px;
+
+        padding:
+            0 10px;
 
         background:
             linear-gradient(
                 135deg,
-                #faf9f7,
-                #f2eee9
+                #f5f6f7,
+                #e9ebee
+            );
+
+        color: #555b64;
+
+        border:
+            1px solid #d7d9dd;
+
+        border-radius: 999px;
+
+        font-size: 9px;
+        font-weight: 900;
+    }
+
+
+    /* =====================================================
+       LOCATION / HOURS CARD
+    ===================================================== */
+
+    .visit-card {
+        margin-top: 28px;
+
+        padding: 18px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #f7f7f7,
+                #eceeef
             );
 
         border:
-            1px solid #e1d8cd;
+            1px solid #d7d9dd;
 
-        border-radius: 16px;
+        border-radius: 18px;
 
         box-shadow:
             inset 0 1px 0
@@ -438,18 +688,35 @@ content="#f3f4f6"
                 255,
                 255,
                 255,
-                .8
+                .75
             );
     }
 
+    .visit-grid {
+        display: grid;
 
-    .location-label {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
 
+        gap: 16px;
+    }
+
+    .visit-block {
+        min-width: 0;
+    }
+
+    .visit-label {
         display: block;
 
         margin-bottom: 6px;
 
-        color: var(--brown-dark);
+        color: #717780;
 
         font-size: 9px;
         font-weight: 950;
@@ -459,10 +726,8 @@ content="#f3f4f6"
         text-transform: uppercase;
     }
 
-
-    .location-main {
-
-        color: #1d1f24;
+    .visit-main {
+        color: #1d2025;
 
         font-size: 13px;
         line-height: 1.45;
@@ -470,16 +735,253 @@ content="#f3f4f6"
         font-weight: 900;
     }
 
-
-    .location-area {
-
+    .visit-sub {
         display: block;
 
         margin-top: 4px;
 
-        color: #777d86;
+        color: #767c85;
+
+        font-size: 10px;
+        line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       WORKING HOURS
+    ===================================================== */
+
+    .hours-shell {
+        margin-top: 14px;
+
+        overflow: hidden;
+
+        background: #ffffff;
+
+        border:
+            1px solid #dcdee2;
+
+        border-radius: 14px;
+    }
+
+    .hours-toggle {
+        width: 100%;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding:
+            13px 14px;
+
+        background: transparent;
+        color: #202329;
+
+        border: 0;
 
         font-size: 11px;
+        font-weight: 950;
+
+        cursor: pointer;
+    }
+
+    .hours-toggle-arrow {
+        color: #777d85;
+
+        transition:
+            transform .18s ease;
+    }
+
+    .hours-shell.open
+    .hours-toggle-arrow {
+        transform:
+            rotate(180deg);
+    }
+
+    .hours-list {
+        display: none;
+
+        padding:
+            0 14px
+            13px;
+    }
+
+    .hours-shell.open
+    .hours-list {
+        display: block;
+    }
+
+    .hours-row {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding:
+            8px 0;
+
+        border-top:
+            1px solid #eceef0;
+
+        font-size: 10px;
+    }
+
+    .hours-day {
+        color: #4e545d;
+
+        font-weight: 850;
+    }
+
+    .hours-value {
+        color: #202329;
+
+        font-weight: 900;
+
+        text-align: right;
+    }
+
+    .hours-value.closed {
+        color: #8d4b4b;
+    }
+
+
+    /* =====================================================
+       OWNER HOURS EDITOR
+    ===================================================== */
+
+    .owner-hours-card {
+        margin-top: 16px;
+
+        padding: 15px;
+
+        background:
+            linear-gradient(
+                145deg,
+                #292c31,
+                #1e2024
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid #3d4148;
+
+        border-radius: 15px;
+    }
+
+    .owner-hours-card[hidden] {
+        display: none;
+    }
+
+    .owner-hours-title {
+        margin: 0;
+
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+    .owner-hours-copy {
+        margin:
+            4px 0 0;
+
+        color: #aeb4bd;
+
+        font-size: 9px;
+        line-height: 1.45;
+    }
+
+    .owner-hours-form {
+        display: grid;
+
+        gap: 8px;
+
+        margin-top: 13px;
+    }
+
+    .owner-hours-row {
+        display: grid;
+
+        grid-template-columns:
+            76px
+            1fr
+            1fr
+            auto;
+
+        gap: 7px;
+
+        align-items: center;
+    }
+
+    .owner-hours-day {
+        color: #d7dbe0;
+
+        font-size: 9px;
+        font-weight: 900;
+    }
+
+    .owner-hours-row input[type="time"] {
+        width: 100%;
+        min-width: 0;
+
+        height: 36px;
+
+        padding:
+            0 7px;
+
+        background: #35383e;
+        color: #ffffff;
+
+        border:
+            1px solid #4c5058;
+
+        border-radius: 8px;
+
+        font-size: 9px;
+    }
+
+    .owner-hours-closed {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 4px;
+
+        color: #c1c6cd;
+
+        font-size: 8px;
+        font-weight: 800;
+    }
+
+    .owner-hours-save {
+        width: 100%;
+
+        min-height: 42px;
+
+        margin-top: 4px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #eef0f2,
+                #d5d8dd
+            );
+
+        color: #1d2025;
+
+        border:
+            1px solid #bfc3ca;
+
+        border-radius: 10px;
+
+        font-size: 10px;
+        font-weight: 950;
+
+        cursor: pointer;
     }
 
 
@@ -487,10 +989,13 @@ content="#f3f4f6"
        CONTACT ACTIONS
     ===================================================== */
 
-    .actions-title {
+    .actions-section {
+        margin-top: 30px;
+    }
 
+    .actions-title {
         margin:
-            28px 0 11px;
+            0 0 11px;
 
         color: #202227;
 
@@ -502,9 +1007,7 @@ content="#f3f4f6"
         text-transform: uppercase;
     }
 
-
     .restaurant-actions {
-
         display: grid;
 
         grid-template-columns:
@@ -519,9 +1022,7 @@ content="#f3f4f6"
         gap: 10px;
     }
 
-
     .restaurant-action {
-
         min-height: 50px;
 
         display: flex;
@@ -549,9 +1050,7 @@ content="#f3f4f6"
             background .16s ease;
     }
 
-
     .restaurant-action:hover {
-
         transform:
             translateY(-2px);
 
@@ -565,14 +1064,12 @@ content="#f3f4f6"
             );
     }
 
-
     .action-directions {
-
         background:
             linear-gradient(
                 135deg,
-                #16191f,
-                #2b2f37
+                #15181d,
+                #2b2f35
             );
 
         color: #ffffff;
@@ -581,9 +1078,7 @@ content="#f3f4f6"
             1px solid #16191f;
     }
 
-
     .action-whatsapp {
-
         background:
             linear-gradient(
                 135deg,
@@ -597,30 +1092,32 @@ content="#f3f4f6"
             1px solid #155e38;
     }
 
-
     .action-call {
-
-        background: #f6f6f6;
-        color: #1c1f24;
-
-        border:
-            1px solid #d8d8d8;
-    }
-
-
-    .action-share {
-
         background:
             linear-gradient(
                 135deg,
-                #fff7ea,
-                #f3e5cc
+                #f8f8f8,
+                #e8e9eb
             );
 
-        color: #27231d;
+        color: #1c1f24;
 
         border:
-            1px solid #dfc8a4;
+            1px solid #d2d4d8;
+    }
+
+    .action-share {
+        background:
+            linear-gradient(
+                135deg,
+                #eceef1,
+                #dadddf
+            );
+
+        color: #272a2f;
+
+        border:
+            1px solid #c8cbd0;
     }
 
 
@@ -629,205 +1126,180 @@ content="#f3f4f6"
     ===================================================== */
 
     .experience-cta {
+        margin-top: 30px;
 
-     margin-top: 26px;
+        padding: 22px;
 
-     padding: 20px;
+        background:
+            linear-gradient(
+                145deg,
+                #45484e 0%,
+                #35383e 54%,
+                #292c31 100%
+            );
 
-     background:
-        linear-gradient(
-            145deg,
-            #44474d 0%,
-            #35383e 55%,
-            #2b2d32 100%
-        );
+        color: #ffffff;
 
-     color: #ffffff;
+        border:
+            1px solid #565a61;
 
-     border:
-        1px solid #55585f;
+        border-radius: 20px;
 
-     border-radius: 18px;
-
-     box-shadow:
-        0 16px 35px
-        rgba(
-            0,
-            0,
-            0,
-            .18
-        );
+        box-shadow:
+            0 17px 38px
+            rgba(
+                0,
+                0,
+                0,
+                .18
+            );
     }
-
 
     .experience-cta-kicker {
+        display: block;
 
-     display: block;
+        color: #c6cbd2;
 
-     color: #c7cbd1;
+        font-size: 9px;
+        font-weight: 950;
 
-     font-size: 9px;
-     font-weight: 950;
+        letter-spacing: .14em;
 
-     letter-spacing: .13em;
-
-     text-transform: uppercase;
+        text-transform: uppercase;
     }
-
 
     .experience-cta h2 {
+        margin:
+            7px 0 0;
 
-     margin:
-        7px 0 0;
+        color: #ffffff;
 
-     color: #ffffff;
+        font-size: 19px;
+        line-height: 1.2;
 
-     font-size: 18px;
-     line-height: 1.2;
+        font-weight: 950;
 
-     font-weight: 950;
-
-     letter-spacing: -.02em;
-    } 
-
+        letter-spacing: -.025em;
+    }
 
     .experience-cta p {
+        margin:
+            8px 0 0;
 
-     margin:
-        8px 0 0;
+        color: #d3d7dc;
 
-     color: #d5d8dd;
-
-     font-size: 11px;
-     line-height: 1.55;
+        font-size: 11px;
+        line-height: 1.58;
     }
-
 
     .experience-cta-link {
- 
-     display: inline-flex;
+        display: inline-flex;
 
-     width: 100%;
- 
-     align-items: center;
-     justify-content: center;
+        width: 100%;
 
-     min-height: 46px;
+        align-items: center;
+        justify-content: center;
 
-     margin-top: 15px;
+        min-height: 47px;
 
-     background:
-        linear-gradient(
-            135deg,
-            #eceef1,
-            #d7dade
-        );
+        margin-top: 16px;
 
-     color: #1b1d21;
+        background:
+            linear-gradient(
+                135deg,
+                #f1f2f4,
+                #d7dade
+            );
 
-     border:
-        1px solid #c5c9ce;
+        color: #1b1d21;
 
-     border-radius: 12px;
+        border:
+            1px solid #c5c9ce;
 
-     font-size: 11px;
-     font-weight: 950;
+        border-radius: 12px;
 
-     text-decoration: none;
+        font-size: 11px;
+        font-weight: 950;
 
-     box-shadow:
-        0 7px 18px
-        rgba(
-            0,
-            0,
-            0,
-            .15
-        );
+        text-decoration: none;
 
-     transition:
-        transform .15s ease,
-        background .15s ease,
-        box-shadow .15s ease;
+        box-shadow:
+            0 7px 18px
+            rgba(
+                0,
+                0,
+                0,
+                .15
+            );
+
+        transition:
+            transform .15s ease,
+            background .15s ease;
+    }
+
+    .experience-cta-link:hover {
+        transform:
+            translateY(-1px);
+
+        background:
+            linear-gradient(
+                135deg,
+                #ffffff,
+                #e4e6e9
+            );
     }
 
 
-    .experience-cta-link:hover {
-
-     transform:
-        translateY(-1px);
-
-     background:
-        linear-gradient(
-            135deg,
-            #f7f8f9,
-            #e3e5e8
-        );
-
-     box-shadow:
-        0 9px 22px
-        rgba(
-            0,
-            0,
-            0,
-            .18
-        );
-    } 
-
     /* =====================================================
-       CUSTOMER EXPERIENCES
+       CUSTOMER EXPERIENCES SECTION
     ===================================================== */
 
     .experience-section {
-
-        margin-top: 34px;
+        margin-top: 38px;
 
         padding:
-            22px;
+            24px;
 
         background:
             rgba(
                 255,
                 255,
                 255,
-                .72
+                .76
             );
 
         border:
-            1px solid #dedede;
+            1px solid #d7d9dd;
 
-        border-radius: 22px;
+        border-radius: 24px;
 
         box-shadow:
             var(--shadow-soft);
 
         backdrop-filter:
-            blur(10px);
+            blur(12px);
 
         -webkit-backdrop-filter:
-            blur(10px);
+            blur(12px);
     }
 
-
     .experience-section-header {
-
         display: flex;
 
         align-items: flex-end;
         justify-content: space-between;
 
-        gap: 12px;
+        gap: 14px;
 
-        margin-bottom: 16px;
+        margin-bottom: 18px;
     }
 
-
     .experience-section-header h2 {
-
         margin: 0;
 
         color: #17191d;
 
-        font-size: 21px;
+        font-size: 22px;
         line-height: 1.12;
 
         font-weight: 950;
@@ -835,9 +1307,7 @@ content="#f3f4f6"
         letter-spacing: -.035em;
     }
 
-
     .experience-section-header p {
-
         margin:
             6px 0 0;
 
@@ -846,17 +1316,18 @@ content="#f3f4f6"
         font-size: 10px;
     }
 
-
     .experience-count {
-
         flex:
             0 0 auto;
 
         padding:
-            5px 8px;
+            5px 9px;
 
-        background: #eee8df;
-        color: #66543e;
+        background: #e9ebee;
+        color: #555b64;
+
+        border:
+            1px solid #d8dbe0;
 
         border-radius: 999px;
 
@@ -865,8 +1336,139 @@ content="#f3f4f6"
     }
 
 
-    .experience-grid {
+    /* =====================================================
+       FEATURED EXPERIENCE
+    ===================================================== */
 
+    .featured-experience {
+        margin-bottom: 18px;
+
+        overflow: hidden;
+
+        background:
+            linear-gradient(
+                145deg,
+                #24272c,
+                #101113
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid #383c42;
+
+        border-radius: 20px;
+
+        box-shadow:
+            0 16px 34px
+            rgba(
+                0,
+                0,
+                0,
+                .16
+            );
+    }
+
+    .featured-experience-label {
+        display: block;
+
+        padding:
+            12px 14px 0;
+
+        color: #aeb4bc;
+
+        font-size: 8px;
+        font-weight: 950;
+
+        letter-spacing: .15em;
+
+        text-transform: uppercase;
+    }
+
+    .featured-experience-layout {
+        display: grid;
+
+        grid-template-columns:
+            minmax(
+                0,
+                1.15fr
+            )
+            minmax(
+                0,
+                .85fr
+            );
+
+        gap: 0;
+
+        align-items: stretch;
+    }
+
+    .featured-experience-media {
+        position: relative;
+
+        min-height: 290px;
+
+        overflow: hidden;
+
+        background: #000000;
+    }
+
+    .featured-experience-media
+    .experience-media-open {
+        height: 100%;
+    }
+
+    .featured-experience-media img,
+    .featured-experience-media video {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+    }
+
+    .featured-experience-copy {
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: flex-end;
+
+        padding:
+            18px;
+    }
+
+    .featured-experience-copy
+    .experience-name {
+        color: #ffffff;
+
+        font-size: 13px;
+    }
+
+    .featured-experience-copy
+    .experience-text {
+        color: #cfd3d8;
+
+        font-size: 11px;
+    }
+
+    .featured-experience-copy
+    .experience-date {
+        color: #858c96;
+    }
+
+    .featured-experience-copy
+    .experience-rating-number {
+        color: #b7bdc5;
+    }
+
+
+    /* =====================================================
+       EXPERIENCE GRID
+    ===================================================== */
+
+    .experience-grid {
         display: grid;
 
         grid-template-columns:
@@ -881,15 +1483,13 @@ content="#f3f4f6"
         gap: 14px;
     }
 
-
     .experience-card {
-
         overflow: hidden;
 
         background: #ffffff;
 
         border:
-            1px solid #dddddd;
+            1px solid #dadcdf;
 
         border-radius: 18px;
 
@@ -907,9 +1507,7 @@ content="#f3f4f6"
             box-shadow .16s ease;
     }
 
-
     .experience-card:hover {
-
         transform:
             translateY(-2px);
 
@@ -923,9 +1521,7 @@ content="#f3f4f6"
             );
     }
 
-
     .experience-media {
-
         position: relative;
 
         overflow: hidden;
@@ -935,9 +1531,7 @@ content="#f3f4f6"
         background: #111827;
     }
 
-
     .experience-media-open {
-
         display: block;
 
         width: 100%;
@@ -952,10 +1546,8 @@ content="#f3f4f6"
         cursor: zoom-in;
     }
 
-
     .experience-media-open img,
     .experience-media-open video {
-
         width: 100%;
         height: 100%;
 
@@ -968,9 +1560,7 @@ content="#f3f4f6"
         pointer-events: none;
     }
 
-
     .experience-media-type {
-
         position: absolute;
 
         left: 10px;
@@ -986,7 +1576,7 @@ content="#f3f4f6"
                 18,
                 20,
                 24,
-                .78
+                .80
             );
 
         color: #ffffff;
@@ -997,17 +1587,9 @@ content="#f3f4f6"
         font-weight: 900;
 
         pointer-events: none;
-
-        backdrop-filter:
-            blur(9px);
-
-        -webkit-backdrop-filter:
-            blur(9px);
     }
 
-
     .experience-media-count {
-
         position: absolute;
 
         right: 10px;
@@ -1023,7 +1605,7 @@ content="#f3f4f6"
                 18,
                 20,
                 24,
-                .78
+                .80
             );
 
         color: #ffffff;
@@ -1036,9 +1618,7 @@ content="#f3f4f6"
         pointer-events: none;
     }
 
-
     .experience-love {
-
         position: absolute;
 
         top: 10px;
@@ -1062,7 +1642,7 @@ content="#f3f4f6"
                 20,
                 21,
                 25,
-                .80
+                .82
             );
 
         color: #ffffff;
@@ -1092,35 +1672,26 @@ content="#f3f4f6"
             blur(10px);
     }
 
-
     .experience-love .heart {
-
         color: #ffffff;
 
         font-size: 15px;
     }
 
-
-    .experience-love.loved .heart {
-
+    .experience-love.loved
+    .heart {
         color: #fb7185;
     }
 
-
     .experience-love:disabled {
-
         opacity: .65;
     }
 
-
     .experience-copy {
-
         padding: 14px;
     }
 
-
     .experience-rating {
-
         display: flex;
 
         align-items: center;
@@ -1130,24 +1701,18 @@ content="#f3f4f6"
         margin-bottom: 8px;
     }
 
-
     .experience-star {
-
         color: #d1d5db;
 
         font-size: 12px;
         line-height: 1;
     }
 
-
     .experience-star.filled {
-
         color: var(--gold);
     }
 
-
     .experience-rating-number {
-
         margin-left: 5px;
 
         color: #777d85;
@@ -1156,9 +1721,7 @@ content="#f3f4f6"
         font-weight: 900;
     }
 
-
     .experience-name {
-
         margin: 0;
 
         color: #1b1d22;
@@ -1167,9 +1730,7 @@ content="#f3f4f6"
         font-weight: 950;
     }
 
-
     .experience-text {
-
         margin:
             6px 0 0;
 
@@ -1181,9 +1742,7 @@ content="#f3f4f6"
         white-space: pre-line;
     }
 
-
     .experience-date {
-
         display: block;
 
         margin-top: 9px;
@@ -1194,23 +1753,21 @@ content="#f3f4f6"
         font-weight: 750;
     }
 
-
     .experience-empty {
-
         padding:
-            28px 20px;
+            30px 20px;
 
         background:
             linear-gradient(
                 135deg,
                 #fafafa,
-                #f1f1f1
+                #eef0f2
             );
 
         color: #6f747c;
 
         border:
-            1px dashed #c9c9c9;
+            1px dashed #c6c9cd;
 
         border-radius: 16px;
 
@@ -1220,18 +1777,15 @@ content="#f3f4f6"
         text-align: center;
     }
 
-
     .experience-media-source {
-
         display: none !important;
     }
 
-
     .experience-missing-media {
-
         aspect-ratio: 4 / 5;
 
         display: grid;
+
         place-items: center;
 
         padding: 20px;
@@ -1243,14 +1797,12 @@ content="#f3f4f6"
                 #090a0d
             );
 
-        color: #fff4df;
+        color: #f1f2f4;
 
         text-align: center;
     }
 
-
     .experience-missing-media strong {
-
         display: block;
 
         font-size: 12px;
@@ -1259,9 +1811,7 @@ content="#f3f4f6"
         letter-spacing: .12em;
     }
 
-
     .experience-missing-media span {
-
         display: block;
 
         margin-top: 5px;
@@ -1283,7 +1833,6 @@ content="#f3f4f6"
     ===================================================== */
 
     .experience-viewer {
-
         position: fixed;
 
         inset: 0;
@@ -1301,18 +1850,14 @@ content="#f3f4f6"
             );
     }
 
-
     .experience-viewer.open {
-
         display: flex;
 
         align-items: center;
         justify-content: center;
     }
 
-
     .experience-viewer-stage {
-
         position: absolute;
 
         inset: 0;
@@ -1338,9 +1883,7 @@ content="#f3f4f6"
         -webkit-user-select: none;
     }
 
-
     .experience-viewer-media {
-
         width: 100%;
         height: 100%;
 
@@ -1362,15 +1905,12 @@ content="#f3f4f6"
         -webkit-user-select: none;
     }
 
-
-    .experience-viewer-stage video {
-
+    .experience-viewer-stage
+    video {
         object-fit: contain;
     }
 
-
     .experience-viewer-close {
-
         position: fixed;
 
         top:
@@ -1412,20 +1952,9 @@ content="#f3f4f6"
         font-weight: 950;
 
         cursor: pointer;
-
-        box-shadow:
-            0 7px 20px
-            rgba(
-                0,
-                0,
-                0,
-                .28
-            );
     }
 
-
     .experience-viewer-counter {
-
         position: fixed;
 
         top:
@@ -1462,15 +1991,11 @@ content="#f3f4f6"
         font-weight: 900;
     }
 
-
     .experience-viewer-counter[hidden] {
-
         display: none;
     }
 
-
     .experience-viewer-details {
-
         position: fixed;
 
         left: 50%;
@@ -1521,15 +2046,6 @@ content="#f3f4f6"
 
         border-radius: 15px;
 
-        box-shadow:
-            0 15px 40px
-            rgba(
-                0,
-                0,
-                0,
-                .30
-            );
-
         backdrop-filter:
             blur(14px);
 
@@ -1537,9 +2053,7 @@ content="#f3f4f6"
             blur(14px);
     }
 
-
     .viewer-rating {
-
         display: flex;
 
         align-items: center;
@@ -1548,15 +2062,11 @@ content="#f3f4f6"
         gap: 2px;
     }
 
-
     .viewer-rating[hidden] {
-
         display: none;
     }
 
-
     .viewer-star {
-
         color:
             rgba(
                 255,
@@ -1568,15 +2078,11 @@ content="#f3f4f6"
         font-size: 14px;
     }
 
-
     .viewer-star.filled {
-
         color: var(--gold);
     }
 
-
     .viewer-rating-number {
-
         margin-left: 6px;
 
         color: #ffffff;
@@ -1585,9 +2091,7 @@ content="#f3f4f6"
         font-weight: 950;
     }
 
-
     .viewer-swipe-hint {
-
         color:
             rgba(
                 255,
@@ -1606,15 +2110,11 @@ content="#f3f4f6"
         letter-spacing: .08em;
     }
 
-
     .viewer-swipe-hint[hidden] {
-
         display: none;
     }
 
-
     .viewer-restaurant-link {
-
         display: flex;
 
         width: 100%;
@@ -1630,8 +2130,8 @@ content="#f3f4f6"
         background:
             linear-gradient(
                 135deg,
-                #fff5e3,
-                #ecd7b3
+                #f0f1f3,
+                #d8dbe0
             );
 
         color: #161616;
@@ -1644,9 +2144,7 @@ content="#f3f4f6"
         text-decoration: none;
     }
 
-
     .viewer-restaurant-link[hidden] {
-
         display: none;
     }
 
@@ -1656,7 +2154,6 @@ content="#f3f4f6"
     ===================================================== */
 
     .share-status {
-
         min-height: 15px;
 
         margin:
@@ -1679,83 +2176,100 @@ content="#f3f4f6"
         display: none;
     }
 
-
     @media (
         max-width: 620px
     ) {
 
         .restaurant-page {
-
             width:
                 min(
                     100% - 18px,
-                    700px
+                    720px
                 );
 
             padding:
                 12px 0
-                110px;
+                112px;
         }
-
 
         .topbar {
-
-            border-radius: 14px;
-
             padding:
                 13px 14px;
+
+            border-radius: 14px;
         }
 
-
         .restaurant-brand {
-
             font-size: 17px;
         }
 
-
         .topbar-link {
-
             font-size: 12px;
         }
 
-
         .restaurant-card {
+            border-radius: 21px;
+        }
+
+        .restaurant-content {
+            padding:
+                23px 17px 24px;
+        }
+
+        .visit-grid {
+            grid-template-columns:
+                1fr;
+        }
+
+        .restaurant-actions {
+            grid-template-columns:
+                1fr;
+        }
+
+        .experience-section {
+            padding: 17px;
 
             border-radius: 20px;
         }
 
+        .experience-section-header {
+            align-items: flex-start;
 
-        .restaurant-content {
-
-            padding:
-                21px 17px 22px;
+            flex-direction: column;
         }
 
-
-        .restaurant-actions {
-
+        .featured-experience-layout {
             grid-template-columns:
                 1fr;
         }
 
-
-        .experience-section {
-
-            padding: 16px;
-
-            border-radius: 18px;
+        .featured-experience-media {
+            min-height: 320px;
         }
-
 
         .experience-grid {
-
             grid-template-columns:
                 1fr;
         }
 
+        .owner-hours-row {
+            grid-template-columns:
+                67px
+                1fr
+                1fr;
+
+            gap: 5px;
+        }
+
+        .owner-hours-closed {
+            grid-column:
+                2 / -1;
+
+            justify-content:
+                flex-end;
+        }
 
         .mobile-action-bar {
-
             position: fixed;
 
             left: 10px;
@@ -1788,14 +2302,14 @@ content="#f3f4f6"
 
             background:
                 rgba(
-                    252,
-                    252,
-                    252,
+                    245,
+                    246,
+                    247,
                     .94
                 );
 
             border:
-                1px solid #d7d7d7;
+                1px solid #cfd2d6;
 
             border-radius: 18px;
 
@@ -1815,10 +2329,8 @@ content="#f3f4f6"
                 blur(18px);
         }
 
-
         .mobile-action-bar a,
         .mobile-action-bar button {
-
             min-width: 0;
             min-height: 46px;
 
@@ -1848,9 +2360,7 @@ content="#f3f4f6"
             cursor: pointer;
         }
 
-
         .mobile-action-bar small {
-
             max-width: 100%;
 
             overflow: hidden;
@@ -1862,10 +2372,8 @@ content="#f3f4f6"
             text-overflow: ellipsis;
         }
 
-
         .mobile-action-bar
         .mobile-whatsapp {
-
             background:
                 linear-gradient(
                     135deg,
@@ -1884,6 +2392,53 @@ content="#f3f4f6"
 
 <body>
 
+{% set rating_ns =
+namespace(
+total=0,
+count=0
+)
+%}
+
+{% for rating_post in experience_posts %}
+
+```
+{% if rating_post.rating %}
+
+    {% set rating_ns.total =
+        rating_ns.total
+        + rating_post.rating
+    %}
+
+    {% set rating_ns.count =
+        rating_ns.count
+        \+ 1
+    %}
+
+{% endif %}
+```
+
+{% endfor %}
+
+{% if rating_ns.count > 0 %}
+
+```
+{% set restaurant_average_rating =
+    rating_ns.total
+    /
+    rating_ns.count
+%}
+```
+
+{% else %}
+
+```
+{% set restaurant_average_rating =
+    none
+%}
+```
+
+{% endif %}
+
 <div class="restaurant-page">
 
 <!-- =========================================
@@ -1892,7 +2447,7 @@ content="#f3f4f6"
 
 <div class="topbar">
 
-
+```
 <a
     href="{{ url_for('home') }}"
     class="restaurant-brand"
@@ -1907,7 +2462,7 @@ content="#f3f4f6"
 >
     ← Discover
 </a>
-
+```
 
 </div>
 
@@ -1917,7 +2472,7 @@ content="#f3f4f6"
 
 <article class="restaurant-card">
 
-
+```
 {% if advert.poster_image_url %}
 
     <div class="poster-shell">
@@ -1927,12 +2482,39 @@ content="#f3f4f6"
             alt="{{ advert.business_name }} restaurant advert"
         >
 
+
+        <div class="poster-brand-strip">
+
+            <div class="poster-brand-copy">
+
+                <strong class="poster-brand-name">
+                    {{ advert.business_name }}
+                </strong>
+
+
+                {% if advert.area %}
+
+                    <span class="poster-brand-area">
+                        📍 {{ advert.area }}
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
     </div>
 
 {% endif %}
 
 
 <div class="restaurant-content">
+
+
+    <span class="section-kicker">
+        Restaurant profile
+    </span>
 
 
     <h1 class="restaurant-name">
@@ -1949,6 +2531,110 @@ content="#f3f4f6"
     {% endif %}
 
 
+    <!-- =================================
+         RATING + OPEN STATUS
+    ================================== -->
+
+    <div class="restaurant-summary">
+
+
+        {% if restaurant_average_rating is not none %}
+
+            <div class="rating-summary">
+
+                <span class="rating-summary-star">
+                    ★
+                </span>
+
+
+                <span class="rating-summary-score">
+
+                    {{
+                        "%.1f"|format(
+                            restaurant_average_rating
+                        )
+                    }}
+
+                </span>
+
+
+                <span class="rating-summary-count">
+
+                    ·
+                    {{ rating_ns.count }}
+
+                    {% if rating_ns.count == 1 %}
+                        rating
+                    {% else %}
+                        ratings
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+        {% endif %}
+
+
+        <div
+            class="open-status-pill"
+            id="restaurant-open-status"
+        >
+
+            <span class="open-status-dot"></span>
+
+            <span id="restaurant-open-status-text">
+                Checking hours…
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================
+         CATEGORY TAGS
+    ================================== -->
+
+    <div class="restaurant-tags">
+
+
+        {% if restaurant_category_tags|default([]) %}
+
+            {% for tag in restaurant_category_tags %}
+
+                <span class="restaurant-tag">
+                    {{ tag }}
+                </span>
+
+            {% endfor %}
+
+
+        {% else %}
+
+            <span class="restaurant-tag">
+                Restaurant
+            </span>
+
+
+            <span class="restaurant-tag">
+                Local food
+            </span>
+
+
+            {% if advert.area %}
+
+                <span class="restaurant-tag">
+                    {{ advert.area }}
+                </span>
+
+            {% endif %}
+
+        {% endif %}
+
+    </div>
+
+
     {% if advert.description %}
 
         <div class="description">
@@ -1959,32 +2645,231 @@ content="#f3f4f6"
 
 
     <!-- =================================
-         LOCATION
+         VISIT
     ================================== -->
 
-    {% if advert.address or advert.area %}
+    {% if
+        advert.address
+        or
+        advert.area
+        or
+        restaurant_hours_payload|default({})
+    %}
 
-        <section class="location-box">
+        <section class="visit-card">
 
-            <span class="location-label">
-                📍 Location
+            <span class="section-kicker">
+                Visit
             </span>
 
 
-            {% if advert.address %}
+            <div class="visit-grid">
 
-                <div class="location-main">
-                    {{ advert.address }}
+
+                {% if advert.address or advert.area %}
+
+                    <div class="visit-block">
+
+                        <span class="visit-label">
+                            📍 Location
+                        </span>
+
+
+                        {% if advert.address %}
+
+                            <div class="visit-main">
+                                {{ advert.address }}
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if advert.area %}
+
+                            <span class="visit-sub">
+                                {{ advert.area }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="visit-block">
+
+                    <span class="visit-label">
+                        🕒 Today
+                    </span>
+
+
+                    <div
+                        class="visit-main"
+                        id="today-hours-main"
+                    >
+                        Hours not set
+                    </div>
+
+
+                    <span
+                        class="visit-sub"
+                        id="today-hours-sub"
+                    >
+                        Restaurant working hours
+                    </span>
+
                 </div>
 
-            {% endif %}
+            </div>
 
 
-            {% if advert.area %}
+            <!-- =============================
+                 PUBLIC HOURS LIST
+            ============================== -->
 
-                <span class="location-area">
-                    {{ advert.area }}
-                </span>
+            <div
+                class="hours-shell"
+                id="hours-shell"
+            >
+
+                <button
+                    type="button"
+                    class="hours-toggle"
+                    id="hours-toggle"
+                >
+
+                    <span>
+                        View full working hours
+                    </span>
+
+
+                    <span class="hours-toggle-arrow">
+                        ↓
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="hours-list"
+                    id="hours-list"
+                ></div>
+
+            </div>
+
+
+            <!-- =============================
+                 SUBSCRIBED OWNER HOURS EDITOR
+
+                 Backend should pass:
+
+                 can_manage_restaurant=True
+
+                 restaurant_hours_update_url=
+                 url_for(...)
+
+                 restaurant_hours_payload={
+                     "monday": {
+                         "open": "09:00",
+                         "close": "21:00",
+                         "closed": false
+                     },
+                     ...
+                 }
+            ============================== -->
+
+            {% if
+                can_manage_restaurant|default(false)
+                and
+                restaurant_hours_update_url|default('')
+            %}
+
+                <section class="owner-hours-card">
+
+                    <h3 class="owner-hours-title">
+                        Manage working hours
+                    </h3>
+
+
+                    <p class="owner-hours-copy">
+                        Keep your opening times accurate
+                        so customers know when to visit.
+                    </p>
+
+
+                    <form
+                        class="owner-hours-form"
+                        method="POST"
+                        action="{{ restaurant_hours_update_url }}"
+                        id="restaurant-hours-form"
+                    >
+
+
+                        {% for day in [
+                            'monday',
+                            'tuesday',
+                            'wednesday',
+                            'thursday',
+                            'friday',
+                            'saturday',
+                            'sunday'
+                        ] %}
+
+                            <div
+                                class="owner-hours-row"
+                                data-owner-hours-row="{{ day }}"
+                            >
+
+                                <span class="owner-hours-day">
+                                    {{ day|capitalize }}
+                                </span>
+
+
+                                <input
+                                    type="time"
+                                    name="{{ day }}_open"
+                                    data-hours-open="{{ day }}"
+                                    aria-label="{{ day|capitalize }} opening time"
+                                >
+
+
+                                <input
+                                    type="time"
+                                    name="{{ day }}_close"
+                                    data-hours-close="{{ day }}"
+                                    aria-label="{{ day|capitalize }} closing time"
+                                >
+
+
+                                <label class="owner-hours-closed">
+
+                                    <input
+                                        type="checkbox"
+                                        name="{{ day }}_closed"
+                                        value="1"
+                                        data-hours-closed="{{ day }}"
+                                    >
+
+                                    Closed
+
+                                </label>
+
+                            </div>
+
+                        {% endfor %}
+
+
+                        <button
+                            type="submit"
+                            class="owner-hours-save"
+                        >
+                            Save working hours
+                        </button>
+
+                    </form>
+
+                </section>
 
             {% endif %}
 
@@ -1997,82 +2882,86 @@ content="#f3f4f6"
          CONTACT & VISIT
     ================================== -->
 
-    <h2 class="actions-title">
-        CONTACT & VISIT
-    </h2>
+    <section class="actions-section">
+
+        <span class="section-kicker">
+            Contact & Visit
+        </span>
 
 
-    <div class="restaurant-actions">
+        <div class="restaurant-actions">
 
 
-        {% if directions_url %}
+            {% if directions_url %}
 
-            <a
-                href="{{ directions_url }}"
+                <a
+                    href="{{ directions_url }}"
+                    class="
+                        restaurant-action
+                        action-directions
+                    "
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    🧭 Directions
+                </a>
+
+            {% endif %}
+
+
+            {% if whatsapp_url %}
+
+                <a
+                    href="{{ whatsapp_url }}"
+                    class="
+                        restaurant-action
+                        action-whatsapp
+                    "
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    💬 WhatsApp
+                </a>
+
+            {% endif %}
+
+
+            {% if phone_url %}
+
+                <a
+                    href="{{ phone_url }}"
+                    class="
+                        restaurant-action
+                        action-call
+                    "
+                >
+                    ☎ Call
+                </a>
+
+            {% endif %}
+
+
+            <button
+                type="button"
                 class="
                     restaurant-action
-                    action-directions
+                    action-share
                 "
-                target="_blank"
-                rel="noopener noreferrer"
+                id="restaurant-share-button"
             >
-                🧭 Directions
-            </a>
+                ↗ Share
+            </button>
 
-        {% endif %}
-
-
-        {% if whatsapp_url %}
-
-            <a
-                href="{{ whatsapp_url }}"
-                class="
-                    restaurant-action
-                    action-whatsapp
-                "
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                💬 WhatsApp
-            </a>
-
-        {% endif %}
+        </div>
 
 
-        {% if phone_url %}
+        <div
+            class="share-status"
+            id="restaurant-share-status"
+            aria-live="polite"
+        ></div>
 
-            <a
-                href="{{ phone_url }}"
-                class="
-                    restaurant-action
-                    action-call
-                "
-            >
-                ☎ Call
-            </a>
-
-        {% endif %}
-
-
-        <button
-            type="button"
-            class="
-                restaurant-action
-                action-share
-            "
-            id="restaurant-share-button"
-        >
-            ↗ Share
-        </button>
-
-    </div>
-
-
-    <div
-        class="share-status"
-        id="restaurant-share-status"
-        aria-live="polite"
-    ></div>
+    </section>
 
 
     <!-- =================================
@@ -2113,7 +3002,7 @@ content="#f3f4f6"
 
 
 </div>
-
+```
 
 </article>
 
@@ -2123,10 +3012,15 @@ content="#f3f4f6"
 
 <section class="experience-section">
 
-
+```
 <div class="experience-section-header">
 
     <div>
+
+        <span class="section-kicker">
+            People love
+        </span>
+
 
         <h2>
             What People Love About {{ advert.business_name }}
@@ -2134,7 +3028,8 @@ content="#f3f4f6"
 
 
         <p>
-            Ratings and experiences from people who’ve been here.
+            Ratings, photos and real experiences
+            from people who’ve been here.
         </p>
 
     </div>
@@ -2156,6 +3051,176 @@ content="#f3f4f6"
 
 
 {% if experience_posts %}
+
+
+    <!-- =================================
+         FEATURED EXPERIENCE
+    ================================== -->
+
+    {% set featured_post =
+        experience_posts[0]
+    %}
+
+
+    {% set featured_media =
+        featured_post.media_items
+        if featured_post.media_items
+        else []
+    %}
+
+
+    {% set featured_primary =
+        featured_post.primary_media
+    %}
+
+
+    {% if featured_primary %}
+
+        <article class="featured-experience">
+
+            <span class="featured-experience-label">
+                Featured experience
+            </span>
+
+
+            <div class="featured-experience-layout">
+
+
+                <div class="featured-experience-media">
+
+
+                    <button
+                        type="button"
+                        class="experience-media-open"
+                        data-experience-open
+                        data-post-id="{{ featured_post.id }}"
+                        aria-label="View featured experience"
+                    >
+
+
+                        {% if featured_primary.is_video %}
+
+                            <video
+                                playsinline
+                                muted
+                                loop
+                                preload="metadata"
+                                controlslist="nodownload noremoteplayback"
+                                disablepictureinpicture
+                                oncontextmenu="return false;"
+                                {% if featured_primary.thumbnail_url %}
+                                    poster="{{ featured_primary.thumbnail_url }}"
+                                {% endif %}
+                            >
+
+                                <source
+                                    src="{{ featured_primary.media_url }}"
+                                >
+
+                            </video>
+
+
+                            <span class="experience-media-type">
+                                ▶ Reel
+                            </span>
+
+
+                        {% else %}
+
+                            <img
+                                src="{{ featured_primary.media_url }}"
+                                alt="{{ featured_post.poster_name }} at {{ advert.business_name }}"
+                                loading="eager"
+                            >
+
+                        {% endif %}
+
+
+                        {% if featured_post.media_count > 1 %}
+
+                            <span class="experience-media-count">
+                                ▣ {{ featured_post.media_count }}
+                            </span>
+
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+
+                <div class="featured-experience-copy">
+
+
+                    {% if featured_post.rating %}
+
+                        <div class="experience-rating">
+
+                            {% for star in range(1, 6) %}
+
+                                <span
+                                    class="
+                                        experience-star
+                                        {% if star <= featured_post.rating %}
+                                            filled
+                                        {% endif %}
+                                    "
+                                >
+                                    ★
+                                </span>
+
+                            {% endfor %}
+
+
+                            <span class="experience-rating-number">
+                                {{ featured_post.rating }}/5
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <p class="experience-name">
+                        {{ featured_post.poster_name }}
+                    </p>
+
+
+                    {% if featured_post.experience_text %}
+
+                        <p class="experience-text">
+                            “{{ featured_post.experience_text }}”
+                        </p>
+
+                    {% endif %}
+
+
+                    {% if featured_post.created_at_johannesburg %}
+
+                        <span class="experience-date">
+
+                            {{
+                                featured_post.created_at_johannesburg.strftime(
+                                    '%d %b %Y · %H:%M'
+                                )
+                            }}
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </article>
+
+    {% endif %}
+
+
+    <!-- =================================
+         ALL EXPERIENCES
+    ================================== -->
 
     <div class="experience-grid">
 
@@ -2188,14 +3253,18 @@ content="#f3f4f6"
 
                     <div
                         class="experience-media-source"
+
                         data-experience-media-source="{{ post.id }}"
+
                         data-experience-rating="{{ post.rating or '' }}"
+
                         data-restaurant-url="{{
                             url_for(
                                 'restaurant_page',
                                 advert_id=advert.id
                             )
                         }}"
+
                         data-restaurant-name="{{
                             advert.business_name
                         }}"
@@ -2221,10 +3290,6 @@ content="#f3f4f6"
 
                     <div class="experience-media">
 
-
-                        <!-- =============================
-                             LOVE
-                        ============================== -->
 
                         <button
                             type="button"
@@ -2262,10 +3327,6 @@ content="#f3f4f6"
                         </button>
 
 
-                        <!-- =============================
-                             CLICKABLE MEDIA
-                        ============================== -->
-
                         <button
                             type="button"
                             class="experience-media-open"
@@ -2285,19 +3346,13 @@ content="#f3f4f6"
                                     controlslist="nodownload noremoteplayback"
                                     disablepictureinpicture
                                     oncontextmenu="return false;"
-                                    {% if
-                                        primary_media.thumbnail_url
-                                    %}
-                                        poster="{{
-                                            primary_media.thumbnail_url
-                                        }}"
+                                    {% if primary_media.thumbnail_url %}
+                                        poster="{{ primary_media.thumbnail_url }}"
                                     {% endif %}
                                 >
 
                                     <source
-                                        src="{{
-                                            primary_media.media_url
-                                        }}"
+                                        src="{{ primary_media.media_url }}"
                                     >
 
                                 </video>
@@ -2311,9 +3366,7 @@ content="#f3f4f6"
                             {% else %}
 
                                 <img
-                                    src="{{
-                                        primary_media.media_url
-                                    }}"
+                                    src="{{ primary_media.media_url }}"
                                     alt="{{ post.poster_name }} at {{ advert.business_name }}"
                                     loading="lazy"
                                 >
@@ -2328,7 +3381,6 @@ content="#f3f4f6"
                                 </span>
 
                             {% endif %}
-
 
                         </button>
 
@@ -2360,10 +3412,6 @@ content="#f3f4f6"
                 <div class="experience-copy">
 
 
-                    <!-- =============================
-                         RATING
-                    ============================== -->
-
                     {% if post.rating %}
 
                         <div
@@ -2376,9 +3424,7 @@ content="#f3f4f6"
                                 <span
                                     class="
                                         experience-star
-                                        {% if
-                                            star <= post.rating
-                                        %}
+                                        {% if star <= post.rating %}
                                             filled
                                         {% endif %}
                                     "
@@ -2426,7 +3472,6 @@ content="#f3f4f6"
 
                     {% endif %}
 
-
                 </div>
 
             </article>
@@ -2451,7 +3496,7 @@ content="#f3f4f6"
     </div>
 
 {% endif %}
-
+```
 
 </section>
 
@@ -2470,24 +3515,22 @@ content="#f3f4f6"
     aria-label="Customer experience viewer"
 >
 
+```
 <button
-type="button"
-class="experience-viewer-close"
-id="experience-viewer-close"
-aria-label="Close media"
-
+    type="button"
+    class="experience-viewer-close"
+    id="experience-viewer-close"
+    aria-label="Close media"
 >
-
-
-×
-
-
+    ×
 </button>
+
 
 <div
     class="experience-viewer-stage"
     id="experience-viewer-stage"
 ></div>
+
 
 <div
     class="experience-viewer-counter"
@@ -2495,48 +3538,47 @@ aria-label="Close media"
     hidden
 ></div>
 
+
 <div class="experience-viewer-details">
 
 
-<div
-    class="viewer-rating"
-    id="viewer-rating"
-    hidden
->
+    <div
+        class="viewer-rating"
+        id="viewer-rating"
+        hidden
+    >
 
-    <span
-        id="viewer-stars"
-    ></span>
+        <span id="viewer-stars"></span>
 
 
-    <span
-        class="viewer-rating-number"
-        id="viewer-rating-number"
-    ></span>
+        <span
+            class="viewer-rating-number"
+            id="viewer-rating-number"
+        ></span>
 
-</div>
-
-
-<div
-    class="viewer-swipe-hint"
-    id="viewer-swipe-hint"
-    hidden
->
-    Swipe left or right
-</div>
+    </div>
 
 
-<a
-    href="#"
-    class="viewer-restaurant-link"
-    id="viewer-restaurant-link"
-    hidden
->
-    View restaurant →
-</a>
+    <div
+        class="viewer-swipe-hint"
+        id="viewer-swipe-hint"
+        hidden
+    >
+        Swipe left or right
+    </div>
 
+
+    <a
+        href="#"
+        class="viewer-restaurant-link"
+        id="viewer-restaurant-link"
+        hidden
+    >
+        View restaurant →
+    </a>
 
 </div>
+```
 
 </div>
 
@@ -2551,7 +3593,7 @@ aria-label="Close media"
 
 {% if directions_url %}
 
-
+```
 <a
     href="{{ directions_url }}"
     target="_blank"
@@ -2560,13 +3602,13 @@ aria-label="Close media"
     <span>🧭</span>
     <small>Directions</small>
 </a>
-
+```
 
 {% endif %}
 
 {% if whatsapp_url %}
 
-
+```
 <a
     href="{{ whatsapp_url }}"
     class="mobile-whatsapp"
@@ -2576,20 +3618,20 @@ aria-label="Close media"
     <span>💬</span>
     <small>WhatsApp</small>
 </a>
-
+```
 
 {% endif %}
 
 {% if phone_url %}
 
-
+```
 <a
     href="{{ phone_url }}"
 >
     <span>☎</span>
     <small>Call</small>
 </a>
-
+```
 
 {% endif %}
 
@@ -2599,17 +3641,837 @@ id="mobile-restaurant-share"
 
 >
 
-
+```
 <span>↗</span>
+```
 
-
-
+```
 <small>Share</small>
-
+```
 
 </button>
 
 </nav>
+
+<!-- =========================================
+     RESTAURANT HOURS DATA
+========================================== -->
+
+<script
+    id="restaurant-hours-data"
+    type="application/json"
+>
+    {{
+        restaurant_hours_payload
+        |default({})
+        |tojson
+    }}
+</script>
+
+<!-- =========================================
+     WORKING HOURS
+========================================== -->
+
+<script>
+
+(() => {
+
+    const dataElement =
+        document.getElementById(
+            "restaurant-hours-data"
+        );
+
+
+    const statusPill =
+        document.getElementById(
+            "restaurant-open-status"
+        );
+
+
+    const statusText =
+        document.getElementById(
+            "restaurant-open-status-text"
+        );
+
+
+    const todayMain =
+        document.getElementById(
+            "today-hours-main"
+        );
+
+
+    const todaySub =
+        document.getElementById(
+            "today-hours-sub"
+        );
+
+
+    const hoursList =
+        document.getElementById(
+            "hours-list"
+        );
+
+
+    const hoursShell =
+        document.getElementById(
+            "hours-shell"
+        );
+
+
+    const hoursToggle =
+        document.getElementById(
+            "hours-toggle"
+        );
+
+
+    let schedule =
+        {};
+
+
+    try {
+
+        schedule =
+            JSON.parse(
+                dataElement?.textContent
+                ||
+                "{}"
+            );
+
+    } catch {
+
+        schedule =
+            {};
+
+    }
+
+
+    const days =
+        [
+            "sunday",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+        ];
+
+
+    const displayDays =
+        [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ];
+
+
+    function normaliseDay(
+        value
+    ) {
+
+        if (!value) {
+
+            return {
+                open:
+                    "",
+
+                close:
+                    "",
+
+                closed:
+                    true,
+            };
+
+        }
+
+
+        if (
+            Array.isArray(
+                value
+            )
+        ) {
+
+            const first =
+                value[0]
+                ||
+                {};
+
+
+            return {
+                open:
+                    first.open
+                    ||
+                    first.open_time
+                    ||
+                    "",
+
+                close:
+                    first.close
+                    ||
+                    first.close_time
+                    ||
+                    "",
+
+                closed:
+                    Boolean(
+                        first.closed
+                    ),
+            };
+
+        }
+
+
+        return {
+
+            open:
+                value.open
+                ||
+                value.open_time
+                ||
+                "",
+
+            close:
+                value.close
+                ||
+                value.close_time
+                ||
+                "",
+
+            closed:
+                Boolean(
+                    value.closed
+                ),
+
+        };
+
+    }
+
+
+    function minutesFromTime(
+        value
+    ) {
+
+        if (
+            !value
+            ||
+            !value.includes(
+                ":"
+            )
+        ) {
+
+            return null;
+
+        }
+
+
+        const [
+            hour,
+            minute,
+        ] =
+            value
+                .split(":")
+                .map(Number);
+
+
+        if (
+            Number.isNaN(
+                hour
+            )
+            ||
+            Number.isNaN(
+                minute
+            )
+        ) {
+
+            return null;
+
+        }
+
+
+        return (
+            hour * 60
+            +
+            minute
+        );
+
+    }
+
+
+    function formatTime(
+        value
+    ) {
+
+        if (!value) {
+
+            return "";
+
+        }
+
+
+        const [
+            hourRaw,
+            minuteRaw,
+        ] =
+            value
+                .split(":")
+                .map(Number);
+
+
+        if (
+            Number.isNaN(
+                hourRaw
+            )
+            ||
+            Number.isNaN(
+                minuteRaw
+            )
+        ) {
+
+            return value;
+
+        }
+
+
+        const suffix =
+            hourRaw >= 12
+                ? "PM"
+                : "AM";
+
+
+        let hour =
+            hourRaw % 12;
+
+
+        if (
+            hour === 0
+        ) {
+
+            hour =
+                12;
+
+        }
+
+
+        return (
+            `${hour}:`
+            +
+            `${String(minuteRaw).padStart(2, "0")} `
+            +
+            suffix
+        );
+
+    }
+
+
+    function getJohannesburgClock() {
+
+        const parts =
+            new Intl.DateTimeFormat(
+                "en-US",
+                {
+                    timeZone:
+                        "Africa/Johannesburg",
+
+                    weekday:
+                        "long",
+
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit",
+
+                    hour12:
+                        false,
+                }
+            )
+            .formatToParts(
+                new Date()
+            );
+
+
+        const values =
+            {};
+
+
+        parts.forEach(
+            (part) => {
+
+                if (
+                    part.type
+                    !== "literal"
+                ) {
+
+                    values[
+                        part.type
+                    ] =
+                        part.value;
+
+                }
+
+            }
+        );
+
+
+        return {
+
+            day:
+                (
+                    values.weekday
+                    ||
+                    ""
+                )
+                .toLowerCase(),
+
+            minutes:
+                (
+                    Number(
+                        values.hour
+                    )
+                    * 60
+                )
+                +
+                Number(
+                    values.minute
+                ),
+
+        };
+
+    }
+
+
+    function renderPublicHours() {
+
+        if (!hoursList) {
+
+            return;
+
+        }
+
+
+        hoursList.innerHTML =
+            "";
+
+
+        days.forEach(
+            (
+                key,
+                index
+            ) => {
+
+                const data =
+                    normaliseDay(
+                        schedule[
+                            key
+                        ]
+                    );
+
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                row.className =
+                    "hours-row";
+
+
+                const day =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                day.className =
+                    "hours-day";
+
+
+                day.textContent =
+                    displayDays[
+                        index
+                    ];
+
+
+                const value =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                value.className =
+                    "hours-value";
+
+
+                if (
+                    data.closed
+                    ||
+                    !data.open
+                    ||
+                    !data.close
+                ) {
+
+                    value.textContent =
+                        "Closed";
+
+
+                    value.classList.add(
+                        "closed"
+                    );
+
+
+                } else {
+
+                    value.textContent =
+                        `${formatTime(data.open)} – ${formatTime(data.close)}`;
+
+                }
+
+
+                row.appendChild(
+                    day
+                );
+
+
+                row.appendChild(
+                    value
+                );
+
+
+                hoursList.appendChild(
+                    row
+                );
+
+            }
+        );
+
+    }
+
+
+    function updateOpenStatus() {
+
+        const keys =
+            Object.keys(
+                schedule
+                ||
+                {}
+            );
+
+
+        if (
+            !keys.length
+        ) {
+
+            if (statusText) {
+
+                statusText.textContent =
+                    "Hours not set";
+
+            }
+
+
+            if (todayMain) {
+
+                todayMain.textContent =
+                    "Hours not set";
+
+            }
+
+
+            if (todaySub) {
+
+                todaySub.textContent =
+                    "Restaurant has not published working hours yet.";
+
+            }
+
+
+            return;
+
+        }
+
+
+        const clock =
+            getJohannesburgClock();
+
+
+        const today =
+            normaliseDay(
+                schedule[
+                    clock.day
+                ]
+            );
+
+
+        const openMinutes =
+            minutesFromTime(
+                today.open
+            );
+
+
+        const closeMinutes =
+            minutesFromTime(
+                today.close
+            );
+
+
+        if (
+            today.closed
+            ||
+            openMinutes === null
+            ||
+            closeMinutes === null
+        ) {
+
+            statusPill
+                ?.classList
+                .remove(
+                    "open"
+                );
+
+
+            statusPill
+                ?.classList
+                .add(
+                    "closed"
+                );
+
+
+            if (statusText) {
+
+                statusText.textContent =
+                    "Closed today";
+
+            }
+
+
+            if (todayMain) {
+
+                todayMain.textContent =
+                    "Closed today";
+
+            }
+
+
+            if (todaySub) {
+
+                todaySub.textContent =
+                    "See full working hours below.";
+
+            }
+
+
+            return;
+
+        }
+
+
+        const overnight =
+            closeMinutes
+            <
+            openMinutes;
+
+
+        const openNow =
+            overnight
+                ? (
+                    clock.minutes
+                    >=
+                    openMinutes
+                    ||
+                    clock.minutes
+                    <
+                    closeMinutes
+                )
+                : (
+                    clock.minutes
+                    >=
+                    openMinutes
+                    &&
+                    clock.minutes
+                    <
+                    closeMinutes
+                );
+
+
+        if (todayMain) {
+
+            todayMain.textContent =
+                `${formatTime(today.open)} – ${formatTime(today.close)}`;
+
+        }
+
+
+        if (openNow) {
+
+            statusPill
+                ?.classList
+                .remove(
+                    "closed"
+                );
+
+
+            statusPill
+                ?.classList
+                .add(
+                    "open"
+                );
+
+
+            if (statusText) {
+
+                statusText.textContent =
+                    `Open now · Closes ${formatTime(today.close)}`;
+
+            }
+
+
+            if (todaySub) {
+
+                todaySub.textContent =
+                    "Currently open";
+
+            }
+
+
+        } else {
+
+            statusPill
+                ?.classList
+                .remove(
+                    "open"
+                );
+
+
+            statusPill
+                ?.classList
+                .add(
+                    "closed"
+                );
+
+
+            if (statusText) {
+
+                statusText.textContent =
+                    `Closed · Opens ${formatTime(today.open)}`;
+
+            }
+
+
+            if (todaySub) {
+
+                todaySub.textContent =
+                    "Currently closed";
+
+            }
+
+        }
+
+    }
+
+
+    function populateOwnerForm() {
+
+        days.forEach(
+            (day) => {
+
+                const data =
+                    normaliseDay(
+                        schedule[
+                            day
+                        ]
+                    );
+
+
+                const open =
+                    document.querySelector(
+                        `[data-hours-open="${day}"]`
+                    );
+
+
+                const close =
+                    document.querySelector(
+                        `[data-hours-close="${day}"]`
+                    );
+
+
+                const closed =
+                    document.querySelector(
+                        `[data-hours-closed="${day}"]`
+                    );
+
+
+                if (open) {
+
+                    open.value =
+                        data.open
+                        ||
+                        "";
+
+                }
+
+
+                if (close) {
+
+                    close.value =
+                        data.close
+                        ||
+                        "";
+
+                }
+
+
+                if (closed) {
+
+                    closed.checked =
+                        Boolean(
+                            data.closed
+                        );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    hoursToggle
+        ?.addEventListener(
+            "click",
+            () => {
+
+                hoursShell
+                    ?.classList
+                    .toggle(
+                        "open"
+                    );
+
+            }
+        );
+
+
+    renderPublicHours();
+
+
+    updateOpenStatus();
+
+
+    populateOwnerForm();
+
+
+    window.setInterval(
+        updateOpenStatus,
+        60000
+    );
+
+})();
+
+</script>
 
 <!-- =========================================
      RESTAURANT SHARE
@@ -2712,7 +4574,9 @@ id="mobile-restaurant-share"
         } catch (error) {
 
             if (
-                error?.name === "AbortError"
+                error?.name
+                ===
+                "AbortError"
             ) {
 
                 return;
@@ -2757,16 +4621,18 @@ id="mobile-restaurant-share"
     }
 
 
-    desktopButton?.addEventListener(
-        "click",
-        shareRestaurant
-    );
+    desktopButton
+        ?.addEventListener(
+            "click",
+            shareRestaurant
+        );
 
 
-    mobileButton?.addEventListener(
-        "click",
-        shareRestaurant
-    );
+    mobileButton
+        ?.addEventListener(
+            "click",
+            shareRestaurant
+        );
 
 })();
 
@@ -2972,10 +4838,6 @@ id="mobile-restaurant-share"
                 true;
 
 
-            /*
-             * User clicked the experience,
-             * so try playback with sound.
-             */
             element.muted =
                 false;
 
@@ -3043,7 +4905,9 @@ id="mobile-restaurant-share"
 
 
         if (
-            element.tagName === "VIDEO"
+            element.tagName
+            ===
+            "VIDEO"
         ) {
 
             element
@@ -3051,11 +4915,6 @@ id="mobile-restaurant-share"
                 .catch(
                     () => {
 
-                        /*
-                         * Browser fallback:
-                         * continue playing muted
-                         * if sound autoplay is blocked.
-                         */
                         element.muted =
                             true;
 
@@ -3073,7 +4932,9 @@ id="mobile-restaurant-share"
 
 
         const multiple =
-            currentItems.length > 1;
+            currentItems.length
+            >
+            1;
 
 
         if (counter) {
@@ -3358,11 +5219,6 @@ id="mobile-restaurant-share"
         );
 
 
-        /*
-         * Render after the viewer has opened.
-         * This keeps playback tied closely to
-         * the user's click.
-         */
         renderMedia();
 
     }
@@ -3479,7 +5335,9 @@ id="mobile-restaurant-share"
     function showPreviousMedia() {
 
         if (
-            currentItems.length < 2
+            currentItems.length
+            <
+            2
         ) {
 
             return;
@@ -3489,7 +5347,9 @@ id="mobile-restaurant-share"
 
         currentIndex =
             (
-                currentIndex - 1
+                currentIndex
+                -
+                1
                 +
                 currentItems.length
             )
@@ -3505,7 +5365,9 @@ id="mobile-restaurant-share"
     function showNextMedia() {
 
         if (
-            currentItems.length < 2
+            currentItems.length
+            <
+            2
         ) {
 
             return;
@@ -3515,7 +5377,9 @@ id="mobile-restaurant-share"
 
         currentIndex =
             (
-                currentIndex + 1
+                currentIndex
+                +
+                1
             )
             %
             currentItems.length;
@@ -3529,7 +5393,9 @@ id="mobile-restaurant-share"
     function handleSwipe() {
 
         if (
-            currentItems.length < 2
+            currentItems.length
+            <
+            2
         ) {
 
             return;
@@ -3578,7 +5444,9 @@ id="mobile-restaurant-share"
 
 
         if (
-            horizontalDistance < 0
+            horizontalDistance
+            <
+            0
         ) {
 
             showNextMedia();
@@ -3713,20 +5581,22 @@ id="mobile-restaurant-share"
         );
 
 
-    closeButton?.addEventListener(
-        "click",
-        closeExperienceViewer
-    );
+    closeButton
+        ?.addEventListener(
+            "click",
+            closeExperienceViewer
+        );
 
 
-    viewerRestaurantLink?.addEventListener(
-        "click",
-        (event) => {
+    viewerRestaurantLink
+        ?.addEventListener(
+            "click",
+            (event) => {
 
-            event.stopPropagation();
+                event.stopPropagation();
 
-        }
-    );
+            }
+        );
 
 
     document.addEventListener(
@@ -3745,21 +5615,27 @@ id="mobile-restaurant-share"
 
 
             if (
-                event.key === "Escape"
+                event.key
+                ===
+                "Escape"
             ) {
 
                 closeExperienceViewer();
 
 
             } else if (
-                event.key === "ArrowLeft"
+                event.key
+                ===
+                "ArrowLeft"
             ) {
 
                 showPreviousMedia();
 
 
             } else if (
-                event.key === "ArrowRight"
+                event.key
+                ===
+                "ArrowRight"
             ) {
 
                 showNextMedia();
@@ -3848,7 +5724,8 @@ id="mobile-restaurant-share"
                             );
 
 
-                        let result = {};
+                        let result =
+                            {};
 
 
                         try {
@@ -3858,7 +5735,8 @@ id="mobile-restaurant-share"
 
                         } catch {
 
-                            result = {};
+                            result =
+                                {};
 
                         }
 
