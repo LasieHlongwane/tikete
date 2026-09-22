@@ -353,14 +353,22 @@ def build_restaurant_hours_payload(
 
 # ============================================================
 
-def restaurant_can_be_managed_by_current_organizer(advert):
-    organizer_id = get_ticketing_organizer_id()
+def restaurant_can_be_managed_by_current_organizer(
+    advert,
+):
 
-    if not organizer_id:
+    current_organizer = (
+        get_current_organizer()
+    )
+
+    if not current_organizer:
         return False
 
-    return advert.organizer_id == organizer_id
-
+    return (
+        advert.organizer_id
+        ==
+        current_organizer.id
+    )
 
 # ============================================================
 
@@ -410,16 +418,16 @@ def update_restaurant_hours(
  require_ticketing_organizer()
 
 
- organizer_id = (
-    get_ticketing_organizer_id()
+ current_organizer = (
+    get_current_organizer()
  )
 
+ if not current_organizer:
+    abort(401)
 
- if not organizer_id:
-
-    abort(
-        401
-    )
+ organizer_id = (
+    current_organizer.id
+ )
 
 
 # --------------------------------------------------------
@@ -14962,12 +14970,21 @@ def restaurant_page(
       )
     )
 
+    current_organizer = (
+        get_current_organizer()
+    )
+
     current_organizer_id = (
-      get_ticketing_organizer_id()
+       current_organizer.id
+       if current_organizer
+       else None
     )
 
     can_manage_restaurant = False
 
+    current_organizer = (
+       get_current_organizer()
+    )
 
     if (
       current_organizer_id
