@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -726,171 +725,175 @@
 
 
     /* =====================================================
-       RESTAURANT GALLERY
+       RESTAURANT GALLERY BUTTON
     ===================================================== */
 
     .restaurant-gallery {
-        margin-top: 28px;
+        margin-top: 24px;
     }
 
-    .restaurant-gallery-header {
+    .restaurant-gallery-launch {
+        width: 100%;
+
         display: flex;
 
-        align-items: flex-end;
-        justify-content: space-between;
+        align-items: center;
 
-        gap: 14px;
+        gap: 13px;
 
-        margin-bottom: 12px;
+        padding:
+            15px 16px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #f7f8f9 0%,
+                #eceef1 100%
+            );
+
+        color: #1c1f24;
+
+        border:
+            1px solid #d4d7dc;
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 8px 20px
+            rgba(
+                15,
+                23,
+                42,
+                .05
+            );
+
+        text-align: left;
+
+        cursor: pointer;
+
+        transition:
+            transform .16s ease,
+            box-shadow .16s ease,
+            border-color .16s ease,
+            background .16s ease;
     }
 
-    .restaurant-gallery-eyebrow {
-        display: block;
+    .restaurant-gallery-launch:hover {
+        transform:
+            translateY(-1px);
 
-        margin-bottom: 5px;
+        border-color:
+            #bec3c9;
 
-        color: #777d85;
+        background:
+            linear-gradient(
+                135deg,
+                #ffffff 0%,
+                #f0f1f3 100%
+            );
 
-        font-size: 9px;
-        font-weight: 950;
-
-        letter-spacing: .16em;
-
-        text-transform: uppercase;
+        box-shadow:
+            0 12px 28px
+            rgba(
+                15,
+                23,
+                42,
+                .08
+            );
     }
 
-    .restaurant-gallery-title {
-        margin: 0;
-
-        color: #17191d;
-
-        font-size: 20px;
-        font-weight: 950;
-
-        letter-spacing: -.03em;
+    .restaurant-gallery-launch:active {
+        transform:
+            scale(.995);
     }
 
-    .restaurant-gallery-count {
+    .restaurant-gallery-launch-icon {
         flex:
             0 0 auto;
 
-        padding:
-            5px 9px;
+        width: 46px;
+        height: 46px;
 
-        background: #eceef1;
-        color: #5c626b;
-
-        border:
-            1px solid #d5d8dc;
-
-        border-radius: 999px;
-
-        font-size: 9px;
-        font-weight: 900;
-    }
-
-    .restaurant-gallery-grid {
         display: grid;
 
-        grid-template-columns:
-            repeat(
-                2,
-                minmax(
-                    0,
-                    1fr
-                )
-            );
-
-        gap: 8px;
-    }
-
-    .restaurant-gallery-item {
-        position: relative;
-
-        width: 100%;
-
-        min-height: 0;
-
-        overflow: hidden;
-
-        padding: 0;
-
-        background: #e5e7e9;
-
-        border:
-            1px solid #d5d8dc;
-
-        border-radius: 15px;
-
-        cursor: zoom-in;
-    }
-
-    .restaurant-gallery-item:first-child {
-        grid-column:
-            1 / -1;
-
-        aspect-ratio:
-            16 / 10;
-    }
-
-    .restaurant-gallery-item:not(:first-child) {
-        aspect-ratio:
-            1 / 1;
-    }
-
-    .restaurant-gallery-item img {
-        display: block;
-
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-
-        filter: none;
-        opacity: 1;
-
-        transition:
-            transform .25s ease;
-    }
-
-    .restaurant-gallery-item:hover img {
-        transform:
-            scale(1.025);
-    }
-
-    .restaurant-gallery-number {
-        position: absolute;
-
-        right: 9px;
-        bottom: 9px;
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-width: 27px;
-        height: 27px;
-
-        padding:
-            0 7px;
+        place-items: center;
 
         background:
-            rgba(
-                16,
-                18,
-                21,
-                .76
+            linear-gradient(
+                145deg,
+                #25282d,
+                #111316
             );
 
         color: #ffffff;
 
-        border-radius: 999px;
+        border-radius: 12px;
+
+        font-size: 18px;
+
+        box-shadow:
+            0 7px 16px
+            rgba(
+                15,
+                23,
+                42,
+                .14
+            );
+    }
+
+    .restaurant-gallery-launch-copy {
+        min-width: 0;
+
+        flex: 1;
+
+        display: flex;
+
+        flex-direction: column;
+    }
+
+    .restaurant-gallery-launch-eyebrow {
+        margin-bottom: 2px;
+
+        color: #7a8089;
 
         font-size: 8px;
         font-weight: 950;
 
-        pointer-events: none;
+        letter-spacing: .14em;
+
+        text-transform: uppercase;
+    }
+
+    .restaurant-gallery-launch-title {
+        color: #191c20;
+
+        font-size: 14px;
+        line-height: 1.25;
+
+        font-weight: 950;
+
+        letter-spacing: -.015em;
+    }
+
+    .restaurant-gallery-launch-meta {
+        margin-top: 3px;
+
+        color: #777d86;
+
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .restaurant-gallery-launch-arrow {
+        flex:
+            0 0 auto;
+
+        color: #696f78;
+
+        font-size: 28px;
+        font-weight: 500;
+
+        line-height: 1;
     }
 
 
@@ -1969,7 +1972,7 @@
                 0,
                 0,
                 0,
-                .94
+                .96
             );
 
         pointer-events: none;
@@ -1993,9 +1996,16 @@
         align-items: center;
         justify-content: center;
 
-        padding: 20px;
+        padding:
+            60px 62px 38px;
 
         overflow: hidden;
+
+        touch-action: pan-y;
+
+        user-select: none;
+
+        -webkit-user-select: none;
     }
 
     .restaurant-gallery-viewer-image {
@@ -2005,12 +2015,27 @@
         max-height: 100%;
 
         object-fit: contain;
+
+        border-radius: 4px;
+
+        -webkit-user-drag: none;
+
+        user-select: none;
+
+        -webkit-user-select: none;
     }
 
     .restaurant-gallery-viewer-close {
         position: fixed;
 
-        top: 16px;
+        top:
+            max(
+                16px,
+                env(
+                    safe-area-inset-top
+                )
+            );
+
         right: 16px;
 
         z-index: 1210;
@@ -2047,7 +2072,14 @@
     .restaurant-gallery-viewer-counter {
         position: fixed;
 
-        top: 19px;
+        top:
+            max(
+                19px,
+                env(
+                    safe-area-inset-top
+                )
+            );
+
         left: 50%;
 
         z-index: 1210;
@@ -2067,6 +2099,15 @@
             );
 
         color: #ffffff;
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .12
+            );
 
         border-radius: 999px;
 
@@ -2463,24 +2504,36 @@
                 flex-end;
         }
 
-        .restaurant-gallery-grid {
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
+        .restaurant-gallery-launch {
+            padding:
+                14px;
+        }
+
+        .restaurant-gallery-launch-icon {
+            width: 42px;
+            height: 42px;
+
+            border-radius: 11px;
+
+            font-size: 16px;
+        }
+
+        .restaurant-gallery-launch-title {
+            font-size: 13px;
+        }
+
+        .restaurant-gallery-launch-meta {
+            font-size: 8px;
         }
 
         .restaurant-gallery-viewer-stage {
-            padding: 10px;
+            padding:
+                58px 10px
+                24px;
         }
 
         .restaurant-gallery-nav {
-            width: 38px;
-            height: 48px;
+            display: none;
         }
 
         .mobile-action-bar {
@@ -2849,7 +2902,7 @@
 
 
             <!-- =================================
-                 RESTAURANT GALLERY
+                 RESTAURANT GALLERY BUTTON
             ================================== -->
 
             {% if advert.gallery_images %}
@@ -2857,63 +2910,58 @@
                 <section class="restaurant-gallery">
 
 
-                    <div class="restaurant-gallery-header">
+                    <button
+                        type="button"
+                        class="restaurant-gallery-launch"
+                        data-restaurant-gallery-open
+                        data-gallery-index="0"
+                        aria-label="See inside {{ advert.business_name }}"
+                    >
 
-                        <div>
 
-                            <span class="restaurant-gallery-eyebrow">
+                        <span class="restaurant-gallery-launch-icon">
+                            ▣
+                        </span>
+
+
+                        <span class="restaurant-gallery-launch-copy">
+
+
+                            <span class="restaurant-gallery-launch-eyebrow">
                                 INSIDE THE PLACE
                             </span>
 
 
-                            <h2 class="restaurant-gallery-title">
-                                See {{ advert.business_name }}
-                            </h2>
-
-                        </div>
+                            <strong class="restaurant-gallery-launch-title">
+                                See inside the place
+                            </strong>
 
 
-                        <span class="restaurant-gallery-count">
+                            <span class="restaurant-gallery-launch-meta">
 
-                            {{ advert.gallery_images|length }}
+                                {{ advert.gallery_images|length }}
 
-                            photo{% if advert.gallery_images|length != 1 %}s{% endif %}
+                                photo{% if advert.gallery_images|length != 1 %}s{% endif %}
+
+                                · Swipe to explore
+
+                            </span>
+
 
                         </span>
 
-                    </div>
+
+                        <span class="restaurant-gallery-launch-arrow">
+                            ›
+                        </span>
 
 
-                    <div class="restaurant-gallery-grid">
+                    </button>
 
 
-                        {% for image in advert.gallery_images %}
-
-                            <button
-                                type="button"
-                                class="restaurant-gallery-item"
-                                data-restaurant-gallery-open
-                                data-gallery-index="{{ loop.index0 }}"
-                                aria-label="View restaurant photo {{ loop.index }}"
-                            >
-
-                                <img
-                                    src="{{ image.image_url }}"
-                                    alt="{{ advert.business_name }} photo {{ loop.index }}"
-                                    loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
-                                >
-
-
-                                <span class="restaurant-gallery-number">
-                                    {{ loop.index }}
-                                </span>
-
-                            </button>
-
-                        {% endfor %}
-
-                    </div>
-
+                    <!-- =================================
+                         HIDDEN RESTAURANT GALLERY DATA
+                    ================================== -->
 
                     <div
                         id="restaurant-gallery-data"
@@ -3741,6 +3789,7 @@
             restaurant-gallery-prev
         "
         id="restaurant-gallery-prev"
+        aria-label="Previous photo"
     >
         ‹
     </button>
@@ -3759,6 +3808,7 @@
             restaurant-gallery-next
         "
         id="restaurant-gallery-next"
+        aria-label="Next photo"
     >
         ›
     </button>
@@ -4653,19 +4703,25 @@
         .filter(Boolean);
 
 
+    if (!images.length) {
+        return;
+    }
+
+
     let currentIndex = 0;
 
     let touchStartX = 0;
 
+    let touchStartY = 0;
+
     let touchEndX = 0;
+
+    let touchEndY = 0;
+
+    const SWIPE_THRESHOLD = 45;
 
 
     function renderImage() {
-
-        if (!images.length) {
-            return;
-        }
-
 
         currentIndex =
             (
@@ -4704,6 +4760,10 @@
                 +
                 1
             );
+
+
+        image.draggable =
+            false;
 
 
         stage.appendChild(
@@ -4753,8 +4813,18 @@
         index
     ) {
 
+        const requestedIndex =
+            Number(
+                index
+            );
+
+
         currentIndex =
-            index;
+            Number.isInteger(
+                requestedIndex
+            )
+                ? requestedIndex
+                : 0;
 
 
         renderImage();
@@ -4774,6 +4844,9 @@
         document.body.classList.add(
             "modal-open"
         );
+
+
+        closeButton?.focus();
 
     }
 
@@ -4796,7 +4869,14 @@
         );
 
 
-        stage.innerHTML = "";
+        stage.innerHTML =
+            "";
+
+
+        touchStartX = 0;
+        touchStartY = 0;
+        touchEndX = 0;
+        touchEndY = 0;
 
     }
 
@@ -4819,6 +4899,74 @@
     }
 
 
+    function handleSwipe() {
+
+        if (
+            images.length
+            <
+            2
+        ) {
+
+            return;
+
+        }
+
+
+        const horizontalDistance =
+            touchEndX
+            -
+            touchStartX;
+
+
+        const verticalDistance =
+            touchEndY
+            -
+            touchStartY;
+
+
+        if (
+            Math.abs(
+                horizontalDistance
+            )
+            <
+            SWIPE_THRESHOLD
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            Math.abs(
+                verticalDistance
+            )
+            >
+            Math.abs(
+                horizontalDistance
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            horizontalDistance < 0
+        ) {
+
+            next();
+
+        } else {
+
+            previous();
+
+        }
+
+    }
+
+
     document
         .querySelectorAll(
             "[data-restaurant-gallery-open]"
@@ -4831,9 +4979,7 @@
                     () => {
 
                         openGallery(
-                            Number(
-                                button.dataset.galleryIndex
-                            )
+                            button.dataset.galleryIndex
                         );
 
                     }
@@ -4868,14 +5014,35 @@
         "touchstart",
         (event) => {
 
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+
+                return;
+
+            }
+
+
             touchStartX =
                 event.touches[
                     0
                 ].clientX;
 
 
+            touchStartY =
+                event.touches[
+                    0
+                ].clientY;
+
+
             touchEndX =
                 touchStartX;
+
+
+            touchEndY =
+                touchStartY;
 
         },
         {
@@ -4888,10 +5055,27 @@
         "touchmove",
         (event) => {
 
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+
+                return;
+
+            }
+
+
             touchEndX =
                 event.touches[
                     0
                 ].clientX;
+
+
+            touchEndY =
+                event.touches[
+                    0
+                ].clientY;
 
         },
         {
@@ -4904,31 +5088,28 @@
         "touchend",
         () => {
 
-            const distance =
-                touchEndX
-                -
-                touchStartX;
+            handleSwipe();
 
+
+            touchStartX = 0;
+            touchStartY = 0;
+            touchEndX = 0;
+            touchEndY = 0;
+
+        }
+    );
+
+
+    viewer.addEventListener(
+        "click",
+        (event) => {
 
             if (
-                Math.abs(
-                    distance
-                )
-                >=
-                45
+                event.target
+                === viewer
             ) {
 
-                if (
-                    distance < 0
-                ) {
-
-                    next();
-
-                } else {
-
-                    previous();
-
-                }
+                closeGallery();
 
             }
 
