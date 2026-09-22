@@ -289,7 +289,7 @@ def parse_restaurant_time(
 # ============================================================
 
 def build_restaurant_hours_payload(
-advert,
+  advert,
 ):
 
 
@@ -308,19 +308,19 @@ Example:
 }
 """
 
-payload = {}
+  payload = {}
 
 
-existing_hours = {
+  existing_hours = {
     opening_hour.day_of_week:
         opening_hour
 
     for opening_hour
     in advert.opening_hours
-}
+  }
 
 
-for day in RESTAURANT_WEEKDAYS:
+  for day in RESTAURANT_WEEKDAYS:
 
     opening_hour = (
         existing_hours.get(
@@ -358,7 +358,7 @@ for day in RESTAURANT_WEEKDAYS:
     )
 
 
-return payload
+  return payload
 
 
 # ============================================================
@@ -368,7 +368,7 @@ return payload
 # ============================================================
 
 def restaurant_can_be_managed_by_current_organizer(
-advert,
+  advert,
 ):
 
 
@@ -377,21 +377,21 @@ Only the organizer that owns this RestaurantAdvert
 may manage it.
 """
 
-organizer_id = (
+  organizer_id = (
     get_ticketing_organizer_id()
-)
+  )
 
 
-if not organizer_id:
+  if not organizer_id:
 
     return False
 
 
-return (
+  return (
     advert.organizer_id
     ==
     organizer_id
-)
+  )
 
 
 # ============================================================
@@ -401,23 +401,23 @@ return (
 # ============================================================
 
 def restaurant_has_active_subscription(
-advert,
+  advert,
 ):
 
 
-organizer = (
+  organizer = (
     advert.organizer
-)
+  )
 
 
-if not organizer:
+  if not organizer:
 
     return False
 
 
-return bool(
+  return bool(
     organizer.is_subscription_active
-)
+  )
 
 
 # ============================================================
@@ -427,11 +427,11 @@ return bool(
 # ============================================================
 
 @app.route(
-"/restaurant/[int:advert_id](int:advert_id)/hours",
-methods=["POST"],
+ "/restaurant/[int:advert_id](int:advert_id)/hours",
+  methods=["POST"],
 )
 def update_restaurant_hours(
-advert_id,
+ advert_id,
 ):
 
 
@@ -439,15 +439,15 @@ advert_id,
 # REQUIRE ORGANIZER LOGIN
 # --------------------------------------------------------
 
-require_ticketing_organizer()
+ require_ticketing_organizer()
 
 
-organizer_id = (
+ organizer_id = (
     get_ticketing_organizer_id()
-)
+ )
 
 
-if not organizer_id:
+ if not organizer_id:
 
     abort(
         401
@@ -458,24 +458,24 @@ if not organizer_id:
 # FIND RESTAURANT
 # --------------------------------------------------------
 
-advert = (
+ advert = (
     RestaurantAdvert.query
     .filter_by(
         id=advert_id
     )
     .first_or_404()
-)
+ )
 
 
 # --------------------------------------------------------
 # OWNERSHIP CHECK
 # --------------------------------------------------------
 
-if (
+ if (
     advert.organizer_id
     !=
     organizer_id
-):
+ ):
 
     abort(
         403
@@ -486,11 +486,11 @@ if (
 # SUBSCRIPTION CHECK
 # --------------------------------------------------------
 
-if (
+ if (
     not advert.organizer
     or
     not advert.organizer.is_subscription_active
-):
+ ):
 
     flash(
         (
@@ -513,7 +513,7 @@ if (
 # EXISTING HOURS
 # --------------------------------------------------------
 
-existing_hours = {
+ existing_hours = {
 
     opening_hour.day_of_week:
         opening_hour
@@ -526,14 +526,14 @@ existing_hours = {
     )
     .all()
 
-}
+ }
 
 
 # --------------------------------------------------------
 # UPDATE ALL 7 DAYS
 # --------------------------------------------------------
 
-try:
+ try:
 
     for day in RESTAURANT_WEEKDAYS:
 
@@ -671,7 +671,7 @@ try:
     db.session.commit()
 
 
-except ValueError as error:
+ except ValueError as error:
 
     db.session.rollback()
 
@@ -692,7 +692,7 @@ except ValueError as error:
     )
 
 
-except Exception as error:
+ except Exception as error:
 
     db.session.rollback()
 
@@ -723,34 +723,34 @@ except Exception as error:
     )
 
 
-flash(
+ flash(
     "Restaurant working hours updated.",
     "success",
-)
+ )
 
 
-return redirect(
+ return redirect(
     url_for(
         "restaurant_page",
         advert_id=advert.id,
     )
-)
+ )
 
 
 # ============================================================
 # RESTAURANT CAMPAIGN SCHEDULING
 # ============================================================
 
-RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
+ RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
     "7": 7,
     "14": 14,
     "30": 30,
-}
+ }
 
 
-def parse_restaurant_campaign_date(
+ def parse_restaurant_campaign_date(
     value,
-):
+ ):
 
     value = (
         str(
@@ -780,7 +780,6 @@ def parse_restaurant_campaign_date(
     except ValueError:
 
         return None
-
 
 def build_restaurant_campaign_schedule(
     form,
