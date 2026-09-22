@@ -2801,18 +2801,13 @@ def restaurant_has_active_subscription(
   )
 
 
-# ============================================================
-
-# UPDATE RESTAURANT HOURS
-
-# ============================================================
 
 @app.route(
- "/restaurant/[int:advert_id](int:advert_id)/hours",
-  methods=["POST"],
+    "/restaurant/<int:advert_id>/hours",
+    methods=["POST"],
 )
 def update_restaurant_hours(
- advert_id,
+    advert_id,
 ):
 
 
