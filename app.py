@@ -3186,6 +3186,13 @@ def parse_restaurant_campaign_date(value):
     except (TypeError, ValueError):
         return None
 
+RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
+    "7": 7,
+    "14": 14,
+    "30": 30,
+}
+
+
 def build_restaurant_campaign_schedule(
     form,
     organizer,
