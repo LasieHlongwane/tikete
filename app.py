@@ -248,46 +248,40 @@ RESTAURANT_WEEKDAYS = (
 # ============================================================
 
 def parse_restaurant_time(
-raw_value,
+    raw_value,
 ):
 
+    """
+    Convert HTML <input type="time"> values such as:
 
-"""
-Convert HTML <input type="time"> values such as:
+        09:00
+        21:30
 
-    09:00
-    21:30
+    into Python datetime.time objects.
+    """
 
-into Python datetime.time objects.
-"""
+    raw_value = (
+        raw_value
+        or
+        ""
+    ).strip()
 
-raw_value = (
-    raw_value
-    or
-    ""
-).strip()
+    if not raw_value:
 
+        return None
 
-if not raw_value:
+    try:
 
-    return None
+        return datetime.strptime(
+            raw_value,
+            "%H:%M",
+        ).time()
 
+    except ValueError:
 
-try:
-
-    return datetime.strptime(
-        raw_value,
-        "%H:%M",
-    ).time()
-
-
-except ValueError:
-
-    raise ValueError(
-        f"Invalid time value: {raw_value}"
-    )
-
-
+        raise ValueError(
+            f"Invalid time value: {raw_value}"
+        )
 # ============================================================
 
 # RESTAURANT HOURS PAYLOAD
