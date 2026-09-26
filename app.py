@@ -14977,6 +14977,10 @@ def create_restaurant_rating_qr(
 # PUBLIC RESTAURANT RATING QR PAGE
 # ============================================================
 
+# ============================================================
+# PUBLIC RESTAURANT RATING QR
+# ============================================================
+
 @app.route(
     "/r/<string:public_code>"
 )
@@ -14985,7 +14989,7 @@ def restaurant_rating_qr_page(
 ):
 
     # ========================================================
-    # QR RECORD
+    # FIND ACTIVE QR
     # ========================================================
 
     restaurant_qr = (
@@ -15072,17 +15076,23 @@ def restaurant_rating_qr_page(
 
 
     # ========================================================
-    # RENDER CUSTOMER RATING PAGE
+    # SEND CUSTOMER TO EXISTING EXPERIENCE FORM
+    # ========================================================
+    #
+    # Your restaurant_experience_form.html already reads:
+    #
+    # request.args.get("restaurant_id")
+    #
+    # Therefore the restaurant scanned through the QR is
+    # automatically selected in the existing form.
     # ========================================================
 
-    return render_template(
-        "restaurant_rating.html",
-
-        advert=
-            advert,
-
-        restaurant_qr=
-            restaurant_qr,
+    return redirect(
+        url_for(
+            "restaurant_experience_form",
+            restaurant_id=
+                advert.id,
+        )
     )
 # ============================================================
 # RESTAURANT RATING QR HELPERS
