@@ -15206,6 +15206,10 @@ def get_or_create_restaurant_main_qr(
 # ============================================================
 # PUBLIC - POST RESTAURANT EXPERIENCE
 # ============================================================
+# ============================================================
+# PUBLIC - POST RESTAURANT EXPERIENCE
+# ============================================================
+
 @app.route(
     "/experiences/new",
     methods=[
@@ -15224,6 +15228,60 @@ def create_restaurant_experience():
     )
 
 
+    # ========================================================
+    # QR / PRESELECTED RESTAURANT
+    # ========================================================
+    #
+    # Normal visitor:
+    #
+    #   /experiences/new
+    #
+    # QR visitor:
+    #
+    #   /experiences/new?restaurant_id=12
+    #
+    # The QR flow identifies the restaurant before the
+    # customer reaches this page.
+    # ========================================================
+
+    preselected_restaurant = None
+
+
+    preselected_restaurant_id = (
+        request.args.get(
+            "restaurant_id",
+            type=int,
+        )
+    )
+
+
+    if preselected_restaurant_id:
+
+        possible_restaurant = (
+            RestaurantAdvert.query
+
+            .filter_by(
+                id=
+                    preselected_restaurant_id
+            )
+
+            .first()
+        )
+
+
+        if restaurant_can_receive_experience_posts(
+            possible_restaurant
+        ):
+
+            preselected_restaurant = (
+                possible_restaurant
+            )
+
+
+    # ========================================================
+    # POST
+    # ========================================================
+
     if request.method == "POST":
 
         # ====================================================
@@ -15238,42 +15296,59 @@ def create_restaurant_experience():
             .strip()
         )
 
-        rating_raw = request.form.get(
-          "rating",
-          ""
-        ).strip()
+
+        rating_raw = (
+            request.form.get(
+                "rating",
+                "",
+            )
+            .strip()
+        )
 
 
         try:
 
-         rating = int(
-          rating_raw
-         )
+            rating = int(
+                rating_raw
+            )
 
         except (
-         TypeError,
-         ValueError,
+            TypeError,
+            ValueError,
         ):
 
-         rating = 0
+            rating = 0
 
+
+        # ====================================================
+        # RATING
+        # ====================================================
 
         if rating not in {
-         1,
-         2,
-         3,
-         4,
-         5,
+            1,
+            2,
+            3,
+            4,
+            5,
         }:
 
-         flash(
-          "Please choose a rating between 1 and 5 stars.",
-          "error",
-         )
+            flash(
+                (
+                    "Please choose a rating "
+                    "between 1 and 5 stars."
+                ),
+                "error",
+            )
 
-         return redirect(
-          request.url
-         )
+            return render_template(
+                "restaurant_experience_form.html",
+
+                restaurants=
+                    restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
+            )
 
 
         experience_text = (
@@ -15295,15 +15370,6 @@ def create_restaurant_experience():
 
         # ====================================================
         # MULTIPLE MEDIA FILES
-        # ====================================================
-        #
-        # HTML input must use:
-        #
-        # name="experience_media"
-        # multiple
-        #
-        # Flask then receives every selected file through
-        # request.files.getlist().
         # ====================================================
 
         media_files = [
@@ -15338,6 +15404,9 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
@@ -15361,6 +15430,9 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
@@ -15383,6 +15455,9 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
@@ -15406,6 +15481,9 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
@@ -15425,6 +15503,9 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
@@ -15460,6 +15541,26 @@ def create_restaurant_experience():
 
 
         # ====================================================
+        # QR RESTAURANT SAFETY
+        # ====================================================
+        #
+        # If this request came from a QR-preselected
+        # restaurant, prevent the submitted restaurant ID
+        # from being changed to another restaurant.
+        # ====================================================
+
+        if (
+            preselected_restaurant
+            and
+            advert.id
+            !=
+            preselected_restaurant.id
+        ):
+
+            abort(400)
+
+
+        # ====================================================
         # MEDIA REQUIRED
         # ====================================================
 
@@ -15478,11 +15579,14 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
         # ====================================================
-        # DETERMINE TYPES
+        # DETERMINE MEDIA TYPES
         # ====================================================
 
         media_types = []
@@ -15513,6 +15617,9 @@ def create_restaurant_experience():
 
                     restaurants=
                         restaurants,
+
+                    preselected_restaurant=
+                        preselected_restaurant,
                 )
 
 
@@ -15541,7 +15648,8 @@ def create_restaurant_experience():
 
         if (
             image_count > 0
-            and video_count > 0
+            and
+            video_count > 0
         ):
 
             flash(
@@ -15558,6 +15666,9 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
 
@@ -15585,6 +15696,9 @@ def create_restaurant_experience():
 
                     restaurants=
                         restaurants,
+
+                    preselected_restaurant=
+                        preselected_restaurant,
                 )
 
 
@@ -15614,11 +15728,14 @@ def create_restaurant_experience():
 
                     restaurants=
                         restaurants,
+
+                    preselected_restaurant=
+                        preselected_restaurant,
                 )
 
 
         # ====================================================
-        # VALIDATE FILE SIZES BEFORE UPLOADING ANYTHING
+        # VALIDATE FILE SIZES BEFORE UPLOAD
         # ====================================================
 
         prepared_media = []
@@ -15677,6 +15794,9 @@ def create_restaurant_experience():
 
                         restaurants=
                             restaurants,
+
+                        preselected_restaurant=
+                            preselected_restaurant,
                     )
 
 
@@ -15700,6 +15820,9 @@ def create_restaurant_experience():
 
                         restaurants=
                             restaurants,
+
+                        preselected_restaurant=
+                            preselected_restaurant,
                     )
 
 
@@ -15730,7 +15853,7 @@ def create_restaurant_experience():
         try:
 
             # =================================================
-            # CREATE PARENT POST FIRST IN MEMORY
+            # CREATE EXPERIENCE POST
             # =================================================
 
             experience_post = (
@@ -15745,7 +15868,8 @@ def create_restaurant_experience():
                     experience_text=
                         experience_text,
 
-                    rating=rating,
+                    rating=
+                        rating,
 
                     moderation_status=
                         "pending",
@@ -15761,12 +15885,12 @@ def create_restaurant_experience():
             )
 
 
-            # Gives us experience_post.id without committing.
+            # Get post ID before final commit.
             db.session.flush()
 
 
             # =================================================
-            # UPLOAD EACH MEDIA ITEM
+            # UPLOAD MEDIA
             # =================================================
 
             for item in prepared_media:
@@ -15858,8 +15982,6 @@ def create_restaurant_experience():
                     )
 
 
-                # Keep enough information to delete it
-                # if anything later fails.
                 uploaded_assets.append(
                     {
                         "public_id":
@@ -15871,14 +15993,8 @@ def create_restaurant_experience():
                 )
 
 
-                duration_seconds = (
-                    None
-                )
-
-
-                thumbnail_url = (
-                    None
-                )
+                duration_seconds = None
+                thumbnail_url = None
 
 
                 # =============================================
@@ -15952,7 +16068,7 @@ def create_restaurant_experience():
 
 
                 # =============================================
-                # CREATE MEDIA ROW
+                # MEDIA DATABASE ROW
                 # =============================================
 
                 media_record = (
@@ -16004,20 +16120,20 @@ def create_restaurant_experience():
 
 
             # =================================================
-            # SAVE EVERYTHING TOGETHER
+            # SAVE EVERYTHING
             # =================================================
 
             db.session.commit()
 
 
+        # ====================================================
+        # VALIDATION / VIDEO FAILURE
+        # ====================================================
+
         except ValueError as error:
 
             db.session.rollback()
 
-
-            # =================================================
-            # REMOVE CLOUDINARY FILES
-            # =================================================
 
             for asset in uploaded_assets:
 
@@ -16061,17 +16177,20 @@ def create_restaurant_experience():
 
                 restaurants=
                     restaurants,
+
+                preselected_restaurant=
+                    preselected_restaurant,
             )
 
+
+        # ====================================================
+        # GENERAL FAILURE
+        # ====================================================
 
         except Exception as error:
 
             db.session.rollback()
 
-
-            # =================================================
-            # REMOVE ALL SUCCESSFULLY-UPLOADED FILES
-            # =================================================
 
             for asset in uploaded_assets:
 
@@ -16125,7 +16244,13 @@ def create_restaurant_experience():
 
             return redirect(
                 url_for(
-                    "create_restaurant_experience"
+                    "create_restaurant_experience",
+
+                    restaurant_id=(
+                        preselected_restaurant.id
+                        if preselected_restaurant
+                        else None
+                    ),
                 )
             )
 
@@ -16145,7 +16270,10 @@ def create_restaurant_experience():
 
         return redirect(
             url_for(
-                "home"
+                "restaurant_page",
+
+                advert_id=
+                    advert.id,
             )
         )
 
@@ -16159,6 +16287,9 @@ def create_restaurant_experience():
 
         restaurants=
             restaurants,
+
+        preselected_restaurant=
+            preselected_restaurant,
     )
 # ============================================================
 # PUBLIC - LOVE / UNLOVE RESTAURANT EXPERIENCE
