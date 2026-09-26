@@ -15148,6 +15148,28 @@ def create_restaurant_rating_qr(
 
 
 
+@app.route("/experiences/thank-you")
+def restaurant_experience_thank_you():
+
+    restaurant_id = request.args.get(
+        "restaurant_id",
+        type=int,
+    )
+
+    restaurant = None
+
+    if restaurant_id:
+        restaurant = (
+            RestaurantAdvert.query
+            .filter_by(id=restaurant_id)
+            .first()
+        )
+
+    return render_template(
+        "restaurant_experience_thank_you.html",
+        restaurant=restaurant,
+    )
+
 # ============================================================
 # PUBLIC RESTAURANT RATING QR PAGE
 # ============================================================
