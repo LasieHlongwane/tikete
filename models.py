@@ -3920,6 +3920,16 @@ class RestaurantAdvert(db.Model):
             "RestaurantGalleryImage.id.asc()"
         ),
     )
+    
+    
+    rating_qr_codes = db.relationship(
+        "RestaurantRatingQRCode",
+        back_populates="restaurant_advert",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="RestaurantRatingQRCode.created_at.asc()",
+    )
+    
 
     # ========================================================
     # CAMPAIGN STATUS
@@ -5195,3 +5205,184 @@ class RestaurantOpeningHour(db.Model):
         f"day={self.day_of_week}>"
       )
 
+
+# ============================================================
+# RESTAURANT RATING QR CODE
+# ============================================================
+#
+# Permanent QR access point for a restaurant.
+#
+# Customers scan this QR while physically at the restaurant.
+#
+# Example:
+#
+# https://tickets.kalxa.co.za/r/KX-A7F92C
+#
+# One restaurant can eventually have multiple QR codes:
+#
+# - main
+# - entrance
+# - counter
+# - receipt
+# - table
+#
+# For the MVP we will create one "main" QR per restaurant.
+# ============================================================
+
+class RestaurantRatingQRCode(db.Model):
+
+    __tablename__ = "restaurant_rating_qr_codes"
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # PUBLIC QR CODE
+    # ========================================================
+    #
+    # Random public identifier.
+    #
+    # We deliberately do NOT expose the restaurant database ID
+    # in the public QR URL.
+    #
+    # Example:
+    #
+    # KX-A7F92C
+    # ========================================================
+
+    public_code = db.Column(
+        db.String(40),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # QR LOCATION / TYPE
+    # ========================================================
+    #
+    # MVP:
+    #
+    # main
+    #
+    # Future examples:
+    #
+    # entrance
+    # counter
+    # receipt
+    # table
+    # ========================================================
+
+    placement_type = db.Column(
+        db.String(30),
+        nullable=False,
+        default="main",
+        index=True,
+    )
+
+
+    # ========================================================
+    # OPTIONAL PLACEMENT LABEL
+    # ========================================================
+    #
+    # Examples:
+    #
+    # Main Restaurant QR
+    # Table 01
+    # Table 12
+    # Front Counter
+    # Receipt
+    # ========================================================
+
+    placement_label = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # STATUS
+    # ========================================================
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIP
+    # ========================================================
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
+        back_populates="rating_qr_codes",
+    )
+
+
+    # ========================================================
+    # PUBLIC URL HELPER
+    # ========================================================
+
+    @property
+    def public_path(self):
+
+        return (
+            f"/r/{self.public_code}"
+        )
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantRatingQRCode "
+            f"id={self.id} "
+            f"restaurant_advert_id="
+            f"{self.restaurant_advert_id} "
+            f"public_code={self.public_code}>"
+        )
