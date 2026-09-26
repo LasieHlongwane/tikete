@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request
 import requests
 import smtplib
-
+import qrcode
 from email.message import EmailMessage
 from datetime import datetime, timedelta, date, timezone
 from decimal import Decimal, InvalidOperation, ROUND_UP
