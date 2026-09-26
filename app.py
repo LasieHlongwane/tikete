@@ -10773,12 +10773,9 @@ def featured_listing_image(
 
 
 # ============================================================
-# ORGANIZER - RESTAURANT ADVERTS
-# ============================================================
-# ============================================================
 # ADMIN - RESTAURANTS
 # ============================================================
-# ============================================================
+
 @app.route(
     "/admin/restaurants"
 )
@@ -11005,6 +11002,168 @@ def admin_restaurants():
 
 
     # ========================================================
+    # RESTAURANT CUSTOMER RATING QR DATA
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # This dashboard only READS existing QR records.
+    #
+    # It does not create QR records just because the owner
+    # opened the Restaurant Control Centre.
+    #
+    # A QR is created only when the owner explicitly clicks
+    # "Generate Customer Rating QR".
+    # ========================================================
+
+    restaurant_qr_data = {}
+
+
+    if advert_ids:
+
+        existing_rating_qrs = (
+            RestaurantRatingQRCode.query
+
+            .filter(
+                RestaurantRatingQRCode.restaurant_advert_id.in_(
+                    advert_ids
+                )
+            )
+
+            .filter(
+                RestaurantRatingQRCode.placement_type
+                == "main"
+            )
+
+            .order_by(
+                RestaurantRatingQRCode.created_at.asc()
+            )
+
+            .all()
+        )
+
+
+        # ====================================================
+        # ONE MAIN QR PER RESTAURANT
+        # ====================================================
+
+        rating_qr_by_restaurant = {}
+
+
+        for restaurant_qr in existing_rating_qrs:
+
+            if (
+                restaurant_qr.restaurant_advert_id
+                not in rating_qr_by_restaurant
+            ):
+
+                rating_qr_by_restaurant[
+                    restaurant_qr.restaurant_advert_id
+                ] = restaurant_qr
+
+
+        # ====================================================
+        # BUILD TEMPLATE PAYLOAD
+        # ====================================================
+
+        for advert in adverts:
+
+            restaurant_qr = (
+                rating_qr_by_restaurant.get(
+                    advert.id
+                )
+            )
+
+
+            if restaurant_qr:
+
+                rating_url = (
+                    url_for(
+                        "restaurant_rating_qr_page",
+
+                        public_code=
+                            restaurant_qr.public_code,
+
+                        _external=True,
+
+                        _scheme="https",
+                    )
+                )
+
+
+                restaurant_qr_data[
+                    advert.id
+                ] = {
+
+                    "exists":
+                        True,
+
+                    "public_code":
+                        restaurant_qr.public_code,
+
+                    "active":
+                        restaurant_qr.active,
+
+                    "rating_url":
+                        rating_url,
+
+                    "image_url":
+                        url_for(
+                            "restaurant_rating_qr_image",
+                            advert_id=
+                                advert.id,
+                        ),
+
+                    "download_url":
+                        url_for(
+                            "download_restaurant_rating_qr",
+                            advert_id=
+                                advert.id,
+                        ),
+
+                    "create_url":
+                        url_for(
+                            "create_restaurant_rating_qr",
+                            advert_id=
+                                advert.id,
+                        ),
+                }
+
+
+            else:
+
+                restaurant_qr_data[
+                    advert.id
+                ] = {
+
+                    "exists":
+                        False,
+
+                    "public_code":
+                        "",
+
+                    "active":
+                        False,
+
+                    "rating_url":
+                        "",
+
+                    "image_url":
+                        "",
+
+                    "download_url":
+                        "",
+
+                    "create_url":
+                        url_for(
+                            "create_restaurant_rating_qr",
+                            advert_id=
+                                advert.id,
+                        ),
+                }
+
+
+    # ========================================================
     # PENDING SUBSCRIPTION
     # ========================================================
 
@@ -11026,6 +11185,10 @@ def admin_restaurants():
         .first()
     )
 
+
+    # ========================================================
+    # RENDER
+    # ========================================================
 
     return render_template(
         "admin/restaurants.html",
@@ -11051,7 +11214,10 @@ def admin_restaurants():
         live_reels=
             live_reels,
 
-        # NEW
+        # ====================================================
+        # CUSTOMER EXPERIENCES
+        # ====================================================
+
         approved_experience_count=
             approved_experience_count,
 
@@ -11060,6 +11226,17 @@ def admin_restaurants():
 
         total_experience_loves=
             total_experience_loves,
+
+        # ====================================================
+        # CUSTOMER RATING QR
+        # ====================================================
+
+        restaurant_qr_data=
+            restaurant_qr_data,
+
+        # ====================================================
+        # SUBSCRIPTION
+        # ====================================================
 
         subscription_active=
             organizer.is_subscription_active,
@@ -11079,9 +11256,7 @@ def admin_restaurants():
         subscription_price=
             KALXA_SUBSCRIPTION_PRICE,
     )
-# ============================================================
-# ADMIN - CREATE RESTAURANT ADVERT
-# ============================================================
+
 # ============================================================
 # ADMIN - CREATE RESTAURANT ADVERT
 # ============================================================
