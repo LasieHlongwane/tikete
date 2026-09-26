@@ -94,6 +94,7 @@ from models import (
     RestaurantExperienceMedia,
     RestaurantOpeningHour,
     RestaurantGalleryImage,
+    RestaurantRatingQRCode,
 )
 
 # ============================================================
@@ -14532,7 +14533,6 @@ def event_page(
     )
 
 
-
 @app.route(
     "/restaurant/<int:advert_id>"
 )
@@ -14688,42 +14688,102 @@ def restaurant_page(
         )
     )
 
+
+    # ========================================================
+    # RESTAURANT HOURS
+    # ========================================================
+
     restaurant_hours_payload = (
-      build_restaurant_hours_payload(
-        advert
-      )
+        build_restaurant_hours_payload(
+            advert
+        )
     )
+
+
+    # ========================================================
+    # CURRENT ORGANIZER
+    # ========================================================
 
     current_organizer = (
         get_current_organizer()
     )
 
+
     current_organizer_id = (
-       current_organizer.id
-       if current_organizer
-       else None
+        current_organizer.id
+        if current_organizer
+        else None
     )
+
+
+    # ========================================================
+    # RESTAURANT MANAGEMENT PERMISSION
+    # ========================================================
 
     can_manage_restaurant = False
 
-    current_organizer = (
-       get_current_organizer()
-    )
 
     if (
-      current_organizer_id
-      and
-      advert.organizer_id
-      ==
-      current_organizer_id
-      and
-      advert.organizer
-      and
-      advert.organizer.is_subscription_active
+        current_organizer_id
+        and
+        advert.organizer_id
+        ==
+        current_organizer_id
+        and
+        advert.organizer
+        and
+        advert.organizer.is_subscription_active
     ):
 
-      can_manage_restaurant = True
+        can_manage_restaurant = True
 
+
+    # ========================================================
+    # RESTAURANT RATING QR
+    # ========================================================
+
+    restaurant_rating_qr = None
+    restaurant_rating_url = ""
+
+
+    if can_manage_restaurant:
+
+        restaurant_rating_qr = (
+            RestaurantRatingQRCode.query
+
+            .filter_by(
+                restaurant_advert_id=
+                    advert.id,
+
+                placement_type=
+                    "main",
+            )
+
+            .order_by(
+                RestaurantRatingQRCode.created_at.asc()
+            )
+
+            .first()
+        )
+
+
+        if restaurant_rating_qr:
+
+            restaurant_rating_url = (
+                url_for(
+                    "restaurant_rating_qr_page",
+
+                    public_code=
+                        restaurant_rating_qr.public_code,
+
+                    _external=True,
+                )
+            )
+
+
+    # ========================================================
+    # RENDER
+    # ========================================================
 
     return render_template(
         "restaurant.html",
@@ -14747,24 +14807,392 @@ def restaurant_page(
             can_manage_restaurant,
 
         restaurant_hours_update_url=(
+
             url_for(
-              "update_restaurant_hours",
-              advert_id=advert.id,
+                "update_restaurant_hours",
+
+                advert_id=
+                    advert.id,
             )
+
             if can_manage_restaurant
+
             else ""
         ),
 
-        # NEW
+        # ====================================================
+        # CUSTOMER EXPERIENCES
+        # ====================================================
+
         experience_posts=
             experience_posts,
 
-        # NEW
         loved_experience_post_ids=
             loved_experience_post_ids,
+
+        # ====================================================
+        # RESTAURANT RATING QR
+        # ====================================================
+
+        restaurant_rating_qr=
+            restaurant_rating_qr,
+
+        restaurant_rating_url=
+            restaurant_rating_url,
+
+        restaurant_rating_qr_create_url=(
+
+            url_for(
+                "create_restaurant_rating_qr",
+
+                advert_id=
+                    advert.id,
+            )
+
+            if can_manage_restaurant
+
+            else ""
+        ),
     )
 
 
+# ============================================================
+# CREATE / GET RESTAURANT RATING QR
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>/rating-qr",
+    methods=["POST"],
+)
+def create_restaurant_rating_qr(
+    advert_id,
+):
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    current_organizer = (
+        get_current_organizer()
+    )
+
+
+    if not current_organizer:
+
+        abort(401)
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+
+        .filter_by(
+            id=
+                advert_id,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # OWNERSHIP SAFETY
+    # ========================================================
+
+    if (
+        advert.organizer_id
+        !=
+        current_organizer.id
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SUBSCRIPTION SAFETY
+    # ========================================================
+
+    if (
+        not advert.organizer
+        or
+        not advert.organizer.is_subscription_active
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # CREATE OR REUSE PERMANENT QR
+    # ========================================================
+
+    restaurant_qr = (
+        get_or_create_restaurant_main_qr(
+            advert
+        )
+    )
+
+
+    # ========================================================
+    # PUBLIC RATING URL
+    # ========================================================
+
+    restaurant_rating_url = (
+        url_for(
+            "restaurant_rating_qr_page",
+
+            public_code=
+                restaurant_qr.public_code,
+
+            _external=True,
+        )
+    )
+
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
+    return {
+        "success": True,
+
+        "restaurant_id":
+            advert.id,
+
+        "business_name":
+            advert.business_name,
+
+        "public_code":
+            restaurant_qr.public_code,
+
+        "rating_url":
+            restaurant_rating_url,
+    }
+
+
+
+# ============================================================
+# PUBLIC RESTAURANT RATING QR PAGE
+# ============================================================
+
+@app.route(
+    "/r/<string:public_code>"
+)
+def restaurant_rating_qr_page(
+    public_code,
+):
+
+    # ========================================================
+    # QR RECORD
+    # ========================================================
+
+    restaurant_qr = (
+        RestaurantRatingQRCode.query
+
+        .filter_by(
+            public_code=
+                public_code,
+
+            active=
+                True,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        restaurant_qr.restaurant_advert
+    )
+
+
+    if not advert:
+
+        abort(404)
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE SAFETY
+    # ========================================================
+
+    if not advert.active:
+
+        abort(404)
+
+
+    # ========================================================
+    # SUBSCRIPTION SAFETY
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if (
+        not organizer
+        or
+        not organizer.is_subscription_active
+    ):
+
+        abort(404)
+
+
+    # ========================================================
+    # CAMPAIGN DATE SAFETY
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        abort(404)
+
+
+    if (
+        advert.ends_at
+        and
+        advert.ends_at <= now
+    ):
+
+        abort(404)
+
+
+    # ========================================================
+    # RENDER CUSTOMER RATING PAGE
+    # ========================================================
+
+    return render_template(
+        "restaurant_rating.html",
+
+        advert=
+            advert,
+
+        restaurant_qr=
+            restaurant_qr,
+    )
+# ============================================================
+# RESTAURANT RATING QR HELPERS
+# ============================================================
+
+
+def generate_restaurant_rating_public_code():
+    """
+    Generate a short public Kalxa restaurant QR code.
+
+    Example:
+
+        KX-A7F92C4D
+
+    The database ID is intentionally not exposed in the
+    customer-facing QR URL.
+    """
+
+    while True:
+
+        public_code = (
+            "KX-"
+            + secrets.token_hex(4).upper()
+        )
+
+        existing_qr = (
+            RestaurantRatingQRCode.query
+            .filter_by(
+                public_code=public_code
+            )
+            .first()
+        )
+
+        if not existing_qr:
+            return public_code
+
+
+def get_or_create_restaurant_main_qr(
+    advert,
+):
+    """
+    Return the restaurant's permanent main QR record.
+
+    If one does not exist yet, create it.
+
+    The same restaurant should continue using the same QR
+    instead of generating a different code every time the
+    owner opens the page.
+    """
+
+    restaurant_qr = (
+        RestaurantRatingQRCode.query
+
+        .filter_by(
+            restaurant_advert_id=
+                advert.id,
+
+            placement_type=
+                "main",
+        )
+
+        .order_by(
+            RestaurantRatingQRCode.created_at.asc()
+        )
+
+        .first()
+    )
+
+
+    if restaurant_qr:
+
+        # If it was previously disabled, keep the existing
+        # permanent code but activate it again.
+        if not restaurant_qr.active:
+
+            restaurant_qr.active = True
+
+            db.session.commit()
+
+        return restaurant_qr
+
+
+    restaurant_qr = (
+        RestaurantRatingQRCode(
+            restaurant_advert_id=
+                advert.id,
+
+            public_code=
+                generate_restaurant_rating_public_code(),
+
+            placement_type=
+                "main",
+
+            placement_label=
+                "Main restaurant QR",
+
+            active=
+                True,
+        )
+    )
+
+
+    db.session.add(
+        restaurant_qr
+    )
+
+    db.session.commit()
+
+
+    return restaurant_qr
 # ============================================================
 # PUBLIC - POST RESTAURANT EXPERIENCE
 # ============================================================
