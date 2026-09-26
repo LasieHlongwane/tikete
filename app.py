@@ -16673,12 +16673,10 @@ def create_restaurant_experience():
             "success",
         )
 
-
         return redirect(
             url_for(
-                "restaurant_page",
-
-                advert_id=
+                "restaurant_experience_thank_you",
+                restaurant_id=
                     advert.id,
             )
         )
