@@ -15203,6 +15203,215 @@ def get_or_create_restaurant_main_qr(
 
 
     return restaurant_qr
+
+
+
+# ============================================================
+# RESTAURANT RATING QR - PNG IMAGE
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>/rating-qr.png"
+)
+def restaurant_rating_qr_image(
+    advert_id,
+):
+
+    # ========================================================
+    # ORGANIZER AUTHENTICATION
+    # ========================================================
+
+    current_organizer = (
+        get_current_organizer()
+    )
+
+
+    if not current_organizer:
+
+        abort(401)
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+
+        .filter_by(
+            id=
+                advert_id
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # OWNERSHIP
+    # ========================================================
+
+    if (
+        advert.organizer_id
+        !=
+        current_organizer.id
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SUBSCRIPTION
+    # ========================================================
+
+    if (
+        not advert.organizer
+        or
+        not advert.organizer.is_subscription_active
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # GET OR CREATE PERMANENT QR
+    # ========================================================
+
+    restaurant_qr = (
+        get_or_create_restaurant_main_qr(
+            advert
+        )
+    )
+
+
+    # ========================================================
+    # PUBLIC QR DESTINATION
+    # ========================================================
+
+    rating_url = (
+        url_for(
+            "restaurant_rating_qr_page",
+
+            public_code=
+                restaurant_qr.public_code,
+
+            _external=True,
+
+            _scheme="https",
+        )
+    )
+
+
+    # ========================================================
+    # GENERATE QR
+    # ========================================================
+
+    qr = qrcode.QRCode(
+        version=None,
+
+        error_correction=
+            qrcode.constants.ERROR_CORRECT_M,
+
+        box_size=12,
+
+        border=4,
+    )
+
+
+    qr.add_data(
+        rating_url
+    )
+
+
+    qr.make(
+        fit=True
+    )
+
+
+    qr_image = (
+        qr.make_image(
+            fill_color="black",
+            back_color="white",
+        )
+    )
+
+
+    # ========================================================
+    # WRITE PNG INTO MEMORY
+    # ========================================================
+
+    image_buffer = (
+        io.BytesIO()
+    )
+
+
+    qr_image.save(
+        image_buffer,
+        format="PNG",
+    )
+
+
+    image_buffer.seek(
+        0
+    )
+
+
+    # ========================================================
+    # DOWNLOAD FILE NAME
+    # ========================================================
+
+    safe_business_name = (
+        "".join(
+            character
+            if (
+                character.isalnum()
+                or character in {
+                    "-",
+                    "_",
+                }
+            )
+            else "-"
+            for character
+            in advert.business_name
+        )
+        .strip("-")
+        .lower()
+    )
+
+
+    if not safe_business_name:
+
+        safe_business_name = (
+            f"restaurant-{advert.id}"
+        )
+
+
+    filename = (
+        f"kalxa-{safe_business_name}-rating-qr.png"
+    )
+
+
+    # ========================================================
+    # RETURN PNG
+    # ========================================================
+
+    return send_file(
+        image_buffer,
+
+        mimetype=
+            "image/png",
+
+        as_attachment=
+            False,
+
+        download_name=
+            filename,
+
+        max_age=
+            0,
+    )
+
+
 # ============================================================
 # PUBLIC - POST RESTAURANT EXPERIENCE
 # ============================================================
