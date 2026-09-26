@@ -15264,7 +15264,7 @@ def restaurant_rating_qr_page(
 
     return redirect(
         url_for(
-            "restaurant_experience_form",
+            "create_restaurant_experience"
             restaurant_id=
                 advert.id,
         )
