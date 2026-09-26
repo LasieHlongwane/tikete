@@ -4,7 +4,6 @@
 
 <head>
 
-
 <meta charset="UTF-8">
 
 <meta
@@ -18,7 +17,11 @@
 >
 
 <title>
-    Share Your Experience | Kalxa
+    {% if preselected_restaurant %}
+        Rate {{ preselected_restaurant.business_name }} | Kalxa
+    {% else %}
+        Share Your Experience | Kalxa
+    {% endif %}
 </title>
 
 
@@ -67,6 +70,10 @@
     }
 
 
+    /* =====================================================
+       TOP BAR
+    ===================================================== */
+
     .topbar {
 
         display: flex;
@@ -107,6 +114,10 @@
         text-decoration: none;
     }
 
+
+    /* =====================================================
+       HERO
+    ===================================================== */
 
     .hero {
 
@@ -164,6 +175,127 @@
         line-height: 1.6;
     }
 
+
+    /* =====================================================
+       QR RESTAURANT CARD
+    ===================================================== */
+
+    .qr-restaurant-card {
+
+        position: relative;
+
+        overflow: hidden;
+
+        margin-bottom: 20px;
+
+        padding: 18px;
+
+        background: #111827;
+        color: #ffffff;
+
+        border-radius: 18px;
+    }
+
+
+    .qr-restaurant-label {
+
+        display: block;
+
+        margin-bottom: 8px;
+
+        color: #d1d5db;
+
+        font-size: 9px;
+        font-weight: 950;
+
+        letter-spacing: .13em;
+
+        text-transform: uppercase;
+    }
+
+
+    .qr-restaurant-name {
+
+        margin: 0;
+
+        color: #ffffff;
+
+        font-size: 22px;
+        line-height: 1.1;
+
+        font-weight: 950;
+
+        letter-spacing: -.025em;
+    }
+
+
+    .qr-restaurant-area {
+
+        margin:
+            7px 0 0;
+
+        color: #d1d5db;
+
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+
+    .qr-confirmation {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        margin-top: 13px;
+
+        padding:
+            6px 9px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .1
+            );
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .12
+            );
+
+        border-radius: 999px;
+
+        color: #ffffff;
+
+        font-size: 9px;
+        font-weight: 850;
+    }
+
+
+    .qr-confirmation-dot {
+
+        width: 6px;
+        height: 6px;
+
+        flex-shrink: 0;
+
+        background: #22c55e;
+
+        border-radius: 999px;
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
 
     .form-card {
 
@@ -494,6 +626,10 @@
     }
 
 
+    /* =====================================================
+       SUBMIT
+    ===================================================== */
+
     .submit-button {
 
         width: 100%;
@@ -548,6 +684,10 @@
     }
 
 
+    /* =====================================================
+       EMPTY STATE
+    ===================================================== */
+
     .no-restaurants {
 
         padding: 24px;
@@ -566,6 +706,10 @@
         text-align: center;
     }
 
+
+    /* =====================================================
+       FLASH
+    ===================================================== */
 
     .flash {
 
@@ -601,6 +745,10 @@
     }
 
 
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
     @media (
         max-width: 560px
     ) {
@@ -620,6 +768,20 @@
             padding: 17px;
 
             border-radius: 16px;
+        }
+
+
+        .qr-restaurant-card {
+
+            padding: 16px;
+
+            border-radius: 16px;
+        }
+
+
+        .qr-restaurant-name {
+
+            font-size: 20px;
         }
 
 
@@ -644,13 +806,17 @@
 
 </style>
 
-
 </head>
+
 
 <body>
 
 <div class="page">
 
+
+<!-- =====================================================
+     TOP BAR
+====================================================== -->
 
 <header class="topbar">
 
@@ -662,16 +828,35 @@
     </a>
 
 
-    <a
-        href="{{ url_for('home') }}"
-        class="back"
-    >
-        ← Discover
-    </a>
+    {% if preselected_restaurant %}
+
+        <a
+            href="{{ url_for(
+                'restaurant_page',
+                advert_id=preselected_restaurant.id
+            ) }}"
+            class="back"
+        >
+            ← Restaurant
+        </a>
+
+    {% else %}
+
+        <a
+            href="{{ url_for('home') }}"
+            class="back"
+        >
+            ← Discover
+        </a>
+
+    {% endif %}
 
 </header>
 
 
+<!-- =====================================================
+     FLASH MESSAGES
+====================================================== -->
 
 {% with messages = get_flashed_messages(
     with_categories=true
@@ -692,32 +877,112 @@
 {% endwith %}
 
 
+<!-- =====================================================
+     HERO
+====================================================== -->
 
 <section class="hero">
 
     <p class="eyebrow">
-        KALXA EXPERIENCES
+
+        {% if preselected_restaurant %}
+
+            KALXA RESTAURANT RATING
+
+        {% else %}
+
+            KALXA EXPERIENCES
+
+        {% endif %}
+
     </p>
 
 
     <h1>
-        Share your experience.
+
+        {% if preselected_restaurant %}
+
+            Rate your visit.
+
+        {% else %}
+
+            Share your experience.
+
+        {% endif %}
+
     </h1>
 
 
     <p>
-        Been somewhere worth talking about?
-        Tag the restaurant, rate your experience,
-        add up to 3 photos or a short reel and tell
-        people what your experience was like.
-        You do not need a Kalxa account.
+
+        {% if preselected_restaurant %}
+
+            Share what your visit was like at
+            {{ preselected_restaurant.business_name }}.
+            Rate your experience, tell people what stood
+            out and add up to 3 photos or a short reel.
+            You do not need a Kalxa account.
+
+        {% else %}
+
+            Been somewhere worth talking about?
+            Tag the restaurant, rate your experience,
+            add up to 3 photos or a short reel and tell
+            people what your experience was like.
+            You do not need a Kalxa account.
+
+        {% endif %}
+
     </p>
 
 </section>
 
 
+<!-- =====================================================
+     QR RESTAURANT IDENTITY
+====================================================== -->
 
-{% if restaurants %}
+{% if preselected_restaurant %}
+
+    <section class="qr-restaurant-card">
+
+        <span class="qr-restaurant-label">
+            You're rating
+        </span>
+
+
+        <h2 class="qr-restaurant-name">
+            {{ preselected_restaurant.business_name }}
+        </h2>
+
+
+        {% if preselected_restaurant.area %}
+
+            <p class="qr-restaurant-area">
+                📍 {{ preselected_restaurant.area }}
+            </p>
+
+        {% endif %}
+
+
+        <div class="qr-confirmation">
+
+            <span class="qr-confirmation-dot"></span>
+
+            Restaurant selected from Kalxa QR
+
+        </div>
+
+    </section>
+
+{% endif %}
+
+
+<!-- =====================================================
+     FORM
+====================================================== -->
+
+{% if restaurants or preselected_restaurant %}
 
     <form
         method="POST"
@@ -744,6 +1009,7 @@
                 type="text"
                 maxlength="120"
                 required
+                autocomplete="name"
                 placeholder="e.g. Lwazi Hlongwane"
                 value="{{ request.form.get(
                     'poster_name',
@@ -759,73 +1025,126 @@
         </div>
 
 
-
         <!-- =====================================
              RESTAURANT
         ====================================== -->
 
-        <div class="field">
+        {% if preselected_restaurant %}
 
-            <label for="restaurant_advert_id">
-                Tag a restaurant
-            </label>
+            <!--
+                QR MODE
 
+                The restaurant has already been resolved by
+                the backend from the QR code.
 
-            {% set selected_restaurant =
-                request.form.get(
-                    'restaurant_advert_id'
-                )
-                or request.args.get(
-                    'restaurant_id'
-                )
-            %}
+                Do not let the customer change it in the UI.
+            -->
 
-
-            <select
+            <input
+                type="hidden"
                 id="restaurant_advert_id"
                 name="restaurant_advert_id"
-                required
+                value="{{ preselected_restaurant.id }}"
             >
 
-                <option value="">
-                    Choose restaurant
-                </option>
+
+            <div class="field">
+
+                <label>
+                    Restaurant
+                </label>
 
 
-                {% for restaurant in restaurants %}
+                <input
+                    type="text"
+                    value="{{
+                        preselected_restaurant.business_name
+                    }}{% if preselected_restaurant.area %} — {{ preselected_restaurant.area }}{% endif %}"
+                    readonly
+                    aria-label="Selected restaurant"
+                >
 
-                    <option
-                        value="{{ restaurant.id }}"
-                        {% if
-                            selected_restaurant
-                            and
-                            selected_restaurant|string
-                            == restaurant.id|string
-                        %}
-                            selected
-                        {% endif %}
-                    >
 
-                        {{ restaurant.business_name }}
+                <span class="field-help">
+                    This restaurant was selected from
+                    the Kalxa QR you scanned.
+                </span>
 
-                        {% if restaurant.area %}
-                            — {{ restaurant.area }}
-                        {% endif %}
+            </div>
 
+
+        {% else %}
+
+            <!--
+                NORMAL MODE
+
+                Customer chooses a restaurant manually.
+            -->
+
+            <div class="field">
+
+                <label for="restaurant_advert_id">
+                    Tag a restaurant
+                </label>
+
+
+                {% set selected_restaurant =
+                    request.form.get(
+                        'restaurant_advert_id'
+                    )
+                    or request.args.get(
+                        'restaurant_id'
+                    )
+                %}
+
+
+                <select
+                    id="restaurant_advert_id"
+                    name="restaurant_advert_id"
+                    required
+                >
+
+                    <option value="">
+                        Choose restaurant
                     </option>
 
-                {% endfor %}
 
-            </select>
+                    {% for restaurant in restaurants %}
+
+                        <option
+                            value="{{ restaurant.id }}"
+
+                            {% if
+                                selected_restaurant
+                                and
+                                selected_restaurant|string
+                                == restaurant.id|string
+                            %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{ restaurant.business_name }}
+
+                            {% if restaurant.area %}
+                                — {{ restaurant.area }}
+                            {% endif %}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
 
 
-            <span class="field-help">
-                Only restaurants with an active Kalxa
-                subscription can be tagged.
-            </span>
+                <span class="field-help">
+                    Only restaurants with an active Kalxa
+                    subscription can be tagged.
+                </span>
 
-        </div>
+            </div>
 
+        {% endif %}
 
 
         <!-- =====================================
@@ -861,12 +1180,14 @@
                         id="rating-{{ value }}"
                         name="rating"
                         value="{{ value }}"
+
                         {% if
                             selected_rating|string
                             == value|string
                         %}
                             checked
                         {% endif %}
+
                         {% if value == 1 %}
                             required
                         {% endif %}
@@ -913,7 +1234,6 @@
         </div>
 
 
-
         <!-- =====================================
              EXPERIENCE
         ====================================== -->
@@ -944,7 +1264,6 @@
         </div>
 
 
-
         <!-- =====================================
              MEDIA
         ====================================== -->
@@ -960,15 +1279,7 @@
                 id="experience_media"
                 name="experience_media"
                 type="file"
-                accept="
-                    image/jpeg,
-                    image/png,
-                    image/webp,
-                    video/mp4,
-                    video/quicktime,
-                    video/x-m4v,
-                    video/webm
-                "
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-m4v,video/webm"
                 multiple
                 required
             >
@@ -993,13 +1304,26 @@
         </div>
 
 
+        <!-- =====================================
+             SUBMIT
+        ====================================== -->
 
         <button
             type="submit"
             class="submit-button"
             id="submit-button"
         >
-            Submit Experience →
+
+            {% if preselected_restaurant %}
+
+                Submit Rating & Experience →
+
+            {% else %}
+
+                Submit Experience →
+
+            {% endif %}
+
         </button>
 
 
@@ -1031,6 +1355,7 @@
 
 
 </div>
+
 
 <!-- =====================================================
      STAR RATING
@@ -1225,6 +1550,7 @@
 })();
 
 </script>
+
 
 <!-- =====================================================
      MULTIPLE PHOTO / VIDEO VALIDATION
@@ -1422,6 +1748,7 @@
 
                     return `
                         <div class="selected-file">
+
                             <span class="selected-file-name">
                                 ${safeName}
                             </span>
@@ -1429,6 +1756,7 @@
                             <span class="selected-file-size">
                                 ${formatBytes(file.size)}
                             </span>
+
                         </div>
                     `;
 
@@ -1477,8 +1805,14 @@
                 "";
 
 
+            /*
+             * Media is required by the HTML field.
+             * This custom message makes the validation
+             * clearer when the user presses submit.
+             */
+
             input.setCustomValidity(
-                ""
+                "Please upload photos or one short video."
             );
 
 
@@ -1657,7 +1991,6 @@
 
                 event.preventDefault();
 
-
                 input.reportValidity();
 
             }
@@ -1668,6 +2001,7 @@
 })();
 
 </script>
+
 
 </body>
 
