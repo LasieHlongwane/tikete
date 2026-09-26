@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -467,11 +466,6 @@
         font-weight: 850;
 
         text-decoration: none;
-
-        transition:
-            background .15s ease,
-            color .15s ease,
-            border-color .15s ease;
     }
 
 
@@ -486,14 +480,6 @@
             );
 
         color: #ffffff;
-
-        border-color:
-            rgba(
-                255,
-                255,
-                255,
-                .06
-            );
     }
 
 
@@ -676,8 +662,7 @@
 
         margin-bottom: 14px;
 
-        padding:
-            8px;
+        padding: 8px;
 
         overflow-x: auto;
 
@@ -765,8 +750,7 @@
 
         margin-bottom: 18px;
 
-        padding:
-            26px;
+        padding: 26px;
 
         background:
             rgba(
@@ -777,8 +761,7 @@
             );
 
         border:
-            1px solid
-            var(--border);
+            1px solid var(--border);
 
         border-radius: 22px;
 
@@ -797,8 +780,7 @@
         margin:
             0 0 7px;
 
-        color:
-            #737982;
+        color: #737982;
 
         font-size: 9px;
         font-weight: 950;
@@ -813,8 +795,7 @@
 
         margin: 0;
 
-        color:
-            #15171b;
+        color: #15171b;
 
         font-size:
             clamp(
@@ -838,8 +819,7 @@
         margin:
             10px 0 0;
 
-        color:
-            #666d76;
+        color: #666d76;
 
         font-size: 13px;
 
@@ -866,8 +846,7 @@
                 #2c3036
             );
 
-        color:
-            #ffffff;
+        color: #ffffff;
 
         border:
             1px solid #202328;
@@ -880,26 +859,6 @@
         text-decoration: none;
 
         white-space: nowrap;
-
-        transition:
-            transform .15s ease,
-            box-shadow .15s ease;
-    }
-
-
-    .button:hover {
-
-        transform:
-            translateY(-1px);
-
-        box-shadow:
-            0 8px 20px
-            rgba(
-                15,
-                23,
-                42,
-                .16
-            );
     }
 
 
@@ -922,12 +881,10 @@
         padding:
             13px 15px;
 
-        background:
-            #ffffff;
+        background: #ffffff;
 
         border:
-            1px solid
-            var(--border);
+            1px solid var(--border);
 
         border-radius: 12px;
 
@@ -998,8 +955,7 @@
                 #e3f3ea
             );
 
-        color:
-            #1f5d3c;
+        color: #1f5d3c;
 
         border:
             1px solid #c4e2cf;
@@ -1015,8 +971,7 @@
                 #faead4
             );
 
-        color:
-            #8c5016;
+        color: #8c5016;
 
         border:
             1px solid #ecd2af;
@@ -1084,8 +1039,7 @@
 
         min-width: 0;
 
-        padding:
-            16px;
+        padding: 16px;
 
         background:
             rgba(
@@ -1096,8 +1050,7 @@
             );
 
         border:
-            1px solid
-            var(--border);
+            1px solid var(--border);
 
         border-radius: 15px;
 
@@ -1110,8 +1063,7 @@
 
         display: block;
 
-        color:
-            #7b818a;
+        color: #7b818a;
 
         font-size: 8px;
         font-weight: 950;
@@ -1128,8 +1080,7 @@
 
         margin-top: 5px;
 
-        color:
-            #17191d;
+        color: #17191d;
 
         font-size: 25px;
         font-weight: 950;
@@ -1164,8 +1115,7 @@
 
         margin: 0;
 
-        color:
-            #17191d;
+        color: #17191d;
 
         font-size: 18px;
         font-weight: 950;
@@ -1179,8 +1129,7 @@
         margin:
             4px 0 0;
 
-        color:
-            #737983;
+        color: #737983;
 
         font-size: 10px;
     }
@@ -1194,11 +1143,9 @@
         padding:
             5px 9px;
 
-        background:
-            #eef0f2;
+        background: #eef0f2;
 
-        color:
-            #61666f;
+        color: #61666f;
 
         border:
             1px solid #dadddf;
@@ -1211,6 +1158,465 @@
 
 
     /* =====================================================
+       CUSTOMER RATING QR
+    ===================================================== */
+
+    .qr-grid {
+
+        display: grid;
+
+        gap: 16px;
+    }
+
+
+    .qr-card {
+
+        overflow: hidden;
+
+        background: #ffffff;
+
+        border:
+            1px solid var(--border);
+
+        border-radius: 20px;
+
+        box-shadow:
+            var(--shadow);
+    }
+
+
+    .qr-card-header {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 14px;
+
+        padding:
+            17px 19px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #17191d,
+                #2d3137
+            );
+
+        color: #ffffff;
+    }
+
+
+    .qr-card-header h3 {
+
+        margin: 0;
+
+        font-size: 15px;
+        font-weight: 950;
+    }
+
+
+    .qr-card-header p {
+
+        margin:
+            4px 0 0;
+
+        color: #aeb4bd;
+
+        font-size: 9px;
+    }
+
+
+    .qr-status {
+
+        flex:
+            0 0 auto;
+
+        padding:
+            6px 9px;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                .08
+            );
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                .10
+            );
+
+        border-radius: 999px;
+
+        color: #cdd2d8;
+
+        font-size: 8px;
+        font-weight: 950;
+    }
+
+
+    .qr-status.active {
+        color: #a9e1bf;
+    }
+
+
+    .qr-card-body {
+
+        display: grid;
+
+        grid-template-columns:
+            230px
+            minmax(
+                0,
+                1fr
+            );
+
+        gap: 24px;
+
+        padding: 22px;
+    }
+
+
+    .qr-preview {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 230px;
+
+        padding: 14px;
+
+        background: #ffffff;
+
+        border:
+            1px solid #d9dce0;
+
+        border-radius: 15px;
+    }
+
+
+    .qr-preview img {
+
+        display: block;
+
+        width: 100%;
+        max-width: 200px;
+
+        height: auto;
+    }
+
+
+    .qr-details {
+        min-width: 0;
+    }
+
+
+    .qr-eyebrow {
+
+        margin:
+            0 0 6px;
+
+        color: #767d86;
+
+        font-size: 8px;
+        font-weight: 950;
+
+        letter-spacing: .13em;
+
+        text-transform: uppercase;
+    }
+
+
+    .qr-details h4 {
+
+        margin: 0;
+
+        color: #191b1f;
+
+        font-size: 21px;
+        font-weight: 950;
+
+        letter-spacing: -.03em;
+    }
+
+
+    .qr-description {
+
+        max-width: 620px;
+
+        margin:
+            8px 0 18px;
+
+        color: #666d76;
+
+        font-size: 11px;
+
+        line-height: 1.6;
+    }
+
+
+    .qr-info-box {
+
+        margin-top: 10px;
+
+        padding:
+            12px 13px;
+
+        background: #f5f6f7;
+
+        border:
+            1px solid #e0e3e6;
+
+        border-radius: 10px;
+    }
+
+
+    .qr-info-label {
+
+        display: block;
+
+        margin-bottom: 5px;
+
+        color: #7b818a;
+
+        font-size: 7px;
+        font-weight: 950;
+
+        letter-spacing: .11em;
+
+        text-transform: uppercase;
+    }
+
+
+    .qr-url {
+
+        display: block;
+
+        overflow-wrap: anywhere;
+
+        color: #25282d;
+
+        font-size: 10px;
+        font-weight: 800;
+
+        line-height: 1.5;
+    }
+
+
+    .qr-code-value {
+
+        color: #25282d;
+
+        font-family:
+            ui-monospace,
+            SFMono-Regular,
+            Menlo,
+            Monaco,
+            Consolas,
+            monospace;
+
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+
+    .qr-actions {
+
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+        margin-top: 17px;
+    }
+
+
+    .qr-action {
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 40px;
+
+        padding:
+            8px 12px;
+
+        border-radius: 9px;
+
+        font-size: 9px;
+        font-weight: 950;
+
+        text-decoration: none;
+    }
+
+
+    .qr-action-primary {
+
+        background: #202328;
+
+        color: #ffffff;
+
+        border:
+            1px solid #202328;
+    }
+
+
+    .qr-action-secondary {
+
+        background: #ffffff;
+
+        color: #25282d;
+
+        border:
+            1px solid #ccd0d5;
+    }
+
+
+    .qr-action-download {
+
+        background:
+            var(--green-bg);
+
+        color:
+            var(--green);
+
+        border:
+            1px solid #c7e7d3;
+    }
+
+
+    .qr-generate {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        padding: 22px;
+    }
+
+
+    .qr-generate-copy h4 {
+
+        margin: 0;
+
+        color: #1d2025;
+
+        font-size: 17px;
+        font-weight: 950;
+    }
+
+
+    .qr-generate-copy p {
+
+        max-width: 640px;
+
+        margin:
+            7px 0 0;
+
+        color: #707780;
+
+        font-size: 10px;
+
+        line-height: 1.6;
+    }
+
+
+    .qr-generate-button {
+
+        flex:
+            0 0 auto;
+
+        min-height: 43px;
+
+        padding:
+            9px 14px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #202328,
+                #353940
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid #202328;
+
+        border-radius: 10px;
+
+        font-size: 9px;
+        font-weight: 950;
+    }
+
+
+    .qr-generate-button:disabled {
+
+        cursor: wait;
+
+        opacity: .6;
+    }
+
+
+    .qr-message {
+
+        display: none;
+
+        margin-top: 12px;
+
+        padding:
+            10px 12px;
+
+        border-radius: 9px;
+
+        font-size: 9px;
+        font-weight: 850;
+    }
+
+
+    .qr-message.show {
+        display: block;
+    }
+
+
+    .qr-message.success {
+
+        background: var(--green-bg);
+
+        color: var(--green);
+
+        border:
+            1px solid #c7e7d3;
+    }
+
+
+    .qr-message.error {
+
+        background: var(--red-bg);
+
+        color: var(--red);
+
+        border:
+            1px solid #eccccc;
+    }
+
+
+    /* =====================================================
        TABLE
     ===================================================== */
 
@@ -1218,12 +1624,10 @@
 
         overflow: hidden;
 
-        background:
-            #ffffff;
+        background: #ffffff;
 
         border:
-            1px solid
-            var(--border);
+            1px solid var(--border);
 
         border-radius: 18px;
 
@@ -1247,11 +1651,9 @@
 
         width: 100%;
 
-        border-collapse:
-            collapse;
+        border-collapse: collapse;
 
-        min-width:
-            980px;
+        min-width: 980px;
     }
 
 
@@ -1264,8 +1666,7 @@
                 #30343a
             );
 
-        color:
-            #d8dce1;
+        color: #d8dce1;
     }
 
 
@@ -1289,15 +1690,12 @@
 
     td {
 
-        padding:
-            14px;
+        padding: 14px;
 
         border-bottom:
-            1px solid
-            var(--border-soft);
+            1px solid var(--border-soft);
 
-        color:
-            #31353b;
+        color: #31353b;
 
         font-size: 10px;
 
@@ -1314,10 +1712,6 @@
         background: #fafbfc;
     }
 
-
-    /* =====================================================
-       CAMPAIGN TABLE
-    ===================================================== */
 
     .restaurant-cell {
 
@@ -1336,17 +1730,14 @@
         width: 54px;
         height: 54px;
 
-        flex:
-            0 0 auto;
+        flex: 0 0 auto;
 
         overflow: hidden;
 
-        background:
-            #e5e7eb;
+        background: #e5e7eb;
 
         border:
-            1px solid
-            #d8dade;
+            1px solid #d8dade;
 
         border-radius: 10px;
     }
@@ -1365,8 +1756,7 @@
 
         display: block;
 
-        color:
-            #17191d;
+        color: #17191d;
 
         font-size: 11px;
         font-weight: 950;
@@ -1379,8 +1769,7 @@
 
         margin-top: 2px;
 
-        color:
-            #7a8089;
+        color: #7a8089;
 
         font-size: 9px;
     }
@@ -1408,48 +1797,39 @@
 
     .badge-live {
 
-        background:
-            var(--green-bg);
+        background: var(--green-bg);
 
-        color:
-            var(--green);
+        color: var(--green);
     }
 
 
     .badge-scheduled {
 
-        background:
-            var(--orange-bg);
+        background: var(--orange-bg);
 
-        color:
-            var(--orange);
+        color: var(--orange);
     }
 
 
     .badge-expired {
 
-        background:
-            var(--red-bg);
+        background: var(--red-bg);
 
-        color:
-            var(--red);
+        color: var(--red);
     }
 
 
     .badge-paused {
 
-        background:
-            #eceef1;
+        background: #eceef1;
 
-        color:
-            #626871;
+        color: #626871;
     }
 
 
     .yes-badge {
 
-        color:
-            var(--green);
+        color: var(--green);
 
         font-weight: 950;
     }
@@ -1457,8 +1837,7 @@
 
     .no-badge {
 
-        color:
-            #8a9098;
+        color: #8a9098;
 
         font-weight: 850;
     }
@@ -1501,21 +1880,17 @@
 
     .table-action-primary {
 
-        background:
-            #202328;
+        background: #202328;
 
-        color:
-            #ffffff;
+        color: #ffffff;
     }
 
 
     .table-action-edit {
 
-        background:
-            #ffffff;
+        background: #ffffff;
 
-        color:
-            #24282d;
+        color: #24282d;
 
         border:
             1px solid #cfd3d8;
@@ -1524,11 +1899,9 @@
 
     .table-action-secondary {
 
-        background:
-            #f3f4f6;
+        background: #f3f4f6;
 
-        color:
-            #25282d;
+        color: #25282d;
 
         border:
             1px solid #d7d9dd;
@@ -1537,11 +1910,9 @@
 
     .table-action-hours {
 
-        background:
-            var(--blue-bg);
+        background: var(--blue-bg);
 
-        color:
-            var(--blue);
+        color: var(--blue);
 
         border:
             1px solid #cddaf0;
@@ -1563,12 +1934,10 @@
 
         margin-bottom: 16px;
 
-        background:
-            #ffffff;
+        background: #ffffff;
 
         border:
-            1px solid
-            var(--border);
+            1px solid var(--border);
 
         border-radius: 18px;
 
@@ -1597,8 +1966,7 @@
             );
 
         border-bottom:
-            1px solid
-            var(--border);
+            1px solid var(--border);
     }
 
 
@@ -1606,8 +1974,7 @@
 
         margin: 0;
 
-        color:
-            #1b1e22;
+        color: #1b1e22;
 
         font-size: 14px;
         font-weight: 950;
@@ -1619,8 +1986,7 @@
         margin:
             3px 0 0;
 
-        color:
-            #767d86;
+        color: #767d86;
 
         font-size: 9px;
     }
@@ -1636,49 +2002,38 @@
     }
 
 
-    .hours-public-link {
+    .hours-public-link,
+    .hours-edit-link {
 
-        flex:
-            0 0 auto;
-
-        color:
-            var(--blue);
+        flex: 0 0 auto;
 
         font-size: 9px;
         font-weight: 900;
 
         text-decoration: none;
+    }
+
+
+    .hours-public-link {
+        color: var(--blue);
     }
 
 
     .hours-edit-link {
-
-        flex:
-            0 0 auto;
-
         color: #34383e;
-
-        font-size: 9px;
-        font-weight: 900;
-
-        text-decoration: none;
     }
 
 
     .hours-table {
-
-        min-width:
-            760px;
+        min-width: 760px;
     }
 
 
     .hours-table thead {
 
-        background:
-            #f4f5f6;
+        background: #f4f5f6;
 
-        color:
-            #69707a;
+        color: #69707a;
     }
 
 
@@ -1688,16 +2043,13 @@
 
 
     .hours-table td {
-
-        padding:
-            11px 13px;
+        padding: 11px 13px;
     }
 
 
     .hours-day {
 
-        color:
-            #25282d;
+        color: #25282d;
 
         font-weight: 950;
     }
@@ -1712,11 +2064,9 @@
         padding:
             6px 8px;
 
-        background:
-            #ffffff;
+        background: #ffffff;
 
-        color:
-            #25282d;
+        color: #25282d;
 
         border:
             1px solid #cfd2d6;
@@ -1735,8 +2085,7 @@
 
         gap: 6px;
 
-        color:
-            #656b74;
+        color: #656b74;
 
         font-size: 9px;
         font-weight: 850;
@@ -1762,19 +2111,16 @@
         padding:
             14px 18px;
 
-        background:
-            #fafbfc;
+        background: #fafbfc;
 
         border-top:
-            1px solid
-            var(--border-soft);
+            1px solid var(--border-soft);
     }
 
 
     .hours-footer-note {
 
-        color:
-            #7a8089;
+        color: #7a8089;
 
         font-size: 9px;
         line-height: 1.45;
@@ -1783,8 +2129,7 @@
 
     .save-hours {
 
-        flex:
-            0 0 auto;
+        flex: 0 0 auto;
 
         min-height: 40px;
 
@@ -1798,8 +2143,7 @@
                 #34383e
             );
 
-        color:
-            #ffffff;
+        color: #ffffff;
 
         border:
             1px solid #202328;
@@ -1808,8 +2152,6 @@
 
         font-size: 9px;
         font-weight: 950;
-
-        cursor: pointer;
     }
 
 
@@ -1831,20 +2173,15 @@
             );
 
         border:
-            1px dashed
-            #bfc4ca;
+            1px dashed #bfc4ca;
 
-        border-radius:
-            16px;
+        border-radius: 16px;
 
-        text-align:
-            center;
+        text-align: center;
 
-        color:
-            #69707a;
+        color: #69707a;
 
-        font-size:
-            11px;
+        font-size: 11px;
 
         box-shadow:
             var(--shadow-soft);
@@ -1853,11 +2190,9 @@
 
     .empty strong {
 
-        color:
-            #2b2f35;
+        color: #2b2f35;
 
-        font-size:
-            13px;
+        font-size: 13px;
     }
 
 
@@ -1914,6 +2249,14 @@
         }
 
 
+        .qr-card-body {
+
+            grid-template-columns: 190px 1fr;
+
+            gap: 18px;
+        }
+
+
         .metrics {
 
             grid-template-columns:
@@ -1941,8 +2284,7 @@
                     1380px
                 );
 
-            padding-top:
-                10px;
+            padding-top: 10px;
         }
 
 
@@ -1951,36 +2293,29 @@
             padding:
                 13px 14px;
 
-            border-radius:
-                14px;
+            border-radius: 14px;
         }
 
 
         .nav-actions {
-
             gap: 8px;
         }
 
 
         .nav-link {
-
             font-size: 9px;
         }
 
 
         .hero {
 
-            align-items:
-                stretch;
+            align-items: stretch;
 
-            flex-direction:
-                column;
+            flex-direction: column;
 
-            padding:
-                20px;
+            padding: 20px;
 
-            border-radius:
-                18px;
+            border-radius: 18px;
         }
 
 
@@ -1991,11 +2326,9 @@
 
         .subscription {
 
-            align-items:
-                flex-start;
+            align-items: flex-start;
 
-            flex-direction:
-                column;
+            flex-direction: column;
         }
 
 
@@ -2014,37 +2347,82 @@
 
         .section-header {
 
-            align-items:
-                flex-start;
+            align-items: flex-start;
 
-            flex-direction:
-                column;
+            flex-direction: column;
+        }
+
+
+        .qr-card-header {
+
+            align-items: flex-start;
+
+            flex-direction: column;
+        }
+
+
+        .qr-card-body {
+            grid-template-columns: 1fr;
+        }
+
+
+        .qr-preview {
+
+            width: 100%;
+
+            max-width: 260px;
+
+            min-height: 0;
+
+            margin:
+                0 auto;
+        }
+
+
+        .qr-generate {
+
+            align-items: stretch;
+
+            flex-direction: column;
+        }
+
+
+        .qr-generate-button {
+            width: 100%;
+        }
+
+
+        .qr-actions {
+
+            display: grid;
+
+            grid-template-columns: 1fr;
+        }
+
+
+        .qr-action {
+            width: 100%;
         }
 
 
         .hours-card-header {
 
-            align-items:
-                flex-start;
+            align-items: flex-start;
 
-            flex-direction:
-                column;
+            flex-direction: column;
         }
 
 
         .hours-card-actions {
-
             flex-wrap: wrap;
         }
 
 
         .hours-footer {
 
-            align-items:
-                stretch;
+            align-items: stretch;
 
-            flex-direction:
-                column;
+            flex-direction: column;
         }
 
 
@@ -2168,6 +2546,14 @@
             {% if subscription_active and adverts %}
 
                 <a
+                    href="#customer-rating-qr"
+                    class="mobile-management-link"
+                >
+                    Rating QR
+                </a>
+
+
+                <a
                     href="#working-hours"
                     class="mobile-management-link"
                 >
@@ -2175,25 +2561,6 @@
                 </a>
 
             {% endif %}
-
-
-            {% for advert in adverts %}
-
-                {% if subscription_active %}
-
-                    <a
-                        href="{{ url_for(
-                            'admin_edit_restaurant',
-                            advert_id=advert.id
-                        ) }}"
-                        class="mobile-management-link"
-                    >
-                        Edit {{ advert.business_name }}
-                    </a>
-
-                {% endif %}
-
-            {% endfor %}
 
 
         </div>
@@ -2329,6 +2696,20 @@
                 {% if subscription_active and adverts %}
 
                     <a
+                        href="#customer-rating-qr"
+                        class="sidebar-link"
+                    >
+
+                        <span class="sidebar-icon">
+                            ▦
+                        </span>
+
+                        Customer Rating QR
+
+                    </a>
+
+
+                    <a
                         href="#working-hours"
                         class="sidebar-link"
                     >
@@ -2418,6 +2799,14 @@
 
 
                             <a
+                                href="#qr-{{ advert.id }}"
+                                class="sidebar-mini-link"
+                            >
+                                Rating QR
+                            </a>
+
+
+                            <a
                                 href="#hours-{{ advert.id }}"
                                 class="sidebar-mini-link"
                             >
@@ -2485,8 +2874,8 @@
                     <p class="subtitle">
 
                         Manage restaurant campaigns,
-                        public profiles, gallery photos,
-                        working hours, reels and
+                        public profiles, customer rating QR codes,
+                        gallery photos, working hours, reels and
                         subscription from one place.
 
                     </p>
@@ -2509,7 +2898,6 @@
 
                 {% else %}
 
-
                     <a
                         href="{{ url_for(
                             'admin_subscription'
@@ -2518,7 +2906,6 @@
                     >
                         🔒 Activate Subscription
                     </a>
-
 
                 {% endif %}
 
@@ -2621,7 +3008,6 @@
 
             {% else %}
 
-
                 <div
                     class="
                         subscription
@@ -2663,7 +3049,6 @@
 
 
                 </div>
-
 
             {% endif %}
 
@@ -2804,37 +3189,14 @@
 
                                     <tr>
 
-                                        <th>
-                                            Restaurant
-                                        </th>
-
-                                        <th>
-                                            Status
-                                        </th>
-
-                                        <th>
-                                            Area
-                                        </th>
-
-                                        <th>
-                                            Campaign Start
-                                        </th>
-
-                                        <th>
-                                            Campaign End
-                                        </th>
-
-                                        <th>
-                                            Reel
-                                        </th>
-
-                                        <th>
-                                            Remaining
-                                        </th>
-
-                                        <th>
-                                            Actions
-                                        </th>
+                                        <th>Restaurant</th>
+                                        <th>Status</th>
+                                        <th>Area</th>
+                                        <th>Campaign Start</th>
+                                        <th>Campaign End</th>
+                                        <th>Reel</th>
+                                        <th>Remaining</th>
+                                        <th>Actions</th>
 
                                     </tr>
 
@@ -2851,7 +3213,6 @@
 
 
                                             <td>
-
 
                                                 <div class="restaurant-cell">
 
@@ -2873,11 +3234,9 @@
 
                                                     <div>
 
-
                                                         <strong>
                                                             {{ advert.business_name }}
                                                         </strong>
-
 
                                                         {% if advert.headline %}
 
@@ -2887,118 +3246,79 @@
 
                                                         {% endif %}
 
-
                                                     </div>
 
 
                                                 </div>
 
-
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.campaign_status == "live" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-live
-                                                    ">
+                                                    <span class="status-badge badge-live">
                                                         ● LIVE
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "scheduled" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-scheduled
-                                                    ">
+                                                    <span class="status-badge badge-scheduled">
                                                         ● SCHEDULED
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "expired" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-expired
-                                                    ">
+                                                    <span class="status-badge badge-expired">
                                                         ● EXPIRED
                                                     </span>
 
-
                                                 {% else %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-paused
-                                                    ">
+                                                    <span class="status-badge badge-paused">
                                                         ● PAUSED
                                                     </span>
 
-
                                                 {% endif %}
-
 
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.area %}
-
                                                     {{ advert.area }}
-
                                                 {% else %}
-
                                                     —
-
                                                 {% endif %}
-
 
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.campaign_start_date %}
-
                                                     {{ advert.campaign_start_date.strftime('%d %b %Y') }}
-
                                                 {% else %}
-
                                                     —
-
                                                 {% endif %}
-
 
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.campaign_end_date %}
-
                                                     {{ advert.campaign_end_date.strftime('%d %b %Y') }}
-
                                                 {% else %}
-
                                                     —
-
                                                 {% endif %}
-
 
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.reel %}
 
@@ -3014,29 +3334,23 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
 
-
                                                 {% if advert.campaign_status == "live" %}
 
                                                     {{ advert.days_remaining }}
-
                                                     day{% if advert.days_remaining != 1 %}s{% endif %}
-
 
                                                 {% elif advert.campaign_status == "scheduled" %}
 
                                                     Starts soon
 
-
                                                 {% elif advert.campaign_status == "expired" %}
 
                                                     Ended
-
 
                                                 {% else %}
 
@@ -3044,12 +3358,10 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
-
 
                                                 <div class="table-actions">
 
@@ -3070,7 +3382,6 @@
 
                                                     {% if subscription_active %}
 
-
                                                         <a
                                                             href="{{ url_for(
                                                                 'admin_edit_restaurant',
@@ -3086,6 +3397,17 @@
 
 
                                                         <a
+                                                            href="#qr-{{ advert.id }}"
+                                                            class="
+                                                                table-action
+                                                                table-action-secondary
+                                                            "
+                                                        >
+                                                            Rating QR
+                                                        </a>
+
+
+                                                        <a
                                                             href="#hours-{{ advert.id }}"
                                                             class="
                                                                 table-action
@@ -3094,7 +3416,6 @@
                                                         >
                                                             Working Hours
                                                         </a>
-
 
                                                     {% endif %}
 
@@ -3116,7 +3437,6 @@
 
 
                                                 </div>
-
 
                                             </td>
 
@@ -3143,25 +3463,19 @@
 
                     <div class="empty">
 
-
                         <strong>
                             No restaurant campaigns yet.
                         </strong>
 
-
                         <br><br>
 
-
                         {% if subscription_active %}
-
 
                             Create your first campaign
                             and start building your restaurant
                             presence on Kalxa.
 
-
                             <br><br>
-
 
                             <a
                                 href="{{ url_for(
@@ -3172,17 +3486,13 @@
                                 + Create First Campaign
                             </a>
 
-
                         {% else %}
-
 
                             Activate your subscription
                             before creating your first
                             restaurant campaign.
 
-
                             <br><br>
-
 
                             <a
                                 href="{{ url_for(
@@ -3193,9 +3503,7 @@
                                 Activate Subscription
                             </a>
 
-
                         {% endif %}
-
 
                     </div>
 
@@ -3204,6 +3512,295 @@
 
 
             </section>
+
+
+            <!-- =================================================
+                 CUSTOMER RATING QR
+            ================================================== -->
+
+            {% if subscription_active and adverts %}
+
+                <section
+                    class="section"
+                    id="customer-rating-qr"
+                >
+
+
+                    <div class="section-header">
+
+
+                        <div>
+
+                            <h2>
+                                Customer Rating QR
+                            </h2>
+
+                            <p>
+                                Generate a permanent QR code for each
+                                restaurant. Print it and place it inside
+                                the restaurant so customers can scan,
+                                rate and share their experience.
+                            </p>
+
+                        </div>
+
+
+                        <span class="section-count">
+                            Permanent QR
+                        </span>
+
+
+                    </div>
+
+
+                    <div class="qr-grid">
+
+
+                        {% for advert in adverts %}
+
+
+                            {% set qr_data =
+                                restaurant_qr_data.get(
+                                    advert.id
+                                )
+                            %}
+
+
+                            <article
+                                class="qr-card"
+                                id="qr-{{ advert.id }}"
+                            >
+
+
+                                <div class="qr-card-header">
+
+
+                                    <div>
+
+                                        <h3>
+                                            {{ advert.business_name }}
+                                        </h3>
+
+                                        <p>
+
+                                            {% if advert.area %}
+                                                📍 {{ advert.area }}
+                                            {% else %}
+                                                Kalxa Restaurant
+                                            {% endif %}
+
+                                        </p>
+
+                                    </div>
+
+
+                                    {% if qr_data and qr_data.exists %}
+
+                                        <span class="qr-status active">
+                                            ● QR ACTIVE
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="qr-status">
+                                            QR NOT CREATED
+                                        </span>
+
+                                    {% endif %}
+
+
+                                </div>
+
+
+                                {% if qr_data and qr_data.exists %}
+
+
+                                    <div class="qr-card-body">
+
+
+                                        <div class="qr-preview">
+
+                                            <img
+                                                src="{{ qr_data.image_url }}"
+                                                alt="Customer rating QR code for {{ advert.business_name }}"
+                                                loading="lazy"
+                                            >
+
+                                        </div>
+
+
+                                        <div class="qr-details">
+
+
+                                            <p class="qr-eyebrow">
+                                                CUSTOMER EXPERIENCE QR
+                                            </p>
+
+
+                                            <h4>
+                                                Scan. Rate. Share.
+                                            </h4>
+
+
+                                            <p class="qr-description">
+
+                                                Print this QR code and place it
+                                                somewhere customers can easily
+                                                scan it after their visit.
+
+                                                The QR is permanently connected
+                                                to <strong>{{ advert.business_name }}</strong>.
+
+                                            </p>
+
+
+                                            <div class="qr-info-box">
+
+                                                <span class="qr-info-label">
+                                                    Permanent Rating Link
+                                                </span>
+
+                                                <span
+                                                    class="qr-url"
+                                                    id="rating-url-{{ advert.id }}"
+                                                >
+                                                    {{ qr_data.rating_url }}
+                                                </span>
+
+                                            </div>
+
+
+                                            <div class="qr-info-box">
+
+                                                <span class="qr-info-label">
+                                                    Kalxa QR Code
+                                                </span>
+
+                                                <span class="qr-code-value">
+                                                    {{ qr_data.public_code }}
+                                                </span>
+
+                                            </div>
+
+
+                                            <div class="qr-actions">
+
+
+                                                <a
+                                                    href="{{ qr_data.rating_url }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="
+                                                        qr-action
+                                                        qr-action-primary
+                                                    "
+                                                >
+                                                    Open Rating Page
+                                                </a>
+
+
+                                                <a
+                                                    href="{{ qr_data.download_url }}"
+                                                    class="
+                                                        qr-action
+                                                        qr-action-download
+                                                    "
+                                                >
+                                                    ↓ Download QR
+                                                </a>
+
+
+                                                <button
+                                                    type="button"
+                                                    class="
+                                                        qr-action
+                                                        qr-action-secondary
+                                                    "
+                                                    data-copy-rating-url="{{ qr_data.rating_url }}"
+                                                >
+                                                    Copy Link
+                                                </button>
+
+
+                                            </div>
+
+
+                                            <div
+                                                class="qr-message"
+                                                id="copy-message-{{ advert.id }}"
+                                            ></div>
+
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                {% else %}
+
+
+                                    <div class="qr-generate">
+
+
+                                        <div class="qr-generate-copy">
+
+                                            <h4>
+                                                Create a permanent customer rating QR
+                                            </h4>
+
+
+                                            <p>
+
+                                                Kalxa will create one permanent
+                                                QR code for
+                                                <strong>{{ advert.business_name }}</strong>.
+
+                                                Customers who scan it will be
+                                                sent directly to the restaurant
+                                                experience form with this
+                                                restaurant already selected.
+
+                                            </p>
+
+
+                                            <div
+                                                class="qr-message"
+                                                id="qr-message-{{ advert.id }}"
+                                            ></div>
+
+                                        </div>
+
+
+                                        <button
+                                            type="button"
+                                            class="qr-generate-button"
+                                            data-create-qr-url="{{ qr_data.create_url if qr_data else '' }}"
+                                            data-restaurant-id="{{ advert.id }}"
+                                        >
+                                            Generate Customer Rating QR
+                                        </button>
+
+
+                                    </div>
+
+
+                                {% endif %}
+
+
+                            </article>
+
+
+                        {% endfor %}
+
+
+                    </div>
+
+
+                </section>
+
+
+            {% endif %}
 
 
             <!-- =================================================
@@ -3227,17 +3824,14 @@
 
                         <div>
 
-
                             <h2>
                                 Working Hours
                             </h2>
-
 
                             <p>
                                 Set the normal weekly opening
                                 and closing times for each restaurant.
                             </p>
-
 
                         </div>
 
@@ -3264,17 +3858,14 @@
 
                                 <div>
 
-
                                     <h3>
                                         {{ advert.business_name }}
                                     </h3>
-
 
                                     <p>
                                         These hours appear
                                         on the public restaurant page.
                                     </p>
-
 
                                 </div>
 
@@ -3329,31 +3920,15 @@
 
                                         <thead>
 
-
                                             <tr>
 
-                                                <th>
-                                                    Day
-                                                </th>
-
-                                                <th>
-                                                    Opening Time
-                                                </th>
-
-                                                <th>
-                                                    Closing Time
-                                                </th>
-
-                                                <th>
-                                                    Closed
-                                                </th>
-
-                                                <th>
-                                                    Public Status
-                                                </th>
+                                                <th>Day</th>
+                                                <th>Opening Time</th>
+                                                <th>Closing Time</th>
+                                                <th>Closed</th>
+                                                <th>Public Status</th>
 
                                             </tr>
-
 
                                         </thead>
 
@@ -3387,9 +3962,7 @@
 
                                                     {% if opening_hour.day_of_week == day %}
 
-
                                                         {% set hour_ns.found = true %}
-
 
                                                         {% set hour_ns.open_time =
                                                             opening_hour.open_time.strftime('%H:%M')
@@ -3397,18 +3970,15 @@
                                                             else ''
                                                         %}
 
-
                                                         {% set hour_ns.close_time =
                                                             opening_hour.close_time.strftime('%H:%M')
                                                             if opening_hour.close_time
                                                             else ''
                                                         %}
 
-
                                                         {% set hour_ns.is_closed =
                                                             opening_hour.is_closed
                                                         %}
-
 
                                                     {% endif %}
 
@@ -3486,7 +4056,6 @@
                                                                 Closed
                                                             </span>
 
-
                                                         {% elif hour_ns.open_time and hour_ns.close_time %}
 
                                                             <span class="
@@ -3500,7 +4069,6 @@
 
                                                             </span>
 
-
                                                         {% else %}
 
                                                             <span class="
@@ -3509,7 +4077,6 @@
                                                             ">
                                                                 Not configured
                                                             </span>
-
 
                                                         {% endif %}
 
@@ -3590,17 +4157,14 @@
 
                         <div>
 
-
                             <h2>
                                 Restaurant Setup Checklist
                             </h2>
-
 
                             <p>
                                 Keep each restaurant profile complete
                                 so customers have useful information.
                             </p>
-
 
                         </div>
 
@@ -3619,43 +4183,19 @@
 
                                 <thead>
 
-
                                     <tr>
 
-                                        <th>
-                                            Restaurant
-                                        </th>
-
-                                        <th>
-                                            Poster
-                                        </th>
-
-                                        <th>
-                                            Gallery
-                                        </th>
-
-                                        <th>
-                                            Location
-                                        </th>
-
-                                        <th>
-                                            Reel
-                                        </th>
-
-                                        <th>
-                                            Working Hours
-                                        </th>
-
-                                        <th>
-                                            Campaign
-                                        </th>
-
-                                        <th>
-                                            Edit
-                                        </th>
+                                        <th>Restaurant</th>
+                                        <th>Poster</th>
+                                        <th>Gallery</th>
+                                        <th>Location</th>
+                                        <th>Reel</th>
+                                        <th>Working Hours</th>
+                                        <th>Rating QR</th>
+                                        <th>Campaign</th>
+                                        <th>Edit</th>
 
                                     </tr>
-
 
                                 </thead>
 
@@ -3669,6 +4209,13 @@
                                         {% set setup_ns =
                                             namespace(
                                                 has_hours=false
+                                            )
+                                        %}
+
+
+                                        {% set qr_data =
+                                            restaurant_qr_data.get(
+                                                advert.id
                                             )
                                         %}
 
@@ -3706,7 +4253,6 @@
 
                                             <td>
 
-
                                                 {% if advert.poster_image_url %}
 
                                                     <span class="yes-badge">
@@ -3721,12 +4267,10 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.gallery_images %}
 
@@ -3746,12 +4290,10 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.address or advert.area %}
 
@@ -3767,12 +4309,10 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if advert.reel %}
 
@@ -3788,12 +4328,10 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
-
 
                                                 {% if setup_ns.has_hours %}
 
@@ -3809,12 +4347,37 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
 
                                             <td>
 
+                                                {% if qr_data and qr_data.exists %}
+
+                                                    <a
+                                                        href="#qr-{{ advert.id }}"
+                                                        class="yes-badge"
+                                                        style="text-decoration:none;"
+                                                    >
+                                                        ✓ Created
+                                                    </a>
+
+                                                {% else %}
+
+                                                    <a
+                                                        href="#qr-{{ advert.id }}"
+                                                        class="no-badge"
+                                                        style="text-decoration:none;"
+                                                    >
+                                                        Not created
+                                                    </a>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+                                            <td>
 
                                                 {% if advert.campaign_status == "live" %}
 
@@ -3825,7 +4388,6 @@
                                                         Live
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "scheduled" %}
 
                                                     <span class="
@@ -3834,7 +4396,6 @@
                                                     ">
                                                         Scheduled
                                                     </span>
-
 
                                                 {% elif advert.campaign_status == "expired" %}
 
@@ -3845,7 +4406,6 @@
                                                         Expired
                                                     </span>
 
-
                                                 {% else %}
 
                                                     <span class="
@@ -3855,15 +4415,12 @@
                                                         Paused
                                                     </span>
 
-
                                                 {% endif %}
-
 
                                             </td>
 
 
                                             <td>
-
 
                                                 <a
                                                     href="{{ url_for(
@@ -3877,7 +4434,6 @@
                                                 >
                                                     Edit Campaign
                                                 </a>
-
 
                                             </td>
 
@@ -3913,6 +4469,287 @@
 
 
 </div>
+
+
+<!-- =========================================================
+     CUSTOMER RATING QR JAVASCRIPT
+========================================================== -->
+
+<script>
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            /* =================================================
+               GENERATE QR
+            ================================================== */
+
+            const generateButtons =
+                document.querySelectorAll(
+                    "[data-create-qr-url]"
+                );
+
+
+            generateButtons.forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        async function () {
+
+                            const createUrl =
+                                button.dataset.createQrUrl;
+
+                            const restaurantId =
+                                button.dataset.restaurantId;
+
+                            const messageBox =
+                                document.getElementById(
+                                    "qr-message-" +
+                                    restaurantId
+                                );
+
+
+                            if (!createUrl) {
+
+                                if (messageBox) {
+
+                                    messageBox.textContent =
+                                        "Unable to create this QR code.";
+
+                                    messageBox.className =
+                                        "qr-message show error";
+                                }
+
+                                return;
+                            }
+
+
+                            const originalText =
+                                button.textContent;
+
+
+                            button.disabled = true;
+
+                            button.textContent =
+                                "Generating QR...";
+
+
+                            if (messageBox) {
+
+                                messageBox.textContent = "";
+
+                                messageBox.className =
+                                    "qr-message";
+                            }
+
+
+                            try {
+
+                                const response =
+                                    await fetch(
+                                        createUrl,
+                                        {
+                                            method: "POST",
+
+                                            headers: {
+                                                "Accept":
+                                                    "application/json"
+                                            }
+                                        }
+                                    );
+
+
+                                let data = {};
+
+
+                                try {
+
+                                    data =
+                                        await response.json();
+
+                                } catch (jsonError) {
+
+                                    data = {};
+                                }
+
+
+                                if (
+                                    !response.ok
+                                    ||
+                                    !data.success
+                                ) {
+
+                                    throw new Error(
+                                        data.error
+                                        ||
+                                        "Unable to generate QR code."
+                                    );
+                                }
+
+
+                                if (messageBox) {
+
+                                    messageBox.textContent =
+                                        "QR created successfully. Loading your permanent QR...";
+
+                                    messageBox.className =
+                                        "qr-message show success";
+                                }
+
+
+                                window.setTimeout(
+                                    function () {
+
+                                        window.location.reload();
+
+                                    },
+                                    650
+                                );
+
+
+                            } catch (error) {
+
+                                button.disabled = false;
+
+                                button.textContent =
+                                    originalText;
+
+
+                                if (messageBox) {
+
+                                    messageBox.textContent =
+                                        error.message
+                                        ||
+                                        "Unable to generate QR code.";
+
+                                    messageBox.className =
+                                        "qr-message show error";
+                                }
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /* =================================================
+               COPY PERMANENT RATING LINK
+            ================================================== */
+
+            const copyButtons =
+                document.querySelectorAll(
+                    "[data-copy-rating-url]"
+                );
+
+
+            copyButtons.forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        async function () {
+
+                            const ratingUrl =
+                                button.dataset.copyRatingUrl;
+
+
+                            if (!ratingUrl) {
+                                return;
+                            }
+
+
+                            const originalText =
+                                button.textContent;
+
+
+                            try {
+
+                                await navigator.clipboard.writeText(
+                                    ratingUrl
+                                );
+
+
+                                button.textContent =
+                                    "Copied ✓";
+
+
+                                window.setTimeout(
+                                    function () {
+
+                                        button.textContent =
+                                            originalText;
+
+                                    },
+                                    1800
+                                );
+
+
+                            } catch (error) {
+
+                                const temporaryInput =
+                                    document.createElement(
+                                        "textarea"
+                                    );
+
+
+                                temporaryInput.value =
+                                    ratingUrl;
+
+
+                                temporaryInput.style.position =
+                                    "fixed";
+
+                                temporaryInput.style.opacity =
+                                    "0";
+
+
+                                document.body.appendChild(
+                                    temporaryInput
+                                );
+
+
+                                temporaryInput.select();
+
+
+                                document.execCommand(
+                                    "copy"
+                                );
+
+
+                                temporaryInput.remove();
+
+
+                                button.textContent =
+                                    "Copied ✓";
+
+
+                                window.setTimeout(
+                                    function () {
+
+                                        button.textContent =
+                                            originalText;
+
+                                    },
+                                    1800
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+</script>
 
 
 </body>
