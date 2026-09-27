@@ -583,6 +583,7 @@
         padding: 14px;
 
         background: #ffffff;
+        color: #111827;
 
         border:
             1px solid #d1d5db;
@@ -591,10 +592,14 @@
 
         cursor: pointer;
 
+        text-align: left;
+
+        font-family: inherit;
+
         transition:
             border-color .15s ease,
             background .15s ease,
-            transform .15s ease;
+            color .15s ease;
     }
 
 
@@ -698,9 +703,7 @@
     }
 
 
-    .media-status {
-
-        display: none;
+    .media-note {
 
         margin-top: 10px;
 
@@ -708,7 +711,7 @@
             9px 10px;
 
         background: #f8fafc;
-        color: #374151;
+        color: #6b7280;
 
         border:
             1px solid #e5e7eb;
@@ -717,52 +720,6 @@
 
         font-size: 9px;
         line-height: 1.5;
-    }
-
-
-    .media-status.visible {
-
-        display: block;
-    }
-
-
-    .media-status.error {
-
-        display: block;
-
-        background: #fef2f2;
-        color: #991b1b;
-
-        border-color: #fecaca;
-    }
-
-
-    .media-required-message {
-
-        display: none;
-
-        margin-top: 10px;
-
-        padding:
-            9px 10px;
-
-        background: #fef2f2;
-        color: #991b1b;
-
-        border:
-            1px solid #fecaca;
-
-        border-radius: 9px;
-
-        font-size: 9px;
-        font-weight: 800;
-        line-height: 1.5;
-    }
-
-
-    .media-required-message.visible {
-
-        display: block;
     }
 
 
@@ -1420,8 +1377,6 @@
 
             <p class="media-intro">
                 Choose photos or a short reel.
-                They are kept separate so uploads work
-                reliably on mobile devices.
             </p>
 
 
@@ -1496,8 +1451,8 @@
 
 
                 <p class="media-panel-description">
-                    Choose between 1 and 3 photos.
-                    JPG, PNG and WebP are supported.
+                    Choose 1 to 3 photos.
+                    JPG, PNG or WebP.
                     Maximum 8 MB per photo.
                 </p>
 
@@ -1508,14 +1463,13 @@
                     type="file"
                     accept="image/*"
                     multiple
+                    required
                 >
 
 
-                <div
-                    class="media-status"
-                    id="photo-status"
-                    aria-live="polite"
-                ></div>
+                <div class="media-note">
+                    You can select up to 3 photos at once.
+                </div>
 
             </div>
 
@@ -1549,21 +1503,11 @@
                 >
 
 
-                <div
-                    class="media-status"
-                    id="reel-status"
-                    aria-live="polite"
-                ></div>
+                <div class="media-note">
+                    One short reel can be submitted
+                    with each experience.
+                </div>
 
-            </div>
-
-
-            <div
-                class="media-required-message"
-                id="media-required-message"
-                aria-live="polite"
-            >
-                Please add at least one photo or one reel.
             </div>
 
         </div>
@@ -1824,18 +1768,19 @@
 
 
 <!-- =====================================================
-     PHOTO / REEL MODE
+     PHOTO / REEL PANEL SWITCHER
+
+     IMPORTANT:
+     This script does NOT read input.files.
+     It does NOT inspect File objects.
+     It does NOT intercept form submission.
+     It does NOT use DataTransfer.
+     It does NOT recreate FileList objects.
 ====================================================== -->
 
 <script>
 
 (() => {
-
-    const form =
-        document.getElementById(
-            "experience-form"
-        );
-
 
     const photoButton =
         document.getElementById(
@@ -1873,30 +1818,14 @@
         );
 
 
-    const photoStatus =
-        document.getElementById(
-            "photo-status"
-        );
-
-
-    const reelStatus =
-        document.getElementById(
-            "reel-status"
-        );
-
-
-    const requiredMessage =
-        document.getElementById(
-            "media-required-message"
-        );
-
-
     if (
-        !form
-        ||
         !photoButton
         ||
         !reelButton
+        ||
+        !photoPanel
+        ||
+        !reelPanel
         ||
         !photoInput
         ||
@@ -1908,540 +1837,131 @@
     }
 
 
-    const MAX_PHOTOS =
-        3;
+    function showPhotos() {
 
-
-    const MAX_PHOTO_BYTES =
-        8 * 1024 * 1024;
-
-
-    const MAX_REEL_BYTES =
-        80 * 1024 * 1024;
-
-
-    let activeMode =
-        "photos";
-
-
-    function formatBytes(
-        bytes
-    ) {
-
-        const mb =
-            bytes
-            /
-            (
-                1024
-                *
-                1024
-            );
-
-
-        if (mb < 1) {
-
-            return (
-                Math.max(
-                    1,
-                    Math.round(
-                        bytes / 1024
-                    )
-                )
-                +
-                " KB"
-            );
-
-        }
-
-
-        return (
-            mb.toFixed(1)
-            +
-            " MB"
-        );
-
-    }
-
-
-    function hideRequiredMessage() {
-
-        if (requiredMessage) {
-
-            requiredMessage.classList.remove(
-                "visible"
-            );
-
-        }
-
-    }
-
-
-    function showStatus(
-        element,
-        message,
-        isError = false
-    ) {
-
-        if (!element) {
-            return;
-        }
-
-
-        element.textContent =
-            message;
-
-
-        element.className =
-            isError
-                ? "media-status error"
-                : "media-status visible";
-
-    }
-
-
-    function clearStatus(
-        element
-    ) {
-
-        if (!element) {
-            return;
-        }
-
-
-        element.textContent =
-            "";
-
-
-        element.className =
-            "media-status";
-
-    }
-
-
-    function setMode(
-        mode
-    ) {
-
-        activeMode =
-            mode;
-
-
-        const photosActive =
-            mode === "photos";
-
-
-        photoButton.classList.toggle(
-            "active",
-            photosActive
+        photoButton.classList.add(
+            "active"
         );
 
 
-        reelButton.classList.toggle(
-            "active",
-            !photosActive
+        reelButton.classList.remove(
+            "active"
         );
 
 
         photoButton.setAttribute(
             "aria-pressed",
-            photosActive
-                ? "true"
-                : "false"
+            "true"
         );
 
 
         reelButton.setAttribute(
             "aria-pressed",
-            photosActive
-                ? "false"
-                : "true"
+            "false"
         );
 
 
-        photoPanel.classList.toggle(
-            "active",
-            photosActive
+        photoPanel.classList.add(
+            "active"
         );
 
 
-        reelPanel.classList.toggle(
-            "active",
-            !photosActive
+        reelPanel.classList.remove(
+            "active"
         );
 
 
         /*
-         * Only the active native file input has a name
-         * and is enabled.
+         * Activate the native photo picker.
          *
-         * This prevents the browser from trying to upload
-         * both photo and video file inputs.
-         *
-         * We DO NOT modify FileList objects.
+         * No selected File objects are inspected.
          */
 
-        if (photosActive) {
-
-            photoInput.disabled =
-                false;
+        photoInput.disabled =
+            false;
 
 
-            photoInput.name =
-                "experience_media";
+        photoInput.required =
+            true;
 
 
-            reelInput.disabled =
-                true;
+        reelInput.disabled =
+            true;
 
 
-            reelInput.removeAttribute(
-                "name"
-            );
+        reelInput.required =
+            false;
+
+    }
 
 
-            /*
-             * Clear the inactive picker.
-             *
-             * This is only done when the customer
-             * explicitly changes media mode.
-             */
+    function showReel() {
 
-            reelInput.value =
-                "";
+        reelButton.classList.add(
+            "active"
+        );
 
 
-            clearStatus(
-                reelStatus
-            );
-
-        }
-        else {
-
-            reelInput.disabled =
-                false;
+        photoButton.classList.remove(
+            "active"
+        );
 
 
-            reelInput.name =
-                "experience_media";
+        reelButton.setAttribute(
+            "aria-pressed",
+            "true"
+        );
 
 
-            photoInput.disabled =
-                true;
+        photoButton.setAttribute(
+            "aria-pressed",
+            "false"
+        );
 
 
-            photoInput.removeAttribute(
-                "name"
-            );
+        reelPanel.classList.add(
+            "active"
+        );
 
 
-            photoInput.value =
-                "";
+        photoPanel.classList.remove(
+            "active"
+        );
 
 
-            clearStatus(
-                photoStatus
-            );
+        /*
+         * Activate the native reel picker.
+         *
+         * Again, we do not touch FileList.
+         */
 
-        }
+        reelInput.disabled =
+            false;
 
 
-        hideRequiredMessage();
+        reelInput.required =
+            true;
+
+
+        photoInput.disabled =
+            true;
+
+
+        photoInput.required =
+            false;
 
     }
 
 
     photoButton.addEventListener(
         "click",
-        () => {
-
-            setMode(
-                "photos"
-            );
-
-        }
+        showPhotos
     );
 
 
     reelButton.addEventListener(
         "click",
-        () => {
-
-            setMode(
-                "reel"
-            );
-
-        }
-    );
-
-
-    photoInput.addEventListener(
-        "change",
-        () => {
-
-            hideRequiredMessage();
-
-
-            const files =
-                Array.from(
-                    photoInput.files
-                    ||
-                    []
-                );
-
-
-            if (!files.length) {
-
-                clearStatus(
-                    photoStatus
-                );
-
-                return;
-
-            }
-
-
-            if (
-                files.length
-                >
-                MAX_PHOTOS
-            ) {
-
-                showStatus(
-                    photoStatus,
-                    "Please choose a maximum of 3 photos.",
-                    true
-                );
-
-                return;
-
-            }
-
-
-            const oversized =
-                files.find(
-                    (file) =>
-                        file.size
-                        >
-                        MAX_PHOTO_BYTES
-                );
-
-
-            if (oversized) {
-
-                showStatus(
-                    photoStatus,
-                    `${oversized.name} is larger than 8 MB.`,
-                    true
-                );
-
-                return;
-
-            }
-
-
-            showStatus(
-                photoStatus,
-                files.length === 1
-                    ? `1 photo selected · ${formatBytes(files[0].size)}`
-                    : `${files.length} photos selected`
-            );
-
-        }
-    );
-
-
-    reelInput.addEventListener(
-        "change",
-        () => {
-
-            hideRequiredMessage();
-
-
-            const file =
-                reelInput.files
-                &&
-                reelInput.files[0];
-
-
-            if (!file) {
-
-                clearStatus(
-                    reelStatus
-                );
-
-                return;
-
-            }
-
-
-            if (
-                file.size
-                >
-                MAX_REEL_BYTES
-            ) {
-
-                showStatus(
-                    reelStatus,
-                    "This reel is larger than the 80 MB limit.",
-                    true
-                );
-
-                return;
-
-            }
-
-
-            showStatus(
-                reelStatus,
-                `1 reel selected · ${formatBytes(file.size)}`
-            );
-
-        }
-    );
-
-
-    /*
-     * We only stop submission when no media exists
-     * or when obvious size/count validation fails.
-     *
-     * We never recreate the FileList,
-     * use DataTransfer,
-     * upload with fetch,
-     * clone the file input,
-     * or programmatically submit the form.
-     */
-
-    form.addEventListener(
-        "submit",
-        (event) => {
-
-            hideRequiredMessage();
-
-
-            if (
-                activeMode
-                ===
-                "photos"
-            ) {
-
-                const files =
-                    Array.from(
-                        photoInput.files
-                        ||
-                        []
-                    );
-
-
-                if (!files.length) {
-
-                    event.preventDefault();
-
-
-                    requiredMessage.classList.add(
-                        "visible"
-                    );
-
-
-                    photoInput.focus();
-
-                    return;
-
-                }
-
-
-                if (
-                    files.length
-                    >
-                    MAX_PHOTOS
-                ) {
-
-                    event.preventDefault();
-
-
-                    showStatus(
-                        photoStatus,
-                        "Please choose a maximum of 3 photos.",
-                        true
-                    );
-
-                    return;
-
-                }
-
-
-                const oversized =
-                    files.find(
-                        (file) =>
-                            file.size
-                            >
-                            MAX_PHOTO_BYTES
-                    );
-
-
-                if (oversized) {
-
-                    event.preventDefault();
-
-
-                    showStatus(
-                        photoStatus,
-                        `${oversized.name} is larger than 8 MB.`,
-                        true
-                    );
-
-                }
-
-            }
-            else {
-
-                const file =
-                    reelInput.files
-                    &&
-                    reelInput.files[0];
-
-
-                if (!file) {
-
-                    event.preventDefault();
-
-
-                    requiredMessage.classList.add(
-                        "visible"
-                    );
-
-
-                    reelInput.focus();
-
-                    return;
-
-                }
-
-
-                if (
-                    file.size
-                    >
-                    MAX_REEL_BYTES
-                ) {
-
-                    event.preventDefault();
-
-
-                    showStatus(
-                        reelStatus,
-                        "This reel is larger than the 80 MB limit.",
-                        true
-                    );
-
-                }
-
-            }
-
-        }
-    );
-
-
-    setMode(
-        "photos"
+        showReel
     );
 
 })();
