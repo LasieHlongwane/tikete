@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -441,7 +442,6 @@
         gap: 6px;
 
         width: max-content;
-
         max-width: 100%;
 
         padding:
@@ -986,8 +986,22 @@
 
     <form
         method="POST"
+
+        action="{{
+            url_for(
+                'create_restaurant_experience',
+                restaurant_id=(
+                    preselected_restaurant.id
+                    if preselected_restaurant
+                    else None
+                )
+            )
+        }}"
+
         enctype="multipart/form-data"
+
         class="form-card"
+
         id="experience-form"
     >
 
@@ -1031,15 +1045,6 @@
 
         {% if preselected_restaurant %}
 
-            <!--
-                QR MODE
-
-                The restaurant has already been resolved by
-                the backend from the QR code.
-
-                Do not let the customer change it in the UI.
-            -->
-
             <input
                 type="hidden"
                 id="restaurant_advert_id"
@@ -1074,12 +1079,6 @@
 
 
         {% else %}
-
-            <!--
-                NORMAL MODE
-
-                Customer chooses a restaurant manually.
-            -->
 
             <div class="field">
 
@@ -1403,11 +1402,17 @@
     ) {
 
         const descriptions = {
+
             1: "1 out of 5 · Poor",
+
             2: "2 out of 5 · Fair",
+
             3: "3 out of 5 · Good",
+
             4: "4 out of 5 · Very good",
+
             5: "5 out of 5 · Excellent",
+
         };
 
 
@@ -1553,18 +1558,12 @@
 
 
 <!-- =====================================================
-     MULTIPLE PHOTO / VIDEO VALIDATION
+     MEDIA SELECTION FEEDBACK
 ====================================================== -->
 
 <script>
 
 (() => {
-
-    const form =
-        document.getElementById(
-            "experience-form"
-        );
-
 
     const input =
         document.getElementById(
@@ -1578,15 +1577,7 @@
         );
 
 
-    const submitButton =
-        document.getElementById(
-            "submit-button"
-        );
-
-
     if (
-        !form
-        ||
         !input
         ||
         !feedback
@@ -1662,6 +1653,54 @@
     }
 
 
+    function escapeHtml(
+        value
+    ) {
+
+        return String(
+            value
+        )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+    }
+
+
+    function clearFeedback() {
+
+        feedback.className =
+            "media-selection-feedback";
+
+
+        feedback.innerHTML =
+            "";
+
+
+        input.setCustomValidity(
+            ""
+        );
+
+    }
+
+
     function showError(
         message
     ) {
@@ -1671,20 +1710,12 @@
 
 
         feedback.innerHTML =
-            `<strong>${message}</strong>`;
+            `<strong>${escapeHtml(message)}</strong>`;
 
 
         input.setCustomValidity(
             message
         );
-
-
-        if (submitButton) {
-
-            submitButton.disabled =
-                true;
-
-        }
 
     }
 
@@ -1697,14 +1728,6 @@
         input.setCustomValidity(
             ""
         );
-
-
-        if (submitButton) {
-
-            submitButton.disabled =
-                false;
-
-        }
 
 
         const heading =
@@ -1723,26 +1746,8 @@
                 (file) => {
 
                     const safeName =
-                        file.name
-                        .replaceAll(
-                            "&",
-                            "&amp;"
-                        )
-                        .replaceAll(
-                            "<",
-                            "&lt;"
-                        )
-                        .replaceAll(
-                            ">",
-                            "&gt;"
-                        )
-                        .replaceAll(
-                            '"',
-                            "&quot;"
-                        )
-                        .replaceAll(
-                            "'",
-                            "&#039;"
+                        escapeHtml(
+                            file.name
                         );
 
 
@@ -1787,6 +1792,21 @@
 
     function validateFiles() {
 
+        /*
+         * IMPORTANT:
+         *
+         * We only READ input.files here.
+         *
+         * We never replace input.files,
+         * create a DataTransfer object,
+         * clone the file input,
+         * reset the form,
+         * or programmatically resubmit it.
+         *
+         * The browser therefore keeps ownership of the
+         * original files selected by the customer.
+         */
+
         const files =
             Array.from(
                 input.files
@@ -1797,34 +1817,9 @@
 
         if (!files.length) {
 
-            feedback.className =
-                "media-selection-feedback";
+            clearFeedback();
 
-
-            feedback.innerHTML =
-                "";
-
-
-            /*
-             * Media is required by the HTML field.
-             * This custom message makes the validation
-             * clearer when the user presses submit.
-             */
-
-            input.setCustomValidity(
-                "Please upload photos or one short video."
-            );
-
-
-            if (submitButton) {
-
-                submitButton.disabled =
-                    false;
-
-            }
-
-
-            return false;
+            return;
 
         }
 
@@ -1866,7 +1861,7 @@
                 "Please upload only JPG, PNG, WebP, MP4, MOV, M4V or WebM files."
             );
 
-            return false;
+            return;
 
         }
 
@@ -1881,7 +1876,7 @@
                 "Choose either photos or one video. Photos and video cannot be uploaded together."
             );
 
-            return false;
+            return;
 
         }
 
@@ -1898,7 +1893,7 @@
                     "Only one video can be uploaded per experience."
                 );
 
-                return false;
+                return;
 
             }
 
@@ -1913,7 +1908,7 @@
                     "The video is larger than the 80 MB limit."
                 );
 
-                return false;
+                return;
 
             }
 
@@ -1924,7 +1919,7 @@
             );
 
 
-            return true;
+            return;
 
         }
 
@@ -1939,7 +1934,7 @@
                 "You can upload a maximum of 3 photos."
             );
 
-            return false;
+            return;
 
         }
 
@@ -1959,7 +1954,7 @@
                 `"${oversizedImage.name}" is larger than the 8 MB photo limit.`
             );
 
-            return false;
+            return;
 
         }
 
@@ -1969,33 +1964,21 @@
             "image"
         );
 
-
-        return true;
-
     }
 
+
+    /*
+     * Only validate when the customer selects files.
+     *
+     * Do NOT intercept the form submit.
+     *
+     * Flask performs the authoritative validation after
+     * the browser sends the multipart/form-data request.
+     */
 
     input.addEventListener(
         "change",
         validateFiles
-    );
-
-
-    form.addEventListener(
-        "submit",
-        (event) => {
-
-            if (
-                !validateFiles()
-            ) {
-
-                event.preventDefault();
-
-                input.reportValidity();
-
-            }
-
-        }
     );
 
 })();
@@ -2006,3 +1989,4 @@
 </body>
 
 </html>
+
