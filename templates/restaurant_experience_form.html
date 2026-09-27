@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -520,26 +519,250 @@
 
 
     /* =====================================================
-       TEST NOTICE
+       MEDIA
     ===================================================== */
 
-    .upload-test-notice {
+    .media-section {
 
-        margin-bottom: 10px;
+        margin-bottom: 20px;
+    }
 
-        padding:
-            10px 11px;
 
-        background: #eff6ff;
-        color: #1e40af;
+    .media-heading {
 
-        border:
-            1px solid #bfdbfe;
+        margin:
+            0 0 5px;
 
-        border-radius: 10px;
+        color: #111827;
+
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+
+    .media-intro {
+
+        margin:
+            0 0 12px;
+
+        color: #6b7280;
 
         font-size: 10px;
         line-height: 1.5;
+    }
+
+
+    .media-choice-grid {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: 10px;
+
+        margin-bottom: 14px;
+    }
+
+
+    .media-choice {
+
+        position: relative;
+
+        min-height: 104px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: space-between;
+
+        padding: 14px;
+
+        background: #ffffff;
+
+        border:
+            1px solid #d1d5db;
+
+        border-radius: 14px;
+
+        cursor: pointer;
+
+        transition:
+            border-color .15s ease,
+            background .15s ease,
+            transform .15s ease;
+    }
+
+
+    .media-choice:hover {
+
+        border-color: #9ca3af;
+    }
+
+
+    .media-choice.active {
+
+        background: #111827;
+        color: #ffffff;
+
+        border-color: #111827;
+    }
+
+
+    .media-choice-icon {
+
+        display: block;
+
+        margin-bottom: 15px;
+
+        font-size: 24px;
+        line-height: 1;
+    }
+
+
+    .media-choice-title {
+
+        display: block;
+
+        margin-bottom: 3px;
+
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+
+    .media-choice-description {
+
+        display: block;
+
+        color: #6b7280;
+
+        font-size: 9px;
+        line-height: 1.4;
+    }
+
+
+    .media-choice.active
+    .media-choice-description {
+
+        color: #d1d5db;
+    }
+
+
+    .media-panel {
+
+        display: none;
+
+        padding: 14px;
+
+        background: #ffffff;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 14px;
+    }
+
+
+    .media-panel.active {
+
+        display: block;
+    }
+
+
+    .media-panel-title {
+
+        margin:
+            0 0 5px;
+
+        color: #111827;
+
+        font-size: 11px;
+        font-weight: 950;
+    }
+
+
+    .media-panel-description {
+
+        margin:
+            0 0 11px;
+
+        color: #6b7280;
+
+        font-size: 9px;
+        line-height: 1.5;
+    }
+
+
+    .media-status {
+
+        display: none;
+
+        margin-top: 10px;
+
+        padding:
+            9px 10px;
+
+        background: #f8fafc;
+        color: #374151;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 9px;
+
+        font-size: 9px;
+        line-height: 1.5;
+    }
+
+
+    .media-status.visible {
+
+        display: block;
+    }
+
+
+    .media-status.error {
+
+        display: block;
+
+        background: #fef2f2;
+        color: #991b1b;
+
+        border-color: #fecaca;
+    }
+
+
+    .media-required-message {
+
+        display: none;
+
+        margin-top: 10px;
+
+        padding:
+            9px 10px;
+
+        background: #fef2f2;
+        color: #991b1b;
+
+        border:
+            1px solid #fecaca;
+
+        border-radius: 9px;
+
+        font-size: 9px;
+        font-weight: 800;
+        line-height: 1.5;
+    }
+
+
+    .media-required-message.visible {
+
+        display: block;
     }
 
 
@@ -713,6 +936,18 @@
 
     }
 
+
+    @media (
+        max-width: 390px
+    ) {
+
+        .media-choice-grid {
+
+            grid-template-columns: 1fr;
+        }
+
+    }
+
 </style>
 
 </head>
@@ -829,15 +1064,15 @@
             Share what your visit was like at
             {{ preselected_restaurant.business_name }}.
             Rate your experience, tell people what stood
-            out and add a photo.
+            out and add photos or a short reel.
             You do not need a Kalxa account.
 
         {% else %}
 
             Been somewhere worth talking about?
             Tag the restaurant, rate your experience,
-            add a photo and tell people what your
-            experience was like.
+            add photos or a short reel and tell people
+            what your experience was like.
             You do not need a Kalxa account.
 
         {% endif %}
@@ -896,16 +1131,16 @@
     <form
         method="POST"
 
-        action="{{
-            url_for(
+        {% if preselected_restaurant %}
+            action="{{ url_for(
                 'create_restaurant_experience',
-                restaurant_id=(
-                    preselected_restaurant.id
-                    if preselected_restaurant
-                    else None
-                )
-            )
-        }}"
+                restaurant_id=preselected_restaurant.id
+            ) }}"
+        {% else %}
+            action="{{ url_for(
+                'create_restaurant_experience'
+            ) }}"
+        {% endif %}
 
         enctype="multipart/form-data"
 
@@ -1174,37 +1409,162 @@
 
         <!-- =====================================
              MEDIA
-             DIAGNOSTIC VERSION:
-             ONE IMAGE ONLY
         ====================================== -->
 
-        <div class="field">
+        <div class="media-section">
 
-            <label for="experience_media">
-                Add a photo
-            </label>
+            <p class="media-heading">
+                Add to your experience
+            </p>
 
 
-            <div class="upload-test-notice">
-                For this test, Kalxa accepts one photo only.
-                Select a JPG, PNG or WebP image and submit
-                it immediately after choosing it.
+            <p class="media-intro">
+                Choose photos or a short reel.
+                They are kept separate so uploads work
+                reliably on mobile devices.
+            </p>
+
+
+            <div class="media-choice-grid">
+
+                <button
+                    type="button"
+                    class="media-choice active"
+                    id="choose-photos"
+                    aria-pressed="true"
+                >
+
+                    <span class="media-choice-icon">
+                        📷
+                    </span>
+
+                    <span>
+
+                        <span class="media-choice-title">
+                            Add photos
+                        </span>
+
+                        <span class="media-choice-description">
+                            Up to 3 photos · 8 MB each
+                        </span>
+
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="media-choice"
+                    id="choose-reel"
+                    aria-pressed="false"
+                >
+
+                    <span class="media-choice-icon">
+                        🎬
+                    </span>
+
+                    <span>
+
+                        <span class="media-choice-title">
+                            Add a reel
+                        </span>
+
+                        <span class="media-choice-description">
+                            1 video · up to 30 seconds
+                        </span>
+
+                    </span>
+
+                </button>
+
             </div>
 
 
-            <input
-                id="experience_media"
-                name="experience_media"
-                type="file"
-                accept="image/*"
-                required
+            <!-- =================================
+                 PHOTOS
+            ================================== -->
+
+            <div
+                class="media-panel active"
+                id="photos-panel"
             >
 
+                <p class="media-panel-title">
+                    Add photos
+                </p>
 
-            <span class="field-help">
-                One photo only for this upload test.
-                Maximum file size: 8 MB.
-            </span>
+
+                <p class="media-panel-description">
+                    Choose between 1 and 3 photos.
+                    JPG, PNG and WebP are supported.
+                    Maximum 8 MB per photo.
+                </p>
+
+
+                <input
+                    id="experience_photos"
+                    name="experience_media"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                >
+
+
+                <div
+                    class="media-status"
+                    id="photo-status"
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+
+            <!-- =================================
+                 REEL
+            ================================== -->
+
+            <div
+                class="media-panel"
+                id="reel-panel"
+            >
+
+                <p class="media-panel-title">
+                    Add a short reel
+                </p>
+
+
+                <p class="media-panel-description">
+                    Choose one video.
+                    Maximum 30 seconds and 80 MB.
+                </p>
+
+
+                <input
+                    id="experience_reel"
+                    name="experience_media"
+                    type="file"
+                    accept="video/*"
+                    disabled
+                >
+
+
+                <div
+                    class="media-status"
+                    id="reel-status"
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+
+            <div
+                class="media-required-message"
+                id="media-required-message"
+                aria-live="polite"
+            >
+                Please add at least one photo or one reel.
+            </div>
 
         </div>
 
@@ -1456,6 +1816,632 @@
 
     paint(
         selectedRating()
+    );
+
+})();
+
+</script>
+
+
+<!-- =====================================================
+     PHOTO / REEL MODE
+====================================================== -->
+
+<script>
+
+(() => {
+
+    const form =
+        document.getElementById(
+            "experience-form"
+        );
+
+
+    const photoButton =
+        document.getElementById(
+            "choose-photos"
+        );
+
+
+    const reelButton =
+        document.getElementById(
+            "choose-reel"
+        );
+
+
+    const photoPanel =
+        document.getElementById(
+            "photos-panel"
+        );
+
+
+    const reelPanel =
+        document.getElementById(
+            "reel-panel"
+        );
+
+
+    const photoInput =
+        document.getElementById(
+            "experience_photos"
+        );
+
+
+    const reelInput =
+        document.getElementById(
+            "experience_reel"
+        );
+
+
+    const photoStatus =
+        document.getElementById(
+            "photo-status"
+        );
+
+
+    const reelStatus =
+        document.getElementById(
+            "reel-status"
+        );
+
+
+    const requiredMessage =
+        document.getElementById(
+            "media-required-message"
+        );
+
+
+    if (
+        !form
+        ||
+        !photoButton
+        ||
+        !reelButton
+        ||
+        !photoInput
+        ||
+        !reelInput
+    ) {
+
+        return;
+
+    }
+
+
+    const MAX_PHOTOS =
+        3;
+
+
+    const MAX_PHOTO_BYTES =
+        8 * 1024 * 1024;
+
+
+    const MAX_REEL_BYTES =
+        80 * 1024 * 1024;
+
+
+    let activeMode =
+        "photos";
+
+
+    function formatBytes(
+        bytes
+    ) {
+
+        const mb =
+            bytes
+            /
+            (
+                1024
+                *
+                1024
+            );
+
+
+        if (mb < 1) {
+
+            return (
+                Math.max(
+                    1,
+                    Math.round(
+                        bytes / 1024
+                    )
+                )
+                +
+                " KB"
+            );
+
+        }
+
+
+        return (
+            mb.toFixed(1)
+            +
+            " MB"
+        );
+
+    }
+
+
+    function hideRequiredMessage() {
+
+        if (requiredMessage) {
+
+            requiredMessage.classList.remove(
+                "visible"
+            );
+
+        }
+
+    }
+
+
+    function showStatus(
+        element,
+        message,
+        isError = false
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        element.textContent =
+            message;
+
+
+        element.className =
+            isError
+                ? "media-status error"
+                : "media-status visible";
+
+    }
+
+
+    function clearStatus(
+        element
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        element.textContent =
+            "";
+
+
+        element.className =
+            "media-status";
+
+    }
+
+
+    function setMode(
+        mode
+    ) {
+
+        activeMode =
+            mode;
+
+
+        const photosActive =
+            mode === "photos";
+
+
+        photoButton.classList.toggle(
+            "active",
+            photosActive
+        );
+
+
+        reelButton.classList.toggle(
+            "active",
+            !photosActive
+        );
+
+
+        photoButton.setAttribute(
+            "aria-pressed",
+            photosActive
+                ? "true"
+                : "false"
+        );
+
+
+        reelButton.setAttribute(
+            "aria-pressed",
+            photosActive
+                ? "false"
+                : "true"
+        );
+
+
+        photoPanel.classList.toggle(
+            "active",
+            photosActive
+        );
+
+
+        reelPanel.classList.toggle(
+            "active",
+            !photosActive
+        );
+
+
+        /*
+         * Only the active native file input has a name
+         * and is enabled.
+         *
+         * This prevents the browser from trying to upload
+         * both photo and video file inputs.
+         *
+         * We DO NOT modify FileList objects.
+         */
+
+        if (photosActive) {
+
+            photoInput.disabled =
+                false;
+
+
+            photoInput.name =
+                "experience_media";
+
+
+            reelInput.disabled =
+                true;
+
+
+            reelInput.removeAttribute(
+                "name"
+            );
+
+
+            /*
+             * Clear the inactive picker.
+             *
+             * This is only done when the customer
+             * explicitly changes media mode.
+             */
+
+            reelInput.value =
+                "";
+
+
+            clearStatus(
+                reelStatus
+            );
+
+        }
+        else {
+
+            reelInput.disabled =
+                false;
+
+
+            reelInput.name =
+                "experience_media";
+
+
+            photoInput.disabled =
+                true;
+
+
+            photoInput.removeAttribute(
+                "name"
+            );
+
+
+            photoInput.value =
+                "";
+
+
+            clearStatus(
+                photoStatus
+            );
+
+        }
+
+
+        hideRequiredMessage();
+
+    }
+
+
+    photoButton.addEventListener(
+        "click",
+        () => {
+
+            setMode(
+                "photos"
+            );
+
+        }
+    );
+
+
+    reelButton.addEventListener(
+        "click",
+        () => {
+
+            setMode(
+                "reel"
+            );
+
+        }
+    );
+
+
+    photoInput.addEventListener(
+        "change",
+        () => {
+
+            hideRequiredMessage();
+
+
+            const files =
+                Array.from(
+                    photoInput.files
+                    ||
+                    []
+                );
+
+
+            if (!files.length) {
+
+                clearStatus(
+                    photoStatus
+                );
+
+                return;
+
+            }
+
+
+            if (
+                files.length
+                >
+                MAX_PHOTOS
+            ) {
+
+                showStatus(
+                    photoStatus,
+                    "Please choose a maximum of 3 photos.",
+                    true
+                );
+
+                return;
+
+            }
+
+
+            const oversized =
+                files.find(
+                    (file) =>
+                        file.size
+                        >
+                        MAX_PHOTO_BYTES
+                );
+
+
+            if (oversized) {
+
+                showStatus(
+                    photoStatus,
+                    `${oversized.name} is larger than 8 MB.`,
+                    true
+                );
+
+                return;
+
+            }
+
+
+            showStatus(
+                photoStatus,
+                files.length === 1
+                    ? `1 photo selected · ${formatBytes(files[0].size)}`
+                    : `${files.length} photos selected`
+            );
+
+        }
+    );
+
+
+    reelInput.addEventListener(
+        "change",
+        () => {
+
+            hideRequiredMessage();
+
+
+            const file =
+                reelInput.files
+                &&
+                reelInput.files[0];
+
+
+            if (!file) {
+
+                clearStatus(
+                    reelStatus
+                );
+
+                return;
+
+            }
+
+
+            if (
+                file.size
+                >
+                MAX_REEL_BYTES
+            ) {
+
+                showStatus(
+                    reelStatus,
+                    "This reel is larger than the 80 MB limit.",
+                    true
+                );
+
+                return;
+
+            }
+
+
+            showStatus(
+                reelStatus,
+                `1 reel selected · ${formatBytes(file.size)}`
+            );
+
+        }
+    );
+
+
+    /*
+     * We only stop submission when no media exists
+     * or when obvious size/count validation fails.
+     *
+     * We never recreate the FileList,
+     * use DataTransfer,
+     * upload with fetch,
+     * clone the file input,
+     * or programmatically submit the form.
+     */
+
+    form.addEventListener(
+        "submit",
+        (event) => {
+
+            hideRequiredMessage();
+
+
+            if (
+                activeMode
+                ===
+                "photos"
+            ) {
+
+                const files =
+                    Array.from(
+                        photoInput.files
+                        ||
+                        []
+                    );
+
+
+                if (!files.length) {
+
+                    event.preventDefault();
+
+
+                    requiredMessage.classList.add(
+                        "visible"
+                    );
+
+
+                    photoInput.focus();
+
+                    return;
+
+                }
+
+
+                if (
+                    files.length
+                    >
+                    MAX_PHOTOS
+                ) {
+
+                    event.preventDefault();
+
+
+                    showStatus(
+                        photoStatus,
+                        "Please choose a maximum of 3 photos.",
+                        true
+                    );
+
+                    return;
+
+                }
+
+
+                const oversized =
+                    files.find(
+                        (file) =>
+                            file.size
+                            >
+                            MAX_PHOTO_BYTES
+                    );
+
+
+                if (oversized) {
+
+                    event.preventDefault();
+
+
+                    showStatus(
+                        photoStatus,
+                        `${oversized.name} is larger than 8 MB.`,
+                        true
+                    );
+
+                }
+
+            }
+            else {
+
+                const file =
+                    reelInput.files
+                    &&
+                    reelInput.files[0];
+
+
+                if (!file) {
+
+                    event.preventDefault();
+
+
+                    requiredMessage.classList.add(
+                        "visible"
+                    );
+
+
+                    reelInput.focus();
+
+                    return;
+
+                }
+
+
+                if (
+                    file.size
+                    >
+                    MAX_REEL_BYTES
+                ) {
+
+                    event.preventDefault();
+
+
+                    showStatus(
+                        reelStatus,
+                        "This reel is larger than the 80 MB limit.",
+                        true
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+
+    setMode(
+        "photos"
     );
 
 })();
