@@ -2621,48 +2621,17 @@
 <body>
 
 
-{% set rating_ns =
-    namespace(
-        total=0,
-        count=0
-    )
-%}
-
-
-{% for rating_post in experience_posts %}
-
-    {% if rating_post.rating %}
-
-        {% set rating_ns.total =
-            rating_ns.total
-            + rating_post.rating
-        %}
-
-        {% set rating_ns.count =
-            rating_ns.count
-            + 1
-        %}
-
-    {% endif %}
-
-{% endfor %}
-
-
-{% if rating_ns.count > 0 %}
-
-    {% set restaurant_average_rating =
-        rating_ns.total
-        /
-        rating_ns.count
-    %}
-
-{% else %}
-
-    {% set restaurant_average_rating =
-        none
-    %}
-
-{% endif %}
+<!-- =====================================================
+     IMPORTANT
+     
+     Rating calculations have been removed from this
+     template.
+     
+     restaurant_average_rating and
+     restaurant_rating_count are now calculated by the
+     restaurant_page Flask route using approved + active
+     RestaurantExperiencePost records.
+====================================================== -->
 
 
 <div class="restaurant-page">
@@ -2802,9 +2771,9 @@
 
                         <span class="rating-summary-count">
 
-                            · {{ rating_ns.count }}
+                            · {{ restaurant_rating_count }}
 
-                            {% if rating_ns.count == 1 %}
+                            {% if restaurant_rating_count == 1 %}
                                 rating
                             {% else %}
                                 ratings
@@ -2958,10 +2927,6 @@
 
                     </button>
 
-
-                    <!-- =================================
-                         HIDDEN RESTAURANT GALLERY DATA
-                    ================================== -->
 
                     <div
                         id="restaurant-gallery-data"
@@ -5461,6 +5426,11 @@
 
     function showNext() {
 
+        if (!currentItems.length) {
+            return;
+        }
+
+
         currentIndex =
             (
                 currentIndex
@@ -5477,6 +5447,11 @@
 
 
     function showPrevious() {
+
+        if (!currentItems.length) {
+            return;
+        }
+
 
         currentIndex =
             (
@@ -5526,14 +5501,132 @@
                         element.dataset.mediaType
 
                 })
+            )
+            .filter(
+                (item) =>
+                    Boolean(
+                        item.url
+                    )
             );
+
+
+        if (!currentItems.length) {
+            return;
+        }
 
 
         currentIndex = 0;
 
 
+        const rating =
+            Number(
+                source.dataset.experienceRating
+            );
+
+
+        if (
+            viewerRating
+            &&
+            viewerStars
+            &&
+            viewerRatingNumber
+            &&
+            Number.isInteger(rating)
+            &&
+            rating >= 1
+            &&
+            rating <= 5
+        ) {
+
+            viewerStars.innerHTML =
+                "";
+
+
+            for (
+                let star = 1;
+                star <= 5;
+                star += 1
+            ) {
+
+                const starElement =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                starElement.className =
+                    star <= rating
+                        ? "viewer-star filled"
+                        : "viewer-star";
+
+
+                starElement.textContent =
+                    "★";
+
+
+                viewerStars.appendChild(
+                    starElement
+                );
+
+            }
+
+
+            viewerRatingNumber.textContent =
+                `${rating}/5`;
+
+
+            viewerRating.hidden =
+                false;
+
+        }
+        else if (viewerRating) {
+
+            viewerRating.hidden =
+                true;
+
+        }
+
+
+        if (viewerRestaurantLink) {
+
+            const restaurantUrl =
+                source.dataset.restaurantUrl;
+
+
+            if (restaurantUrl) {
+
+                viewerRestaurantLink.href =
+                    restaurantUrl;
+
+
+                viewerRestaurantLink.textContent =
+                    source.dataset.restaurantName
+                        ? `View ${source.dataset.restaurantName} →`
+                        : "View restaurant →";
+
+
+                viewerRestaurantLink.hidden =
+                    false;
+
+            }
+            else {
+
+                viewerRestaurantLink.hidden =
+                    true;
+
+            }
+
+        }
+
+
         viewer.classList.add(
             "open"
+        );
+
+
+        viewer.setAttribute(
+            "aria-hidden",
+            "false"
         );
 
 
@@ -5554,12 +5647,47 @@
         );
 
 
+        viewer.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
         document.body.classList.remove(
             "modal-open"
         );
 
 
         stage.innerHTML = "";
+
+
+        currentItems = [];
+
+        currentIndex = 0;
+
+
+        if (viewerRating) {
+            viewerRating.hidden =
+                true;
+        }
+
+
+        if (viewerRestaurantLink) {
+            viewerRestaurantLink.hidden =
+                true;
+        }
+
+
+        if (counter) {
+            counter.hidden =
+                true;
+        }
+
+
+        if (swipeHint) {
+            swipeHint.hidden =
+                true;
+        }
 
     }
 
@@ -5597,6 +5725,15 @@
         "touchstart",
         (event) => {
 
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+                return;
+            }
+
+
             touchStartX =
                 event.touches[
                     0
@@ -5615,6 +5752,15 @@
     stage.addEventListener(
         "touchmove",
         (event) => {
+
+            if (
+                !event.touches
+                ||
+                !event.touches.length
+            ) {
+                return;
+            }
+
 
             touchEndX =
                 event.touches[
@@ -5639,6 +5785,8 @@
 
 
             if (
+                currentItems.length > 1
+                &&
                 Math.abs(
                     distance
                 )
@@ -5659,6 +5807,10 @@
                 }
 
             }
+
+
+            touchStartX = 0;
+            touchEndX = 0;
 
         }
     );
