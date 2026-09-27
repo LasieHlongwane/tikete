@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -521,108 +520,26 @@
 
 
     /* =====================================================
-       MEDIA SELECTION
+       TEST NOTICE
     ===================================================== */
 
-    .media-selection-feedback {
+    .upload-test-notice {
 
-        display: none;
-
-        margin-top: 10px;
+        margin-bottom: 10px;
 
         padding:
             10px 11px;
 
-        background: #ffffff;
+        background: #eff6ff;
+        color: #1e40af;
 
         border:
-            1px solid #d1d5db;
+            1px solid #bfdbfe;
 
         border-radius: 10px;
 
-        color: #4b5563;
-
         font-size: 10px;
         line-height: 1.5;
-    }
-
-
-    .media-selection-feedback.visible {
-
-        display: block;
-    }
-
-
-    .media-selection-feedback.error {
-
-        display: block;
-
-        background: #fef2f2;
-        color: #991b1b;
-
-        border-color: #fecaca;
-    }
-
-
-    .media-selection-title {
-
-        display: block;
-
-        margin-bottom: 6px;
-
-        color: #111827;
-
-        font-size: 10px;
-        font-weight: 900;
-    }
-
-
-    .selected-files {
-
-        display: grid;
-
-        gap: 5px;
-    }
-
-
-    .selected-file {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 10px;
-
-        padding:
-            6px 8px;
-
-        background: #f8fafc;
-
-        border-radius: 7px;
-    }
-
-
-    .selected-file-name {
-
-        min-width: 0;
-
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-        white-space: nowrap;
-
-        font-weight: 700;
-    }
-
-
-    .selected-file-size {
-
-        flex-shrink: 0;
-
-        color: #9ca3af;
-
-        font-size: 9px;
     }
 
 
@@ -659,14 +576,6 @@
     .submit-button:hover {
 
         background: #27272a;
-    }
-
-
-    .submit-button:disabled {
-
-        opacity: .55;
-
-        cursor: not-allowed;
     }
 
 
@@ -920,15 +829,15 @@
             Share what your visit was like at
             {{ preselected_restaurant.business_name }}.
             Rate your experience, tell people what stood
-            out and add up to 3 photos or a short reel.
+            out and add a photo.
             You do not need a Kalxa account.
 
         {% else %}
 
             Been somewhere worth talking about?
             Tag the restaurant, rate your experience,
-            add up to 3 photos or a short reel and tell
-            people what your experience was like.
+            add a photo and tell people what your
+            experience was like.
             You do not need a Kalxa account.
 
         {% endif %}
@@ -1265,40 +1174,37 @@
 
         <!-- =====================================
              MEDIA
+             DIAGNOSTIC VERSION:
+             ONE IMAGE ONLY
         ====================================== -->
 
         <div class="field">
 
             <label for="experience_media">
-                Add photos or a short reel
+                Add a photo
             </label>
+
+
+            <div class="upload-test-notice">
+                For this test, Kalxa accepts one photo only.
+                Select a JPG, PNG or WebP image and submit
+                it immediately after choosing it.
+            </div>
 
 
             <input
                 id="experience_media"
                 name="experience_media"
                 type="file"
-                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-m4v,video/webm"
-                multiple
+                accept="image/*"
                 required
             >
 
 
             <span class="field-help">
-                You can select up to 3 photos at once,
-                or upload 1 short video.
-                Photos and video cannot be mixed in the same post.
-                Photos: JPG, PNG or WebP up to 8 MB each.
-                Videos: MP4, MOV, M4V or WebM,
-                maximum 30 seconds and 80 MB.
+                One photo only for this upload test.
+                Maximum file size: 8 MB.
             </span>
-
-
-            <div
-                class="media-selection-feedback"
-                id="media-selection-feedback"
-                aria-live="polite"
-            ></div>
 
         </div>
 
@@ -1557,436 +1463,6 @@
 </script>
 
 
-<!-- =====================================================
-     MEDIA SELECTION FEEDBACK
-====================================================== -->
-
-<script>
-
-(() => {
-
-    const input =
-        document.getElementById(
-            "experience_media"
-        );
-
-
-    const feedback =
-        document.getElementById(
-            "media-selection-feedback"
-        );
-
-
-    if (
-        !input
-        ||
-        !feedback
-    ) {
-
-        return;
-
-    }
-
-
-    const MAX_IMAGES =
-        3;
-
-
-    const MAX_IMAGE_BYTES =
-        8 * 1024 * 1024;
-
-
-    const MAX_VIDEO_BYTES =
-        80 * 1024 * 1024;
-
-
-    const IMAGE_TYPES =
-        new Set([
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-        ]);
-
-
-    const VIDEO_TYPES =
-        new Set([
-            "video/mp4",
-            "video/quicktime",
-            "video/x-m4v",
-            "video/webm",
-        ]);
-
-
-    function formatBytes(
-        bytes
-    ) {
-
-        if (
-            !Number.isFinite(
-                bytes
-            )
-            ||
-            bytes <= 0
-        ) {
-
-            return "0 MB";
-
-        }
-
-
-        const mb =
-            bytes
-            /
-            (
-                1024
-                *
-                1024
-            );
-
-
-        return (
-            mb < 1
-                ? `${Math.round(bytes / 1024)} KB`
-                : `${mb.toFixed(1)} MB`
-        );
-
-    }
-
-
-    function escapeHtml(
-        value
-    ) {
-
-        return String(
-            value
-        )
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-    }
-
-
-    function clearFeedback() {
-
-        feedback.className =
-            "media-selection-feedback";
-
-
-        feedback.innerHTML =
-            "";
-
-
-        input.setCustomValidity(
-            ""
-        );
-
-    }
-
-
-    function showError(
-        message
-    ) {
-
-        feedback.className =
-            "media-selection-feedback error";
-
-
-        feedback.innerHTML =
-            `<strong>${escapeHtml(message)}</strong>`;
-
-
-        input.setCustomValidity(
-            message
-        );
-
-    }
-
-
-    function showFiles(
-        files,
-        type
-    ) {
-
-        input.setCustomValidity(
-            ""
-        );
-
-
-        const heading =
-            type === "video"
-                ? "1 video selected"
-                : (
-                    files.length === 1
-                        ? "1 photo selected"
-                        : `${files.length} photos selected`
-                );
-
-
-        const rows =
-            files
-            .map(
-                (file) => {
-
-                    const safeName =
-                        escapeHtml(
-                            file.name
-                        );
-
-
-                    return `
-                        <div class="selected-file">
-
-                            <span class="selected-file-name">
-                                ${safeName}
-                            </span>
-
-                            <span class="selected-file-size">
-                                ${formatBytes(file.size)}
-                            </span>
-
-                        </div>
-                    `;
-
-                }
-            )
-            .join(
-                ""
-            );
-
-
-        feedback.className =
-            "media-selection-feedback visible";
-
-
-        feedback.innerHTML =
-            `
-                <span class="media-selection-title">
-                    ${heading}
-                </span>
-
-                <div class="selected-files">
-                    ${rows}
-                </div>
-            `;
-
-    }
-
-
-    function validateFiles() {
-
-        /*
-         * IMPORTANT:
-         *
-         * We only READ input.files here.
-         *
-         * We never replace input.files,
-         * create a DataTransfer object,
-         * clone the file input,
-         * reset the form,
-         * or programmatically resubmit it.
-         *
-         * The browser therefore keeps ownership of the
-         * original files selected by the customer.
-         */
-
-        const files =
-            Array.from(
-                input.files
-                ||
-                []
-            );
-
-
-        if (!files.length) {
-
-            clearFeedback();
-
-            return;
-
-        }
-
-
-        const images =
-            files.filter(
-                (file) =>
-                    IMAGE_TYPES.has(
-                        file.type
-                    )
-            );
-
-
-        const videos =
-            files.filter(
-                (file) =>
-                    VIDEO_TYPES.has(
-                        file.type
-                    )
-            );
-
-
-        const unknown =
-            files.filter(
-                (file) =>
-                    !IMAGE_TYPES.has(
-                        file.type
-                    )
-                    &&
-                    !VIDEO_TYPES.has(
-                        file.type
-                    )
-            );
-
-
-        if (unknown.length) {
-
-            showError(
-                "Please upload only JPG, PNG, WebP, MP4, MOV, M4V or WebM files."
-            );
-
-            return;
-
-        }
-
-
-        if (
-            images.length
-            &&
-            videos.length
-        ) {
-
-            showError(
-                "Choose either photos or one video. Photos and video cannot be uploaded together."
-            );
-
-            return;
-
-        }
-
-
-        if (videos.length) {
-
-            if (
-                videos.length !== 1
-                ||
-                files.length !== 1
-            ) {
-
-                showError(
-                    "Only one video can be uploaded per experience."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                videos[0].size
-                >
-                MAX_VIDEO_BYTES
-            ) {
-
-                showError(
-                    "The video is larger than the 80 MB limit."
-                );
-
-                return;
-
-            }
-
-
-            showFiles(
-                videos,
-                "video"
-            );
-
-
-            return;
-
-        }
-
-
-        if (
-            images.length < 1
-            ||
-            images.length > MAX_IMAGES
-        ) {
-
-            showError(
-                "You can upload a maximum of 3 photos."
-            );
-
-            return;
-
-        }
-
-
-        const oversizedImage =
-            images.find(
-                (file) =>
-                    file.size
-                    >
-                    MAX_IMAGE_BYTES
-            );
-
-
-        if (oversizedImage) {
-
-            showError(
-                `"${oversizedImage.name}" is larger than the 8 MB photo limit.`
-            );
-
-            return;
-
-        }
-
-
-        showFiles(
-            images,
-            "image"
-        );
-
-    }
-
-
-    /*
-     * Only validate when the customer selects files.
-     *
-     * Do NOT intercept the form submit.
-     *
-     * Flask performs the authoritative validation after
-     * the browser sends the multipart/form-data request.
-     */
-
-    input.addEventListener(
-        "change",
-        validateFiles
-    );
-
-})();
-
-</script>
-
-
 </body>
 
 </html>
-
