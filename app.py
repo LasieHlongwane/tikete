@@ -14707,7 +14707,6 @@ def event_page(
         events=None,
     )
 
-
 @app.route(
     "/restaurant/<int:advert_id>"
 )
@@ -14798,10 +14797,77 @@ def restaurant_page(
     )
 
 
+    # ========================================================
+    # RESTAURANT RATING SUMMARY
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # The public restaurant rating is calculated from the
+    # same approved + active experience posts that are shown
+    # publicly on the restaurant page.
+    #
+    # Pending, rejected or inactive posts do NOT affect the
+    # public rating.
+    #
+    # Example:
+    #
+    # Approved ratings:
+    # 5, 4, 4
+    #
+    # Count:
+    # 3
+    #
+    # Average:
+    # 4.3
+    #
+    # ========================================================
+
+    restaurant_ratings = [
+
+        post.rating
+
+        for post
+        in experience_posts
+
+        if post.rating is not None
+
+    ]
+
+
+    restaurant_rating_count = (
+        len(
+            restaurant_ratings
+        )
+    )
+
+
+    restaurant_average_rating = None
+
+
+    if restaurant_rating_count > 0:
+
+        restaurant_average_rating = (
+            sum(
+                restaurant_ratings
+            )
+            /
+            restaurant_rating_count
+        )
+
+
+    # ========================================================
+    # ANONYMOUS EXPERIENCE SESSION
+    # ========================================================
+
     anonymous_session_id = (
         get_restaurant_experience_session_id()
     )
 
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE LOVES
+    # ========================================================
 
     loved_experience_post_ids = set()
 
@@ -14809,9 +14875,12 @@ def restaurant_page(
     if experience_posts:
 
         experience_post_ids = [
+
             post.id
+
             for post
             in experience_posts
+
         ]
 
 
@@ -14831,11 +14900,13 @@ def restaurant_page(
 
                 .filter(
                     RestaurantExperienceLove.anonymous_session_id
-                    == anonymous_session_id
+                    ==
+                    anonymous_session_id
                 )
 
                 .all()
             )
+
         }
 
 
@@ -14918,6 +14989,7 @@ def restaurant_page(
     # ========================================================
 
     restaurant_rating_qr = None
+
     restaurant_rating_url = ""
 
 
@@ -14963,8 +15035,17 @@ def restaurant_page(
     return render_template(
         "restaurant.html",
 
+        # ====================================================
+        # RESTAURANT
+        # ====================================================
+
         advert=
             advert,
+
+
+        # ====================================================
+        # CONTACT
+        # ====================================================
 
         whatsapp_url=
             whatsapp_url,
@@ -14975,8 +15056,18 @@ def restaurant_page(
         directions_url=
             directions_url,
 
+
+        # ====================================================
+        # RESTAURANT HOURS
+        # ====================================================
+
         restaurant_hours_payload=
             restaurant_hours_payload,
+
+
+        # ====================================================
+        # RESTAURANT MANAGEMENT
+        # ====================================================
 
         can_manage_restaurant=
             can_manage_restaurant,
@@ -14995,6 +15086,7 @@ def restaurant_page(
             else ""
         ),
 
+
         # ====================================================
         # CUSTOMER EXPERIENCES
         # ====================================================
@@ -15004,6 +15096,18 @@ def restaurant_page(
 
         loved_experience_post_ids=
             loved_experience_post_ids,
+
+
+        # ====================================================
+        # RESTAURANT RATING SUMMARY
+        # ====================================================
+
+        restaurant_average_rating=
+            restaurant_average_rating,
+
+        restaurant_rating_count=
+            restaurant_rating_count,
+
 
         # ====================================================
         # RESTAURANT RATING QR
@@ -15029,7 +15133,6 @@ def restaurant_page(
             else ""
         ),
     )
-
 
 # ============================================================
 # CREATE / GET RESTAURANT RATING QR
