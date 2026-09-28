@@ -14003,6 +14003,17 @@ def organizer_signup():
         # ====================================================
         # CREATE ORGANIZER
         # ====================================================
+        #
+        # IMPORTANT:
+        #
+        # account_type is stored explicitly.
+        #
+        # event
+        # restaurant
+        #
+        # This prevents restaurant accounts from falling back
+        # to the Organizer model's default "event" value.
+        # ====================================================
 
         organizer = (
             Organizer(
@@ -14126,6 +14137,131 @@ def organizer_signup():
     )
 
 
+
+def get_current_organizer():
+
+    # ========================================================
+    # ORGANIZER SESSION ID
+    # ========================================================
+
+    organizer_id = (
+        session.get(
+            ORGANIZER_SESSION_KEY
+        )
+    )
+
+
+    if not organizer_id:
+
+        return None
+
+
+    # ========================================================
+    # VALIDATE ORGANIZER ID
+    # ========================================================
+
+    try:
+
+        organizer_id = int(
+            organizer_id
+        )
+
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        session.pop(
+            ORGANIZER_SESSION_KEY,
+            None,
+        )
+
+        return None
+
+
+    # ========================================================
+    # LOAD ORGANIZER
+    # ========================================================
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+
+    # ========================================================
+    # VALIDATE ORGANIZER
+    # ========================================================
+
+    if (
+        not organizer
+        or not organizer.active
+    ):
+
+        session.pop(
+            ORGANIZER_SESSION_KEY,
+            None,
+        )
+
+        return None
+
+
+    # ========================================================
+    # NORMALIZE ACCOUNT TYPE
+    # ========================================================
+    #
+    # Existing database records may pre-date restaurant
+    # accounts or contain inconsistent capitalization /
+    # whitespace.
+    #
+    # Valid application values:
+    #
+    # event
+    # restaurant
+    #
+    # IMPORTANT:
+    # We do NOT automatically convert "event" to "restaurant".
+    # That decision must come from the stored account record.
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    account_type = (
+        str(
+            account_type
+        )
+        .strip()
+        .lower()
+    )
+
+
+    if account_type not in {
+        "event",
+        "restaurant",
+    }:
+
+        account_type = (
+            "event"
+        )
+
+
+    organizer.account_type = (
+        account_type
+    )
+
+
+    return organizer
 # ============================================================
 # ORGANIZER LOGIN
 # ============================================================
