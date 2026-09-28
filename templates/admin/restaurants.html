@@ -2478,7 +2478,8 @@
                 ) }}"
                 class="nav-link"
             >
-                Subscription
+                Subscription ·
+                R{{ "%.2f"|format(subscription_price) }}
             </a>
 
 
@@ -2517,7 +2518,8 @@
                 ) }}"
                 class="mobile-management-link"
             >
-                Subscription
+                Subscription ·
+                R{{ "%.2f"|format(subscription_price) }}
             </a>
 
 
@@ -2654,7 +2656,8 @@
                         ◈
                     </span>
 
-                    Subscription
+                    Subscription ·
+                    R{{ "%.2f"|format(subscription_price) }}
 
                 </a>
 
@@ -2904,7 +2907,7 @@
                         ) }}"
                         class="button"
                     >
-                        🔒 Activate Subscription
+                        🔒 Activate — R{{ "%.2f"|format(subscription_price) }}
                     </a>
 
                 {% endif %}
@@ -2987,6 +2990,11 @@
 
                             {% endif %}
 
+                            Renewal price:
+                            <strong style="display:inline;">
+                                R{{ "%.2f"|format(subscription_price) }}
+                            </strong>.
+
                         </p>
 
 
@@ -3026,8 +3034,12 @@
 
                         <p>
 
-                            Activate your subscription
-                            to create campaigns,
+                            Activate your restaurant subscription
+                            for
+                            <strong style="display:inline;">
+                                R{{ "%.2f"|format(subscription_price) }}
+                            </strong>
+                            every 30 days to create campaigns,
                             edit restaurant details,
                             gallery photos and
                             working hours.
@@ -3044,7 +3056,9 @@
                         ) }}"
                         class="subscription-link"
                     >
-                        Activate subscription →
+                        Activate for
+                        R{{ "%.2f"|format(subscription_price) }}
+                        →
                     </a>
 
 
@@ -3488,7 +3502,9 @@
 
                         {% else %}
 
-                            Activate your subscription
+                            Activate your
+                            R{{ "%.2f"|format(subscription_price) }}
+                            restaurant subscription
                             before creating your first
                             restaurant campaign.
 
@@ -3500,7 +3516,8 @@
                                 ) }}"
                                 class="button"
                             >
-                                Activate Subscription
+                                Activate Subscription —
+                                R{{ "%.2f"|format(subscription_price) }}
                             </a>
 
                         {% endif %}
