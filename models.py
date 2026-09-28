@@ -5386,3 +5386,130 @@ class RestaurantRatingQRCode(db.Model):
             f"{self.restaurant_advert_id} "
             f"public_code={self.public_code}>"
         )
+
+
+# ============================================================
+# RESTAURANT CONVERSION ANALYTICS
+# ============================================================
+
+class RestaurantAnalyticsEvent(db.Model):
+
+    __tablename__ = "restaurant_analytics_events"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    # --------------------------------------------------------
+    # RESTAURANT
+    # --------------------------------------------------------
+
+    restaurant_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # EVENT
+    #
+    # Examples:
+    #
+    # restaurant_view
+    # experience_view
+    # whatsapp_click
+    # phone_click
+    # directions_click
+    # --------------------------------------------------------
+
+    event_type = db.Column(
+        db.String(50),
+        nullable=False,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # ANONYMOUS TICKETING SESSION
+    # --------------------------------------------------------
+
+    session_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # KALXA STORIES ATTRIBUTION
+    #
+    # These are external IDs.
+    # They are NOT foreign keys because Stories has its own DB.
+    # --------------------------------------------------------
+
+    source = db.Column(
+        db.String(50),
+        nullable=True,
+        index=True,
+    )
+
+    source_article_id = db.Column(
+        db.Integer,
+        nullable=True,
+        index=True,
+    )
+
+    source_restaurant_id = db.Column(
+        db.Integer,
+        nullable=True,
+        index=True,
+    )
+
+    source_session_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    # --------------------------------------------------------
+    # EXTRA EVENT DATA
+    # --------------------------------------------------------
+
+    event_metadata = db.Column(
+        db.JSON,
+        nullable=True,
+    )
+
+    referrer = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(
+            timezone.utc
+        ),
+        index=True,
+    )
+
+    restaurant = db.relationship(
+        "RestaurantAdvert",
+        backref=db.backref(
+            "analytics_events",
+            lazy=True,
+            cascade="all, delete-orphan",
+        ),
+    )
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantAnalyticsEvent "
+            f"{self.event_type} "
+            f"restaurant={self.restaurant_id}>"
+        )
