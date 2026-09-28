@@ -4968,7 +4968,6 @@ SUPERADMIN_PASSWORD_HASH = (
 # attendee ticket payments. Attendee ticket payments are now
 # Paystack-only and never expose organizer bank details.
 # ============================================================
-
 KALXA_SUBSCRIPTION_PLAN_NAME = (
     os.environ.get(
         "KALXA_SUBSCRIPTION_PLAN_NAME",
@@ -4976,6 +4975,11 @@ KALXA_SUBSCRIPTION_PLAN_NAME = (
     )
     .strip()
 )
+
+
+# ============================================================
+# EVENT ORGANIZER SUBSCRIPTION PRICE
+# ============================================================
 
 try:
 
@@ -4986,6 +4990,7 @@ try:
         )
     )
 
+
 except InvalidOperation:
 
     raise RuntimeError(
@@ -4993,8 +4998,35 @@ except InvalidOperation:
     )
 
 
-KALXA_SUBSCRIPTION_PERIOD_DAYS = 30
+# ============================================================
+# RESTAURANT SUBSCRIPTION PRICE
+# ============================================================
 
+try:
+
+    KALXA_RESTAURANT_SUBSCRIPTION_PRICE = Decimal(
+        os.environ.get(
+            "KALXA_RESTAURANT_SUBSCRIPTION_PRICE",
+            "219.00",
+        )
+    )
+
+
+except InvalidOperation:
+
+    raise RuntimeError(
+        (
+            "KALXA_RESTAURANT_SUBSCRIPTION_PRICE "
+            "must be a valid number."
+        )
+    )
+
+
+# ============================================================
+# SUBSCRIPTION PERIOD
+# ============================================================
+
+KALXA_SUBSCRIPTION_PERIOD_DAYS = 30
 
 # ============================================================
 # KALXA EVENT PARTNER PROGRAM
@@ -11253,8 +11285,10 @@ def admin_restaurants():
         subscription_plan_name=
             KALXA_SUBSCRIPTION_PLAN_NAME,
 
+
         subscription_price=
-            KALXA_SUBSCRIPTION_PRICE,
+           KALXA_RESTAURANT_SUBSCRIPTION_PRICE,
+                      
     )
 
 # ============================================================
@@ -20380,7 +20414,6 @@ def track_event_reel():
 # ============================================================
 # ORGANIZER SUBSCRIPTION
 # ============================================================
-
 @app.route(
     "/admin/subscription"
 )
@@ -20399,6 +20432,36 @@ def admin_subscription():
     organizer = (
         get_current_organizer()
     )
+
+
+    # ========================================================
+    # ACCOUNT-SPECIFIC SUBSCRIPTION PRICE
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if (
+        account_type
+        == "restaurant"
+    ):
+
+        subscription_price = (
+            KALXA_RESTAURANT_SUBSCRIPTION_PRICE
+        )
+
+    else:
+
+        subscription_price = (
+            KALXA_SUBSCRIPTION_PRICE
+        )
 
 
     payments = (
@@ -20455,7 +20518,7 @@ def admin_subscription():
             KALXA_SUBSCRIPTION_PLAN_NAME,
 
         subscription_price=
-            KALXA_SUBSCRIPTION_PRICE,
+            subscription_price,
 
         subscription_period_days=
             KALXA_SUBSCRIPTION_PERIOD_DAYS,
@@ -20463,7 +20526,6 @@ def admin_subscription():
         bank_details=
             KALXA_SUBSCRIPTION_BANK,
     )
-
 
 # ============================================================
 # ORGANIZER - PAY SUBSCRIPTION WITH PAYSTACK
