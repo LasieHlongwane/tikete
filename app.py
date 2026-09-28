@@ -2611,6 +2611,145 @@ def send_push_campaign(
 
 
 
+# ============================================================
+# PUBLIC RESTAURANT API
+# ============================================================
+
+@app.route(
+    "/api/public/restaurants",
+    methods=["GET"],
+)
+def api_public_restaurants():
+
+    search = (
+        request.args
+        .get(
+            "q",
+            "",
+        )
+        .strip()
+    )
+
+    query = (
+        RestaurantAdvert.query
+        .filter(
+            RestaurantAdvert.active.is_(True)
+        )
+    )
+
+    if search:
+
+        pattern = f"%{search}%"
+
+        query = query.filter(
+            db.or_(
+                RestaurantAdvert.business_name.ilike(
+                    pattern
+                ),
+                RestaurantAdvert.area.ilike(
+                    pattern
+                ),
+            )
+        )
+
+    restaurants = (
+        query
+        .order_by(
+            RestaurantAdvert.business_name.asc()
+        )
+        .limit(30)
+        .all()
+    )
+
+    return jsonify({
+        "restaurants": [
+            serialize_public_restaurant(
+                restaurant
+            )
+            for restaurant in restaurants
+        ]
+    })
+
+
+# ============================================================
+# SINGLE PUBLIC RESTAURANT
+# ============================================================
+
+@app.route(
+    "/api/public/restaurants/<int:advert_id>",
+    methods=["GET"],
+)
+def api_public_restaurant(advert_id):
+
+    restaurant = (
+        RestaurantAdvert.query
+        .filter(
+            RestaurantAdvert.id == advert_id,
+            RestaurantAdvert.active.is_(True),
+        )
+        .first()
+    )
+
+    if restaurant is None:
+
+        return jsonify({
+            "error": "Restaurant not found."
+        }), 404
+
+    return jsonify(
+        serialize_public_restaurant(
+            restaurant
+        )
+    )
+
+
+# ============================================================
+# RESTAURANT SERIALIZER
+# ============================================================
+
+def serialize_public_restaurant(
+    restaurant
+):
+
+    return {
+
+        "id":
+            restaurant.id,
+
+        "business_name":
+            restaurant.business_name,
+
+        "headline":
+            restaurant.headline,
+
+        "description":
+            restaurant.description,
+
+        "price_text":
+            restaurant.price_text,
+
+        "address":
+            restaurant.address,
+
+        "area":
+            restaurant.area,
+
+        "directions_url":
+            restaurant.directions_url,
+
+        "active":
+            bool(
+                restaurant.active
+            ),
+
+        "profile_path":
+            url_for(
+                "restaurant_page",
+                advert_id=restaurant.id,
+            ),
+
+    }
+
     # ============================================================
 # REQUIRE ACTIVE RESTAURANT SUBSCRIPTION
 # ============================================================
