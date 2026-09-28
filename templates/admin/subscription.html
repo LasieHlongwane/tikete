@@ -217,10 +217,24 @@
 
 <body>
 
+    <!-- =====================================================
+         ACCOUNT TYPE
+    ====================================================== -->
+
+    {% set account_type =
+        (
+            organizer.account_type
+            if organizer
+            and organizer.account_type
+            else "event"
+        )
+        |trim
+        |lower
+    %}
+
+
     {% set is_restaurant_account =
-        organizer
-        and
-        organizer.account_type == "restaurant"
+        account_type == "restaurant"
     %}
 
 
