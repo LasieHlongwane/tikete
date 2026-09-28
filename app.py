@@ -20554,6 +20554,40 @@ def admin_request_subscription_payment():
     )
 
 
+    # ========================================================
+    # ACCOUNT-SPECIFIC SUBSCRIPTION PRICE
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if (
+        account_type
+        == "restaurant"
+    ):
+
+        subscription_price = (
+            KALXA_RESTAURANT_SUBSCRIPTION_PRICE
+        )
+
+    else:
+
+        subscription_price = (
+            KALXA_SUBSCRIPTION_PRICE
+        )
+
+
+    # ========================================================
+    # SUSPENSION CHECK
+    # ========================================================
+
     if organizer.is_suspended:
 
         flash(
@@ -20571,6 +20605,10 @@ def admin_request_subscription_payment():
         )
 
 
+    # ========================================================
+    # PAYSTACK CONFIGURATION
+    # ========================================================
+
     if not paystack_is_configured():
 
         flash(
@@ -20584,6 +20622,10 @@ def admin_request_subscription_payment():
             )
         )
 
+
+    # ========================================================
+    # EXISTING PENDING PAYMENT
+    # ========================================================
 
     payment = (
         SubscriptionPayment.query
@@ -20601,6 +20643,85 @@ def admin_request_subscription_payment():
     )
 
 
+    # ========================================================
+    # IMPORTANT:
+    #
+    # If an old pending payment exists with a different price,
+    # do not reuse it.
+    #
+    # Example:
+    #
+    # Restaurant previously had a pending R199 payment,
+    # but restaurant pricing is now R219.
+    #
+    # That old checkout must not be reused.
+    # ========================================================
+
+    if (
+        payment
+        and
+        Decimal(
+            str(
+                payment.amount
+            )
+        )
+        !=
+        Decimal(
+            str(
+                subscription_price
+            )
+        )
+    ):
+
+        payment.payment_status = (
+            "cancelled"
+        )
+
+
+        try:
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Subscription Paystack] "
+                    "Failed to cancel outdated pending payment "
+                    "organizer_id=%s payment_id=%s error=%s"
+                ),
+                organizer.id,
+                payment.id,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Unable to update your subscription payment. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_subscription"
+                )
+            )
+
+
+        payment = None
+
+
+    # ========================================================
+    # REUSE VALID PENDING PAYSTACK CHECKOUT
+    # ========================================================
+
     if (
         payment
         and payment.paystack_authorization_url
@@ -20610,6 +20731,10 @@ def admin_request_subscription_payment():
             payment.paystack_authorization_url
         )
 
+
+    # ========================================================
+    # CREATE SUBSCRIPTION PAYMENT
+    # ========================================================
 
     if not payment:
 
@@ -20622,7 +20747,7 @@ def admin_request_subscription_payment():
                 KALXA_SUBSCRIPTION_PLAN_NAME,
 
             amount=
-                KALXA_SUBSCRIPTION_PRICE,
+                subscription_price,
 
             period_days=
                 KALXA_SUBSCRIPTION_PERIOD_DAYS,
@@ -20676,6 +20801,10 @@ def admin_request_subscription_payment():
             )
 
 
+    # ========================================================
+    # PAYSTACK CALLBACK
+    # ========================================================
+
     callback_url = url_for(
         "paystack_subscription_callback",
         _external=
@@ -20685,7 +20814,12 @@ def admin_request_subscription_payment():
     )
 
 
+    # ========================================================
+    # PAYSTACK PAYLOAD
+    # ========================================================
+
     payload = {
+
         "email":
             organizer.email,
 
@@ -20719,6 +20853,7 @@ def admin_request_subscription_payment():
 
         # Use Kalxa's main Paystack merchant account.
         # No organizer subaccount is supplied here.
+
         "channels": [
             "eft",
             "capitec_pay",
@@ -20727,6 +20862,7 @@ def admin_request_subscription_payment():
         "metadata":
             json.dumps(
                 {
+
                     "payment_type":
                         "kalxa_subscription",
 
@@ -20736,15 +20872,27 @@ def admin_request_subscription_payment():
                     "organizer_id":
                         organizer.id,
 
+                    "account_type":
+                        account_type,
+
                     "plan_name":
                         payment.plan_name,
 
                     "period_days":
                         payment.period_days,
+
+                    "subscription_amount":
+                        str(
+                            payment.amount
+                        ),
                 }
             ),
     }
 
+
+    # ========================================================
+    # INITIALIZE PAYSTACK CHECKOUT
+    # ========================================================
 
     try:
 
@@ -20786,6 +20934,7 @@ def admin_request_subscription_payment():
             or None
         )
 
+
         payment.paystack_authorization_url = (
             authorization_url
         )
@@ -20824,11 +20973,13 @@ def admin_request_subscription_payment():
         )
 
 
+    # ========================================================
+    # REDIRECT TO PAYSTACK
+    # ========================================================
+
     return redirect(
         authorization_url
     )
-
-
 # ============================================================
 # PAYSTACK SUBSCRIPTION CALLBACK
 # ============================================================
