@@ -967,6 +967,29 @@ def finalize_paystack_subscription_payment(
     transaction_data,
 ):
 
+    # ========================================================
+    # PAYMENT RECORD SAFETY
+    # ========================================================
+
+    if not payment:
+
+        raise RuntimeError(
+            "Subscription payment record is missing."
+        )
+
+
+    # ========================================================
+    # IDEMPOTENCY
+    # ========================================================
+    #
+    # Paystack may send the webhook more than once, or the
+    # callback and webhook may both attempt to finalize the
+    # same transaction.
+    #
+    # A payment that has already been finalized must not
+    # extend the subscription for a second time.
+    # ========================================================
+
     if (
         payment.payment_status
         == "paid"
@@ -974,6 +997,64 @@ def finalize_paystack_subscription_payment(
 
         return payment
 
+
+    # ========================================================
+    # CANCELLED PAYMENT SAFETY
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # A cancelled payment may belong to an outdated checkout.
+    #
+    # Example:
+    #
+    # Restaurant previously had an R199 checkout.
+    # Restaurant subscription price changes to R219.
+    # The R199 payment is cancelled and a new R219 payment
+    # is created.
+    #
+    # If the customer somehow completes the old R199 checkout,
+    # that payment must NOT activate or extend the restaurant
+    # subscription.
+    # ========================================================
+
+    if (
+        payment.payment_status
+        == "cancelled"
+    ):
+
+        raise RuntimeError(
+            (
+                "Cancelled subscription payments "
+                "cannot activate subscriptions."
+            )
+        )
+
+
+    # ========================================================
+    # PAYMENT STATUS SAFETY
+    # ========================================================
+    #
+    # Only pending subscription payments are allowed to move
+    # into the paid state.
+    # ========================================================
+
+    if (
+        payment.payment_status
+        != "pending"
+    ):
+
+        raise RuntimeError(
+            (
+                "Subscription payment is not "
+                "eligible for confirmation."
+            )
+        )
+
+
+    # ========================================================
+    # PAYSTACK TRANSACTION STATUS
+    # ========================================================
 
     if (
         not isinstance(
@@ -990,6 +1071,10 @@ def finalize_paystack_subscription_payment(
             "Paystack subscription transaction is not successful."
         )
 
+
+    # ========================================================
+    # REFERENCE VERIFICATION
+    # ========================================================
 
     reference = (
         str(
@@ -1011,6 +1096,10 @@ def finalize_paystack_subscription_payment(
             "Paystack subscription reference does not match."
         )
 
+
+    # ========================================================
+    # AMOUNT VERIFICATION
+    # ========================================================
 
     expected_amount = int(
         (
@@ -1048,6 +1137,10 @@ def finalize_paystack_subscription_payment(
         )
 
 
+    # ========================================================
+    # CURRENCY VERIFICATION
+    # ========================================================
+
     currency = (
         str(
             transaction_data.get(
@@ -1070,6 +1163,10 @@ def finalize_paystack_subscription_payment(
         )
 
 
+    # ========================================================
+    # ORGANIZER
+    # ========================================================
+
     organizer = (
         payment.organizer
     )
@@ -1082,12 +1179,20 @@ def finalize_paystack_subscription_payment(
         )
 
 
+    # ========================================================
+    # ORGANIZER SUSPENSION SAFETY
+    # ========================================================
+
     if organizer.is_suspended:
 
         raise RuntimeError(
             "Suspended organizers cannot activate subscriptions."
         )
 
+
+    # ========================================================
+    # SUBSCRIPTION PERIOD
+    # ========================================================
 
     now = (
         datetime.utcnow()
@@ -1106,7 +1211,9 @@ def finalize_paystack_subscription_payment(
 
     else:
 
-        subscription_start = now
+        subscription_start = (
+            now
+        )
 
 
     subscription_end = (
@@ -1120,33 +1227,49 @@ def finalize_paystack_subscription_payment(
     )
 
 
+    # ========================================================
+    # PAYMENT CONFIRMATION
+    # ========================================================
+
     payment.payment_method = (
         "paystack"
     )
+
 
     payment.payment_status = (
         "paid"
     )
 
-    payment.paid_at = now
 
-    payment.confirmed_at = now
+    payment.paid_at = (
+        now
+    )
+
+
+    payment.confirmed_at = (
+        now
+    )
+
 
     payment.confirmed_by = (
         "paystack"
     )
 
+
     payment.subscription_start = (
         subscription_start
     )
+
 
     payment.subscription_end = (
         subscription_end
     )
 
+
     payment.payment_verified_at = (
         now
     )
+
 
     payment.paystack_transaction_id = (
         str(
@@ -1158,6 +1281,7 @@ def finalize_paystack_subscription_payment(
         or None
     )
 
+
     payment.payment_channel = (
         transaction_data.get(
             "channel"
@@ -1166,7 +1290,14 @@ def finalize_paystack_subscription_payment(
     )
 
 
-    organizer.active = True
+    # ========================================================
+    # ACTIVATE ORGANIZER SUBSCRIPTION
+    # ========================================================
+
+    organizer.active = (
+        True
+    )
+
 
     organizer.subscription_status = (
         "active"
@@ -1187,6 +1318,10 @@ def finalize_paystack_subscription_payment(
         subscription_end
     )
 
+
+    # ========================================================
+    # SAVE
+    # ========================================================
 
     db.session.commit()
 
@@ -18039,15 +18174,27 @@ def paystack_ticket_callback():
 )
 def paystack_ticket_webhook():
 
+    # ========================================================
+    # PAYSTACK CONFIGURATION
+    # ========================================================
+
     if not PAYSTACK_SECRET_KEY:
 
         abort(503)
 
 
+    # ========================================================
+    # RAW WEBHOOK BODY
+    # ========================================================
+
     raw_body = (
         request.get_data()
     )
 
+
+    # ========================================================
+    # VERIFY PAYSTACK SIGNATURE
+    # ========================================================
 
     received_signature = (
         request.headers.get(
@@ -18078,6 +18225,10 @@ def paystack_ticket_webhook():
         abort(400)
 
 
+    # ========================================================
+    # PARSE PAYSTACK PAYLOAD
+    # ========================================================
+
     try:
 
         payload = json.loads(
@@ -18091,6 +18242,10 @@ def paystack_ticket_webhook():
 
         abort(400)
 
+
+    # ========================================================
+    # ONLY PROCESS SUCCESSFUL CHARGES
+    # ========================================================
 
     if (
         payload.get(
@@ -18132,6 +18287,10 @@ def paystack_ticket_webhook():
         )
 
 
+    # ========================================================
+    # TICKET ORDER
+    # ========================================================
+
     order = (
         TicketOrder.query
         .filter_by(
@@ -18142,7 +18301,15 @@ def paystack_ticket_webhook():
     )
 
 
+    # ========================================================
+    # NON-TICKET PAYMENTS
+    # ========================================================
+
     if not order:
+
+        # ====================================================
+        # SUBSCRIPTION PAYMENT
+        # ====================================================
 
         subscription_payment = (
             SubscriptionPayment.query
@@ -18154,7 +18321,15 @@ def paystack_ticket_webhook():
         )
 
 
+        # ====================================================
+        # NOT A SUBSCRIPTION PAYMENT
+        # ====================================================
+
         if not subscription_payment:
+
+            # ================================================
+            # EVENT BOOST
+            # ================================================
 
             boost = (
                 EventBoost.query
@@ -18166,7 +18341,15 @@ def paystack_ticket_webhook():
             )
 
 
+            # ================================================
+            # NOT AN EVENT BOOST
+            # ================================================
+
             if not boost:
+
+                # ============================================
+                # FEATURED LISTING
+                # ============================================
 
                 featured_listing = (
                     FeaturedListing.query
@@ -18178,13 +18361,31 @@ def paystack_ticket_webhook():
                 )
 
 
+                # ============================================
+                # UNKNOWN PAYMENT REFERENCE
+                # ============================================
+
                 if not featured_listing:
+
+                    current_app.logger.warning(
+                        (
+                            "[Paystack Webhook] "
+                            "No Kalxa payment record found "
+                            "for reference=%s"
+                        ),
+                        reference,
+                    )
+
 
                     return (
                         "",
                         200,
                     )
 
+
+                # ============================================
+                # FINALIZE FEATURED LISTING
+                # ============================================
 
                 try:
 
@@ -18207,6 +18408,7 @@ def paystack_ticket_webhook():
                         error,
                     )
 
+
                     return (
                         "",
                         500,
@@ -18218,6 +18420,10 @@ def paystack_ticket_webhook():
                     200,
                 )
 
+
+            # ================================================
+            # FINALIZE EVENT BOOST
+            # ================================================
 
             try:
 
@@ -18240,6 +18446,7 @@ def paystack_ticket_webhook():
                     error,
                 )
 
+
                 return (
                     "",
                     500,
@@ -18251,6 +18458,60 @@ def paystack_ticket_webhook():
                 200,
             )
 
+
+        # ====================================================
+        # CANCELLED SUBSCRIPTION PAYMENT
+        # ====================================================
+        #
+        # IMPORTANT:
+        #
+        # A cancelled subscription payment can belong to an
+        # outdated Paystack checkout.
+        #
+        # Example:
+        #
+        # Restaurant previously created an R199 checkout.
+        #
+        # Restaurant subscription pricing changes to R219.
+        #
+        # The old R199 SubscriptionPayment is cancelled and
+        # replaced with a new R219 payment.
+        #
+        # If the old checkout is somehow completed later,
+        # Paystack may still send charge.success.
+        #
+        # We acknowledge the webhook with HTTP 200 so Paystack
+        # does not repeatedly retry it, but we DO NOT activate
+        # or extend the organizer subscription.
+        # ====================================================
+
+        if (
+            subscription_payment.payment_status
+            == "cancelled"
+        ):
+
+            current_app.logger.warning(
+                (
+                    "[Paystack Subscription Webhook] "
+                    "Ignoring successful transaction for "
+                    "cancelled subscription payment "
+                    "reference=%s organizer_id=%s payment_id=%s"
+                ),
+                reference,
+                subscription_payment.organizer_id,
+                subscription_payment.id,
+            )
+
+
+            return (
+                "",
+                200,
+            )
+
+
+        # ====================================================
+        # FINALIZE SUBSCRIPTION PAYMENT
+        # ====================================================
 
         try:
 
@@ -18273,6 +18534,7 @@ def paystack_ticket_webhook():
                 error,
             )
 
+
             return (
                 "",
                 500,
@@ -18284,6 +18546,10 @@ def paystack_ticket_webhook():
             200,
         )
 
+
+    # ========================================================
+    # FINALIZE TICKET ORDER
+    # ========================================================
 
     try:
 
@@ -18313,6 +18579,10 @@ def paystack_ticket_webhook():
             500,
         )
 
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
 
     return (
         "",
