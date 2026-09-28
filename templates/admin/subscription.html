@@ -11,7 +11,7 @@
     >
 
     <title>
-        Subscription | Kalxa Ticketing
+        Subscription | Kalxa
     </title>
 
     <style>
@@ -199,34 +199,83 @@
             line-height: 1.5;
         }
 
+        .plan-type {
+            display: inline-flex;
+            margin-top: 12px;
+            padding: 7px 10px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .07);
+            color: #d1d5db;
+            font-size: .72rem;
+            font-weight: 850;
+        }
+
     </style>
 
 </head>
 
 <body>
 
+    {% set is_restaurant_account =
+        organizer
+        and
+        organizer.account_type == "restaurant"
+    %}
+
+
     <main class="page">
 
 
         <div class="topbar">
 
-            <a
-                href="{{ url_for(
-                    'admin_dashboard'
-                ) }}"
-                class="back"
-            >
-                ← Dashboard
-            </a>
+            {% if is_restaurant_account %}
+
+                <a
+                    href="{{ url_for(
+                        'admin_restaurants'
+                    ) }}"
+                    class="back"
+                >
+                    ← Restaurant Control
+                </a>
+
+            {% else %}
+
+                <a
+                    href="{{ url_for(
+                        'admin_dashboard'
+                    ) }}"
+                    class="back"
+                >
+                    ← Dashboard
+                </a>
+
+            {% endif %}
+
 
             <span class="brand">
-                Kalxa Ticketing
+
+                {% if is_restaurant_account %}
+
+                    Kalxa Restaurant
+
+                {% else %}
+
+                    Kalxa Ticketing
+
+                {% endif %}
+
             </span>
 
         </div>
 
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages =
+            get_flashed_messages(
+                with_categories=true
+            )
+        %}
 
             {% for category, message in messages %}
 
@@ -239,36 +288,106 @@
         {% endwith %}
 
 
+        <!-- =================================================
+             SUBSCRIPTION PLAN
+        ================================================== -->
+
         <section class="card hero">
 
             <span class="eyebrow">
-                ORGANIZER SUBSCRIPTION
+
+                {% if is_restaurant_account %}
+
+                    RESTAURANT SUBSCRIPTION
+
+                {% else %}
+
+                    ORGANIZER SUBSCRIPTION
+
+                {% endif %}
+
             </span>
+
 
             <div class="plan-row">
 
                 <div>
 
                     <h1>
-                        {{ subscription_plan_name }}
+
+                        {% if is_restaurant_account %}
+
+                            Kalxa Restaurant Monthly
+
+                        {% else %}
+
+                            {{ subscription_plan_name }}
+
+                        {% endif %}
+
                     </h1>
 
-                    <p class="muted">
-                        Pay Kalxa for organizer software access.
-                        Ticket-sale proceeds remain separate and
-                        settle to your own connected Paystack account.
-                    </p>
+
+                    {% if is_restaurant_account %}
+
+                        <p class="muted">
+
+                            Unlock your Kalxa restaurant
+                            management tools, campaigns,
+                            public restaurant profile,
+                            customer rating QR,
+                            working hours and customer
+                            experience features.
+
+                        </p>
+
+                    {% else %}
+
+                        <p class="muted">
+
+                            Pay Kalxa for organizer software access.
+
+                            Ticket-sale proceeds remain separate
+                            and settle to your own connected
+                            Paystack account.
+
+                        </p>
+
+                    {% endif %}
+
+
+                    <span class="plan-type">
+
+                        {% if is_restaurant_account %}
+
+                            Restaurant Account
+
+                        {% else %}
+
+                            Event Organizer Account
+
+                        {% endif %}
+
+                    </span>
 
                 </div>
+
 
                 <div>
 
                     <div class="price">
-                        R{{ "%.2f"|format(subscription_price) }}
+
+                        R{{ "%.2f"|format(
+                            subscription_price
+                        ) }}
+
                     </div>
 
                     <div class="muted">
-                        {{ subscription_period_days }} days
+
+                        {{ subscription_period_days }}
+                        days
+
                     </div>
 
                 </div>
@@ -277,6 +396,10 @@
 
         </section>
 
+
+        <!-- =================================================
+             CURRENT ACCESS
+        ================================================== -->
 
         <section class="card">
 
@@ -296,24 +419,36 @@
                             {{ subscription_status }}
                         {% endif %}"
                     >
+
                         {% if subscription_active %}
+
                             ACTIVE
+
                         {% else %}
+
                             {{ subscription_status|upper }}
+
                         {% endif %}
+
                     </span>
 
                 </div>
 
+
                 {% if subscription_expires_at %}
 
                     <div class="muted">
+
                         Access expires:
+
                         <strong>
+
                             {{ subscription_expires_at.strftime(
                                 '%d %B %Y'
                             ) }}
+
                         </strong>
+
                     </div>
 
                 {% endif %}
@@ -324,11 +459,24 @@
             {% if subscription_status == "suspended" %}
 
                 <p class="muted">
-                    Your organizer account is suspended.
-                    Contact Kalxa before attempting payment.
+
+                    {% if is_restaurant_account %}
+
+                        Your restaurant account is suspended.
+                        Contact Kalxa before attempting payment.
+
+                    {% else %}
+
+                        Your organizer account is suspended.
+                        Contact Kalxa before attempting payment.
+
+                    {% endif %}
+
                 </p>
 
+
             {% else %}
+
 
                 <form
                     method="POST"
@@ -342,13 +490,34 @@
                         type="submit"
                         class="button"
                     >
+
                         {% if subscription_active %}
-                            Renew for {{ subscription_period_days }} Days — Pay R{{ "%.2f"|format(subscription_price) }}
+
+                            Renew for
+                            {{ subscription_period_days }}
+                            Days — Pay
+                            R{{ "%.2f"|format(
+                                subscription_price
+                            ) }}
+
+
                         {% elif pending_payment %}
-                            Continue Paystack Payment — R{{ "%.2f"|format(pending_payment.amount) }}
+
+                            Continue Paystack Payment —
+                            R{{ "%.2f"|format(
+                                pending_payment.amount
+                            ) }}
+
+
                         {% else %}
-                            Activate Subscription — Pay R{{ "%.2f"|format(subscription_price) }}
+
+                            Activate Subscription — Pay
+                            R{{ "%.2f"|format(
+                                subscription_price
+                            ) }}
+
                         {% endif %}
+
                     </button>
 
                 </form>
@@ -356,10 +525,24 @@
 
                 <div class="secure-note">
 
-                    Secure payment is handled by Paystack.
-                    This payment goes directly to Kalxa's
-                    platform merchant account and is separate
-                    from attendee ticket-sale settlements.
+                    {% if is_restaurant_account %}
+
+                        Secure payment is handled by Paystack.
+
+                        This subscription payment goes directly
+                        to Kalxa's platform merchant account
+                        and activates your restaurant management
+                        access after successful verification.
+
+                    {% else %}
+
+                        Secure payment is handled by Paystack.
+
+                        This payment goes directly to Kalxa's
+                        platform merchant account and is separate
+                        from attendee ticket-sale settlements.
+
+                    {% endif %}
 
                 </div>
 
@@ -367,6 +550,10 @@
 
         </section>
 
+
+        <!-- =================================================
+             PENDING PAYMENT
+        ================================================== -->
 
         {% if pending_payment %}
 
@@ -380,19 +567,32 @@
                     Paystack Checkout
                 </h2>
 
+
                 <p class="muted">
+
                     Reference:
+
                     <strong>
                         {{ pending_payment.payment_reference }}
                     </strong>
+
                 </p>
 
+
                 <p class="muted">
+
                     Amount:
+
                     <strong>
-                        R{{ "%.2f"|format(pending_payment.amount) }}
+
+                        R{{ "%.2f"|format(
+                            pending_payment.amount
+                        ) }}
+
                     </strong>
+
                 </p>
+
 
                 {% if pending_payment.paystack_authorization_url %}
 
@@ -405,11 +605,26 @@
 
                 {% endif %}
 
+
                 <p class="secure-note">
-                    After Paystack confirms payment, Kalxa
-                    activates your organizer subscription
-                    automatically. Super Admin approval is
-                    not required.
+
+                    After Paystack confirms payment,
+                    Kalxa activates your
+
+                    {% if is_restaurant_account %}
+
+                        restaurant subscription
+
+                    {% else %}
+
+                        organizer subscription
+
+                    {% endif %}
+
+                    automatically.
+
+                    Super Admin approval is not required.
+
                 </p>
 
             </section>
@@ -417,15 +632,21 @@
         {% endif %}
 
 
+        <!-- =================================================
+             PAYMENT HISTORY
+        ================================================== -->
+
         <section class="card">
 
             <h2>
                 Subscription Payment History
             </h2>
 
+
             {% if payments %}
 
                 <div class="history">
+
 
                     {% for payment in payments %}
 
@@ -439,24 +660,43 @@
                                         {{ payment.payment_reference }}
                                     </strong>
 
+
                                     <small>
+
                                         {{ payment.plan_name }}
-                                        · R{{ "%.2f"|format(payment.amount) }}
-                                        · {{ payment.created_at.strftime(
+
+                                        ·
+
+                                        R{{ "%.2f"|format(
+                                            payment.amount
+                                        ) }}
+
+                                        ·
+
+                                        {{ payment.created_at.strftime(
                                             '%d %B %Y'
                                         ) }}
+
                                     </small>
+
 
                                     {% if payment.payment_channel %}
 
                                         <small>
+
                                             Paystack ·
-                                            {{ payment.payment_channel|replace('_', ' ')|title }}
+
+                                            {{ payment.payment_channel
+                                                |replace('_', ' ')
+                                                |title
+                                            }}
+
                                         </small>
 
                                     {% endif %}
 
                                 </div>
+
 
                                 <span
                                     class="status
@@ -468,7 +708,9 @@
                                         inactive
                                     {% endif %}"
                                 >
+
                                     {{ payment.payment_status|upper }}
+
                                 </span>
 
                             </div>
@@ -477,7 +719,9 @@
 
                     {% endfor %}
 
+
                 </div>
+
 
             {% else %}
 
