@@ -229,6 +229,26 @@ RESTAURANT_ANALYTICS_SESSION_KEY = (
 RESTAURANT_ATTRIBUTION_SESSION_KEY = (
     "kalxa_restaurant_attribution"
 )
+
+# ============================================================
+# KALXA CROSS-APP ATTRIBUTION
+# ============================================================
+
+KALXA_ATTRIBUTION_SECRET = (
+    os.getenv(
+        "KALXA_ATTRIBUTION_SECRET",
+        "",
+    )
+    .strip()
+)
+
+KALXA_ATTRIBUTION_MAX_AGE_SECONDS = (
+    7 * 24 * 60 * 60
+)
+
+KALXA_ATTRIBUTION_SALT = (
+    "kalxa-restaurant-attribution"
+)
 # ============================================================
 
 # RESTAURANT OPENING HOURS
@@ -664,88 +684,7 @@ def get_restaurant_analytics_session_id():
 # CAPTURE RESTAURANT ATTRIBUTION
 # ============================================================
 
-def capture_restaurant_attribution(
-    restaurant_id,
-):
 
-    source = (
-        request.args
-        .get(
-            "source",
-            "",
-        )
-        .strip()
-        .lower()
-    )
-
-    article_id = (
-        request.args
-        .get(
-            "article_id",
-            "",
-        )
-        .strip()
-    )
-
-    source_session = (
-        request.args
-        .get(
-            "source_session",
-            "",
-        )
-        .strip()
-    )
-
-
-    # --------------------------------------------------------
-    # ONLY ACCEPT KNOWN STORIES ATTRIBUTION
-    # --------------------------------------------------------
-
-    if source != "stories":
-
-        return
-
-
-    try:
-
-        article_id = int(
-            article_id
-        )
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        return
-
-
-    if article_id <= 0:
-
-        return
-
-
-    # --------------------------------------------------------
-    # STORE ATTRIBUTION IN SIGNED FLASK SESSION
-    # --------------------------------------------------------
-
-    session[
-        RESTAURANT_ATTRIBUTION_SESSION_KEY
-    ] = {
-        "source":
-            "stories",
-
-        "article_id":
-            article_id,
-
-        "restaurant_id":
-            restaurant_id,
-
-        "source_session_id":
-            source_session
-            or
-            None,
-    }
 
 def cloudinary_reels_configured():
 
@@ -3263,6 +3202,275 @@ def build_restaurant_hours_payload(
   return payload
 
 
+def get_kalxa_attribution_serializer():
+    """
+    Build the serializer used to verify attribution tokens
+    created by Kalxa Stories.
+    """
+
+    if not KALXA_ATTRIBUTION_SECRET:
+
+        return None
+
+
+    return URLSafeTimedSerializer(
+        KALXA_ATTRIBUTION_SECRET,
+        salt=KALXA_ATTRIBUTION_SALT,
+    )
+
+
+def capture_restaurant_attribution(
+    advert,
+):
+    """
+    Verify a signed Kalxa Stories attribution token and
+    persist the verified attribution inside the Ticketing
+    Flask session.
+
+    Expected URL:
+
+        /restaurant/2?kat=<SIGNED_TOKEN>
+
+    The token is created by Kalxa Stories using the same
+    KALXA_ATTRIBUTION_SECRET and salt.
+
+    No customer name, email address, phone number or IP
+    address is stored.
+    """
+
+    # ========================================================
+    # INCOMING SIGNED TOKEN
+    # ========================================================
+
+    token = (
+        request.args
+        .get(
+            "kat",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # NO NEW TOKEN
+    # ========================================================
+    #
+    # Preserve existing attribution only when it belongs
+    # to the restaurant currently being viewed.
+    # ========================================================
+
+    if not token:
+
+        existing = (
+            session.get(
+                RESTAURANT_ATTRIBUTION_SESSION_KEY
+            )
+            or {}
+        )
+
+
+        if (
+            existing.get(
+                "restaurant_id"
+            )
+            == advert.id
+        ):
+
+            return existing
+
+
+        return {}
+
+
+    # ========================================================
+    # SERIALIZER
+    # ========================================================
+
+    serializer = (
+        get_kalxa_attribution_serializer()
+    )
+
+
+    if serializer is None:
+
+        current_app.logger.error(
+            "KALXA_ATTRIBUTION_SECRET is not configured."
+        )
+
+        return {}
+
+
+    # ========================================================
+    # VERIFY TOKEN
+    # ========================================================
+
+    try:
+
+        payload = serializer.loads(
+            token,
+            max_age=(
+                KALXA_ATTRIBUTION_MAX_AGE_SECONDS
+            ),
+        )
+
+    except SignatureExpired:
+
+        current_app.logger.info(
+            "Expired Kalxa Stories attribution token."
+        )
+
+        return {}
+
+    except BadSignature:
+
+        current_app.logger.warning(
+            "Rejected invalid Kalxa Stories "
+            "attribution token."
+        )
+
+        return {}
+
+
+    # ========================================================
+    # VERIFY SOURCE
+    # ========================================================
+
+    if (
+        payload.get(
+            "source"
+        )
+        !=
+        "kalxa_stories"
+    ):
+
+        return {}
+
+
+    # ========================================================
+    # VERIFY RESTAURANT
+    # ========================================================
+
+    try:
+
+        source_restaurant_id = int(
+            payload.get(
+                "restaurant_id"
+            )
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return {}
+
+
+    if (
+        source_restaurant_id
+        != advert.id
+    ):
+
+        current_app.logger.warning(
+            (
+                "Rejected mismatched Kalxa Stories "
+                "attribution. "
+                "URL restaurant=%s "
+                "token restaurant=%s"
+            ),
+            advert.id,
+            source_restaurant_id,
+        )
+
+        return {}
+
+
+    # ========================================================
+    # VERIFY STORY
+    # ========================================================
+
+    try:
+
+        story_id = int(
+            payload.get(
+                "story_id"
+            )
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return {}
+
+
+    if story_id <= 0:
+
+        return {}
+
+
+    # ========================================================
+    # SOURCE SESSION
+    # ========================================================
+
+    source_session_id = (
+        payload.get(
+            "source_session_id"
+        )
+    )
+
+
+    if source_session_id is not None:
+
+        source_session_id = str(
+            source_session_id
+        )[:100]
+
+
+    # ========================================================
+    # VERIFIED ATTRIBUTION
+    # ========================================================
+    #
+    # We keep "article_id" here because your existing
+    # RestaurantAnalyticsEvent model uses:
+    #
+    # source_article_id
+    #
+    # and record_restaurant_analytics_event() currently
+    # reads attribution["article_id"].
+    # ========================================================
+
+    attribution = {
+
+        "source":
+            "kalxa_stories",
+
+        "article_id":
+            story_id,
+
+        "restaurant_id":
+            advert.id,
+
+        "source_session_id":
+            source_session_id,
+    }
+
+
+    # ========================================================
+    # STORE IN SIGNED FLASK SESSION
+    # ========================================================
+
+    session[
+        RESTAURANT_ATTRIBUTION_SESSION_KEY
+    ] = attribution
+
+    session.modified = True
+
+
+    return attribution
+
 # ============================================================
 
 # CHECK RESTAURANT OWNER
@@ -3962,7 +4170,6 @@ def build_restaurant_campaign_schedule(
 
 
 
-
 # ============================================================
 # STAGE 6 - RESTAURANT CONVERSION ANALYTICS
 # ============================================================
@@ -4010,169 +4217,6 @@ def parse_positive_int(
 # CAPTURE STORIES ATTRIBUTION
 # ============================================================
 
-def capture_restaurant_attribution(
-    advert,
-):
-    """
-    Capture incoming Kalxa Stories attribution and persist it
-    inside the Ticketing Flask session.
-
-    Expected incoming query parameters:
-
-    source=stories
-    article_id=7
-    restaurant_id=2
-    source_session=abc123
-
-    No customer name, email address or phone number is stored.
-    """
-
-    source = (
-        request.args
-        .get(
-            "source",
-            "",
-        )
-        .strip()
-        .lower()
-    )
-
-
-    # --------------------------------------------------------
-    # NO NEW ATTRIBUTION
-    # --------------------------------------------------------
-    #
-    # If the request does not contain Stories attribution,
-    # keep any existing attribution only when it belongs to
-    # this restaurant.
-    # --------------------------------------------------------
-
-    if source != "stories":
-
-        existing = (
-            session.get(
-                RESTAURANT_ANALYTICS_ATTRIBUTION_KEY
-            )
-            or {}
-        )
-
-        if (
-            existing.get(
-                "restaurant_id"
-            )
-            == advert.id
-        ):
-
-            return existing
-
-        return {}
-
-
-    # --------------------------------------------------------
-    # ARTICLE
-    # --------------------------------------------------------
-
-    article_id = (
-        parse_positive_int(
-            request.args.get(
-                "article_id"
-            )
-        )
-    )
-
-
-    # --------------------------------------------------------
-    # RESTAURANT
-    # --------------------------------------------------------
-
-    source_restaurant_id = (
-        parse_positive_int(
-            request.args.get(
-                "restaurant_id"
-            )
-        )
-    )
-
-
-    if (
-        source_restaurant_id
-        is not None
-        and
-        source_restaurant_id
-        != advert.id
-    ):
-
-        current_app.logger.warning(
-            "Rejected mismatched Kalxa Stories "
-            "restaurant attribution. "
-            "URL restaurant=%s source restaurant=%s",
-            advert.id,
-            source_restaurant_id,
-        )
-
-        return {}
-
-
-    # --------------------------------------------------------
-    # SOURCE SESSION
-    # --------------------------------------------------------
-
-    source_session_id = (
-        request.args
-        .get(
-            "source_session",
-            "",
-        )
-        .strip()
-    )
-
-
-    if len(
-        source_session_id
-    ) > 100:
-
-        source_session_id = (
-            source_session_id[:100]
-        )
-
-
-    # --------------------------------------------------------
-    # REQUIRE STORY
-    # --------------------------------------------------------
-
-    if article_id is None:
-
-        return {}
-
-
-    # --------------------------------------------------------
-    # STORE ATTRIBUTION
-    # --------------------------------------------------------
-
-    attribution = {
-        "source":
-            "stories",
-
-        "article_id":
-            article_id,
-
-        "restaurant_id":
-            advert.id,
-
-        "source_session_id":
-            source_session_id
-            or
-            None,
-    }
-
-
-    session[
-        RESTAURANT_ANALYTICS_ATTRIBUTION_KEY
-    ] = attribution
-
-    session.modified = True
-
-    return attribution
 
 
 # ============================================================
@@ -16198,20 +16242,29 @@ def restaurant_page(
     # STAGE 6 - CAPTURE STORIES ATTRIBUTION
     # ========================================================
     #
-    # Example incoming URL:
+    # This checks whether the visitor arrived from
+    # Kalxa Stories.
     #
-    # /restaurant/2
-    #     ?source=stories
-    #     &article_id=7
-    #     &restaurant_id=2
-    #     &source_session=abc123
+    # The attribution is persisted inside the Ticketing
+    # Flask session so that later actions such as:
     #
-    # capture_restaurant_attribution() validates the incoming
-    # source and stores the attribution inside the signed
-    # Ticketing Flask session.
+    # restaurant_view
+    # experience_view
+    # whatsapp_click
+    # phone_click
+    # directions_click
     #
-    # This means the attribution survives after the visitor
-    # leaves the original landing URL.
+    # can all retain the same Stories attribution.
+    #
+    # NOTE:
+    #
+    # We will inspect capture_restaurant_attribution()
+    # separately to make sure it uses the secure signed
+    # attribution token:
+    #
+    # ?kat=<SIGNED_TOKEN>
+    #
+    # rather than trusting editable query parameters.
     # ========================================================
 
     restaurant_attribution = (
@@ -16226,8 +16279,8 @@ def restaurant_page(
     # ========================================================
     #
     # Reuse the existing anonymous restaurant experience
-    # session so restaurant analytics and experience activity
-    # share the same anonymous browser identity.
+    # session for customer experience loves and other
+    # anonymous restaurant behaviour.
     # ========================================================
 
     anonymous_session_id = (
@@ -16239,13 +16292,34 @@ def restaurant_page(
     # STAGE 6 - RESTAURANT VIEW
     # ========================================================
     #
-    # Deduplicated so repeated refreshes from the same
-    # anonymous browser do not immediately inflate views.
+    # IMPORTANT:
+    #
+    # record_restaurant_analytics_event() currently accepts:
+    #
+    # restaurant_id
+    # event_type
+    # metadata
+    #
+    # Therefore we pass restaurant_id=advert.id.
+    #
+    # We are NOT passing:
+    #
+    # advert=advert
+    # deduplicate=True
+    #
+    # because the current analytics helper does not accept
+    # those arguments.
     # ========================================================
 
     record_restaurant_analytics_event(
-        advert=advert,
-        event_type="restaurant_view",
+        restaurant_id=(
+            advert.id
+        ),
+
+        event_type=(
+            "restaurant_view"
+        ),
+
         metadata={
             "page":
                 "restaurant",
@@ -16255,7 +16329,6 @@ def restaurant_page(
                     restaurant_attribution
                 ),
         },
-        deduplicate=True,
     )
 
 
@@ -16292,24 +16365,11 @@ def restaurant_page(
     # RESTAURANT RATING SUMMARY
     # ========================================================
     #
-    # The public restaurant rating is calculated from the
-    # same approved + active experience posts that are shown
-    # publicly on the restaurant page.
+    # Only approved + active customer experiences contribute
+    # to the public restaurant rating.
     #
-    # Pending, rejected or inactive posts do NOT affect the
-    # public rating.
-    #
-    # Example:
-    #
-    # Ratings:
-    #
-    # 5
-    # 4
-    # 4
-    #
-    # Average:
-    #
-    # 4.3
+    # Pending, rejected and inactive experience posts are
+    # excluded.
     # ========================================================
 
     restaurant_ratings = [
@@ -16403,12 +16463,13 @@ def restaurant_page(
     # RAW CONTACT LINK AVAILABILITY
     # ========================================================
     #
-    # These are only used to determine whether the restaurant
-    # actually has a valid destination.
+    # These URLs are used only to determine whether the
+    # restaurant actually has a valid destination.
     #
-    # They are NOT sent directly to restaurant.html anymore.
+    # They are NOT sent directly to restaurant.html.
     #
-    # Instead the public page receives Kalxa tracking routes.
+    # The public template receives Kalxa internal tracking
+    # URLs instead.
     # ========================================================
 
     raw_whatsapp_url = (
@@ -16436,14 +16497,14 @@ def restaurant_page(
     # STAGE 6 - TRACKED CONTACT LINKS
     # ========================================================
     #
-    # Customer journey:
+    # Flow:
     #
-    # Restaurant
-    #     ↓
-    # Kalxa tracking route
-    #     ↓
-    # Record conversion
-    #     ↓
+    # Restaurant page
+    #       ↓
+    # Kalxa action route
+    #       ↓
+    # Analytics event
+    #       ↓
     # External destination
     #
     # Examples:
@@ -16618,19 +16679,21 @@ def restaurant_page(
     # STAGE 6 - ATTRIBUTION VALUES FOR TEMPLATE
     # ========================================================
     #
-    # The template does not need these to create the contact
-    # tracking URLs because attribution is now persisted in
+    # Contact tracking itself does not depend on these
+    # template values because attribution is persisted in
     # the Flask session.
     #
-    # They remain available for debugging, UI indicators or
-    # future client-side analytics.
+    # These values remain useful for debugging and possible
+    # future client-side analytics/UI.
     # ========================================================
 
     attribution_source = (
         restaurant_attribution.get(
             "source"
         )
+
         if restaurant_attribution
+
         else None
     )
 
@@ -16639,7 +16702,9 @@ def restaurant_page(
         restaurant_attribution.get(
             "article_id"
         )
+
         if restaurant_attribution
+
         else None
     )
 
@@ -16648,7 +16713,9 @@ def restaurant_page(
         restaurant_attribution.get(
             "restaurant_id"
         )
+
         if restaurant_attribution
+
         else None
     )
 
@@ -16657,7 +16724,9 @@ def restaurant_page(
         restaurant_attribution.get(
             "source_session_id"
         )
+
         if restaurant_attribution
+
         else None
     )
 
@@ -16668,6 +16737,7 @@ def restaurant_page(
 
     return render_template(
         "restaurant.html",
+
 
         # ====================================================
         # RESTAURANT
@@ -16682,9 +16752,7 @@ def restaurant_page(
         # CONTACT
         # ====================================================
         #
-        # IMPORTANT:
-        #
-        # These are now internal Kalxa tracking URLs.
+        # These are INTERNAL Kalxa tracking routes.
         #
         # restaurant.html can continue using:
         #
@@ -16692,7 +16760,8 @@ def restaurant_page(
         # href="{{ phone_url }}"
         # href="{{ directions_url }}"
         #
-        # without needing to know how analytics works.
+        # The tracking route records the event and then
+        # redirects the visitor to the real destination.
         # ====================================================
 
         whatsapp_url=(
@@ -16796,7 +16865,7 @@ def restaurant_page(
 
 
         # ====================================================
-        # STAGE 6 ATTRIBUTION
+        # STAGE 6 - ATTRIBUTION
         # ====================================================
 
         attribution_source=(
@@ -16815,8 +16884,6 @@ def restaurant_page(
             source_session_id
         ),
     )
-
-
 # ============================================================
 # STAGE 6 - WHATSAPP CONVERSION
 # ============================================================
