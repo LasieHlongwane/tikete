@@ -3134,9 +3134,22 @@ def capture_restaurant_attribution(
     The token is created by Kalxa Stories using the same
     KALXA_ATTRIBUTION_SECRET and salt.
 
+    Stored attribution also receives a captured_at timestamp
+    so Ticketing can enforce its own attribution window after
+    the signed token has been accepted.
+
     No customer name, email address, phone number or IP
     address is stored.
     """
+
+    # ========================================================
+    # CURRENT TIME
+    # ========================================================
+
+    now = datetime.now(
+        timezone.utc
+    )
+
 
     # ========================================================
     # INCOMING SIGNED TOKEN
@@ -3156,8 +3169,15 @@ def capture_restaurant_attribution(
     # NO NEW TOKEN
     # ========================================================
     #
-    # Preserve existing attribution only when it belongs
-    # to the restaurant currently being viewed.
+    # Preserve existing attribution only when:
+    #
+    # 1. It belongs to the restaurant currently being viewed.
+    # 2. It contains a valid captured_at timestamp.
+    # 3. It is still inside the attribution window.
+    #
+    # Old sessions created before captured_at was introduced
+    # are treated as expired rather than being trusted
+    # indefinitely.
     # ========================================================
 
     if not token:
@@ -3166,7 +3186,8 @@ def capture_restaurant_attribution(
             session.get(
                 RESTAURANT_ATTRIBUTION_SESSION_KEY
             )
-            or {}
+            or
+            {}
         )
 
 
@@ -3174,13 +3195,90 @@ def capture_restaurant_attribution(
             existing.get(
                 "restaurant_id"
             )
-            == advert.id
+            != advert.id
         ):
 
-            return existing
+            return {}
 
 
-        return {}
+        captured_at_raw = (
+            existing.get(
+                "captured_at"
+            )
+        )
+
+
+        if not captured_at_raw:
+
+            session.pop(
+                RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                None,
+            )
+
+            session.modified = True
+
+            return {}
+
+
+        try:
+
+            captured_at = (
+                datetime.fromisoformat(
+                    captured_at_raw
+                )
+            )
+
+
+            if captured_at.tzinfo is None:
+
+                captured_at = (
+                    captured_at.replace(
+                        tzinfo=timezone.utc
+                    )
+                )
+
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            session.pop(
+                RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                None,
+            )
+
+            session.modified = True
+
+            return {}
+
+
+        attribution_age_seconds = (
+            now
+            -
+            captured_at
+        ).total_seconds()
+
+
+        if (
+            attribution_age_seconds < 0
+            or
+            attribution_age_seconds
+            >
+            KALXA_ATTRIBUTION_MAX_AGE_SECONDS
+        ):
+
+            session.pop(
+                RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                None,
+            )
+
+            session.modified = True
+
+            return {}
+
+
+        return existing
 
 
     # ========================================================
@@ -3333,13 +3431,13 @@ def capture_restaurant_attribution(
     # VERIFIED ATTRIBUTION
     # ========================================================
     #
-    # We keep "article_id" here because your existing
-    # RestaurantAnalyticsEvent model uses:
+    # article_id remains the internal session key because
+    # RestaurantAnalyticsEvent stores:
     #
-    # source_article_id
+    #     source_article_id
     #
-    # and record_restaurant_analytics_event() currently
-    # reads attribution["article_id"].
+    # captured_at controls how long this verified attribution
+    # remains usable inside Ticketing.
     # ========================================================
 
     attribution = {
@@ -3355,6 +3453,9 @@ def capture_restaurant_attribution(
 
         "source_session_id":
             source_session_id,
+
+        "captured_at":
+            now.isoformat(),
     }
 
 
@@ -3370,7 +3471,6 @@ def capture_restaurant_attribution(
 
 
     return attribution
-
 # ============================================================
 
 # CHECK RESTAURANT OWNER
@@ -4161,7 +4261,6 @@ def get_restaurant_attribution(
 # ============================================================
 # RECENT RESTAURANT ANALYTICS EVENT
 # ============================================================
-
 def recent_restaurant_analytics_event_exists(
     restaurant_id,
     event_type,
@@ -4229,13 +4328,7 @@ def recent_restaurant_analytics_event_exists(
         query.first()
         is not None
     )
-
-
-# ============================================================
-# RECORD RESTAURANT ANALYTICS EVENT
-# ============================================================
-
-# ============================================================
+ #============================================================
 # RECORD RESTAURANT ANALYTICS EVENT
 # ============================================================
 
@@ -4258,25 +4351,17 @@ def record_restaurant_analytics_event(
 
         restaurant_id=advert.id
 
-    This keeps existing Ticketing routes compatible while
-    giving the analytics system one canonical implementation.
+    Stories attribution is accepted only when:
 
-    Supported events include:
+        1. It belongs to this restaurant.
+        2. It came from the verified Ticketing session.
+        3. It contains a valid captured_at timestamp.
+        4. It is still inside the attribution window.
 
-        restaurant_view
-        experience_view
-        whatsapp_click
-        phone_click
-        directions_click
-        gallery_view
-        share_click
+    Expired or invalid attribution is cleared before the
+    analytics event is recorded.
 
-    Stories attribution is read from the signed Flask
-    session attribution created after verification of the
-    `kat` token.
-
-    Analytics failures must never block the customer
-    journey.
+    Analytics failures must never block the customer journey.
     """
 
     # ========================================================
@@ -4306,10 +4391,8 @@ def record_restaurant_analytics_event(
 
         try:
 
-            resolved_restaurant_id = (
-                int(
-                    restaurant_id
-                )
+            resolved_restaurant_id = int(
+                restaurant_id
             )
 
         except (
@@ -4347,11 +4430,6 @@ def record_restaurant_analytics_event(
     # ========================================================
     # ANONYMOUS RESTAURANT SESSION
     # ========================================================
-    #
-    # Keep using the existing restaurant experience session
-    # so restaurant interactions from the same browser can
-    # belong to one anonymous journey.
-    # ========================================================
 
     anonymous_session_id = (
         get_restaurant_experience_session_id()
@@ -4360,15 +4438,6 @@ def record_restaurant_analytics_event(
 
     # ========================================================
     # GET VERIFIED STORIES ATTRIBUTION
-    # ========================================================
-    #
-    # capture_restaurant_attribution() has already verified
-    # the signed `kat` token and stored the accepted payload
-    # in:
-    #
-    # RESTAURANT_ATTRIBUTION_SESSION_KEY
-    #
-    # Never trust URL source/article parameters here.
     # ========================================================
 
     attribution = (
@@ -4384,10 +4453,6 @@ def record_restaurant_analytics_event(
     # ========================================================
     # RESTAURANT SAFETY CHECK
     # ========================================================
-    #
-    # Attribution is only valid for the restaurant contained
-    # in the verified signed token.
-    # ========================================================
 
     attributed_restaurant_id = (
         attribution.get(
@@ -4402,6 +4467,101 @@ def record_restaurant_analytics_event(
     ):
 
         attribution = {}
+
+
+    # ========================================================
+    # ATTRIBUTION EXPIRY CHECK
+    # ========================================================
+    #
+    # Even though the incoming `kat` token has its own
+    # max_age, attribution stored in the Flask session must
+    # also expire.
+    #
+    # This prevents an old Story visit from claiming a much
+    # later direct conversion.
+    # ========================================================
+
+    if attribution:
+
+        captured_at_raw = (
+            attribution.get(
+                "captured_at"
+            )
+        )
+
+
+        if not captured_at_raw:
+
+            attribution = {}
+
+            session.pop(
+                RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                None,
+            )
+
+            session.modified = True
+
+
+        else:
+
+            try:
+
+                captured_at = (
+                    datetime.fromisoformat(
+                        captured_at_raw
+                    )
+                )
+
+
+                if captured_at.tzinfo is None:
+
+                    captured_at = (
+                        captured_at.replace(
+                            tzinfo=timezone.utc
+                        )
+                    )
+
+
+                attribution_age_seconds = (
+                    datetime.now(
+                        timezone.utc
+                    )
+                    -
+                    captured_at
+                ).total_seconds()
+
+
+                if (
+                    attribution_age_seconds < 0
+                    or
+                    attribution_age_seconds
+                    >
+                    KALXA_ATTRIBUTION_MAX_AGE_SECONDS
+                ):
+
+                    attribution = {}
+
+                    session.pop(
+                        RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                        None,
+                    )
+
+                    session.modified = True
+
+
+            except (
+                TypeError,
+                ValueError,
+            ):
+
+                attribution = {}
+
+                session.pop(
+                    RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                    None,
+                )
+
+                session.modified = True
 
 
     # ========================================================
@@ -4446,6 +4606,7 @@ def record_restaurant_analytics_event(
 
             duplicate_exists = (
                 recent_restaurant_analytics_event_exists(
+
                     restaurant_id=(
                         resolved_restaurant_id
                     ),
@@ -4471,9 +4632,6 @@ def record_restaurant_analytics_event(
 
 
         except Exception:
-
-            # Deduplication failure should not prevent the
-            # event from being recorded.
 
             current_app.logger.exception(
                 "Unable to check restaurant analytics "
