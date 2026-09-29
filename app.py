@@ -4265,15 +4265,46 @@ def recent_restaurant_analytics_event_exists(
     restaurant_id,
     event_type,
     session_id,
+    source=None,
     source_article_id=None,
 ):
     """
-    Used for events where repeated page refreshes should not
-    inflate analytics.
+    Check whether the same anonymous analytics event was
+    recently recorded.
 
-    Action clicks such as WhatsApp and Directions are normally
-    recorded without deduplication.
+    Current deduplication identity:
+
+        restaurant
+        + event type
+        + anonymous session
+        + traffic source
+        + source article (when applicable)
+
+    This prevents repeated refreshes from inflating views
+    while preserving separate attribution journeys.
+
+    Example:
+
+        Same browser
+        Restaurant #2
+        restaurant_view
+        source = direct
+        within 30 minutes
+
+            -> duplicate
+
+        Same browser
+        Restaurant #2
+        restaurant_view
+        source = kalxa_stories
+        Story #1
+
+            -> separate attributed journey
     """
+
+    # ========================================================
+    # CUTOFF
+    # ========================================================
 
     cutoff = (
         datetime.now(
@@ -4287,6 +4318,10 @@ def recent_restaurant_analytics_event_exists(
         )
     )
 
+
+    # ========================================================
+    # BASE QUERY
+    # ========================================================
 
     query = (
         RestaurantAnalyticsEvent.query
@@ -4307,6 +4342,30 @@ def recent_restaurant_analytics_event_exists(
     )
 
 
+    # ========================================================
+    # TRAFFIC SOURCE
+    # ========================================================
+
+    if source is None:
+
+        query = query.filter(
+            RestaurantAnalyticsEvent
+            .source
+            .is_(None)
+        )
+
+    else:
+
+        query = query.filter(
+            RestaurantAnalyticsEvent.source
+            == source
+        )
+
+
+    # ========================================================
+    # SOURCE ARTICLE
+    # ========================================================
+
     if source_article_id is None:
 
         query = query.filter(
@@ -4324,11 +4383,14 @@ def recent_restaurant_analytics_event_exists(
         )
 
 
+    # ========================================================
+    # RESULT
+    # ========================================================
+
     return (
         query.first()
         is not None
-    )
- #============================================================
+    ) #============================================================
 # RECORD RESTAURANT ANALYTICS EVENT
 # ============================================================
 
@@ -4672,6 +4734,12 @@ def record_restaurant_analytics_event(
                     session_id=(
                         anonymous_session_id
                     ),
+                    
+                    
+
+                   source=(
+                        source
+                   ),                    
 
                     source_article_id=(
                         source_article_id
