@@ -16040,6 +16040,9 @@ def event_page(
         events=None,
     )
 
+# ============================================================
+# PUBLIC RESTAURANT PAGE
+# ============================================================
 
 @app.route(
     "/restaurant/<int:advert_id>"
@@ -16047,6 +16050,10 @@ def event_page(
 def restaurant_page(
     advert_id,
 ):
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
 
     advert = (
         RestaurantAdvert.query
@@ -16106,8 +16113,7 @@ def restaurant_page(
 
 
     # ========================================================
-    # STAGE 6:
-    # READ KALXA ATTRIBUTION
+    # STAGE 6 - CAPTURE STORIES ATTRIBUTION
     # ========================================================
     #
     # Example incoming URL:
@@ -16118,157 +16124,28 @@ def restaurant_page(
     #     &restaurant_id=2
     #     &source_session=abc123
     #
-    # These values allow Kalxa Ticketing to understand that
-    # the restaurant visit originated from Kalxa Stories.
+    # capture_restaurant_attribution() validates the incoming
+    # source and stores the attribution inside the signed
+    # Ticketing Flask session.
     #
-    # No customer name, email or phone number is required.
+    # This means the attribution survives after the visitor
+    # leaves the original landing URL.
     # ========================================================
 
-    attribution_source = (
-        request.args
-        .get(
-            "source",
-            "",
+    restaurant_attribution = (
+        capture_restaurant_attribution(
+            advert
         )
-        .strip()
-        .lower()
-    )
-
-
-    source_article_id = None
-
-    raw_source_article_id = (
-        request.args
-        .get(
-            "article_id",
-            "",
-        )
-        .strip()
-    )
-
-
-    if raw_source_article_id:
-
-        try:
-
-            parsed_article_id = int(
-                raw_source_article_id
-            )
-
-            if parsed_article_id > 0:
-
-                source_article_id = (
-                    parsed_article_id
-                )
-
-        except (
-            TypeError,
-            ValueError,
-        ):
-
-            source_article_id = None
-
-
-    source_restaurant_id = None
-
-    raw_source_restaurant_id = (
-        request.args
-        .get(
-            "restaurant_id",
-            "",
-        )
-        .strip()
-    )
-
-
-    if raw_source_restaurant_id:
-
-        try:
-
-            parsed_restaurant_id = int(
-                raw_source_restaurant_id
-            )
-
-            if parsed_restaurant_id > 0:
-
-                source_restaurant_id = (
-                    parsed_restaurant_id
-                )
-
-        except (
-            TypeError,
-            ValueError,
-        ):
-
-            source_restaurant_id = None
-
-
-    source_session_id = (
-        request.args
-        .get(
-            "source_session",
-            "",
-        )
-        .strip()
     )
 
 
     # ========================================================
-    # ATTRIBUTION VALIDATION
+    # ANONYMOUS RESTAURANT SESSION
     # ========================================================
     #
-    # At the moment Stories is the only external source being
-    # connected to restaurant conversion analytics.
-    #
-    # Unknown source values are ignored.
-    # ========================================================
-
-    if (
-        attribution_source
-        != "stories"
-    ):
-
-        attribution_source = None
-
-        source_article_id = None
-
-        source_restaurant_id = None
-
-        source_session_id = None
-
-
-    # ========================================================
-    # RESTAURANT SAFETY CHECK
-    # ========================================================
-    #
-    # Stories should send the same restaurant ID as the
-    # restaurant page being opened.
-    #
-    # If somebody manually changes the query parameter,
-    # Ticketing does not trust that value.
-    # ========================================================
-
-    if (
-        source_restaurant_id
-        is not None
-        and
-        source_restaurant_id
-        != advert.id
-    ):
-
-        source_restaurant_id = None
-
-
-    # ========================================================
-    # TICKETING ANONYMOUS SESSION
-    # ========================================================
-    #
-    # We already use an anonymous restaurant experience
-    # session in Ticketing.
-    #
-    # Reusing it means restaurant analytics can understand
-    # activity within the same anonymous browser session
-    # without storing personal information.
+    # Reuse the existing anonymous restaurant experience
+    # session so restaurant analytics and experience activity
+    # share the same anonymous browser identity.
     # ========================================================
 
     anonymous_session_id = (
@@ -16277,75 +16154,27 @@ def restaurant_page(
 
 
     # ========================================================
-    # STAGE 6:
-    # RECORD RESTAURANT VIEW
+    # STAGE 6 - RESTAURANT VIEW
+    # ========================================================
+    #
+    # Deduplicated so repeated refreshes from the same
+    # anonymous browser do not immediately inflate views.
     # ========================================================
 
-    try:
+    record_restaurant_analytics_event(
+        advert=advert,
+        event_type="restaurant_view",
+        metadata={
+            "page":
+                "restaurant",
 
-        restaurant_view_event = (
-            RestaurantAnalyticsEvent(
-
-                restaurant_id=(
-                    advert.id
+            "attributed":
+                bool(
+                    restaurant_attribution
                 ),
-
-                event_type=(
-                    "restaurant_view"
-                ),
-
-                session_id=(
-                    anonymous_session_id
-                ),
-
-                source=(
-                    attribution_source
-                ),
-
-                source_article_id=(
-                    source_article_id
-                ),
-
-                source_restaurant_id=(
-                    source_restaurant_id
-                ),
-
-                source_session_id=(
-                    source_session_id
-                ),
-
-                referrer=(
-                    request.referrer
-                ),
-
-                event_metadata={
-                    "page":
-                        "restaurant",
-
-                    "attributed":
-                        bool(
-                            attribution_source
-                        ),
-                },
-            )
-        )
-
-
-        db.session.add(
-            restaurant_view_event
-        )
-
-        db.session.commit()
-
-
-    except Exception:
-
-        db.session.rollback()
-
-        app.logger.exception(
-            "Unable to record restaurant "
-            "analytics view."
-        )
+        },
+        deduplicate=True,
+    )
 
 
     # ========================================================
@@ -16387,6 +16216,18 @@ def restaurant_page(
     #
     # Pending, rejected or inactive posts do NOT affect the
     # public rating.
+    #
+    # Example:
+    #
+    # Ratings:
+    #
+    # 5
+    # 4
+    # 4
+    #
+    # Average:
+    #
+    # 4.3
     # ========================================================
 
     restaurant_ratings = [
@@ -16408,7 +16249,9 @@ def restaurant_page(
     )
 
 
-    restaurant_average_rating = None
+    restaurant_average_rating = (
+        None
+    )
 
 
     if (
@@ -16475,27 +16318,106 @@ def restaurant_page(
 
 
     # ========================================================
-    # CONTACT LINKS
+    # RAW CONTACT LINK AVAILABILITY
+    # ========================================================
+    #
+    # These are only used to determine whether the restaurant
+    # actually has a valid destination.
+    #
+    # They are NOT sent directly to restaurant.html anymore.
+    #
+    # Instead the public page receives Kalxa tracking routes.
     # ========================================================
 
-    whatsapp_url = (
+    raw_whatsapp_url = (
         build_restaurant_whatsapp_url(
             advert.whatsapp_number
         )
     )
 
 
-    phone_url = (
+    raw_phone_url = (
         build_restaurant_phone_url(
             advert.phone_number
         )
     )
 
 
-    directions_url = (
+    raw_directions_url = (
         valid_restaurant_directions_url(
             advert.directions_url
         )
+    )
+
+
+    # ========================================================
+    # STAGE 6 - TRACKED CONTACT LINKS
+    # ========================================================
+    #
+    # Customer journey:
+    #
+    # Restaurant
+    #     ↓
+    # Kalxa tracking route
+    #     ↓
+    # Record conversion
+    #     ↓
+    # External destination
+    #
+    # Examples:
+    #
+    # /restaurant/2/action/whatsapp
+    #
+    # /restaurant/2/action/phone
+    #
+    # /restaurant/2/action/directions
+    # ========================================================
+
+    whatsapp_url = (
+
+        url_for(
+            "restaurant_whatsapp_action",
+
+            advert_id=(
+                advert.id
+            ),
+        )
+
+        if raw_whatsapp_url
+
+        else None
+    )
+
+
+    phone_url = (
+
+        url_for(
+            "restaurant_phone_action",
+
+            advert_id=(
+                advert.id
+            ),
+        )
+
+        if raw_phone_url
+
+        else None
+    )
+
+
+    directions_url = (
+
+        url_for(
+            "restaurant_directions_action",
+
+            advert_id=(
+                advert.id
+            ),
+        )
+
+        if raw_directions_url
+
+        else None
     )
 
 
@@ -16520,8 +16442,11 @@ def restaurant_page(
 
 
     current_organizer_id = (
+
         current_organizer.id
+
         if current_organizer
+
         else None
     )
 
@@ -16530,7 +16455,9 @@ def restaurant_page(
     # RESTAURANT MANAGEMENT PERMISSION
     # ========================================================
 
-    can_manage_restaurant = False
+    can_manage_restaurant = (
+        False
+    )
 
 
     if (
@@ -16546,16 +16473,22 @@ def restaurant_page(
         .is_subscription_active
     ):
 
-        can_manage_restaurant = True
+        can_manage_restaurant = (
+            True
+        )
 
 
     # ========================================================
     # RESTAURANT RATING QR
     # ========================================================
 
-    restaurant_rating_qr = None
+    restaurant_rating_qr = (
+        None
+    )
 
-    restaurant_rating_url = ""
+    restaurant_rating_url = (
+        ""
+    )
 
 
     if can_manage_restaurant:
@@ -16600,6 +16533,54 @@ def restaurant_page(
 
 
     # ========================================================
+    # STAGE 6 - ATTRIBUTION VALUES FOR TEMPLATE
+    # ========================================================
+    #
+    # The template does not need these to create the contact
+    # tracking URLs because attribution is now persisted in
+    # the Flask session.
+    #
+    # They remain available for debugging, UI indicators or
+    # future client-side analytics.
+    # ========================================================
+
+    attribution_source = (
+        restaurant_attribution.get(
+            "source"
+        )
+        if restaurant_attribution
+        else None
+    )
+
+
+    source_article_id = (
+        restaurant_attribution.get(
+            "article_id"
+        )
+        if restaurant_attribution
+        else None
+    )
+
+
+    source_restaurant_id = (
+        restaurant_attribution.get(
+            "restaurant_id"
+        )
+        if restaurant_attribution
+        else None
+    )
+
+
+    source_session_id = (
+        restaurant_attribution.get(
+            "source_session_id"
+        )
+        if restaurant_attribution
+        else None
+    )
+
+
+    # ========================================================
     # RENDER
     # ========================================================
 
@@ -16617,6 +16598,19 @@ def restaurant_page(
 
         # ====================================================
         # CONTACT
+        # ====================================================
+        #
+        # IMPORTANT:
+        #
+        # These are now internal Kalxa tracking URLs.
+        #
+        # restaurant.html can continue using:
+        #
+        # href="{{ whatsapp_url }}"
+        # href="{{ phone_url }}"
+        # href="{{ directions_url }}"
+        #
+        # without needing to know how analytics works.
         # ====================================================
 
         whatsapp_url=(
@@ -16722,11 +16716,6 @@ def restaurant_page(
         # ====================================================
         # STAGE 6 ATTRIBUTION
         # ====================================================
-        #
-        # These values are also available to restaurant.html
-        # for the next Stage 6 step where WhatsApp, phone and
-        # directions clicks will go through tracked routes.
-        # ====================================================
 
         attribution_source=(
             attribution_source
@@ -16746,6 +16735,151 @@ def restaurant_page(
     )
 
 
+# ============================================================
+# STAGE 6 - WHATSAPP CONVERSION
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>/action/whatsapp"
+)
+def restaurant_whatsapp_action(
+    advert_id,
+):
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+
+    whatsapp_url = (
+        build_restaurant_whatsapp_url(
+            advert.whatsapp_number
+        )
+    )
+
+
+    if not whatsapp_url:
+
+        abort(404)
+
+
+    record_restaurant_analytics_event(
+        advert=advert,
+        event_type="whatsapp_click",
+        metadata={
+            "action":
+                "whatsapp",
+        },
+        deduplicate=False,
+    )
+
+
+    return redirect(
+        whatsapp_url
+    )
+
+
+# ============================================================
+# STAGE 6 - PHONE CONVERSION
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>/action/phone"
+)
+def restaurant_phone_action(
+    advert_id,
+):
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+
+    phone_url = (
+        build_restaurant_phone_url(
+            advert.phone_number
+        )
+    )
+
+
+    if not phone_url:
+
+        abort(404)
+
+
+    record_restaurant_analytics_event(
+        advert=advert,
+        event_type="phone_click",
+        metadata={
+            "action":
+                "phone",
+        },
+        deduplicate=False,
+    )
+
+
+    return redirect(
+        phone_url
+    )
+
+
+# ============================================================
+# STAGE 6 - DIRECTIONS CONVERSION
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>/action/directions"
+)
+def restaurant_directions_action(
+    advert_id,
+):
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+
+    directions_url = (
+        valid_restaurant_directions_url(
+            advert.directions_url
+        )
+    )
+
+
+    if not directions_url:
+
+        abort(404)
+
+
+    record_restaurant_analytics_event(
+        advert=advert,
+        event_type="directions_click",
+        metadata={
+            "action":
+                "directions",
+        },
+        deduplicate=False,
+    )
+
+
+    return redirect(
+        directions_url
+    )
 # ============================================================
 # CREATE / GET RESTAURANT RATING QR
 # ============================================================
