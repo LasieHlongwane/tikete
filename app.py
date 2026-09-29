@@ -630,6 +630,184 @@ def paystack_api_request(
 
     return result
 
+
+# ============================================================
+# STORIES CONVERSION ANALYTICS API
+# ============================================================
+
+@app.route(
+    "/api/public/stories/conversions"
+)
+def stories_conversion_analytics():
+
+    article_ids_raw = (
+        request.args
+        .get(
+            "article_ids",
+            "",
+        )
+        .strip()
+    )
+
+    article_ids = []
+
+    for value in (
+        article_ids_raw.split(",")
+    ):
+
+        value = (
+            value.strip()
+        )
+
+        if not value:
+
+            continue
+
+        try:
+
+            article_id = int(
+                value
+            )
+
+        except ValueError:
+
+            continue
+
+        if (
+            article_id > 0
+            and
+            article_id not in article_ids
+        ):
+
+            article_ids.append(
+                article_id
+            )
+
+
+    if not article_ids:
+
+        return jsonify({
+            "articles": []
+        })
+
+
+    rows = (
+        db.session.query(
+            RestaurantAnalyticsEvent
+            .source_article_id,
+
+            RestaurantAnalyticsEvent
+            .event_type,
+
+            func.count(
+                RestaurantAnalyticsEvent.id
+            ).label(
+                "total"
+            ),
+        )
+        .filter(
+            RestaurantAnalyticsEvent.source
+            == "stories",
+
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .in_(
+                article_ids
+            ),
+        )
+        .group_by(
+            RestaurantAnalyticsEvent
+            .source_article_id,
+
+            RestaurantAnalyticsEvent
+            .event_type,
+        )
+        .all()
+    )
+
+
+    article_lookup = {
+        article_id: {
+            "article_id":
+                article_id,
+
+            "restaurant_views":
+                0,
+
+            "experience_views":
+                0,
+
+            "whatsapp_clicks":
+                0,
+
+            "phone_clicks":
+                0,
+
+            "directions_clicks":
+                0,
+        }
+
+        for article_id
+        in article_ids
+    }
+
+
+    field_lookup = {
+
+        "restaurant_view":
+            "restaurant_views",
+
+        "experience_view":
+            "experience_views",
+
+        "whatsapp_click":
+            "whatsapp_clicks",
+
+        "phone_click":
+            "phone_clicks",
+
+        "directions_click":
+            "directions_clicks",
+    }
+
+
+    for row in rows:
+
+        article_id = (
+            row.source_article_id
+        )
+
+        field = (
+            field_lookup.get(
+                row.event_type
+            )
+        )
+
+        if (
+            article_id in article_lookup
+            and
+            field
+        ):
+
+            article_lookup[
+                article_id
+            ][
+                field
+            ] = int(
+                row.total or 0
+            )
+
+
+    return jsonify({
+        "articles": [
+            article_lookup[
+                article_id
+            ]
+
+            for article_id
+            in article_ids
+        ]
+    })
 # ============================================================
 # GET RESTAURANT ANALYTICS SESSION
 # ============================================================
@@ -15380,6 +15558,7 @@ def event_page(
         events=None,
     )
 
+
 @app.route(
     "/restaurant/<int:advert_id>"
 )
@@ -15391,11 +15570,8 @@ def restaurant_page(
         RestaurantAdvert.query
 
         .filter_by(
-            id=
-                advert_id,
-
-            active=
-                True,
+            id=advert_id,
+            active=True,
         )
 
         .first_or_404()
@@ -15418,7 +15594,8 @@ def restaurant_page(
 
     if (
         not organizer
-        or not organizer.is_subscription_active
+        or
+        not organizer.is_subscription_active
     ):
 
         abort(404)
@@ -15430,7 +15607,8 @@ def restaurant_page(
 
     if (
         advert.starts_at
-        and advert.starts_at > now
+        and
+        advert.starts_at > now
     ):
 
         abort(404)
@@ -15438,10 +15616,254 @@ def restaurant_page(
 
     if (
         advert.ends_at
-        and advert.ends_at <= now
+        and
+        advert.ends_at <= now
     ):
 
         abort(404)
+
+
+    # ========================================================
+    # STAGE 6:
+    # READ KALXA ATTRIBUTION
+    # ========================================================
+    #
+    # Example incoming URL:
+    #
+    # /restaurant/2
+    #     ?source=stories
+    #     &article_id=7
+    #     &restaurant_id=2
+    #     &source_session=abc123
+    #
+    # These values allow Kalxa Ticketing to understand that
+    # the restaurant visit originated from Kalxa Stories.
+    #
+    # No customer name, email or phone number is required.
+    # ========================================================
+
+    attribution_source = (
+        request.args
+        .get(
+            "source",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    source_article_id = None
+
+    raw_source_article_id = (
+        request.args
+        .get(
+            "article_id",
+            "",
+        )
+        .strip()
+    )
+
+
+    if raw_source_article_id:
+
+        try:
+
+            parsed_article_id = int(
+                raw_source_article_id
+            )
+
+            if parsed_article_id > 0:
+
+                source_article_id = (
+                    parsed_article_id
+                )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            source_article_id = None
+
+
+    source_restaurant_id = None
+
+    raw_source_restaurant_id = (
+        request.args
+        .get(
+            "restaurant_id",
+            "",
+        )
+        .strip()
+    )
+
+
+    if raw_source_restaurant_id:
+
+        try:
+
+            parsed_restaurant_id = int(
+                raw_source_restaurant_id
+            )
+
+            if parsed_restaurant_id > 0:
+
+                source_restaurant_id = (
+                    parsed_restaurant_id
+                )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            source_restaurant_id = None
+
+
+    source_session_id = (
+        request.args
+        .get(
+            "source_session",
+            "",
+        )
+        .strip()
+    )
+
+
+    # ========================================================
+    # ATTRIBUTION VALIDATION
+    # ========================================================
+    #
+    # At the moment Stories is the only external source being
+    # connected to restaurant conversion analytics.
+    #
+    # Unknown source values are ignored.
+    # ========================================================
+
+    if (
+        attribution_source
+        != "stories"
+    ):
+
+        attribution_source = None
+
+        source_article_id = None
+
+        source_restaurant_id = None
+
+        source_session_id = None
+
+
+    # ========================================================
+    # RESTAURANT SAFETY CHECK
+    # ========================================================
+    #
+    # Stories should send the same restaurant ID as the
+    # restaurant page being opened.
+    #
+    # If somebody manually changes the query parameter,
+    # Ticketing does not trust that value.
+    # ========================================================
+
+    if (
+        source_restaurant_id
+        is not None
+        and
+        source_restaurant_id
+        != advert.id
+    ):
+
+        source_restaurant_id = None
+
+
+    # ========================================================
+    # TICKETING ANONYMOUS SESSION
+    # ========================================================
+    #
+    # We already use an anonymous restaurant experience
+    # session in Ticketing.
+    #
+    # Reusing it means restaurant analytics can understand
+    # activity within the same anonymous browser session
+    # without storing personal information.
+    # ========================================================
+
+    anonymous_session_id = (
+        get_restaurant_experience_session_id()
+    )
+
+
+    # ========================================================
+    # STAGE 6:
+    # RECORD RESTAURANT VIEW
+    # ========================================================
+
+    try:
+
+        restaurant_view_event = (
+            RestaurantAnalyticsEvent(
+
+                restaurant_id=(
+                    advert.id
+                ),
+
+                event_type=(
+                    "restaurant_view"
+                ),
+
+                session_id=(
+                    anonymous_session_id
+                ),
+
+                source=(
+                    attribution_source
+                ),
+
+                source_article_id=(
+                    source_article_id
+                ),
+
+                source_restaurant_id=(
+                    source_restaurant_id
+                ),
+
+                source_session_id=(
+                    source_session_id
+                ),
+
+                referrer=(
+                    request.referrer
+                ),
+
+                event_metadata={
+                    "page":
+                        "restaurant",
+
+                    "attributed":
+                        bool(
+                            attribution_source
+                        ),
+                },
+            )
+        )
+
+
+        db.session.add(
+            restaurant_view_event
+        )
+
+        db.session.commit()
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        app.logger.exception(
+            "Unable to record restaurant "
+            "analytics view."
+        )
 
 
     # ========================================================
@@ -15452,18 +15874,21 @@ def restaurant_page(
         RestaurantExperiencePost.query
 
         .filter_by(
-            restaurant_advert_id=
-                advert.id,
+            restaurant_advert_id=(
+                advert.id
+            ),
 
-            active=
-                True,
+            active=True,
 
-            moderation_status=
-                "approved",
+            moderation_status=(
+                "approved"
+            ),
         )
 
         .order_by(
-            RestaurantExperiencePost.created_at.desc()
+            RestaurantExperiencePost
+            .created_at
+            .desc()
         )
 
         .all()
@@ -15474,26 +15899,12 @@ def restaurant_page(
     # RESTAURANT RATING SUMMARY
     # ========================================================
     #
-    # IMPORTANT:
-    #
     # The public restaurant rating is calculated from the
     # same approved + active experience posts that are shown
     # publicly on the restaurant page.
     #
     # Pending, rejected or inactive posts do NOT affect the
     # public rating.
-    #
-    # Example:
-    #
-    # Approved ratings:
-    # 5, 4, 4
-    #
-    # Count:
-    # 3
-    #
-    # Average:
-    # 4.3
-    #
     # ========================================================
 
     restaurant_ratings = [
@@ -15518,7 +15929,9 @@ def restaurant_page(
     restaurant_average_rating = None
 
 
-    if restaurant_rating_count > 0:
+    if (
+        restaurant_rating_count > 0
+    ):
 
         restaurant_average_rating = (
             sum(
@@ -15530,19 +15943,12 @@ def restaurant_page(
 
 
     # ========================================================
-    # ANONYMOUS EXPERIENCE SESSION
-    # ========================================================
-
-    anonymous_session_id = (
-        get_restaurant_experience_session_id()
-    )
-
-
-    # ========================================================
     # CUSTOMER EXPERIENCE LOVES
     # ========================================================
 
-    loved_experience_post_ids = set()
+    loved_experience_post_ids = (
+        set()
+    )
 
 
     if experience_posts:
@@ -15566,13 +15972,16 @@ def restaurant_page(
                 RestaurantExperienceLove.query
 
                 .filter(
-                    RestaurantExperienceLove.post_id.in_(
+                    RestaurantExperienceLove
+                    .post_id
+                    .in_(
                         experience_post_ids
                     )
                 )
 
                 .filter(
-                    RestaurantExperienceLove.anonymous_session_id
+                    RestaurantExperienceLove
+                    .anonymous_session_id
                     ==
                     anonymous_session_id
                 )
@@ -15651,7 +16060,8 @@ def restaurant_page(
         and
         advert.organizer
         and
-        advert.organizer.is_subscription_active
+        advert.organizer
+        .is_subscription_active
     ):
 
         can_manage_restaurant = True
@@ -15672,15 +16082,19 @@ def restaurant_page(
             RestaurantRatingQRCode.query
 
             .filter_by(
-                restaurant_advert_id=
-                    advert.id,
+                restaurant_advert_id=(
+                    advert.id
+                ),
 
-                placement_type=
-                    "main",
+                placement_type=(
+                    "main"
+                ),
             )
 
             .order_by(
-                RestaurantRatingQRCode.created_at.asc()
+                RestaurantRatingQRCode
+                .created_at
+                .asc()
             )
 
             .first()
@@ -15693,8 +16107,10 @@ def restaurant_page(
                 url_for(
                     "restaurant_rating_qr_page",
 
-                    public_code=
-                        restaurant_rating_qr.public_code,
+                    public_code=(
+                        restaurant_rating_qr
+                        .public_code
+                    ),
 
                     _external=True,
                 )
@@ -15712,46 +16128,53 @@ def restaurant_page(
         # RESTAURANT
         # ====================================================
 
-        advert=
-            advert,
+        advert=(
+            advert
+        ),
 
 
         # ====================================================
         # CONTACT
         # ====================================================
 
-        whatsapp_url=
-            whatsapp_url,
+        whatsapp_url=(
+            whatsapp_url
+        ),
 
-        phone_url=
-            phone_url,
+        phone_url=(
+            phone_url
+        ),
 
-        directions_url=
-            directions_url,
+        directions_url=(
+            directions_url
+        ),
 
 
         # ====================================================
         # RESTAURANT HOURS
         # ====================================================
 
-        restaurant_hours_payload=
-            restaurant_hours_payload,
+        restaurant_hours_payload=(
+            restaurant_hours_payload
+        ),
 
 
         # ====================================================
         # RESTAURANT MANAGEMENT
         # ====================================================
 
-        can_manage_restaurant=
-            can_manage_restaurant,
+        can_manage_restaurant=(
+            can_manage_restaurant
+        ),
 
         restaurant_hours_update_url=(
 
             url_for(
                 "update_restaurant_hours",
 
-                advert_id=
-                    advert.id,
+                advert_id=(
+                    advert.id
+                ),
             )
 
             if can_manage_restaurant
@@ -15764,48 +16187,82 @@ def restaurant_page(
         # CUSTOMER EXPERIENCES
         # ====================================================
 
-        experience_posts=
-            experience_posts,
+        experience_posts=(
+            experience_posts
+        ),
 
-        loved_experience_post_ids=
-            loved_experience_post_ids,
+        loved_experience_post_ids=(
+            loved_experience_post_ids
+        ),
 
 
         # ====================================================
         # RESTAURANT RATING SUMMARY
         # ====================================================
 
-        restaurant_average_rating=
-            restaurant_average_rating,
+        restaurant_average_rating=(
+            restaurant_average_rating
+        ),
 
-        restaurant_rating_count=
-            restaurant_rating_count,
+        restaurant_rating_count=(
+            restaurant_rating_count
+        ),
 
 
         # ====================================================
         # RESTAURANT RATING QR
         # ====================================================
 
-        restaurant_rating_qr=
-            restaurant_rating_qr,
+        restaurant_rating_qr=(
+            restaurant_rating_qr
+        ),
 
-        restaurant_rating_url=
-            restaurant_rating_url,
+        restaurant_rating_url=(
+            restaurant_rating_url
+        ),
 
         restaurant_rating_qr_create_url=(
 
             url_for(
                 "create_restaurant_rating_qr",
 
-                advert_id=
-                    advert.id,
+                advert_id=(
+                    advert.id
+                ),
             )
 
             if can_manage_restaurant
 
             else ""
         ),
+
+
+        # ====================================================
+        # STAGE 6 ATTRIBUTION
+        # ====================================================
+        #
+        # These values are also available to restaurant.html
+        # for the next Stage 6 step where WhatsApp, phone and
+        # directions clicks will go through tracked routes.
+        # ====================================================
+
+        attribution_source=(
+            attribution_source
+        ),
+
+        source_article_id=(
+            source_article_id
+        ),
+
+        source_restaurant_id=(
+            source_restaurant_id
+        ),
+
+        source_session_id=(
+            source_session_id
+        ),
     )
+
 
 # ============================================================
 # CREATE / GET RESTAURANT RATING QR
