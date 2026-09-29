@@ -14541,6 +14541,85 @@ def admin_delete_restaurant_reel(
 # PUBLIC ATTENDEE - ENABLE PUSH FROM HOME PAGE
 # ============================================================
 
+# ============================================================
+# STAGE 6 - RESTAURANT EXPERIENCE VIEW ANALYTICS
+# ============================================================
+
+@app.route(
+    (
+        "/restaurant/<int:advert_id>"
+        "/analytics/experience/"
+        "<int:post_id>/view"
+    ),
+    methods=["POST"],
+)
+def restaurant_experience_view_analytics(
+    advert_id,
+    post_id,
+):
+
+    # --------------------------------------------------------
+    # RESTAURANT MUST EXIST AND BE ACTIVE
+    # --------------------------------------------------------
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+
+    # --------------------------------------------------------
+    # EXPERIENCE MUST BELONG TO THIS RESTAURANT
+    # --------------------------------------------------------
+
+    post = (
+        RestaurantExperiencePost.query
+        .filter_by(
+            id=post_id,
+            restaurant_advert_id=advert.id,
+            active=True,
+            moderation_status="approved",
+        )
+        .first_or_404()
+    )
+
+
+    # --------------------------------------------------------
+    # RECORD EXPERIENCE VIEW
+    # --------------------------------------------------------
+
+    record_restaurant_analytics_event(
+        restaurant_id=advert.id,
+        event_type="experience_view",
+        metadata={
+            "experience_post_id":
+                post.id,
+        },
+    )
+
+
+    # --------------------------------------------------------
+    # RESPONSE
+    # --------------------------------------------------------
+
+    return jsonify(
+        {
+            "ok": True,
+            "event_type":
+                "experience_view",
+            "restaurant_id":
+                advert.id,
+            "experience_post_id":
+                post.id,
+        }
+    )
+
+
+
 @app.route(
     "/notifications/subscribe-public",
     methods=["POST"],
