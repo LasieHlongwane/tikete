@@ -39,6 +39,7 @@ from firebase_admin import (
 )
 
 from dotenv import load_dotenv
+from uuid import uuid4
 from flask import (
     Flask,
     jsonify,
@@ -95,6 +96,7 @@ from models import (
     RestaurantOpeningHour,
     RestaurantGalleryImage,
     RestaurantRatingQRCode,
+    RestaurantAnalyticsEvent,
 )
 
 # ============================================================
@@ -216,6 +218,17 @@ EVENT_BOOST_PLANS = {
     },
 }
 
+# ============================================================
+# RESTAURANT ANALYTICS
+# ============================================================
+
+RESTAURANT_ANALYTICS_SESSION_KEY = (
+    "kalxa_restaurant_analytics_session"
+)
+
+RESTAURANT_ATTRIBUTION_SESSION_KEY = (
+    "kalxa_restaurant_attribution"
+)
 # ============================================================
 
 # RESTAURANT OPENING HOURS
@@ -617,6 +630,116 @@ def paystack_api_request(
 
     return result
 
+# ============================================================
+# GET RESTAURANT ANALYTICS SESSION
+# ============================================================
+
+def get_restaurant_analytics_session_id():
+
+    session_id = session.get(
+        RESTAURANT_ANALYTICS_SESSION_KEY
+    )
+
+    if not session_id:
+
+        session_id = (
+            uuid4().hex
+        )
+
+        session[
+            RESTAURANT_ANALYTICS_SESSION_KEY
+        ] = session_id
+
+    return session_id
+
+
+
+# ============================================================
+# CAPTURE RESTAURANT ATTRIBUTION
+# ============================================================
+
+def capture_restaurant_attribution(
+    restaurant_id,
+):
+
+    source = (
+        request.args
+        .get(
+            "source",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+    article_id = (
+        request.args
+        .get(
+            "article_id",
+            "",
+        )
+        .strip()
+    )
+
+    source_session = (
+        request.args
+        .get(
+            "source_session",
+            "",
+        )
+        .strip()
+    )
+
+
+    # --------------------------------------------------------
+    # ONLY ACCEPT KNOWN STORIES ATTRIBUTION
+    # --------------------------------------------------------
+
+    if source != "stories":
+
+        return
+
+
+    try:
+
+        article_id = int(
+            article_id
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return
+
+
+    if article_id <= 0:
+
+        return
+
+
+    # --------------------------------------------------------
+    # STORE ATTRIBUTION IN SIGNED FLASK SESSION
+    # --------------------------------------------------------
+
+    session[
+        RESTAURANT_ATTRIBUTION_SESSION_KEY
+    ] = {
+        "source":
+            "stories",
+
+        "article_id":
+            article_id,
+
+        "restaurant_id":
+            restaurant_id,
+
+        "source_session_id":
+            source_session
+            or
+            None,
+    }
 
 def cloudinary_reels_configured():
 
@@ -648,6 +771,112 @@ def allowed_event_reel_filename(filename):
         in EVENT_REEL_ALLOWED_EXTENSIONS
     )
 
+
+# ============================================================
+# RECORD RESTAURANT ANALYTICS EVENT
+# ============================================================
+
+def record_restaurant_analytics_event(
+    restaurant_id,
+    event_type,
+    metadata=None,
+):
+
+    try:
+
+        analytics_session_id = (
+            get_restaurant_analytics_session_id()
+        )
+
+        attribution = (
+            session.get(
+                RESTAURANT_ATTRIBUTION_SESSION_KEY,
+                {},
+            )
+            or
+            {}
+        )
+
+
+        # ----------------------------------------------------
+        # ONLY ATTRIBUTE IF RESTAURANT MATCHES
+        # ----------------------------------------------------
+
+        attributed_restaurant_id = (
+            attribution.get(
+                "restaurant_id"
+            )
+        )
+
+        if (
+            attributed_restaurant_id
+            != restaurant_id
+        ):
+
+            attribution = {}
+
+
+        event = RestaurantAnalyticsEvent(
+
+            restaurant_id=(
+                restaurant_id
+            ),
+
+            event_type=(
+                event_type
+            ),
+
+            session_id=(
+                analytics_session_id
+            ),
+
+            source=(
+                attribution.get(
+                    "source"
+                )
+            ),
+
+            source_article_id=(
+                attribution.get(
+                    "article_id"
+                )
+            ),
+
+            source_restaurant_id=(
+                attribution.get(
+                    "restaurant_id"
+                )
+            ),
+
+            source_session_id=(
+                attribution.get(
+                    "source_session_id"
+                )
+            ),
+
+            event_metadata=(
+                metadata
+            ),
+
+            referrer=(
+                request.referrer
+            ),
+        )
+
+        db.session.add(
+            event
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        app.logger.exception(
+            "Unable to record restaurant "
+            "analytics event."
+        )
 
 def delete_cloudinary_reel(public_id):
 
