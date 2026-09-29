@@ -4131,6 +4131,488 @@ def build_restaurant_campaign_schedule(
         ends_at,
         None,
     )
+
+
+
+
+# ============================================================
+# STAGE 6 - RESTAURANT CONVERSION ANALYTICS
+# ============================================================
+
+RESTAURANT_ANALYTICS_ATTRIBUTION_KEY = (
+    "kalxa_restaurant_attribution"
+)
+
+RESTAURANT_ANALYTICS_DEDUPLICATION_MINUTES = 30
+
+
+# ============================================================
+# SAFE POSITIVE INTEGER
+# ============================================================
+
+def parse_positive_int(
+    value,
+):
+
+    if value is None:
+
+        return None
+
+    try:
+
+        parsed_value = int(
+            value
+        )
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        return None
+
+    if parsed_value <= 0:
+
+        return None
+
+    return parsed_value
+
+
+# ============================================================
+# CAPTURE STORIES ATTRIBUTION
+# ============================================================
+
+def capture_restaurant_attribution(
+    advert,
+):
+    """
+    Capture incoming Kalxa Stories attribution and persist it
+    inside the Ticketing Flask session.
+
+    Expected incoming query parameters:
+
+    source=stories
+    article_id=7
+    restaurant_id=2
+    source_session=abc123
+
+    No customer name, email address or phone number is stored.
+    """
+
+    source = (
+        request.args
+        .get(
+            "source",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    # --------------------------------------------------------
+    # NO NEW ATTRIBUTION
+    # --------------------------------------------------------
+    #
+    # If the request does not contain Stories attribution,
+    # keep any existing attribution only when it belongs to
+    # this restaurant.
+    # --------------------------------------------------------
+
+    if source != "stories":
+
+        existing = (
+            session.get(
+                RESTAURANT_ANALYTICS_ATTRIBUTION_KEY
+            )
+            or {}
+        )
+
+        if (
+            existing.get(
+                "restaurant_id"
+            )
+            == advert.id
+        ):
+
+            return existing
+
+        return {}
+
+
+    # --------------------------------------------------------
+    # ARTICLE
+    # --------------------------------------------------------
+
+    article_id = (
+        parse_positive_int(
+            request.args.get(
+                "article_id"
+            )
+        )
+    )
+
+
+    # --------------------------------------------------------
+    # RESTAURANT
+    # --------------------------------------------------------
+
+    source_restaurant_id = (
+        parse_positive_int(
+            request.args.get(
+                "restaurant_id"
+            )
+        )
+    )
+
+
+    if (
+        source_restaurant_id
+        is not None
+        and
+        source_restaurant_id
+        != advert.id
+    ):
+
+        current_app.logger.warning(
+            "Rejected mismatched Kalxa Stories "
+            "restaurant attribution. "
+            "URL restaurant=%s source restaurant=%s",
+            advert.id,
+            source_restaurant_id,
+        )
+
+        return {}
+
+
+    # --------------------------------------------------------
+    # SOURCE SESSION
+    # --------------------------------------------------------
+
+    source_session_id = (
+        request.args
+        .get(
+            "source_session",
+            "",
+        )
+        .strip()
+    )
+
+
+    if len(
+        source_session_id
+    ) > 100:
+
+        source_session_id = (
+            source_session_id[:100]
+        )
+
+
+    # --------------------------------------------------------
+    # REQUIRE STORY
+    # --------------------------------------------------------
+
+    if article_id is None:
+
+        return {}
+
+
+    # --------------------------------------------------------
+    # STORE ATTRIBUTION
+    # --------------------------------------------------------
+
+    attribution = {
+        "source":
+            "stories",
+
+        "article_id":
+            article_id,
+
+        "restaurant_id":
+            advert.id,
+
+        "source_session_id":
+            source_session_id
+            or
+            None,
+    }
+
+
+    session[
+        RESTAURANT_ANALYTICS_ATTRIBUTION_KEY
+    ] = attribution
+
+    session.modified = True
+
+    return attribution
+
+
+# ============================================================
+# GET STORED RESTAURANT ATTRIBUTION
+# ============================================================
+
+def get_restaurant_attribution(
+    restaurant_id,
+):
+
+    attribution = (
+        session.get(
+            RESTAURANT_ANALYTICS_ATTRIBUTION_KEY
+        )
+        or {}
+    )
+
+
+    if (
+        attribution.get(
+            "restaurant_id"
+        )
+        != restaurant_id
+    ):
+
+        return {}
+
+
+    if (
+        attribution.get(
+            "source"
+        )
+        != "stories"
+    ):
+
+        return {}
+
+
+    return attribution
+
+
+# ============================================================
+# RECENT RESTAURANT ANALYTICS EVENT
+# ============================================================
+
+def recent_restaurant_analytics_event_exists(
+    restaurant_id,
+    event_type,
+    session_id,
+    source_article_id=None,
+):
+    """
+    Used for events where repeated page refreshes should not
+    inflate analytics.
+
+    Action clicks such as WhatsApp and Directions are normally
+    recorded without deduplication.
+    """
+
+    cutoff = (
+        datetime.now(
+            timezone.utc
+        )
+        -
+        timedelta(
+            minutes=(
+                RESTAURANT_ANALYTICS_DEDUPLICATION_MINUTES
+            )
+        )
+    )
+
+
+    query = (
+        RestaurantAnalyticsEvent.query
+
+        .filter(
+            RestaurantAnalyticsEvent.restaurant_id
+            == restaurant_id,
+
+            RestaurantAnalyticsEvent.event_type
+            == event_type,
+
+            RestaurantAnalyticsEvent.session_id
+            == session_id,
+
+            RestaurantAnalyticsEvent.created_at
+            >= cutoff,
+        )
+    )
+
+
+    if source_article_id is None:
+
+        query = query.filter(
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .is_(None)
+        )
+
+    else:
+
+        query = query.filter(
+            RestaurantAnalyticsEvent
+            .source_article_id
+            == source_article_id
+        )
+
+
+    return (
+        query.first()
+        is not None
+    )
+
+
+# ============================================================
+# RECORD RESTAURANT ANALYTICS EVENT
+# ============================================================
+
+def record_restaurant_analytics_event(
+    advert,
+    event_type,
+    metadata=None,
+    deduplicate=False,
+):
+    """
+    Record an anonymous restaurant analytics event.
+
+    Supported initial events:
+
+    restaurant_view
+    experience_view
+    whatsapp_click
+    phone_click
+    directions_click
+    gallery_view
+    share_click
+
+    Analytics failures never block the customer journey.
+    """
+
+    anonymous_session_id = (
+        get_restaurant_experience_session_id()
+    )
+
+
+    attribution = (
+        get_restaurant_attribution(
+            advert.id
+        )
+    )
+
+
+    source = (
+        attribution.get(
+            "source"
+        )
+    )
+
+
+    source_article_id = (
+        attribution.get(
+            "article_id"
+        )
+    )
+
+
+    source_restaurant_id = (
+        attribution.get(
+            "restaurant_id"
+        )
+    )
+
+
+    source_session_id = (
+        attribution.get(
+            "source_session_id"
+        )
+    )
+
+
+    if (
+        deduplicate
+        and
+        recent_restaurant_analytics_event_exists(
+            restaurant_id=advert.id,
+            event_type=event_type,
+            session_id=anonymous_session_id,
+            source_article_id=(
+                source_article_id
+            ),
+        )
+    ):
+
+        return False
+
+
+    analytics_event = (
+        RestaurantAnalyticsEvent(
+
+            restaurant_id=(
+                advert.id
+            ),
+
+            event_type=(
+                event_type
+            ),
+
+            session_id=(
+                anonymous_session_id
+            ),
+
+            source=(
+                source
+            ),
+
+            source_article_id=(
+                source_article_id
+            ),
+
+            source_restaurant_id=(
+                source_restaurant_id
+            ),
+
+            source_session_id=(
+                source_session_id
+            ),
+
+            event_metadata=(
+                metadata
+                or
+                {}
+            ),
+
+            referrer=(
+                request.referrer
+            ),
+
+            created_at=(
+                datetime.now(
+                    timezone.utc
+                )
+            ),
+        )
+    )
+
+
+    try:
+
+        db.session.add(
+            analytics_event
+        )
+
+        db.session.commit()
+
+        return True
+
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "Unable to record restaurant "
+            "analytics event: %s",
+            event_type,
+        )
+
+        return False
 # ============================================================
 # ORGANIZER HOME ENDPOINT
 # ============================================================
