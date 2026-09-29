@@ -4351,6 +4351,17 @@ def record_restaurant_analytics_event(
 
         restaurant_id=advert.id
 
+    Traffic classification:
+
+        source = "kalxa_stories"
+
+            when a valid, unexpired, verified Kalxa Stories
+            attribution exists for this restaurant.
+
+        source = "direct"
+
+            when no valid attribution exists.
+
     Stories attribution is accepted only when:
 
         1. It belongs to this restaurant.
@@ -4472,14 +4483,6 @@ def record_restaurant_analytics_event(
     # ========================================================
     # ATTRIBUTION EXPIRY CHECK
     # ========================================================
-    #
-    # Even though the incoming `kat` token has its own
-    # max_age, attribution stored in the Flask session must
-    # also expire.
-    #
-    # This prevents an old Story visit from claiming a much
-    # later direct conversion.
-    # ========================================================
 
     if attribution:
 
@@ -4565,35 +4568,86 @@ def record_restaurant_analytics_event(
 
 
     # ========================================================
-    # ATTRIBUTION VALUES
+    # TRAFFIC SOURCE CLASSIFICATION
+    # ========================================================
+    #
+    # At this stage Kalxa has two restaurant traffic classes:
+    #
+    #     kalxa_stories
+    #     direct
+    #
+    # "direct" means that this analytics event does not have
+    # a currently valid verified Stories attribution.
+    #
+    # Future sources can be introduced here, for example:
+    #
+    #     kalxa_qr
+    #     kalxa_discovery
+    #     kalxa_search
+    #     kalxa_push
+    #
+    # without changing the RestaurantAnalyticsEvent schema.
     # ========================================================
 
-    source = (
+    if (
         attribution.get(
             "source"
         )
-    )
+        ==
+        "kalxa_stories"
+    ):
 
-
-    source_article_id = (
-        attribution.get(
-            "article_id"
+        source = (
+            "kalxa_stories"
         )
-    )
 
+    else:
 
-    source_restaurant_id = (
-        attribution.get(
-            "restaurant_id"
+        source = (
+            "direct"
         )
-    )
 
 
-    source_session_id = (
-        attribution.get(
-            "source_session_id"
+    # ========================================================
+    # ATTRIBUTION VALUES
+    # ========================================================
+    #
+    # Direct traffic must not inherit Story attribution
+    # identifiers.
+    # ========================================================
+
+    if (
+        source
+        ==
+        "kalxa_stories"
+    ):
+
+        source_article_id = (
+            attribution.get(
+                "article_id"
+            )
         )
-    )
+
+        source_restaurant_id = (
+            attribution.get(
+                "restaurant_id"
+            )
+        )
+
+        source_session_id = (
+            attribution.get(
+                "source_session_id"
+            )
+        )
+
+
+    else:
+
+        source_article_id = None
+
+        source_restaurant_id = None
+
+        source_session_id = None
 
 
     # ========================================================
