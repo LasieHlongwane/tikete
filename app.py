@@ -17476,7 +17476,109 @@ def get_or_create_restaurant_main_qr(
     return restaurant_qr
 
 
+# ============================================================
+# RESTAURANT EXPERIENCE VIEW ANALYTICS
+# ============================================================
 
+@app.route(
+    (
+        "/restaurant/<int:advert_id>"
+        "/analytics/experience/"
+        "<int:post_id>/view"
+    ),
+    methods=["POST"],
+)
+def restaurant_experience_view_analytics(
+    advert_id,
+    post_id,
+):
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # EXPERIENCE POST
+    #
+    # Only approved, active experiences belonging to this
+    # restaurant can generate an experience_view event.
+    # ========================================================
+
+    post = (
+        RestaurantExperiencePost.query
+        .filter_by(
+            id=post_id,
+            restaurant_advert_id=advert.id,
+            active=True,
+            moderation_status="approved",
+        )
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # RECORD ANALYTICS
+    #
+    # Attribution already lives in the Ticketing session.
+    #
+    # If this visitor arrived from Kalxa Stories, the existing
+    # record_restaurant_analytics_event() helper automatically
+    # attaches:
+    #
+    # source = kalxa_stories
+    # source_article_id
+    # source_restaurant_id
+    # source_session_id
+    #
+    # We keep the experience post ID inside event_metadata
+    # because RestaurantAnalyticsEvent currently has no
+    # dedicated experience_post_id column.
+    # ========================================================
+
+    recorded = (
+        record_restaurant_analytics_event(
+            restaurant_id=advert.id,
+            event_type="experience_view",
+            metadata={
+                "experience_post_id":
+                    post.id,
+            },
+            deduplicate=True,
+        )
+    )
+
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
+    return jsonify({
+        "ok": True,
+
+        "recorded":
+            bool(
+                recorded
+            ),
+
+        "event_type":
+            "experience_view",
+
+        "restaurant_id":
+            advert.id,
+
+        "experience_post_id":
+            post.id,
+    })
 # ============================================================
 # RESTAURANT RATING QR - PNG IMAGE
 # ============================================================
