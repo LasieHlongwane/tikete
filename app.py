@@ -17683,6 +17683,718 @@ def restaurant_rating_qr_image(
     )
 
 
+
+# ============================================================
+# KALXA INTERNAL ANALYTICS API
+# ============================================================
+#
+# This API allows trusted Kalxa services such as
+# Kalxa Stories to retrieve aggregated Ticketing conversion
+# data.
+#
+# IMPORTANT:
+#
+# - This is NOT a public analytics endpoint.
+# - It returns aggregate counts only.
+# - It does NOT return session IDs.
+# - It does NOT return source session IDs.
+# - It does NOT return individual analytics events.
+# ============================================================
+
+
+KALXA_INTERNAL_API_KEY = (
+    os.getenv(
+        "KALXA_INTERNAL_API_KEY",
+        "",
+    )
+    .strip()
+)
+
+
+# ============================================================
+# VERIFY INTERNAL API KEY
+# ============================================================
+
+def kalxa_internal_api_authorized():
+    """
+    Verify that the request came from another trusted
+    Kalxa service.
+
+    The caller must send:
+
+        X-Kalxa-Internal-Key: <secret>
+
+    hmac.compare_digest() is used instead of normal string
+    comparison.
+    """
+
+    configured_key = (
+        KALXA_INTERNAL_API_KEY
+    )
+
+
+    if not configured_key:
+
+        current_app.logger.error(
+            "KALXA_INTERNAL_API_KEY "
+            "is not configured."
+        )
+
+        return False
+
+
+    supplied_key = (
+        request.headers
+        .get(
+            "X-Kalxa-Internal-Key",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not supplied_key:
+
+        return False
+
+
+    return hmac.compare_digest(
+        configured_key,
+        supplied_key,
+    )
+
+
+# ============================================================
+# PARSE STORY IDS
+# ============================================================
+
+def parse_internal_story_ids(
+    raw_value,
+):
+    """
+    Convert:
+
+        1,2,3
+
+    into:
+
+        [1, 2, 3]
+
+    Invalid values are ignored.
+
+    A maximum of 100 story IDs is accepted per request.
+    """
+
+    if not raw_value:
+
+        return []
+
+
+    story_ids = []
+
+
+    for raw_id in raw_value.split(","):
+
+        raw_id = (
+            raw_id.strip()
+        )
+
+
+        if not raw_id:
+
+            continue
+
+
+        try:
+
+            story_id = int(
+                raw_id
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            continue
+
+
+        if story_id <= 0:
+
+            continue
+
+
+        if story_id in story_ids:
+
+            continue
+
+
+        story_ids.append(
+            story_id
+        )
+
+
+        if len(
+            story_ids
+        ) >= 100:
+
+            break
+
+
+    return story_ids
+
+
+# ============================================================
+# PRIVATE RESTAURANT ANALYTICS
+# ============================================================
+
+@app.route(
+    "/api/internal/restaurant-analytics",
+    methods=["GET"],
+)
+def internal_restaurant_analytics():
+    """
+    Return aggregated Kalxa Ticketing restaurant analytics
+    attributed to Kalxa Stories.
+
+    Example request:
+
+        /api/internal/restaurant-analytics
+            ?story_ids=1,2,3
+
+    Required header:
+
+        X-Kalxa-Internal-Key: <secret>
+
+    The endpoint intentionally returns aggregate data only.
+    """
+
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    if not kalxa_internal_api_authorized():
+
+        return jsonify(
+            {
+                "ok": False,
+                "error":
+                    "unauthorized",
+            }
+        ), 401
+
+
+    # ========================================================
+    # STORY IDS
+    # ========================================================
+
+    story_ids = (
+        parse_internal_story_ids(
+            request.args.get(
+                "story_ids",
+                "",
+            )
+        )
+    )
+
+
+    if not story_ids:
+
+        return jsonify(
+            {
+                "ok": False,
+                "error":
+                    "story_ids_required",
+            }
+        ), 400
+
+
+    # ========================================================
+    # SUPPORTED CONVERSION EVENTS
+    # ========================================================
+
+    supported_events = (
+        "restaurant_view",
+        "experience_view",
+        "whatsapp_click",
+        "phone_click",
+        "directions_click",
+    )
+
+
+    # ========================================================
+    # QUERY
+    # ========================================================
+    #
+    # Only events carrying verified Kalxa Stories attribution
+    # are included.
+    #
+    # Group by:
+    #
+    #     story
+    #     restaurant
+    #     event type
+    #
+    # This keeps the response small even when the underlying
+    # event table eventually contains millions of events.
+    # ========================================================
+
+    rows = (
+        db.session.query(
+
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .label(
+                "story_id"
+            ),
+
+            RestaurantAnalyticsEvent
+            .restaurant_id
+            .label(
+                "restaurant_id"
+            ),
+
+            RestaurantAnalyticsEvent
+            .event_type
+            .label(
+                "event_type"
+            ),
+
+            db.func.count(
+                RestaurantAnalyticsEvent.id
+            )
+            .label(
+                "event_count"
+            ),
+        )
+
+        .filter(
+            RestaurantAnalyticsEvent.source
+            == "kalxa_stories",
+
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .in_(
+                story_ids
+            ),
+
+            RestaurantAnalyticsEvent
+            .event_type
+            .in_(
+                supported_events
+            ),
+        )
+
+        .group_by(
+            RestaurantAnalyticsEvent
+            .source_article_id,
+
+            RestaurantAnalyticsEvent
+            .restaurant_id,
+
+            RestaurantAnalyticsEvent
+            .event_type,
+        )
+
+        .all()
+    )
+
+
+    # ========================================================
+    # UNIQUE ATTRIBUTED STORIES VISITORS
+    # ========================================================
+    #
+    # source_session_id originates from the anonymous Stories
+    # session.
+    #
+    # We count it here but never expose the IDs themselves.
+    # ========================================================
+
+    unique_rows = (
+        db.session.query(
+
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .label(
+                "story_id"
+            ),
+
+            RestaurantAnalyticsEvent
+            .restaurant_id
+            .label(
+                "restaurant_id"
+            ),
+
+            db.func.count(
+                db.func.distinct(
+                    RestaurantAnalyticsEvent
+                    .source_session_id
+                )
+            )
+            .label(
+                "unique_sessions"
+            ),
+        )
+
+        .filter(
+            RestaurantAnalyticsEvent.source
+            == "kalxa_stories",
+
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .in_(
+                story_ids
+            ),
+
+            RestaurantAnalyticsEvent
+            .source_session_id
+            .isnot(
+                None
+            ),
+        )
+
+        .group_by(
+            RestaurantAnalyticsEvent
+            .source_article_id,
+
+            RestaurantAnalyticsEvent
+            .restaurant_id,
+        )
+
+        .all()
+    )
+
+
+    # ========================================================
+    # RESPONSE STRUCTURE
+    # ========================================================
+
+    results = {}
+
+
+    def get_result(
+        story_id,
+        restaurant_id,
+    ):
+
+        story_key = str(
+            story_id
+        )
+
+        restaurant_key = str(
+            restaurant_id
+        )
+
+
+        if story_key not in results:
+
+            results[
+                story_key
+            ] = {
+                "story_id":
+                    story_id,
+
+                "restaurants":
+                    {},
+            }
+
+
+        restaurants = (
+            results[
+                story_key
+            ][
+                "restaurants"
+            ]
+        )
+
+
+        if (
+            restaurant_key
+            not in restaurants
+        ):
+
+            restaurants[
+                restaurant_key
+            ] = {
+                "restaurant_id":
+                    restaurant_id,
+
+                "restaurant_views":
+                    0,
+
+                "experience_views":
+                    0,
+
+                "whatsapp_clicks":
+                    0,
+
+                "phone_clicks":
+                    0,
+
+                "directions_clicks":
+                    0,
+
+                "meaningful_actions":
+                    0,
+
+                "unique_sessions":
+                    0,
+            }
+
+
+        return restaurants[
+            restaurant_key
+        ]
+
+
+    # ========================================================
+    # MAP EVENT COUNTS
+    # ========================================================
+
+    event_field_map = {
+        "restaurant_view":
+            "restaurant_views",
+
+        "experience_view":
+            "experience_views",
+
+        "whatsapp_click":
+            "whatsapp_clicks",
+
+        "phone_click":
+            "phone_clicks",
+
+        "directions_click":
+            "directions_clicks",
+    }
+
+
+    for row in rows:
+
+        result = get_result(
+            story_id=(
+                row.story_id
+            ),
+
+            restaurant_id=(
+                row.restaurant_id
+            ),
+        )
+
+
+        field_name = (
+            event_field_map.get(
+                row.event_type
+            )
+        )
+
+
+        if field_name:
+
+            result[
+                field_name
+            ] = int(
+                row.event_count
+                or
+                0
+            )
+
+
+    # ========================================================
+    # UNIQUE SESSIONS
+    # ========================================================
+
+    for row in unique_rows:
+
+        result = get_result(
+            story_id=(
+                row.story_id
+            ),
+
+            restaurant_id=(
+                row.restaurant_id
+            ),
+        )
+
+
+        result[
+            "unique_sessions"
+        ] = int(
+            row.unique_sessions
+            or
+            0
+        )
+
+
+    # ========================================================
+    # MEANINGFUL ACTIONS
+    # ========================================================
+    #
+    # Restaurant views and experience views represent
+    # engagement.
+    #
+    # The following represent stronger customer intent:
+    #
+    #     WhatsApp
+    #     phone
+    #     directions
+    # ========================================================
+
+    for story in results.values():
+
+        for restaurant in (
+            story[
+                "restaurants"
+            ]
+            .values()
+        ):
+
+            restaurant[
+                "meaningful_actions"
+            ] = (
+                restaurant[
+                    "whatsapp_clicks"
+                ]
+                +
+                restaurant[
+                    "phone_clicks"
+                ]
+                +
+                restaurant[
+                    "directions_clicks"
+                ]
+            )
+
+
+    # ========================================================
+    # CONVERT RESTAURANT DICTS TO LISTS
+    # ========================================================
+
+    response_stories = []
+
+
+    for story_id in story_ids:
+
+        story_key = str(
+            story_id
+        )
+
+
+        story = (
+            results.get(
+                story_key,
+                {
+                    "story_id":
+                        story_id,
+
+                    "restaurants":
+                        {},
+                },
+            )
+        )
+
+
+        restaurants = list(
+            story[
+                "restaurants"
+            ]
+            .values()
+        )
+
+
+        # ====================================================
+        # STORY TOTALS
+        # ====================================================
+
+        totals = {
+            "restaurant_views":
+                sum(
+                    restaurant[
+                        "restaurant_views"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
+
+            "experience_views":
+                sum(
+                    restaurant[
+                        "experience_views"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
+
+            "whatsapp_clicks":
+                sum(
+                    restaurant[
+                        "whatsapp_clicks"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
+
+            "phone_clicks":
+                sum(
+                    restaurant[
+                        "phone_clicks"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
+
+            "directions_clicks":
+                sum(
+                    restaurant[
+                        "directions_clicks"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
+
+            "meaningful_actions":
+                sum(
+                    restaurant[
+                        "meaningful_actions"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
+        }
+
+
+        response_stories.append(
+            {
+                "story_id":
+                    story_id,
+
+                "totals":
+                    totals,
+
+                "restaurants":
+                    restaurants,
+            }
+        )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    return jsonify(
+        {
+            "ok":
+                True,
+
+            "source":
+                "kalxa_stories",
+
+            "stories":
+                response_stories,
+        }
+    ), 200
+
 # ============================================================
 # PUBLIC - POST RESTAURANT EXPERIENCE
 # ============================================================
