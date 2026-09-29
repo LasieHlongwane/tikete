@@ -635,179 +635,7 @@ def paystack_api_request(
 # STORIES CONVERSION ANALYTICS API
 # ============================================================
 
-@app.route(
-    "/api/public/stories/conversions"
-)
-def stories_conversion_analytics():
 
-    article_ids_raw = (
-        request.args
-        .get(
-            "article_ids",
-            "",
-        )
-        .strip()
-    )
-
-    article_ids = []
-
-    for value in (
-        article_ids_raw.split(",")
-    ):
-
-        value = (
-            value.strip()
-        )
-
-        if not value:
-
-            continue
-
-        try:
-
-            article_id = int(
-                value
-            )
-
-        except ValueError:
-
-            continue
-
-        if (
-            article_id > 0
-            and
-            article_id not in article_ids
-        ):
-
-            article_ids.append(
-                article_id
-            )
-
-
-    if not article_ids:
-
-        return jsonify({
-            "articles": []
-        })
-
-
-    rows = (
-        db.session.query(
-            RestaurantAnalyticsEvent
-            .source_article_id,
-
-            RestaurantAnalyticsEvent
-            .event_type,
-
-            func.count(
-                RestaurantAnalyticsEvent.id
-            ).label(
-                "total"
-            ),
-        )
-        .filter(
-            RestaurantAnalyticsEvent.source
-            == "stories",
-
-            RestaurantAnalyticsEvent
-            .source_article_id
-            .in_(
-                article_ids
-            ),
-        )
-        .group_by(
-            RestaurantAnalyticsEvent
-            .source_article_id,
-
-            RestaurantAnalyticsEvent
-            .event_type,
-        )
-        .all()
-    )
-
-
-    article_lookup = {
-        article_id: {
-            "article_id":
-                article_id,
-
-            "restaurant_views":
-                0,
-
-            "experience_views":
-                0,
-
-            "whatsapp_clicks":
-                0,
-
-            "phone_clicks":
-                0,
-
-            "directions_clicks":
-                0,
-        }
-
-        for article_id
-        in article_ids
-    }
-
-
-    field_lookup = {
-
-        "restaurant_view":
-            "restaurant_views",
-
-        "experience_view":
-            "experience_views",
-
-        "whatsapp_click":
-            "whatsapp_clicks",
-
-        "phone_click":
-            "phone_clicks",
-
-        "directions_click":
-            "directions_clicks",
-    }
-
-
-    for row in rows:
-
-        article_id = (
-            row.source_article_id
-        )
-
-        field = (
-            field_lookup.get(
-                row.event_type
-            )
-        )
-
-        if (
-            article_id in article_lookup
-            and
-            field
-        ):
-
-            article_lookup[
-                article_id
-            ][
-                field
-            ] = int(
-                row.total or 0
-            )
-
-
-    return jsonify({
-        "articles": [
-            article_lookup[
-                article_id
-            ]
-
-            for article_id
-            in article_ids
-        ]
-    })
 # ============================================================
 # GET RESTAURANT ANALYTICS SESSION
 # ============================================================
@@ -11893,6 +11721,181 @@ def upload_restaurant_gallery_image(
 # ============================================================
 # PUBLIC EVENT POSTER
 # ============================================================
+
+@app.route(
+    "/api/public/stories/conversions"
+)
+def stories_conversion_analytics():
+
+    article_ids_raw = (
+        request.args
+        .get(
+            "article_ids",
+            "",
+        )
+        .strip()
+    )
+
+    article_ids = []
+
+    for value in (
+        article_ids_raw.split(",")
+    ):
+
+        value = (
+            value.strip()
+        )
+
+        if not value:
+
+            continue
+
+        try:
+
+            article_id = int(
+                value
+            )
+
+        except ValueError:
+
+            continue
+
+        if (
+            article_id > 0
+            and
+            article_id not in article_ids
+        ):
+
+            article_ids.append(
+                article_id
+            )
+
+
+    if not article_ids:
+
+        return jsonify({
+            "articles": []
+        })
+
+
+    rows = (
+        db.session.query(
+            RestaurantAnalyticsEvent
+            .source_article_id,
+
+            RestaurantAnalyticsEvent
+            .event_type,
+
+            func.count(
+                RestaurantAnalyticsEvent.id
+            ).label(
+                "total"
+            ),
+        )
+        .filter(
+            RestaurantAnalyticsEvent.source
+            == "stories",
+
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .in_(
+                article_ids
+            ),
+        )
+        .group_by(
+            RestaurantAnalyticsEvent
+            .source_article_id,
+
+            RestaurantAnalyticsEvent
+            .event_type,
+        )
+        .all()
+    )
+
+
+    article_lookup = {
+        article_id: {
+            "article_id":
+                article_id,
+
+            "restaurant_views":
+                0,
+
+            "experience_views":
+                0,
+
+            "whatsapp_clicks":
+                0,
+
+            "phone_clicks":
+                0,
+
+            "directions_clicks":
+                0,
+        }
+
+        for article_id
+        in article_ids
+    }
+
+
+    field_lookup = {
+
+        "restaurant_view":
+            "restaurant_views",
+
+        "experience_view":
+            "experience_views",
+
+        "whatsapp_click":
+            "whatsapp_clicks",
+
+        "phone_click":
+            "phone_clicks",
+
+        "directions_click":
+            "directions_clicks",
+    }
+
+
+    for row in rows:
+
+        article_id = (
+            row.source_article_id
+        )
+
+        field = (
+            field_lookup.get(
+                row.event_type
+            )
+        )
+
+        if (
+            article_id in article_lookup
+            and
+            field
+        ):
+
+            article_lookup[
+                article_id
+            ][
+                field
+            ] = int(
+                row.total or 0
+            )
+
+
+    return jsonify({
+        "articles": [
+            article_lookup[
+                article_id
+            ]
+
+            for article_id
+            in article_ids
+        ]
+    })
+
 
 @app.route(
     "/event/<int:event_id>/poster"
