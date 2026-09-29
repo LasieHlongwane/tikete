@@ -721,107 +721,7 @@ def allowed_event_reel_filename(filename):
 # RECORD RESTAURANT ANALYTICS EVENT
 # ============================================================
 
-def record_restaurant_analytics_event(
-    restaurant_id,
-    event_type,
-    metadata=None,
-):
 
-    try:
-
-        analytics_session_id = (
-            get_restaurant_analytics_session_id()
-        )
-
-        attribution = (
-            session.get(
-                RESTAURANT_ATTRIBUTION_SESSION_KEY,
-                {},
-            )
-            or
-            {}
-        )
-
-
-        # ----------------------------------------------------
-        # ONLY ATTRIBUTE IF RESTAURANT MATCHES
-        # ----------------------------------------------------
-
-        attributed_restaurant_id = (
-            attribution.get(
-                "restaurant_id"
-            )
-        )
-
-        if (
-            attributed_restaurant_id
-            != restaurant_id
-        ):
-
-            attribution = {}
-
-
-        event = RestaurantAnalyticsEvent(
-
-            restaurant_id=(
-                restaurant_id
-            ),
-
-            event_type=(
-                event_type
-            ),
-
-            session_id=(
-                analytics_session_id
-            ),
-
-            source=(
-                attribution.get(
-                    "source"
-                )
-            ),
-
-            source_article_id=(
-                attribution.get(
-                    "article_id"
-                )
-            ),
-
-            source_restaurant_id=(
-                attribution.get(
-                    "restaurant_id"
-                )
-            ),
-
-            source_session_id=(
-                attribution.get(
-                    "source_session_id"
-                )
-            ),
-
-            event_metadata=(
-                metadata
-            ),
-
-            referrer=(
-                request.referrer
-            ),
-        )
-
-        db.session.add(
-            event
-        )
-
-        db.session.commit()
-
-    except Exception:
-
-        db.session.rollback()
-
-        app.logger.exception(
-            "Unable to record restaurant "
-            "analytics event."
-        )
 
 def delete_cloudinary_reel(public_id):
 
@@ -4335,39 +4235,178 @@ def recent_restaurant_analytics_event_exists(
 # RECORD RESTAURANT ANALYTICS EVENT
 # ============================================================
 
+# ============================================================
+# RECORD RESTAURANT ANALYTICS EVENT
+# ============================================================
+
 def record_restaurant_analytics_event(
-    advert,
-    event_type,
+    advert=None,
+    restaurant_id=None,
+    event_type=None,
     metadata=None,
     deduplicate=False,
 ):
     """
-    Record an anonymous restaurant analytics event.
+    Record one anonymous Kalxa Ticketing restaurant
+    analytics event.
 
-    Supported initial events:
+    The helper supports either:
 
-    restaurant_view
-    experience_view
-    whatsapp_click
-    phone_click
-    directions_click
-    gallery_view
-    share_click
+        advert=advert
 
-    Analytics failures never block the customer journey.
+    or:
+
+        restaurant_id=advert.id
+
+    This keeps existing Ticketing routes compatible while
+    giving the analytics system one canonical implementation.
+
+    Supported events include:
+
+        restaurant_view
+        experience_view
+        whatsapp_click
+        phone_click
+        directions_click
+        gallery_view
+        share_click
+
+    Stories attribution is read from the signed Flask
+    session attribution created after verification of the
+    `kat` token.
+
+    Analytics failures must never block the customer
+    journey.
     """
+
+    # ========================================================
+    # RESOLVE RESTAURANT ID
+    # ========================================================
+
+    resolved_restaurant_id = None
+
+
+    if advert is not None:
+
+        resolved_restaurant_id = (
+            getattr(
+                advert,
+                "id",
+                None,
+            )
+        )
+
+
+    if (
+        resolved_restaurant_id
+        is None
+        and
+        restaurant_id is not None
+    ):
+
+        try:
+
+            resolved_restaurant_id = (
+                int(
+                    restaurant_id
+                )
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            resolved_restaurant_id = None
+
+
+    if resolved_restaurant_id is None:
+
+        current_app.logger.warning(
+            "Restaurant analytics event skipped: "
+            "restaurant ID missing."
+        )
+
+        return False
+
+
+    # ========================================================
+    # VALIDATE EVENT TYPE
+    # ========================================================
+
+    if not event_type:
+
+        current_app.logger.warning(
+            "Restaurant analytics event skipped: "
+            "event type missing."
+        )
+
+        return False
+
+
+    # ========================================================
+    # ANONYMOUS RESTAURANT SESSION
+    # ========================================================
+    #
+    # Keep using the existing restaurant experience session
+    # so restaurant interactions from the same browser can
+    # belong to one anonymous journey.
+    # ========================================================
 
     anonymous_session_id = (
         get_restaurant_experience_session_id()
     )
 
 
+    # ========================================================
+    # GET VERIFIED STORIES ATTRIBUTION
+    # ========================================================
+    #
+    # capture_restaurant_attribution() has already verified
+    # the signed `kat` token and stored the accepted payload
+    # in:
+    #
+    # RESTAURANT_ATTRIBUTION_SESSION_KEY
+    #
+    # Never trust URL source/article parameters here.
+    # ========================================================
+
     attribution = (
-        get_restaurant_attribution(
-            advert.id
+        session.get(
+            RESTAURANT_ATTRIBUTION_SESSION_KEY,
+            {},
+        )
+        or
+        {}
+    )
+
+
+    # ========================================================
+    # RESTAURANT SAFETY CHECK
+    # ========================================================
+    #
+    # Attribution is only valid for the restaurant contained
+    # in the verified signed token.
+    # ========================================================
+
+    attributed_restaurant_id = (
+        attribution.get(
+            "restaurant_id"
         )
     )
 
+
+    if (
+        attributed_restaurant_id
+        != resolved_restaurant_id
+    ):
+
+        attribution = {}
+
+
+    # ========================================================
+    # ATTRIBUTION VALUES
+    # ========================================================
 
     source = (
         attribution.get(
@@ -4397,27 +4436,60 @@ def record_restaurant_analytics_event(
     )
 
 
-    if (
-        deduplicate
-        and
-        recent_restaurant_analytics_event_exists(
-            restaurant_id=advert.id,
-            event_type=event_type,
-            session_id=anonymous_session_id,
-            source_article_id=(
-                source_article_id
-            ),
-        )
-    ):
+    # ========================================================
+    # OPTIONAL DEDUPLICATION
+    # ========================================================
 
-        return False
+    if deduplicate:
 
+        try:
+
+            duplicate_exists = (
+                recent_restaurant_analytics_event_exists(
+                    restaurant_id=(
+                        resolved_restaurant_id
+                    ),
+
+                    event_type=(
+                        event_type
+                    ),
+
+                    session_id=(
+                        anonymous_session_id
+                    ),
+
+                    source_article_id=(
+                        source_article_id
+                    ),
+                )
+            )
+
+
+            if duplicate_exists:
+
+                return False
+
+
+        except Exception:
+
+            # Deduplication failure should not prevent the
+            # event from being recorded.
+
+            current_app.logger.exception(
+                "Unable to check restaurant analytics "
+                "deduplication."
+            )
+
+
+    # ========================================================
+    # CREATE EVENT
+    # ========================================================
 
     analytics_event = (
         RestaurantAnalyticsEvent(
 
             restaurant_id=(
-                advert.id
+                resolved_restaurant_id
             ),
 
             event_type=(
@@ -4462,6 +4534,10 @@ def record_restaurant_analytics_event(
         )
     )
 
+
+    # ========================================================
+    # SAVE EVENT
+    # ========================================================
 
     try:
 
