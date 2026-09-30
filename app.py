@@ -14697,30 +14697,82 @@ def get_taggable_restaurants():
 # ============================================================
 # RESTAURANT TAGGING ELIGIBILITY
 # ============================================================
+#
+# Determines whether customers are allowed to:
+#
+# - select this restaurant in Share Experience
+# - submit an experience for this restaurant
+#
+# Restaurant plan rules:
+#
+# FREE:
+#     customer experiences = NO
+#
+# STANDARD:
+#     customer experiences = YES
+#
+# PREMIUM:
+#     customer experiences = YES
+#
+# IMPORTANT:
+# This helper must be used both when displaying restaurants
+# and when processing the POST request. Hiding a restaurant
+# from the form alone is not sufficient security.
+# ============================================================
 
 def restaurant_can_receive_experience_posts(
     advert,
 ):
 
-    if not advert:
+    # --------------------------------------------------------
+    # RESTAURANT MUST EXIST
+    # --------------------------------------------------------
 
+    if not advert:
         return False
 
+
+    # --------------------------------------------------------
+    # RESTAURANT MUST BE ACTIVE
+    # --------------------------------------------------------
 
     if not advert.active:
-
         return False
 
+
+    # --------------------------------------------------------
+    # RESTAURANT SUBSCRIPTION FEATURE
+    # --------------------------------------------------------
+    #
+    # This is the Free / Standard / Premium permission layer.
+    #
+    # Free     -> False
+    # Standard -> True
+    # Premium  -> True
+    #
+    # has_restaurant_feature() also verifies that the
+    # restaurant subscription itself is active.
+    # --------------------------------------------------------
+
+    if not advert.can_receive_customer_experiences:
+        return False
+
+
+    # --------------------------------------------------------
+    # ORGANIZER MUST EXIST
+    # --------------------------------------------------------
 
     organizer = (
         advert.organizer
     )
 
-
     if not organizer:
-
         return False
 
+
+    # --------------------------------------------------------
+    # ORGANIZER MUST BE A RESTAURANT ACCOUNT
+    # --------------------------------------------------------
 
     if (
         getattr(
@@ -14730,38 +14782,58 @@ def restaurant_can_receive_experience_posts(
         )
         != "restaurant"
     ):
-
         return False
 
+
+    # --------------------------------------------------------
+    # ORGANIZER SaaS SUBSCRIPTION MUST BE ACTIVE
+    # --------------------------------------------------------
+    #
+    # This is separate from the RestaurantAdvert plan.
+    #
+    # Organizer subscription:
+    #     Controls general Kalxa Ticketing access.
+    #
+    # RestaurantAdvert subscription:
+    #     Controls Free / Standard / Premium restaurant
+    #     features.
+    # --------------------------------------------------------
 
     if not organizer.is_subscription_active:
-
         return False
 
+
+    # --------------------------------------------------------
+    # RESTAURANT CAMPAIGN MUST HAVE STARTED
+    # --------------------------------------------------------
 
     now = (
         datetime.utcnow()
     )
 
-
     if (
         advert.starts_at
         and advert.starts_at > now
     ):
-
         return False
 
+
+    # --------------------------------------------------------
+    # RESTAURANT CAMPAIGN MUST NOT BE EXPIRED
+    # --------------------------------------------------------
 
     if (
         advert.ends_at
         and advert.ends_at <= now
     ):
-
         return False
 
 
-    return True
+    # --------------------------------------------------------
+    # ELIGIBLE
+    # --------------------------------------------------------
 
+    return True
 # ============================================================
 # ORGANIZER - DELETE RESTAURANT REEL
 # ============================================================
