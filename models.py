@@ -3869,6 +3869,62 @@ class RestaurantAdvert(db.Model):
         index=True,
     )
 
+    
+        # ========================================================
+    # SUBSCRIPTION
+    # ========================================================
+
+    # Available tiers:
+    # - free
+    # - standard
+    # - premium
+    #
+    # Free:
+    #   Restaurant profile + reel only
+    #
+    # Standard:
+    #   Gallery + operational hours + reel +
+    #   customer experiences
+    #
+    # Premium:
+    #   Everything in Standard +
+    #   Kalxa Stories/blog + analytics
+
+    subscription_tier = db.Column(
+        db.String(30),
+        nullable=False,
+        default="free",
+        server_default="free",
+        index=True,
+    )
+
+    # Available statuses:
+    # - active
+    # - inactive
+    # - cancelled
+    # - expired
+    #
+    # Free restaurants remain "active".
+    # The tier determines which features they can access.
+
+    subscription_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="active",
+        server_default="active",
+        index=True,
+    )
+
+    subscription_started_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    subscription_expires_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
     # ========================================================
     # TIMESTAMPS
     # ========================================================
