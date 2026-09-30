@@ -14,6 +14,131 @@ from werkzeug.security import (
 
 db = SQLAlchemy()
 
+# ============================================================
+# RESTAURANT SUBSCRIPTION PLANS
+# ============================================================
+#
+# Restaurant subscriptions are separate from the Organizer
+# subscription.
+#
+# Organizer subscription:
+#     Controls general Kalxa Ticketing SaaS access.
+#
+# Restaurant subscription:
+#     Controls restaurant-specific features such as gallery,
+#     opening hours, customer experiences, Stories and
+#     analytics.
+# ============================================================
+
+
+RESTAURANT_PLAN_FREE = "free"
+RESTAURANT_PLAN_STANDARD = "standard"
+RESTAURANT_PLAN_PREMIUM = "premium"
+
+
+RESTAURANT_PLAN_PRICES = {
+
+    RESTAURANT_PLAN_FREE: 0,
+
+    RESTAURANT_PLAN_STANDARD: 219,
+
+    RESTAURANT_PLAN_PREMIUM: 299,
+
+}
+
+
+RESTAURANT_PLAN_NAMES = {
+
+    RESTAURANT_PLAN_FREE:
+        "Free",
+
+    RESTAURANT_PLAN_STANDARD:
+        "Standard",
+
+    RESTAURANT_PLAN_PREMIUM:
+        "Premium",
+
+}
+
+
+# ============================================================
+# RESTAURANT PLAN FEATURES
+# ============================================================
+#
+# FREE
+# ------------------------------------------------------------
+# Profile                YES
+# Reel                   YES
+# Gallery                NO
+# Opening hours          NO
+# Customer experiences   NO
+# Kalxa Stories          NO
+# Analytics              NO
+#
+# STANDARD - R219/month
+# ------------------------------------------------------------
+# Profile                YES
+# Reel                   YES
+# Gallery                YES
+# Opening hours          YES
+# Customer experiences   YES
+# Kalxa Stories          NO
+# Analytics              NO
+#
+# PREMIUM - R299/month
+# ------------------------------------------------------------
+# Everything in Standard
+# Kalxa Stories          YES
+# Analytics              YES
+# ============================================================
+
+
+RESTAURANT_PLAN_FEATURES = {
+
+    RESTAURANT_PLAN_FREE: {
+
+        "profile": True,
+        "reel": True,
+
+        "gallery": False,
+        "opening_hours": False,
+        "customer_experiences": False,
+
+        "stories": False,
+        "analytics": False,
+
+    },
+
+    RESTAURANT_PLAN_STANDARD: {
+
+        "profile": True,
+        "reel": True,
+
+        "gallery": True,
+        "opening_hours": True,
+        "customer_experiences": True,
+
+        "stories": False,
+        "analytics": False,
+
+    },
+
+    RESTAURANT_PLAN_PREMIUM: {
+
+        "profile": True,
+        "reel": True,
+
+        "gallery": True,
+        "opening_hours": True,
+        "customer_experiences": True,
+
+        "stories": True,
+        "analytics": True,
+
+    },
+
+}
+
 
 # ============================================================
 # ORGANIZER
@@ -3925,6 +4050,186 @@ class RestaurantAdvert(db.Model):
         nullable=True,
         index=True,
     )
+
+        # ========================================================
+    # SUBSCRIPTION HELPERS
+    # ========================================================
+
+    @property
+    def normalized_subscription_tier(self):
+
+        tier = (
+            self.subscription_tier
+            or RESTAURANT_PLAN_FREE
+        ).strip().lower()
+
+        if tier not in RESTAURANT_PLAN_FEATURES:
+            return RESTAURANT_PLAN_FREE
+
+        return tier
+
+
+    @property
+    def subscription_plan_name(self):
+
+        return RESTAURANT_PLAN_NAMES.get(
+            self.normalized_subscription_tier,
+            "Free",
+        )
+
+
+    @property
+    def subscription_price(self):
+
+        return RESTAURANT_PLAN_PRICES.get(
+            self.normalized_subscription_tier,
+            0,
+        )
+
+
+    @property
+    def is_restaurant_subscription_active(self):
+
+        if (
+            self.subscription_status
+            != "active"
+        ):
+            return False
+
+        # Free does not expire.
+        if (
+            self.normalized_subscription_tier
+            == RESTAURANT_PLAN_FREE
+        ):
+            return True
+
+        # Paid plans must have an expiry date.
+        if (
+            self.subscription_expires_at
+            is None
+        ):
+            return False
+
+        return (
+            self.subscription_expires_at
+            > datetime.utcnow()
+        )
+
+
+    def has_restaurant_feature(
+        self,
+        feature_name,
+    ):
+
+        if not self.is_restaurant_subscription_active:
+            return False
+
+        features = (
+            RESTAURANT_PLAN_FEATURES.get(
+                self.normalized_subscription_tier,
+                RESTAURANT_PLAN_FEATURES[
+                    RESTAURANT_PLAN_FREE
+                ],
+            )
+        )
+
+        return bool(
+            features.get(
+                feature_name,
+                False,
+            )
+        )
+
+
+    # ========================================================
+    # FEATURE PERMISSIONS
+    # ========================================================
+
+    @property
+    def can_use_profile(self):
+
+        return self.has_restaurant_feature(
+            "profile"
+        )
+
+
+    @property
+    def can_use_reel(self):
+
+        return self.has_restaurant_feature(
+            "reel"
+        )
+
+
+    @property
+    def can_use_gallery(self):
+
+        return self.has_restaurant_feature(
+            "gallery"
+        )
+
+
+    @property
+    def can_use_opening_hours(self):
+
+        return self.has_restaurant_feature(
+            "opening_hours"
+        )
+
+
+    @property
+    def can_receive_customer_experiences(self):
+
+        return self.has_restaurant_feature(
+            "customer_experiences"
+        )
+
+
+    @property
+    def can_use_stories(self):
+
+        return self.has_restaurant_feature(
+            "stories"
+        )
+
+
+    @property
+    def can_view_analytics(self):
+
+        return self.has_restaurant_feature(
+            "analytics"
+        )
+
+
+    # ========================================================
+    # PLAN TYPE HELPERS
+    # ========================================================
+
+    @property
+    def is_free_plan(self):
+
+        return (
+            self.normalized_subscription_tier
+            == RESTAURANT_PLAN_FREE
+        )
+
+
+    @property
+    def is_standard_plan(self):
+
+        return (
+            self.normalized_subscription_tier
+            == RESTAURANT_PLAN_STANDARD
+        )
+
+
+    @property
+    def is_premium_plan(self):
+
+        return (
+            self.normalized_subscription_tier
+            == RESTAURANT_PLAN_PREMIUM
+        )
     # ========================================================
     # TIMESTAMPS
     # ========================================================
