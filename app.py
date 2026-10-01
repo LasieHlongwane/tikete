@@ -14429,6 +14429,19 @@ def admin_manage_restaurant(
 
 
     # ========================================================
+    # ORGANIZER REQUIRED
+    # ========================================================
+
+    if not organizer:
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    # ========================================================
     # RESTAURANT ACCOUNT ONLY
     # ========================================================
 
@@ -14455,97 +14468,455 @@ def admin_manage_restaurant(
 
 
     # ========================================================
+    # ORGANIZER ACCOUNT MUST BE ACTIVE
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # We only check whether the owner account itself is active.
+    #
+    # We deliberately DO NOT require:
+    #
+    #     organizer.is_subscription_active
+    #
+    # Restaurant subscription access is now controlled by the
+    # RestaurantAdvert Free / Standard / Premium plan.
+    # ========================================================
+
+    if not organizer.active:
+
+        flash(
+            (
+                "Your restaurant account is "
+                "currently inactive."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    # ========================================================
     # RESTAURANT
     # ========================================================
 
     advert = (
         RestaurantAdvert.query
+
         .filter_by(
             id=advert_id,
             organizer_id=organizer.id,
         )
+
         .first_or_404()
+    )
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # STANDARD / PREMIUM lifecycle:
+    #
+    # Active
+    #     -> paid features available
+    #
+    # Expired
+    #     -> 5-day grace period
+    #     -> paid features remain available
+    #
+    # Grace period expires
+    #     -> automatically downgrade to Free
+    #
+    # Existing gallery images, hours and experiences remain
+    # stored in the database.
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # CURRENT TIME
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # RESTAURANT PLAN
+    # ========================================================
+
+    restaurant_plan = (
+        advert.normalized_subscription_tier
+    )
+
+
+    restaurant_plan_name = (
+        advert.subscription_plan_name
+    )
+
+
+    restaurant_plan_price = (
+        advert.subscription_price
+    )
+
+
+    # ========================================================
+    # PLAN STATE
+    # ========================================================
+
+    restaurant_subscription_active = (
+        advert.is_restaurant_subscription_active
+    )
+
+
+    restaurant_subscription_in_grace = (
+        advert.is_restaurant_subscription_in_grace_period
+    )
+
+
+    restaurant_subscription_grace_ends_at = (
+        advert.restaurant_subscription_grace_ends_at
+    )
+
+
+    # ========================================================
+    # GRACE PERIOD DAYS REMAINING
+    # ========================================================
+    #
+    # Example:
+    #
+    # Premium expires:
+    #     1 October 10:00
+    #
+    # Grace ends:
+    #     6 October 10:00
+    #
+    # During this period the owner retains Premium features
+    # while being prompted to renew.
+    # ========================================================
+
+    restaurant_subscription_grace_days_remaining = (
+        None
+    )
+
+
+    if (
+        restaurant_subscription_in_grace
+        and
+        restaurant_subscription_grace_ends_at
+    ):
+
+        remaining_seconds = max(
+            0,
+            (
+                restaurant_subscription_grace_ends_at
+                -
+                now
+            ).total_seconds(),
+        )
+
+
+        # ----------------------------------------------------
+        # ROUND UP PARTIAL DAYS
+        # ----------------------------------------------------
+        #
+        # 2 days + 3 hours remaining should display as:
+        #
+        #     3 days remaining
+        #
+        # rather than:
+        #
+        #     2 days remaining
+        # ----------------------------------------------------
+
+        restaurant_subscription_grace_days_remaining = (
+            max(
+                1,
+                int(
+                    (
+                        remaining_seconds
+                        +
+                        86399
+                    )
+                    //
+                    86400
+                ),
+            )
+        )
+
+
+    # ========================================================
+    # SUBSCRIPTION EXPIRY
+    # ========================================================
+
+    restaurant_subscription_expires_at = (
+        advert.subscription_expires_at
+    )
+
+
+    # ========================================================
+    # PLAN FLAGS
+    # ========================================================
+
+    is_free_plan = (
+        advert.is_free_plan
+    )
+
+
+    is_standard_plan = (
+        advert.is_standard_plan
+    )
+
+
+    is_premium_plan = (
+        advert.is_premium_plan
+    )
+
+
+    # ========================================================
+    # UPGRADE / RENEWAL OPTIONS
+    # ========================================================
+    #
+    # These flags only control what the management page should
+    # offer.
+    #
+    # The payment routes must still validate the requested plan
+    # server-side when Paystack is connected.
+    # ========================================================
+
+    can_upgrade_to_standard = (
+        restaurant_plan
+        != RESTAURANT_PLAN_STANDARD
+    )
+
+
+    can_upgrade_to_premium = (
+        restaurant_plan
+        != RESTAURANT_PLAN_PREMIUM
+    )
+
+
+    can_renew_standard = (
+        restaurant_plan
+        == RESTAURANT_PLAN_STANDARD
+    )
+
+
+    can_renew_premium = (
+        restaurant_plan
+        == RESTAURANT_PLAN_PREMIUM
+    )
+
+
+    # ========================================================
+    # PLAN PRICES
+    # ========================================================
+
+    standard_plan_price = (
+        RESTAURANT_PLAN_PRICES[
+            RESTAURANT_PLAN_STANDARD
+        ]
+    )
+
+
+    premium_plan_price = (
+        RESTAURANT_PLAN_PRICES[
+            RESTAURANT_PLAN_PREMIUM
+        ]
+    )
+
+
+    # ========================================================
+    # RESTAURANT FEATURE PERMISSIONS
+    # ========================================================
+
+    can_use_reel = (
+        advert.can_use_reel
+    )
+
+
+    can_use_gallery = (
+        advert.can_use_gallery
+    )
+
+
+    can_use_opening_hours = (
+        advert.can_use_opening_hours
+    )
+
+
+    can_receive_customer_experiences = (
+        advert.can_receive_customer_experiences
+    )
+
+
+    can_use_stories = (
+        advert.can_use_stories
+    )
+
+
+    can_view_analytics = (
+        advert.can_view_analytics
     )
 
 
     # ========================================================
     # RENDER
     # ========================================================
-    #
-    # Organizer SaaS access and Restaurant plan access remain
-    # separate concepts.
-    #
-    # Restaurant feature permissions are always taken from
-    # RestaurantAdvert.
-    # ========================================================
 
     return render_template(
         "admin/restaurant_manage.html",
 
-        organizer=organizer,
 
-        advert=advert,
+        # ====================================================
+        # ORGANIZER
+        # ====================================================
 
-
-        # ----------------------------------------------------
-        # ORGANIZER SaaS SUBSCRIPTION
-        # ----------------------------------------------------
-
-        subscription_active=(
-            organizer.is_subscription_active
-        ),
-
-        subscription_expires_at=(
-            organizer.subscription_expires_at
+        organizer=(
+            organizer
         ),
 
 
-        # ----------------------------------------------------
+        # ====================================================
+        # RESTAURANT
+        # ====================================================
+
+        advert=(
+            advert
+        ),
+
+
+        # ====================================================
         # RESTAURANT PLAN
-        # ----------------------------------------------------
+        # ====================================================
 
         restaurant_plan=(
-            advert.normalized_subscription_tier
+            restaurant_plan
         ),
 
         restaurant_plan_name=(
-            advert.subscription_plan_name
+            restaurant_plan_name
         ),
 
         restaurant_plan_price=(
-            advert.subscription_price
+            restaurant_plan_price
+        ),
+
+        restaurant_subscription_active=(
+            restaurant_subscription_active
+        ),
+
+        restaurant_subscription_expires_at=(
+            restaurant_subscription_expires_at
         ),
 
 
-        # ----------------------------------------------------
+        # ====================================================
+        # GRACE PERIOD
+        # ====================================================
+
+        restaurant_subscription_in_grace=(
+            restaurant_subscription_in_grace
+        ),
+
+        restaurant_subscription_grace_ends_at=(
+            restaurant_subscription_grace_ends_at
+        ),
+
+        restaurant_subscription_grace_days_remaining=(
+            restaurant_subscription_grace_days_remaining
+        ),
+
+
+        # ====================================================
+        # PLAN FLAGS
+        # ====================================================
+
+        is_free_plan=(
+            is_free_plan
+        ),
+
+        is_standard_plan=(
+            is_standard_plan
+        ),
+
+        is_premium_plan=(
+            is_premium_plan
+        ),
+
+
+        # ====================================================
+        # PLAN PRICES
+        # ====================================================
+
+        standard_plan_price=(
+            standard_plan_price
+        ),
+
+        premium_plan_price=(
+            premium_plan_price
+        ),
+
+
+        # ====================================================
+        # UPGRADE / RENEWAL CONTROLS
+        # ====================================================
+
+        can_upgrade_to_standard=(
+            can_upgrade_to_standard
+        ),
+
+        can_upgrade_to_premium=(
+            can_upgrade_to_premium
+        ),
+
+        can_renew_standard=(
+            can_renew_standard
+        ),
+
+        can_renew_premium=(
+            can_renew_premium
+        ),
+
+
+        # ====================================================
         # RESTAURANT FEATURE PERMISSIONS
-        # ----------------------------------------------------
+        # ====================================================
 
         can_use_reel=(
-            advert.can_use_reel
+            can_use_reel
         ),
 
         can_use_gallery=(
-            advert.can_use_gallery
+            can_use_gallery
         ),
 
         can_use_opening_hours=(
-            advert.can_use_opening_hours
+            can_use_opening_hours
         ),
 
         can_receive_customer_experiences=(
-            advert.can_receive_customer_experiences
+            can_receive_customer_experiences
         ),
 
         can_use_stories=(
-            advert.can_use_stories
+            can_use_stories
         ),
 
         can_view_analytics=(
-            advert.can_view_analytics
+            can_view_analytics
         ),
     )
-
 
 # ============================================================
 # CREATE RESTAURANT EXPERIENCE
