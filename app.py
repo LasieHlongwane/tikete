@@ -237,17 +237,166 @@ RESTAURANT_ATTRIBUTION_SESSION_KEY = (
 
 RESTAURANT_SUBSCRIPTION_PERIOD_DAYS = 30
 
+# ============================================================
+# RESTAURANT SUBSCRIPTION PLANS
+# ============================================================
+
+RESTAURANT_PLAN_FREE = "free"
+
+RESTAURANT_PLAN_STANDARD = "standard"
+
+RESTAURANT_PLAN_PREMIUM = "premium"
+
+
+# ============================================================
+# RESTAURANT PLAN PRICES
+# ============================================================
+
+RESTAURANT_PLAN_PRICES = {
+
+    RESTAURANT_PLAN_FREE:
+        0,
+
+    RESTAURANT_PLAN_STANDARD:
+        219,
+
+    RESTAURANT_PLAN_PREMIUM:
+        299,
+}
+
+
+# ============================================================
+# RESTAURANT PLAN NAMES
+# ============================================================
+
+RESTAURANT_PLAN_NAMES = {
+
+    RESTAURANT_PLAN_FREE:
+        "Free",
+
+    RESTAURANT_PLAN_STANDARD:
+        "Standard",
+
+    RESTAURANT_PLAN_PREMIUM:
+        "Premium",
+}
+
+
+# ============================================================
+# RESTAURANT PLAN FEATURES
+# ============================================================
+
+RESTAURANT_PLAN_FEATURES = {
+
+    RESTAURANT_PLAN_FREE: {
+
+        "profile":
+            True,
+
+        "reel":
+            True,
+
+        "gallery":
+            False,
+
+        "opening_hours":
+            False,
+
+        "customer_experiences":
+            False,
+
+        "stories":
+            False,
+
+        "analytics":
+            False,
+    },
+
+
+    RESTAURANT_PLAN_STANDARD: {
+
+        "profile":
+            True,
+
+        "reel":
+            True,
+
+        "gallery":
+            True,
+
+        "opening_hours":
+            True,
+
+        "customer_experiences":
+            True,
+
+        "stories":
+            False,
+
+        "analytics":
+            False,
+    },
+
+
+    RESTAURANT_PLAN_PREMIUM: {
+
+        "profile":
+            True,
+
+        "reel":
+            True,
+
+        "gallery":
+            True,
+
+        "opening_hours":
+            True,
+
+        "customer_experiences":
+            True,
+
+        "stories":
+            True,
+
+        "analytics":
+            True,
+    },
+}
+
+
+# ============================================================
+# RESTAURANT SUBSCRIPTION GRACE PERIOD
+# ============================================================
+
+RESTAURANT_SUBSCRIPTION_GRACE_DAYS = 5
+
+
+# ============================================================
+# RESTAURANT SUBSCRIPTION PAYMENT SETTINGS
+# ============================================================
+
+
+
 
 RESTAURANT_PAYABLE_PLANS = {
 
     RESTAURANT_PLAN_STANDARD: {
-        "name": "Kalxa Restaurant Standard",
-        "price": Decimal("219.00"),
+
+        "name":
+            "Kalxa Restaurant Standard",
+
+        "price":
+            Decimal("219.00"),
     },
 
+
     RESTAURANT_PLAN_PREMIUM: {
-        "name": "Kalxa Restaurant Premium",
-        "price": Decimal("299.00"),
+
+        "name":
+            "Kalxa Restaurant Premium",
+
+        "price":
+            Decimal("299.00"),
     },
 }
 # ============================================================
