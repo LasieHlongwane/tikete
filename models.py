@@ -4082,22 +4082,22 @@ class RestaurantAdvert(db.Model):
 # RESTAURANT SUBSCRIPTION GRACE PERIOD
 # ============================================================
 
-@property
-def restaurant_subscription_grace_ends_at(self):
+    @property
+    def restaurant_subscription_grace_ends_at(self):
 
     # Free does not expire.
-    if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+      if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
         return None
 
-    if self.subscription_expires_at is None:
+      if self.subscription_expires_at is None:
         return None
 
-    return (
+      return (
         self.subscription_expires_at
         + timedelta(
             days=RESTAURANT_SUBSCRIPTION_GRACE_DAYS
         )
-    )
+      )
 
 
 # ============================================================
