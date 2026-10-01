@@ -10,6 +10,11 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
     <title>
         Manage {{ advert.business_name }} | Kalxa
     </title>
@@ -17,15 +22,88 @@
 
     <style>
 
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
         * {
             box-sizing: border-box;
         }
 
+
+        :root {
+
+            --page:
+                #f6f7f9;
+
+            --surface:
+                #ffffff;
+
+            --surface-soft:
+                #f8fafc;
+
+            --text:
+                #111827;
+
+            --text-soft:
+                #64748b;
+
+            --border:
+                #e5e7eb;
+
+            --border-strong:
+                #d1d5db;
+
+            --black:
+                #111827;
+
+            --green-bg:
+                #dcfce7;
+
+            --green:
+                #166534;
+
+            --amber-bg:
+                #fef3c7;
+
+            --amber:
+                #92400e;
+
+            --orange-bg:
+                #fff7ed;
+
+            --orange:
+                #9a3412;
+
+            --orange-border:
+                #fed7aa;
+
+            --red-bg:
+                #fee2e2;
+
+            --red:
+                #991b1b;
+
+            --blue-bg:
+                #eff6ff;
+
+            --blue:
+                #1d4ed8;
+
+            --blue-border:
+                #bfdbfe;
+        }
+
+
         body {
+
             margin: 0;
 
-            background: #f6f7f9;
-            color: #111827;
+            background:
+                var(--page);
+
+            color:
+                var(--text);
 
             font-family:
                 Inter,
@@ -35,62 +113,161 @@
                 sans-serif;
         }
 
+
         .page {
-            width: min(100% - 28px, 900px);
-            margin: 0 auto;
-            padding: 28px 0 70px;
+
+            width:
+                min(
+                    100% - 28px,
+                    900px
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                28px 0 70px;
         }
+
+
+        /* =====================================================
+           BACK
+        ===================================================== */
 
         .back {
-            display: inline-flex;
-            margin-bottom: 18px;
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 800;
-            text-decoration: none;
+
+            display:
+                inline-flex;
+
+            margin-bottom:
+                18px;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                12px;
+
+            font-weight:
+                800;
+
+            text-decoration:
+                none;
         }
+
+
+        /* =====================================================
+           HERO
+        ===================================================== */
 
         .hero {
-            display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 20px;
 
-            padding: 20px;
+            display:
+                grid;
 
-            background: #ffffff;
+            grid-template-columns:
+                180px 1fr;
+
+            gap:
+                20px;
+
+            padding:
+                20px;
+
+            background:
+                var(--surface);
 
             border:
-                1px solid #e5e7eb;
+                1px solid var(--border);
 
-            border-radius: 20px;
+            border-radius:
+                20px;
         }
+
 
         .poster {
-            overflow: hidden;
 
-            aspect-ratio: 4 / 5;
+            overflow:
+                hidden;
 
-            background: #e5e7eb;
+            aspect-ratio:
+                4 / 5;
 
-            border-radius: 14px;
+            background:
+                #e5e7eb;
+
+            border-radius:
+                14px;
         }
+
 
         .poster img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+
+            width:
+                100%;
+
+            height:
+                100%;
+
+            object-fit:
+                cover;
         }
+
+
+        .poster-placeholder {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                100%;
+
+            height:
+                100%;
+
+            color:
+                #94a3b8;
+
+            font-size:
+                12px;
+
+            font-weight:
+                800;
+
+            text-align:
+                center;
+        }
+
 
         .eyebrow {
-            margin: 0 0 7px;
-            color: #64748b;
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: .12em;
+
+            margin:
+                0 0 7px;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                10px;
+
+            font-weight:
+                900;
+
+            letter-spacing:
+                .12em;
         }
 
+
         h1 {
-            margin: 0;
+
+            margin:
+                0;
 
             font-size:
                 clamp(
@@ -99,50 +276,101 @@
                     38px
                 );
 
-            letter-spacing: -.04em;
+            letter-spacing:
+                -.04em;
         }
+
 
         .headline {
-            margin: 7px 0 0;
-            color: #64748b;
-            font-size: 13px;
+
+            margin:
+                7px 0 0;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                13px;
         }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
 
         .status {
-            display: inline-flex;
 
-            margin-top: 12px;
+            display:
+                inline-flex;
 
-            padding: 6px 9px;
+            align-items:
+                center;
 
-            border-radius: 999px;
+            margin-top:
+                12px;
 
-            font-size: 10px;
-            font-weight: 950;
+            padding:
+                6px 9px;
+
+            border-radius:
+                999px;
+
+            font-size:
+                10px;
+
+            font-weight:
+                950;
         }
+
 
         .status-live {
-            background: #dcfce7;
-            color: #166534;
+
+            background:
+                var(--green-bg);
+
+            color:
+                var(--green);
         }
+
 
         .status-scheduled {
-            background: #fef3c7;
-            color: #92400e;
+
+            background:
+                var(--amber-bg);
+
+            color:
+                var(--amber);
         }
+
 
         .status-expired {
-            background: #fee2e2;
-            color: #991b1b;
+
+            background:
+                var(--red-bg);
+
+            color:
+                var(--red);
         }
+
 
         .status-paused {
-            background: #f3f4f6;
-            color: #4b5563;
+
+            background:
+                #f3f4f6;
+
+            color:
+                #4b5563;
         }
 
+
+        /* =====================================================
+           CAMPAIGN METRICS
+        ===================================================== */
+
         .metrics {
-            display: grid;
+
+            display:
+                grid;
 
             grid-template-columns:
                 repeat(
@@ -150,85 +378,343 @@
                     minmax(0, 1fr)
                 );
 
-            gap: 12px;
+            gap:
+                12px;
 
-            margin-top: 16px;
+            margin-top:
+                16px;
         }
+
 
         .metric {
-            padding: 13px;
 
-            background: #f8fafc;
+            padding:
+                13px;
+
+            background:
+                var(--surface-soft);
 
             border:
-                1px solid #e5e7eb;
+                1px solid var(--border);
 
-            border-radius: 12px;
+            border-radius:
+                12px;
         }
+
 
         .metric-label {
-            color: #64748b;
-            font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                9px;
+
+            font-weight:
+                900;
+
+            text-transform:
+                uppercase;
         }
+
 
         .metric-value {
-            display: block;
 
-            margin-top: 5px;
+            display:
+                block;
 
-            color: #111827;
+            margin-top:
+                5px;
 
-            font-size: 13px;
-            font-weight: 900;
+            color:
+                var(--text);
+
+            font-size:
+                13px;
+
+            font-weight:
+                900;
         }
 
-        .sections {
-            display: grid;
-            gap: 14px;
-            margin-top: 16px;
-        }
 
-        .section {
-            padding: 18px;
+        /* =====================================================
+           SUBSCRIPTION PANEL
+        ===================================================== */
 
-            background: #ffffff;
+        .subscription-panel {
+
+            margin-top:
+                16px;
+
+            padding:
+                20px;
+
+            background:
+                var(--surface);
 
             border:
-                1px solid #e5e7eb;
+                1px solid var(--border);
 
-            border-radius: 16px;
+            border-radius:
+                18px;
         }
 
-        .section h2 {
-            margin: 0 0 12px;
 
-            font-size: 14px;
+        .subscription-top {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            justify-content:
+                space-between;
+
+            gap:
+                16px;
         }
 
-        .detail {
-            display: grid;
 
-            grid-template-columns:
-                130px 1fr;
+        .subscription-eyebrow {
 
-            gap: 7px 12px;
+            margin:
+                0 0 6px;
 
-            font-size: 12px;
+            color:
+                var(--text-soft);
+
+            font-size:
+                9px;
+
+            font-weight:
+                950;
+
+            letter-spacing:
+                .12em;
+
+            text-transform:
+                uppercase;
         }
 
-        .detail-label {
-            color: #64748b;
+
+        .subscription-title {
+
+            margin:
+                0;
+
+            font-size:
+                21px;
+
+            letter-spacing:
+                -.03em;
         }
 
-        .detail-value {
-            font-weight: 750;
-            word-break: break-word;
+
+        .subscription-price {
+
+            flex:
+                0 0 auto;
+
+            font-size:
+                19px;
+
+            font-weight:
+                950;
+
+            text-align:
+                right;
         }
 
-        .actions {
-            display: grid;
+
+        .subscription-price small {
+
+            display:
+                block;
+
+            margin-top:
+                2px;
+
+            color:
+                var(--text-soft);
+
+            font-size:
+                9px;
+
+            font-weight:
+                800;
+        }
+
+
+        .plan-badge {
+
+            display:
+                inline-flex;
+
+            margin-top:
+                10px;
+
+            padding:
+                6px 9px;
+
+            border-radius:
+                999px;
+
+            font-size:
+                9px;
+
+            font-weight:
+                950;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .plan-free {
+
+            background:
+                #f3f4f6;
+
+            color:
+                #374151;
+        }
+
+
+        .plan-standard {
+
+            background:
+                var(--blue-bg);
+
+            color:
+                var(--blue);
+        }
+
+
+        .plan-premium {
+
+            background:
+                #111827;
+
+            color:
+                #ffffff;
+        }
+
+
+        /* =====================================================
+           GRACE PERIOD WARNING
+        ===================================================== */
+
+        .grace-warning {
+
+            margin-top:
+                16px;
+
+            padding:
+                15px;
+
+            background:
+                var(--orange-bg);
+
+            color:
+                var(--orange);
+
+            border:
+                1px solid var(--orange-border);
+
+            border-radius:
+                12px;
+
+            font-size:
+                12px;
+
+            line-height:
+                1.55;
+        }
+
+
+        .grace-warning strong {
+
+            display:
+                block;
+
+            margin-bottom:
+                4px;
+
+            font-size:
+                13px;
+        }
+
+
+        .grace-deadline {
+
+            display:
+                block;
+
+            margin-top:
+                8px;
+
+            font-size:
+                10px;
+
+            font-weight:
+                850;
+        }
+
+
+        /* =====================================================
+           FREE PLAN INFO
+        ===================================================== */
+
+        .free-info {
+
+            margin-top:
+                16px;
+
+            padding:
+                14px;
+
+            background:
+                #f8fafc;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                12px;
+
+            color:
+                #475569;
+
+            font-size:
+                11px;
+
+            line-height:
+                1.55;
+        }
+
+
+        /* =====================================================
+           PLAN CARDS
+        ===================================================== */
+
+        .plans-title {
+
+            margin:
+                22px 0 10px;
+
+            font-size:
+                12px;
+
+            font-weight:
+                950;
+        }
+
+
+        .plan-grid {
+
+            display:
+                grid;
 
             grid-template-columns:
                 repeat(
@@ -236,94 +722,556 @@
                     minmax(0, 1fr)
                 );
 
-            gap: 9px;
-
-            margin-top: 16px;
+            gap:
+                12px;
         }
+
+
+        .plan-card {
+
+            position:
+                relative;
+
+            padding:
+                16px;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                14px;
+        }
+
+
+        .plan-card-current {
+
+            border:
+                2px solid #111827;
+        }
+
+
+        .plan-card-premium {
+
+            background:
+                #111827;
+
+            color:
+                #ffffff;
+
+            border-color:
+                #111827;
+        }
+
+
+        .plan-card-premium.plan-card-current {
+
+            box-shadow:
+                0 0 0 3px rgba(17, 24, 39, .12);
+        }
+
+
+        .current-label {
+
+            display:
+                inline-flex;
+
+            margin-bottom:
+                10px;
+
+            padding:
+                5px 8px;
+
+            background:
+                #dcfce7;
+
+            color:
+                #166534;
+
+            border-radius:
+                999px;
+
+            font-size:
+                8px;
+
+            font-weight:
+                950;
+
+            text-transform:
+                uppercase;
+        }
+
+
+        .plan-card h3 {
+
+            margin:
+                0;
+
+            font-size:
+                16px;
+        }
+
+
+        .plan-card-price {
+
+            margin-top:
+                5px;
+
+            font-size:
+                20px;
+
+            font-weight:
+                950;
+        }
+
+
+        .plan-card-price span {
+
+            font-size:
+                9px;
+
+            font-weight:
+                750;
+
+            opacity:
+                .7;
+        }
+
+
+        .plan-features {
+
+            display:
+                grid;
+
+            gap:
+                7px;
+
+            margin:
+                14px 0 0;
+
+            padding:
+                0;
+
+            list-style:
+                none;
+
+            font-size:
+                10px;
+
+            line-height:
+                1.4;
+        }
+
+
+        .plan-feature-muted {
+
+            opacity:
+                .55;
+        }
+
+
+        .plan-action {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                100%;
+
+            min-height:
+                42px;
+
+            margin-top:
+                16px;
+
+            padding:
+                9px 12px;
+
+            border:
+                0;
+
+            border-radius:
+                10px;
+
+            font:
+                inherit;
+
+            font-size:
+                10px;
+
+            font-weight:
+                950;
+
+            cursor:
+                pointer;
+        }
+
+
+        .plan-action-dark {
+
+            background:
+                #111827;
+
+            color:
+                #ffffff;
+        }
+
+
+        .plan-action-light {
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+        }
+
+
+        .plan-action-disabled {
+
+            background:
+                #e5e7eb;
+
+            color:
+                #64748b;
+
+            cursor:
+                not-allowed;
+        }
+
+
+        /* =====================================================
+           FEATURE ACCESS
+        ===================================================== */
+
+        .feature-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                8px;
+
+            margin-top:
+                14px;
+        }
+
+
+        .feature {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                8px;
+
+            padding:
+                10px 11px;
+
+            background:
+                var(--surface-soft);
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                10px;
+
+            font-size:
+                10px;
+
+            font-weight:
+                800;
+        }
+
+
+        .feature-enabled {
+
+            color:
+                #166534;
+
+            font-weight:
+                950;
+        }
+
+
+        .feature-disabled {
+
+            color:
+                #94a3b8;
+
+            font-weight:
+                950;
+        }
+
+
+        /* =====================================================
+           SECTIONS
+        ===================================================== */
+
+        .sections {
+
+            display:
+                grid;
+
+            gap:
+                14px;
+
+            margin-top:
+                16px;
+        }
+
+
+        .section {
+
+            padding:
+                18px;
+
+            background:
+                var(--surface);
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                16px;
+        }
+
+
+        .section h2 {
+
+            margin:
+                0 0 12px;
+
+            font-size:
+                14px;
+        }
+
+
+        .detail {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                130px 1fr;
+
+            gap:
+                7px 12px;
+
+            font-size:
+                12px;
+        }
+
+
+        .detail-label {
+
+            color:
+                var(--text-soft);
+        }
+
+
+        .detail-value {
+
+            font-weight:
+                750;
+
+            word-break:
+                break-word;
+        }
+
+
+        /* =====================================================
+           ACTIONS
+        ===================================================== */
+
+        .actions {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap:
+                9px;
+
+            margin-top:
+                16px;
+        }
+
 
         .action,
         .actions button {
-            display: flex;
 
-            align-items: center;
-            justify-content: center;
+            display:
+                flex;
 
-            min-height: 44px;
+            align-items:
+                center;
 
-            padding: 9px 12px;
+            justify-content:
+                center;
 
-            border-radius: 10px;
+            min-height:
+                44px;
 
-            font: inherit;
+            padding:
+                9px 12px;
 
-            font-size: 11px;
-            font-weight: 900;
+            border-radius:
+                10px;
 
-            text-decoration: none;
+            font:
+                inherit;
 
-            cursor: pointer;
+            font-size:
+                11px;
+
+            font-weight:
+                900;
+
+            text-decoration:
+                none;
+
+            cursor:
+                pointer;
         }
+
 
         .action-primary {
-            background: #111827;
-            color: #ffffff;
-            border: 1px solid #111827;
-        }
 
-        .action-secondary {
-            background: #ffffff;
-            color: #111827;
-            border: 1px solid #d1d5db;
-        }
+            background:
+                #111827;
 
-        .action-warning {
-            background: #fff7ed;
-            color: #9a3412;
-            border: 1px solid #fed7aa;
-        }
-
-        .subscription-warning {
-            margin-top: 16px;
-
-            padding: 14px;
-
-            background: #fff7ed;
-            color: #9a3412;
+            color:
+                #ffffff;
 
             border:
-                1px solid #fed7aa;
-
-            border-radius: 12px;
-
-            font-size: 11px;
-
-            line-height: 1.5;
+                1px solid #111827;
         }
+
+
+        .action-secondary {
+
+            background:
+                #ffffff;
+
+            color:
+                #111827;
+
+            border:
+                1px solid var(--border-strong);
+        }
+
+
+        .action-warning {
+
+            background:
+                var(--orange-bg);
+
+            color:
+                var(--orange);
+
+            border:
+                1px solid var(--orange-border);
+        }
+
 
         form {
             margin: 0;
         }
 
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
         @media (max-width: 640px) {
 
             .hero {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
+
 
             .poster {
-                max-width: 260px;
+
+                max-width:
+                    260px;
             }
+
 
             .metrics {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
+
+
+            .subscription-top {
+
+                flex-direction:
+                    column;
+            }
+
+
+            .subscription-price {
+
+                text-align:
+                    left;
+            }
+
+
+            .plan-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .feature-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
 
             .actions {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
 
+
             .detail {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
 
         }
@@ -332,9 +1280,16 @@
 
 </head>
 
+
 <body>
 
+
 <div class="page">
+
+
+    <!-- =====================================================
+         BACK
+    ====================================================== -->
 
     <a
         href="{{ url_for(
@@ -345,6 +1300,10 @@
         ← Restaurant Control Centre
     </a>
 
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
 
     <section class="hero">
 
@@ -358,6 +1317,12 @@
                     alt="{{ advert.business_name }} poster"
                 >
 
+            {% else %}
+
+                <div class="poster-placeholder">
+                    No restaurant poster
+                </div>
+
             {% endif %}
 
         </div>
@@ -368,6 +1333,7 @@
             <p class="eyebrow">
                 RESTAURANT CAMPAIGN
             </p>
+
 
             <h1>
                 {{ advert.business_name }}
@@ -382,6 +1348,10 @@
 
             {% endif %}
 
+
+            <!-- =============================================
+                 CAMPAIGN STATUS
+            ============================================== -->
 
             {% if advert.campaign_status == "live" %}
 
@@ -410,7 +1380,12 @@
             {% endif %}
 
 
+            <!-- =============================================
+                 CAMPAIGN METRICS
+            ============================================== -->
+
             <div class="metrics">
+
 
                 <div class="metric">
 
@@ -421,9 +1396,13 @@
                     <span class="metric-value">
 
                         {% if advert.campaign_start_date %}
+
                             {{ advert.campaign_start_date.strftime('%d %b %Y') }}
+
                         {% else %}
+
                             —
+
                         {% endif %}
 
                     </span>
@@ -440,9 +1419,13 @@
                     <span class="metric-value">
 
                         {% if advert.campaign_end_date %}
+
                             {{ advert.campaign_end_date.strftime('%d %b %Y') }}
+
                         {% else %}
+
                             —
+
                         {% endif %}
 
                     </span>
@@ -459,14 +1442,19 @@
                     <span class="metric-value">
 
                         {% if advert.days_remaining is not none %}
+
                             {{ advert.days_remaining }} days
+
                         {% else %}
+
                             —
+
                         {% endif %}
 
                     </span>
 
                 </div>
+
 
             </div>
 
@@ -475,33 +1463,633 @@
     </section>
 
 
-    {% if not subscription_active %}
+    <!-- =====================================================
+         RESTAURANT SUBSCRIPTION
+    ====================================================== -->
 
-        <div class="subscription-warning">
+    <section class="subscription-panel">
 
-            🔒 Your restaurant subscription is not active.
 
-            You can view your campaign,
-            but editing, resuming and reel publishing
-            require an active subscription.
+        <div class="subscription-top">
 
-            <br><br>
 
-            <a
-                href="{{ url_for(
-                    'admin_subscription'
-                ) }}"
-            >
-                Activate Subscription →
-            </a>
+            <div>
+
+                <p class="subscription-eyebrow">
+                    Restaurant Plan
+                </p>
+
+
+                <h2 class="subscription-title">
+                    {{ restaurant_plan_name }}
+                </h2>
+
+
+                {% if is_free_plan %}
+
+                    <span class="plan-badge plan-free">
+                        Free Plan
+                    </span>
+
+                {% elif is_standard_plan %}
+
+                    <span class="plan-badge plan-standard">
+                        Standard Plan
+                    </span>
+
+                {% elif is_premium_plan %}
+
+                    <span class="plan-badge plan-premium">
+                        Premium Plan
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="subscription-price">
+
+                R{{ restaurant_plan_price }}
+
+                {% if not is_free_plan %}
+
+                    <small>
+                        per month
+                    </small>
+
+                {% else %}
+
+                    <small>
+                        no monthly fee
+                    </small>
+
+                {% endif %}
+
+            </div>
+
 
         </div>
 
-    {% endif %}
 
+        <!-- =================================================
+             GRACE PERIOD WARNING
+        ================================================== -->
+
+        {% if restaurant_subscription_in_grace %}
+
+            <div class="grace-warning">
+
+                <strong>
+                    ⚠ {{ restaurant_plan_name }}
+                    subscription expired
+                </strong>
+
+
+                {% if restaurant_subscription_grace_days_remaining == 1 %}
+
+                    You have approximately
+                    <strong style="display:inline;">
+                        1 day remaining
+                    </strong>
+                    to renew before your restaurant
+                    automatically moves to the Free plan.
+
+                {% else %}
+
+                    You have approximately
+                    <strong style="display:inline;">
+                        {{ restaurant_subscription_grace_days_remaining }}
+                        days remaining
+                    </strong>
+                    to renew before your restaurant
+                    automatically moves to the Free plan.
+
+                {% endif %}
+
+
+                {% if restaurant_subscription_grace_ends_at %}
+
+                    <span class="grace-deadline">
+
+                        Grace period ends:
+
+                        {{ restaurant_subscription_grace_ends_at.strftime(
+                            '%d %b %Y at %H:%M'
+                        ) }}
+
+                    </span>
+
+                {% endif %}
+
+
+                <br>
+
+                Your {{ restaurant_plan_name }} features remain
+                available during this grace period.
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             FREE PLAN INFORMATION
+        ================================================== -->
+
+        {% if is_free_plan %}
+
+            <div class="free-info">
+
+                <strong>
+                    Your restaurant is on Kalxa Free.
+                </strong>
+
+                <br><br>
+
+                Your restaurant profile, contact details and
+                restaurant Reel remain available.
+
+                Upgrade to Standard or Premium to unlock
+                gallery photos, operational hours and customer
+                experiences.
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             PAID SUBSCRIPTION EXPIRY
+        ================================================== -->
+
+        {% if
+            not is_free_plan
+            and
+            restaurant_subscription_expires_at
+            and
+            not restaurant_subscription_in_grace
+        %}
+
+            <div class="free-info">
+
+                <strong>
+                    Subscription active
+                </strong>
+
+                <br>
+
+                Current paid period ends:
+
+                {{ restaurant_subscription_expires_at.strftime(
+                    '%d %b %Y at %H:%M'
+                ) }}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             CURRENT FEATURE ACCESS
+        ================================================== -->
+
+        <div class="feature-grid">
+
+
+            <div class="feature">
+
+                Restaurant profile
+
+                <span class="feature-enabled">
+                    ✓ Included
+                </span>
+
+            </div>
+
+
+            <div class="feature">
+
+                Restaurant Reel
+
+                {% if can_use_reel %}
+
+                    <span class="feature-enabled">
+                        ✓ Included
+                    </span>
+
+                {% else %}
+
+                    <span class="feature-disabled">
+                        Locked
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="feature">
+
+                Gallery photos
+
+                {% if can_use_gallery %}
+
+                    <span class="feature-enabled">
+                        ✓ Included
+                    </span>
+
+                {% else %}
+
+                    <span class="feature-disabled">
+                        Locked
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="feature">
+
+                Operational hours
+
+                {% if can_use_opening_hours %}
+
+                    <span class="feature-enabled">
+                        ✓ Included
+                    </span>
+
+                {% else %}
+
+                    <span class="feature-disabled">
+                        Locked
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="feature">
+
+                Customer experiences
+
+                {% if can_receive_customer_experiences %}
+
+                    <span class="feature-enabled">
+                        ✓ Included
+                    </span>
+
+                {% else %}
+
+                    <span class="feature-disabled">
+                        Locked
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="feature">
+
+                Kalxa Stories
+
+                {% if can_use_stories %}
+
+                    <span class="feature-enabled">
+                        ✓ Included
+                    </span>
+
+                {% else %}
+
+                    <span class="feature-disabled">
+                        Locked
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="feature">
+
+                Restaurant analytics
+
+                {% if can_view_analytics %}
+
+                    <span class="feature-enabled">
+                        ✓ Included
+                    </span>
+
+                {% else %}
+
+                    <span class="feature-disabled">
+                        Locked
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             PLAN OPTIONS
+        ================================================== -->
+
+        <h3 class="plans-title">
+            Restaurant Plans
+        </h3>
+
+
+        <div class="plan-grid">
+
+
+            <!-- =============================================
+                 STANDARD
+            ============================================== -->
+
+            <article
+                class="
+                    plan-card
+                    {% if is_standard_plan %}
+                        plan-card-current
+                    {% endif %}
+                "
+            >
+
+
+                {% if is_standard_plan %}
+
+                    <span class="current-label">
+
+                        {% if restaurant_subscription_in_grace %}
+                            Renewal required
+                        {% else %}
+                            Current plan
+                        {% endif %}
+
+                    </span>
+
+                {% endif %}
+
+
+                <h3>
+                    Standard
+                </h3>
+
+
+                <div class="plan-card-price">
+
+                    R{{ standard_plan_price }}
+
+                    <span>
+                        / month
+                    </span>
+
+                </div>
+
+
+                <ul class="plan-features">
+
+                    <li>
+                        ✓ Restaurant profile
+                    </li>
+
+                    <li>
+                        ✓ Restaurant Reel / discovery
+                    </li>
+
+                    <li>
+                        ✓ Gallery photos
+                    </li>
+
+                    <li>
+                        ✓ Operational hours
+                    </li>
+
+                    <li>
+                        ✓ Customer experiences
+                    </li>
+
+                    <li class="plan-feature-muted">
+                        — Kalxa Stories
+                    </li>
+
+                    <li class="plan-feature-muted">
+                        — Restaurant analytics
+                    </li>
+
+                </ul>
+
+
+                <!-- =========================================
+                     PAYMENT BUTTON PLACEHOLDER
+                ========================================== -->
+
+                {% if is_standard_plan %}
+
+                    {% if restaurant_subscription_in_grace %}
+
+                        <button
+                            type="button"
+                            class="plan-action plan-action-disabled"
+                            disabled
+                        >
+                            Renew Standard — R{{ standard_plan_price }}
+                        </button>
+
+                    {% else %}
+
+                        <button
+                            type="button"
+                            class="plan-action plan-action-disabled"
+                            disabled
+                        >
+                            Current Standard Plan
+                        </button>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <button
+                        type="button"
+                        class="plan-action plan-action-disabled"
+                        disabled
+                    >
+
+                        {% if is_premium_plan %}
+
+                            Standard — R{{ standard_plan_price }}
+
+                        {% else %}
+
+                            Upgrade to Standard — R{{ standard_plan_price }}
+
+                        {% endif %}
+
+                    </button>
+
+                {% endif %}
+
+
+            </article>
+
+
+            <!-- =============================================
+                 PREMIUM
+            ============================================== -->
+
+            <article
+                class="
+                    plan-card
+                    plan-card-premium
+
+                    {% if is_premium_plan %}
+                        plan-card-current
+                    {% endif %}
+                "
+            >
+
+
+                {% if is_premium_plan %}
+
+                    <span class="current-label">
+
+                        {% if restaurant_subscription_in_grace %}
+                            Renewal required
+                        {% else %}
+                            Current plan
+                        {% endif %}
+
+                    </span>
+
+                {% endif %}
+
+
+                <h3>
+                    Premium
+                </h3>
+
+
+                <div class="plan-card-price">
+
+                    R{{ premium_plan_price }}
+
+                    <span>
+                        / month
+                    </span>
+
+                </div>
+
+
+                <ul class="plan-features">
+
+                    <li>
+                        ✓ Everything in Standard
+                    </li>
+
+                    <li>
+                        ✓ Gallery photos
+                    </li>
+
+                    <li>
+                        ✓ Operational hours
+                    </li>
+
+                    <li>
+                        ✓ Customer experiences
+                    </li>
+
+                    <li>
+                        ✓ Kalxa Stories exposure
+                    </li>
+
+                    <li>
+                        ✓ Restaurant analytics
+                    </li>
+
+                </ul>
+
+
+                <!-- =========================================
+                     PAYMENT BUTTON PLACEHOLDER
+                ========================================== -->
+
+                {% if is_premium_plan %}
+
+                    {% if restaurant_subscription_in_grace %}
+
+                        <button
+                            type="button"
+                            class="plan-action plan-action-disabled"
+                            disabled
+                        >
+                            Renew Premium — R{{ premium_plan_price }}
+                        </button>
+
+                    {% else %}
+
+                        <button
+                            type="button"
+                            class="plan-action plan-action-light"
+                            disabled
+                            style="cursor:not-allowed; opacity:.75;"
+                        >
+                            Current Premium Plan
+                        </button>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <button
+                        type="button"
+                        class="plan-action plan-action-light"
+                        disabled
+                        style="cursor:not-allowed; opacity:.75;"
+                    >
+                        Upgrade to Premium — R{{ premium_plan_price }}
+                    </button>
+
+                {% endif %}
+
+
+            </article>
+
+
+        </div>
+
+
+        <div class="free-info">
+
+            Payment activation for Standard and Premium
+            will be connected to Paystack.
+
+            Your restaurant plan will only be upgraded
+            after Kalxa verifies the payment successfully.
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =====================================================
+         RESTAURANT INFORMATION
+    ====================================================== -->
 
     <div class="sections">
 
+
+        <!-- =================================================
+             CAMPAIGN DETAILS
+        ================================================== -->
 
         <section class="section">
 
@@ -511,6 +2099,7 @@
 
 
             <div class="detail">
+
 
                 <div class="detail-label">
                     Business
@@ -547,10 +2136,15 @@
                     {{ advert.address or "—" }}
                 </div>
 
+
             </div>
 
         </section>
 
+
+        <!-- =================================================
+             CUSTOMER CONTACT
+        ================================================== -->
 
         <section class="section">
 
@@ -560,6 +2154,7 @@
 
 
             <div class="detail">
+
 
                 <div class="detail-label">
                     WhatsApp
@@ -586,17 +2181,26 @@
                 <div class="detail-value">
 
                     {% if advert.directions_url %}
+
                         Configured
+
                     {% else %}
+
                         —
+
                     {% endif %}
 
                 </div>
+
 
             </div>
 
         </section>
 
+
+        <!-- =================================================
+             RESTAURANT REEL
+        ================================================== -->
 
         <section class="section">
 
@@ -607,43 +2211,187 @@
 
             <div class="detail">
 
+
                 <div class="detail-label">
                     Status
                 </div>
 
+
                 <div class="detail-value">
 
                     {% if advert.reel and advert.reel.active %}
+
                         🎬 Published
+
                     {% else %}
+
                         No reel published
+
                     {% endif %}
 
                 </div>
+
+
+                <div class="detail-label">
+                    Plan access
+                </div>
+
+
+                <div class="detail-value">
+
+                    {% if can_use_reel %}
+
+                        ✓ Available on your plan
+
+                    {% else %}
+
+                        Locked
+
+                    {% endif %}
+
+                </div>
+
 
             </div>
 
         </section>
 
 
+        <!-- =================================================
+             PAID FEATURE SUMMARY
+        ================================================== -->
+
+        {% if not is_free_plan %}
+
+            <section class="section">
+
+                <h2>
+                    Paid Restaurant Features
+                </h2>
+
+
+                <div class="detail">
+
+
+                    <div class="detail-label">
+                        Gallery
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if can_use_gallery %}
+                            ✓ Enabled
+                        {% else %}
+                            Locked
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="detail-label">
+                        Hours
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if can_use_opening_hours %}
+                            ✓ Enabled
+                        {% else %}
+                            Locked
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="detail-label">
+                        Experiences
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if can_receive_customer_experiences %}
+                            ✓ Enabled
+                        {% else %}
+                            Locked
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="detail-label">
+                        Stories
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if can_use_stories %}
+                            ✓ Enabled
+                        {% else %}
+                            Not included
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="detail-label">
+                        Analytics
+                    </div>
+
+                    <div class="detail-value">
+
+                        {% if can_view_analytics %}
+                            ✓ Enabled
+                        {% else %}
+                            Not included
+                        {% endif %}
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
     </div>
 
+
+    <!-- =====================================================
+         RESTAURANT ACTIONS
+    ====================================================== -->
 
     <div class="actions">
 
 
-        {% if subscription_active %}
+        <!-- =================================================
+             EDIT
+        ================================================== -->
+        <!--
+            FREE restaurant owners are deliberately allowed
+            to edit their basic profile.
 
-            <a
-                href="{{ url_for(
-                    'admin_edit_restaurant',
-                    advert_id=advert.id
-                ) }}"
-                class="action action-primary"
-            >
-                ✏️ Edit Advert
-            </a>
+            Backend feature checks must continue protecting
+            gallery/hours/etc.
+        -->
 
+        <a
+            href="{{ url_for(
+                'admin_edit_restaurant',
+                advert_id=advert.id
+            ) }}"
+            class="action action-primary"
+        >
+            ✏️ Edit Restaurant
+        </a>
+
+
+        <!-- =================================================
+             REEL
+        ================================================== -->
+
+        {% if can_use_reel %}
 
             <a
                 href="{{ url_for(
@@ -653,15 +2401,25 @@
                 class="action action-primary"
             >
                 🎬
+
                 {% if advert.reel %}
+
                     Manage Reel
+
                 {% else %}
+
                     Upload Reel
+
                 {% endif %}
+
             </a>
 
         {% endif %}
 
+
+        <!-- =================================================
+             PUBLIC PAGE
+        ================================================== -->
 
         <a
             href="{{ url_for(
@@ -675,6 +2433,10 @@
             View Public Page →
         </a>
 
+
+        <!-- =================================================
+             PAUSE
+        ================================================== -->
 
         {% if advert.active %}
 
@@ -697,7 +2459,11 @@
             </form>
 
 
-        {% elif subscription_active %}
+        <!-- =================================================
+             RESUME
+        ================================================== -->
+
+        {% else %}
 
             <form
                 method="POST"
@@ -722,7 +2488,9 @@
 
     </div>
 
+
 </div>
+
 
 </body>
 
