@@ -285,6 +285,8 @@ RESTAURANT_WEEKDAYS = (
 # ============================================================
 # RESTAURANT ADVERTISING
 # ============================================================
+RESTAURANT_SUBSCRIPTION_GRACE_DAYS = 5
+
 
 RESTAURANT_POSTER_MAX_FILE_BYTES = (
     8 * 1024 * 1024
@@ -1748,33 +1750,33 @@ def restaurant_notification_copy(
 # AUTOMATIC RESTAURANT PUSH
 # ============================================================
 
+# ============================================================
+# AUTOMATIC RESTAURANT PUSH
+# ============================================================
+
 def send_automatic_restaurant_push(
     advert,
 ):
+
+    # ========================================================
+    # RESTAURANT REQUIRED
+    # ========================================================
 
     if not advert:
 
         return None
 
 
-    organizer = (
-        advert.organizer
-    )
-
-
     # ========================================================
-    # RESTAURANT MUST STILL HAVE AN ACTIVE SUBSCRIPTION
+    # RESTAURANT MUST BE ACTIVE
     # ========================================================
 
-    if (
-        not organizer
-        or not organizer.is_subscription_active
-    ):
+    if not advert.active:
 
         current_app.logger.info(
             (
                 "[Restaurant Auto Push] "
-                "Skipped because subscription "
+                "Skipped because restaurant "
                 "is inactive "
                 "advert_id=%s"
             ),
@@ -1785,10 +1787,213 @@ def send_automatic_restaurant_push(
 
 
     # ========================================================
-    # ADVERT MUST BE ACTIVE
+    # RESTAURANT OWNER REQUIRED
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # We require a valid restaurant owner account, but we
+    # deliberately DO NOT require:
+    #
+    #     organizer.is_subscription_active
+    #
+    # That property belongs to the legacy Organizer SaaS
+    # subscription system.
+    #
+    # Restaurant feature access is now controlled by the
+    # RestaurantAdvert Free / Standard / Premium plan.
     # ========================================================
 
-    if not advert.active:
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because restaurant "
+                "has no organizer "
+                "advert_id=%s"
+            ),
+            advert.id,
+        )
+
+        return None
+
+
+    # ========================================================
+    # ORGANIZER ACCOUNT MUST BE ACTIVE
+    # ========================================================
+
+    if not organizer.active:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because restaurant "
+                "owner account is inactive "
+                "advert_id=%s "
+                "organizer_id=%s"
+            ),
+            advert.id,
+            organizer.id,
+        )
+
+        return None
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if (
+        account_type
+        != "restaurant"
+    ):
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because organizer "
+                "is not a restaurant account "
+                "advert_id=%s "
+                "organizer_id=%s"
+            ),
+            advert.id,
+            organizer.id,
+        )
+
+        return None
+
+
+    # ========================================================
+    # RESTAURANT PLAN MUST BE ACTIVE
+    # ========================================================
+    #
+    # FREE:
+    #
+    #     active
+    #     no expiry required
+    #
+    # STANDARD / PREMIUM:
+    #
+    #     active
+    #     future expiry required
+    #
+    # This is controlled by RestaurantAdvert rather than the
+    # old Organizer subscription.
+    # ========================================================
+
+    if not advert.is_restaurant_subscription_active:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because restaurant "
+                "plan is inactive "
+                "advert_id=%s "
+                "plan=%s"
+            ),
+            advert.id,
+            advert.normalized_subscription_tier,
+        )
+
+        return None
+
+
+    # ========================================================
+    # REEL / DISCOVERY FEATURE
+    # ========================================================
+    #
+    # Restaurant discovery/reel is currently available on:
+    #
+    #     FREE
+    #     STANDARD
+    #     PREMIUM
+    #
+    # Using the feature property keeps this function safe if
+    # the plan matrix changes later.
+    # ========================================================
+
+    if not advert.can_use_reel:
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because restaurant "
+                "plan does not allow reels "
+                "advert_id=%s "
+                "plan=%s"
+            ),
+            advert.id,
+            advert.normalized_subscription_tier,
+        )
+
+        return None
+
+
+    # ========================================================
+    # CAMPAIGN START DATE
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because restaurant "
+                "campaign has not started "
+                "advert_id=%s starts_at=%s"
+            ),
+            advert.id,
+            advert.starts_at,
+        )
+
+        return None
+
+
+    # ========================================================
+    # CAMPAIGN END DATE
+    # ========================================================
+
+    if (
+        advert.ends_at
+        and
+        advert.ends_at <= now
+    ):
+
+        current_app.logger.info(
+            (
+                "[Restaurant Auto Push] "
+                "Skipped because restaurant "
+                "campaign has expired "
+                "advert_id=%s ends_at=%s"
+            ),
+            advert.id,
+            advert.ends_at,
+        )
 
         return None
 
@@ -1832,19 +2037,29 @@ def send_automatic_restaurant_push(
     # ========================================================
     # PREVENT ACCIDENTAL DUPLICATE AUTO PUSH
     # ========================================================
+    #
+    # A restaurant advert should not automatically create
+    # another push campaign if one has already been created
+    # for this advert.
+    # ========================================================
 
     existing_campaign = (
         PushCampaign.query
+
         .filter_by(
-            restaurant_advert_id=
-                advert.id,
+            restaurant_advert_id=(
+                advert.id
+            ),
 
-            campaign_type=
-                "restaurant",
+            campaign_type=(
+                "restaurant"
+            ),
 
-            created_by=
-                "restaurant_auto",
+            created_by=(
+                "restaurant_auto"
+            ),
         )
+
         .filter(
             PushCampaign.status.in_(
                 [
@@ -1855,9 +2070,11 @@ def send_automatic_restaurant_push(
                 ]
             )
         )
+
         .order_by(
             PushCampaign.created_at.desc()
         )
+
         .first()
     )
 
@@ -1868,7 +2085,8 @@ def send_automatic_restaurant_push(
             (
                 "[Restaurant Auto Push] "
                 "Already created "
-                "advert_id=%s campaign_id=%s"
+                "advert_id=%s "
+                "campaign_id=%s"
             ),
             advert.id,
             existing_campaign.id,
@@ -1904,7 +2122,7 @@ def send_automatic_restaurant_push(
 
 
     # ========================================================
-    # COPY
+    # NOTIFICATION COPY
     # ========================================================
 
     (
@@ -1918,70 +2136,102 @@ def send_automatic_restaurant_push(
 
 
     # ========================================================
-    # CAMPAIGN
+    # CREATE PUSH CAMPAIGN
     # ========================================================
 
     campaign = PushCampaign(
 
-        campaign_type=
-            "restaurant",
+        campaign_type=(
+            "restaurant"
+        ),
 
-        restaurant_advert_id=
-            advert.id,
+        restaurant_advert_id=(
+            advert.id
+        ),
 
-        event_id=
-            None,
+        event_id=None,
 
-        title=
-            title,
+        title=(
+            title
+        ),
 
-        body=
-            body,
+        body=(
+            body
+        ),
 
-        target_url=
+        target_url=(
             url_for(
                 "restaurant_page",
 
-                advert_id=
-                    advert.id,
+                advert_id=(
+                    advert.id
+                ),
 
-                _external=
-                    True,
-            ),
+                _external=True,
+            )
+        ),
 
-        target_mode=
-            "area",
+        target_mode=(
+            "area"
+        ),
 
-        target_area=
-            advert.area,
+        target_area=(
+            advert.area
+        ),
 
-        target_latitude=
-            None,
+        target_latitude=None,
 
-        target_longitude=
-            None,
+        target_longitude=None,
 
-        radius_km=
-            None,
+        radius_km=None,
 
-        status=
-            "draft",
+        status=(
+            "draft"
+        ),
 
-        recipient_count=
+        recipient_count=(
             len(
                 subscriptions
+            )
+        ),
+
+        created_by=(
+            "restaurant_auto"
+        ),
+    )
+
+
+    # ========================================================
+    # SAVE CAMPAIGN BEFORE SENDING
+    # ========================================================
+
+    try:
+
+        db.session.add(
+            campaign
+        )
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Auto Push] "
+                "Campaign creation failed "
+                "advert_id=%s "
+                "error=%s"
             ),
+            advert.id,
+            error,
+        )
 
-        created_by=
-            "restaurant_auto",
-    )
 
-
-    db.session.add(
-        campaign
-    )
-
-    db.session.commit()
+        return None
 
 
     # ========================================================
@@ -2001,6 +2251,10 @@ def send_automatic_restaurant_push(
         db.session.rollback()
 
 
+        # ----------------------------------------------------
+        # RELOAD CAMPAIGN
+        # ----------------------------------------------------
+
         campaign = (
             db.session.get(
                 PushCampaign,
@@ -2008,6 +2262,10 @@ def send_automatic_restaurant_push(
             )
         )
 
+
+        # ----------------------------------------------------
+        # MARK AS FAILED
+        # ----------------------------------------------------
 
         if campaign:
 
@@ -2025,6 +2283,19 @@ def send_automatic_restaurant_push(
                 db.session.rollback()
 
 
+                current_app.logger.exception(
+                    (
+                        "[Restaurant Auto Push] "
+                        "Unable to mark failed "
+                        "campaign "
+                        "advert_id=%s "
+                        "campaign_id=%s"
+                    ),
+                    advert.id,
+                    campaign.id,
+                )
+
+
         current_app.logger.exception(
             (
                 "[Restaurant Auto Push] "
@@ -2034,15 +2305,21 @@ def send_automatic_restaurant_push(
                 "error=%s"
             ),
             advert.id,
-            campaign.id
-            if campaign
-            else None,
+            (
+                campaign.id
+                if campaign
+                else None
+            ),
             error,
         )
 
 
         return campaign
 
+
+    # ========================================================
+    # FINISHED
+    # ========================================================
 
     current_app.logger.info(
         (
@@ -2062,21 +2339,30 @@ def send_automatic_restaurant_push(
 
     return campaign
 
+
+# ============================================================
+# FIREBASE WEB PUSH CONFIGURED
+# ============================================================
+
 def firebase_web_push_configured():
 
     required_values = (
         FIREBASE_WEB_CONFIG.get(
             "apiKey"
         ),
+
         FIREBASE_WEB_CONFIG.get(
             "projectId"
         ),
+
         FIREBASE_WEB_CONFIG.get(
             "messagingSenderId"
         ),
+
         FIREBASE_WEB_CONFIG.get(
             "appId"
         ),
+
         FIREBASE_VAPID_KEY,
     )
 
@@ -2085,6 +2371,137 @@ def firebase_web_push_configured():
         required_values
     )
 
+
+# ============================================================
+# RESTAURANT HAS ACTIVE SUBSCRIPTION
+# ============================================================
+
+def restaurant_has_active_subscription(
+    advert,
+):
+
+    # ========================================================
+    # RESTAURANT REQUIRED
+    # ========================================================
+
+    if not advert:
+
+        return False
+
+
+    # ========================================================
+    # RESTAURANT MUST BE ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        return False
+
+
+    # ========================================================
+    # ORGANIZER / OWNER REQUIRED
+    # ========================================================
+    #
+    # We still require the restaurant to belong to a valid
+    # Organizer account.
+    #
+    # We deliberately DO NOT require:
+    #
+    #     organizer.is_subscription_active
+    #
+    # That belongs to the legacy Organizer SaaS subscription.
+    #
+    # Restaurant subscription access is now controlled by
+    # RestaurantAdvert.
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        return False
+
+
+    # ========================================================
+    # ORGANIZER ACCOUNT MUST BE ACTIVE
+    # ========================================================
+
+    if not organizer.active:
+
+        return False
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if (
+        account_type
+        != "restaurant"
+    ):
+
+        return False
+
+
+    # ========================================================
+    # RESTAURANT PLAN
+    # ========================================================
+    #
+    # FREE
+    # --------------------------------------------------------
+    #
+    # subscription_tier:
+    #     free
+    #
+    # subscription_status:
+    #     active
+    #
+    # subscription_expires_at:
+    #     None
+    #
+    # Result:
+    #     ACTIVE
+    #
+    #
+    # STANDARD / PREMIUM
+    # --------------------------------------------------------
+    #
+    # subscription_status:
+    #     active
+    #
+    # subscription_expires_at:
+    #     future datetime
+    #
+    # Result:
+    #     ACTIVE
+    #
+    #
+    # Expired paid plans return False here.
+    # ========================================================
+
+    if not advert.is_restaurant_subscription_active:
+
+        return False
+
+
+    # ========================================================
+    # ACTIVE RESTAURANT
+    # ========================================================
+
+    return True
 
 
 
@@ -3557,48 +3974,8 @@ def restaurant_can_be_managed_by_current_organizer(
 
 # ============================================================
 
-def restaurant_has_active_subscription(
-  advert,
-):
-
-
-  organizer = (
-    advert.organizer
-  )
-
-
-  if not organizer:
-
-    return False
-
-
-  return bool(
-    organizer.is_subscription_active
-  )
-
 
 # ============================================================
-# RESTAURANT - UPDATE OPERATIONAL HOURS
-# ============================================================
-#
-# Restaurant plan rules:
-#
-# FREE:
-#     Operational hours = NO
-#
-# STANDARD:
-#     Operational hours = YES
-#
-# PREMIUM:
-#     Operational hours = YES
-#
-# IMPORTANT:
-# This permission is enforced server-side.
-#
-# Hiding the hours form in the frontend is not enough because
-# a user could manually send a POST request to this endpoint.
-# ============================================================
-
 @app.route(
     "/restaurant/<int:advert_id>/hours",
     methods=["POST"],
@@ -3608,12 +3985,13 @@ def update_restaurant_hours(
 ):
 
     # ========================================================
-    # REQUIRE ORGANIZER LOGIN
+    # ORGANIZER LOGIN
     # ========================================================
 
     auth = (
         require_ticketing_organizer()
     )
+
 
     if auth:
         return auth
@@ -3625,87 +4003,69 @@ def update_restaurant_hours(
 
 
     if not current_organizer:
+
         abort(401)
 
 
-    organizer_id = (
-        current_organizer.id
-    )
-
-
     # ========================================================
-    # FIND RESTAURANT
+    # RESTAURANT
     # ========================================================
 
     advert = (
         RestaurantAdvert.query
+
         .filter_by(
             id=advert_id
         )
+
         .first_or_404()
     )
 
 
     # ========================================================
-    # OWNERSHIP CHECK
+    # OWNERSHIP
     # ========================================================
 
     if (
         advert.organizer_id
-        != organizer_id
+        != current_organizer.id
     ):
 
         abort(403)
 
 
     # ========================================================
-    # ORGANIZER SUBSCRIPTION CHECK
+    # OWNER ACCOUNT SAFETY
     # ========================================================
-    #
-    # Keep the existing organizer-level subscription check.
-    #
-    # This protects the organizer account itself.
-    # Restaurant-plan permissions are checked separately below.
-    # ========================================================
+
+    if not current_organizer.active:
+
+        abort(403)
+
 
     if (
-        not advert.organizer
-        or
-        not advert.organizer.is_subscription_active
+        getattr(
+            current_organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
     ):
 
-        flash(
-            (
-                "An active restaurant account "
-                "is required to manage working hours."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "restaurant_page",
-                advert_id=advert.id,
-            )
-        )
+        abort(403)
 
 
     # ========================================================
-    # RESTAURANT PLAN PERMISSION CHECK
+    # SYNCHRONIZE SUBSCRIPTION
     # ========================================================
-    #
-    # FREE:
-    #     can_use_opening_hours = False
-    #
-    # STANDARD:
-    #     can_use_opening_hours = True
-    #
-    # PREMIUM:
-    #     can_use_opening_hours = True
-    #
-    # This check MUST remain on the backend even after the
-    # frontend hours form is hidden/locked for Free accounts.
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # RESTAURANT PLAN PERMISSION
     # ========================================================
 
     if not advert.can_use_opening_hours:
@@ -3739,12 +4099,12 @@ def update_restaurant_hours(
 
         for opening_hour
         in RestaurantOpeningHour.query
-        .filter_by(
-            restaurant_advert_id=
-                advert.id
-        )
-        .all()
 
+        .filter_by(
+            restaurant_advert_id=advert.id
+        )
+
+        .all()
     }
 
 
@@ -3756,10 +4116,6 @@ def update_restaurant_hours(
 
         for day in RESTAURANT_WEEKDAYS:
 
-            # =================================================
-            # CLOSED STATUS
-            # =================================================
-
             is_closed = (
                 request.form.get(
                     f"{day}_closed"
@@ -3767,10 +4123,6 @@ def update_restaurant_hours(
                 == "1"
             )
 
-
-            # =================================================
-            # RAW TIMES
-            # =================================================
 
             open_raw = (
                 request.form.get(
@@ -3802,7 +4154,8 @@ def update_restaurant_hours(
 
                 if (
                     not open_raw
-                    or not close_raw
+                    or
+                    not close_raw
                 ):
 
                     flash(
@@ -3852,11 +4205,8 @@ def update_restaurant_hours(
 
                 opening_hour = (
                     RestaurantOpeningHour(
-                        restaurant_advert_id=
-                            advert.id,
-
-                        day_of_week=
-                            day,
+                        restaurant_advert_id=advert.id,
+                        day_of_week=day,
                     )
                 )
 
@@ -3892,10 +4242,6 @@ def update_restaurant_hours(
         db.session.commit()
 
 
-    # ========================================================
-    # INVALID TIME
-    # ========================================================
-
     except ValueError as error:
 
         db.session.rollback()
@@ -3916,10 +4262,6 @@ def update_restaurant_hours(
             )
         )
 
-
-    # ========================================================
-    # GENERAL ERROR
-    # ========================================================
 
     except Exception as error:
 
@@ -3970,7 +4312,6 @@ def update_restaurant_hours(
             advert_id=advert.id,
         )
     )
-
 
 # ============================================================
 # RESTAURANT CAMPAIGN SCHEDULING
@@ -11259,7 +11600,6 @@ def superadmin_suspend_organizer(
 # ============================================================
 # SUPER ADMIN - SEND RESTAURANT PUSH
 # ============================================================
-
 @app.route(
     "/superadmin/notifications/restaurants/send",
     methods=[
@@ -11267,6 +11607,10 @@ def superadmin_suspend_organizer(
     ],
 )
 def superadmin_send_restaurant_notification():
+
+    # ========================================================
+    # SUPERADMIN AUTHENTICATION
+    # ========================================================
 
     auth = (
         require_superadmin()
@@ -11276,6 +11620,10 @@ def superadmin_send_restaurant_notification():
     if auth:
         return auth
 
+
+    # ========================================================
+    # FIREBASE REQUIRED
+    # ========================================================
 
     if not firebase_admin_configured():
 
@@ -11294,6 +11642,10 @@ def superadmin_send_restaurant_notification():
             )
         )
 
+
+    # ========================================================
+    # FORM VALUES
+    # ========================================================
 
     restaurant_id = (
         request.form.get(
@@ -11321,6 +11673,10 @@ def superadmin_send_restaurant_notification():
     )
 
 
+    # ========================================================
+    # RESTAURANT ID REQUIRED
+    # ========================================================
+
     if not restaurant_id:
 
         flash(
@@ -11336,12 +11692,17 @@ def superadmin_send_restaurant_notification():
         )
 
 
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
     advert = (
         RestaurantAdvert.query
+
         .filter_by(
-            id=
-                restaurant_id,
+            id=restaurant_id,
         )
+
         .first()
     )
 
@@ -11361,24 +11722,37 @@ def superadmin_send_restaurant_notification():
         )
 
 
+    # ========================================================
+    # OWNER
+    # ========================================================
+
     organizer = (
         advert.organizer
     )
 
 
     # ========================================================
-    # PAID SUBSCRIPTION REQUIRED
+    # RESTAURANT OWNER REQUIRED
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # We no longer check:
+    #
+    #     organizer.is_subscription_active
+    #
+    # Restaurant promotion is now controlled by the
+    # RestaurantAdvert Free / Standard / Premium plan.
+    #
+    # The Organizer account must still exist and be active.
     # ========================================================
 
-    if (
-        not organizer
-        or not organizer.is_subscription_active
-    ):
+    if not organizer:
 
         flash(
             (
-                "This restaurant's subscription "
-                "has expired or is inactive."
+                "This restaurant does not have "
+                "a valid owner account."
             ),
             "error",
         )
@@ -11388,11 +11762,75 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # OWNER ACCOUNT MUST BE ACTIVE
+    # ========================================================
+
+    if not organizer.active:
+
+        flash(
+            (
+                "This restaurant owner account "
+                "is currently inactive."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if (
+        account_type
+        != "restaurant"
+    ):
+
+        flash(
+            (
+                "This advert is not owned by "
+                "a restaurant account."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT ADVERT MUST BE ACTIVE
+    # ========================================================
 
     if not advert.active:
 
@@ -11409,20 +11847,129 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # RESTAURANT PLAN MUST BE ACTIVE
+    # ========================================================
+    #
+    # FREE
+    # --------------------------------------------------------
+    # Active without an expiry date.
+    #
+    # STANDARD / PREMIUM
+    # --------------------------------------------------------
+    # Must have active status and a future restaurant-plan
+    # expiry date.
+    #
+    # This check belongs to RestaurantAdvert rather than the
+    # old Organizer SaaS subscription.
+    # ========================================================
+
+    if not advert.is_restaurant_subscription_active:
+
+        flash(
+            (
+                "This restaurant plan is "
+                "currently inactive."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT PROMOTION / REEL FEATURE
+    # ========================================================
+    #
+    # Restaurant discovery/reel promotion is currently
+    # available on:
+    #
+    #     FREE
+    #     STANDARD
+    #     PREMIUM
+    #
+    # We still use the feature property rather than hardcoding
+    # plan names so this route automatically follows future
+    # changes to the restaurant feature matrix.
+    # ========================================================
+
+    if not advert.can_use_reel:
+
+        flash(
+            (
+                "This restaurant plan does not "
+                "currently allow restaurant promotion."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # CAMPAIGN WINDOW
+    # ========================================================
 
     now = (
         datetime.utcnow()
     )
 
 
+    # ========================================================
+    # CAMPAIGN HAS NOT STARTED
+    # ========================================================
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        flash(
+            (
+                "This restaurant campaign "
+                "has not started yet."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "superadmin_notifications",
+
+                restaurant_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # CAMPAIGN EXPIRED
+    # ========================================================
+
     if (
         advert.ends_at
-        and advert.ends_at <= now
+        and
+        advert.ends_at <= now
     ):
 
         flash(
@@ -11438,11 +11985,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # TITLE REQUIRED
+    # ========================================================
 
     if not title:
 
@@ -11456,11 +12006,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # BODY REQUIRED
+    # ========================================================
 
     if not body:
 
@@ -11474,11 +12027,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # TITLE LENGTH
+    # ========================================================
 
     if len(title) > 120:
 
@@ -11495,11 +12051,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # BODY LENGTH
+    # ========================================================
 
     if len(body) > 500:
 
@@ -11516,11 +12075,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # AREA REQUIRED
+    # ========================================================
 
     if not advert.area:
 
@@ -11537,11 +12099,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # AUDIENCE
+    # ========================================================
 
     subscriptions = (
         get_restaurant_push_subscriptions(
@@ -11565,67 +12130,62 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
 
+    # ========================================================
+    # CREATE PUSH CAMPAIGN
+    # ========================================================
+
     campaign = PushCampaign(
 
-        campaign_type=
-            "restaurant",
+        campaign_type="restaurant",
 
-        event_id=
-            None,
+        event_id=None,
 
-        restaurant_advert_id=
-            advert.id,
+        restaurant_advert_id=advert.id,
 
-        title=
-            title,
+        title=title,
 
-        body=
-            body,
+        body=body,
 
-        target_url=
+        target_url=(
             url_for(
                 "restaurant_page",
 
-                advert_id=
-                    advert.id,
+                advert_id=advert.id,
 
-                _external=
-                    True,
-            ),
+                _external=True,
+            )
+        ),
 
-        target_mode=
-            "area",
+        target_mode="area",
 
-        target_area=
-            advert.area,
+        target_area=advert.area,
 
-        target_latitude=
-            None,
+        target_latitude=None,
 
-        target_longitude=
-            None,
+        target_longitude=None,
 
-        radius_km=
-            None,
+        radius_km=None,
 
-        status=
-            "draft",
+        status="draft",
 
-        recipient_count=
+        recipient_count=(
             len(
                 subscriptions
-            ),
+            )
+        ),
 
-        created_by=
-            "superadmin",
+        created_by="superadmin",
     )
 
+
+    # ========================================================
+    # SAVE CAMPAIGN
+    # ========================================================
 
     try:
 
@@ -11645,7 +12205,8 @@ def superadmin_send_restaurant_notification():
             (
                 "[Restaurant Push] "
                 "Campaign creation failed "
-                "advert_id=%s error=%s"
+                "advert_id=%s "
+                "error=%s"
             ),
             advert.id,
             error,
@@ -11665,11 +12226,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # SEND PUSH CAMPAIGN
+    # ========================================================
 
     try:
 
@@ -11684,6 +12248,10 @@ def superadmin_send_restaurant_notification():
         db.session.rollback()
 
 
+        # ====================================================
+        # RELOAD CAMPAIGN
+        # ====================================================
+
         campaign = (
             db.session.get(
                 PushCampaign,
@@ -11691,6 +12259,10 @@ def superadmin_send_restaurant_notification():
             )
         )
 
+
+        # ====================================================
+        # MARK CAMPAIGN AS FAILED
+        # ====================================================
 
         if campaign:
 
@@ -11703,10 +12275,28 @@ def superadmin_send_restaurant_notification():
 
                 db.session.commit()
 
+
             except Exception:
 
                 db.session.rollback()
 
+
+                current_app.logger.exception(
+                    (
+                        "[Restaurant Push] "
+                        "Unable to mark campaign "
+                        "as failed "
+                        "campaign_id=%s "
+                        "advert_id=%s"
+                    ),
+                    campaign.id,
+                    advert.id,
+                )
+
+
+        # ====================================================
+        # LOG SEND FAILURE
+        # ====================================================
 
         current_app.logger.exception(
             (
@@ -11716,9 +12306,11 @@ def superadmin_send_restaurant_notification():
                 "advert_id=%s "
                 "error=%s"
             ),
-            campaign.id
-            if campaign
-            else None,
+            (
+                campaign.id
+                if campaign
+                else None
+            ),
             advert.id,
             error,
         )
@@ -11737,11 +12329,14 @@ def superadmin_send_restaurant_notification():
             url_for(
                 "superadmin_notifications",
 
-                restaurant_id=
-                    advert.id,
+                restaurant_id=advert.id,
             )
         )
 
+
+    # ========================================================
+    # SEND RESULT
+    # ========================================================
 
     if campaign.failure_count:
 
@@ -11768,12 +12363,15 @@ def superadmin_send_restaurant_notification():
         )
 
 
+    # ========================================================
+    # SUCCESS REDIRECT
+    # ========================================================
+
     return redirect(
         url_for(
             "superadmin_notifications",
 
-            restaurant_id=
-                advert.id,
+            restaurant_id=advert.id,
         )
     )
 # ============================================================
@@ -13717,14 +14315,44 @@ def admin_create_restaurant():
         # retained here until we explicitly refactor the
         # Organizer SaaS subscription layer.
         # ====================================================
+     # ====================================================
+# AUTOMATIC RESTAURANT PUSH
+# ====================================================
+#
+# Restaurant discovery/reels are available on:
+#
+# FREE
+# STANDARD
+# PREMIUM
+#
+# Therefore this uses the RestaurantAdvert feature
+# permission instead of the legacy Organizer paid
+# subscription.
+# ====================================================
 
-        if organizer.is_subscription_active:
+    if advert.can_use_reel:
 
-            try:
+      try:
 
-                send_automatic_restaurant_push(
-                    advert
-                )
+        send_automatic_restaurant_push(
+            advert
+        )
+
+      except Exception as error:
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Advert] "
+                "Advert created but automatic "
+                "push notification failed "
+                "advert_id=%s "
+                "organizer_id=%s "
+                "error=%s"
+            ),
+            advert.id,
+            organizer.id,
+            error,
+        )
 
             except Exception as error:
 
@@ -15052,250 +15680,8 @@ def create_restaurant_experience():
 # RESTAURANT RATING QR - DOWNLOAD
 # ============================================================
 
-@app.route(
-    "/restaurant/<int:advert_id>/rating-qr/download"
-)
-def download_restaurant_rating_qr(
-    advert_id,
-):
 
-    # ========================================================
-    # ORGANIZER AUTHENTICATION
-    # ========================================================
-
-    current_organizer = (
-        get_current_organizer()
-    )
-
-
-    if not current_organizer:
-
-        abort(401)
-
-
-    # ========================================================
-    # RESTAURANT
-    # ========================================================
-
-    advert = (
-        RestaurantAdvert.query
-        .filter_by(
-            id=advert_id
-        )
-        .first_or_404()
-    )
-
-
-    # ========================================================
-    # OWNERSHIP
-    # ========================================================
-
-    if (
-        advert.organizer_id
-        !=
-        current_organizer.id
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # ORGANIZER SUBSCRIPTION
-    # ========================================================
-    #
-    # Existing organizer SaaS access is preserved.
-    # ========================================================
-
-    if (
-        not advert.organizer
-        or
-        not advert.organizer.is_subscription_active
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # RESTAURANT PLAN PERMISSION
-    # ========================================================
-    #
-    # The rating QR sends customers into the customer
-    # experience/rating system.
-    #
-    # FREE:
-    #     No customer experiences
-    #     No rating QR
-    #
-    # STANDARD:
-    #     Rating QR enabled
-    #
-    # PREMIUM:
-    #     Rating QR enabled
-    #
-    # This must be enforced here rather than relying on the
-    # manage-page button being hidden.
-    # ========================================================
-
-    if (
-        not advert.can_receive_customer_experiences
-    ):
-
-        flash(
-            (
-                "The customer rating QR is available "
-                "on the Standard and Premium "
-                "restaurant plans."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin_manage_restaurant",
-                advert_id=advert.id,
-            )
-        )
-
-
-    # ========================================================
-    # GET OR CREATE PERMANENT QR
-    # ========================================================
-
-    restaurant_qr = (
-        get_or_create_restaurant_main_qr(
-            advert
-        )
-    )
-
-
-    # ========================================================
-    # PUBLIC DESTINATION
-    # ========================================================
-
-    rating_url = (
-        url_for(
-            "restaurant_rating_qr_page",
-
-            public_code=(
-                restaurant_qr.public_code
-            ),
-
-            _external=True,
-
-            _scheme="https",
-        )
-    )
-
-
-    # ========================================================
-    # GENERATE QR
-    # ========================================================
-
-    qr = qrcode.QRCode(
-        version=None,
-
-        error_correction=(
-            qrcode.constants.ERROR_CORRECT_M
-        ),
-
-        box_size=12,
-
-        border=4,
-    )
-
-
-    qr.add_data(
-        rating_url
-    )
-
-
-    qr.make(
-        fit=True
-    )
-
-
-    qr_image = (
-        qr.make_image(
-            fill_color="black",
-            back_color="white",
-        )
-    )
-
-
-    # ========================================================
-    # PNG BUFFER
-    # ========================================================
-
-    image_buffer = (
-        io.BytesIO()
-    )
-
-
-    qr_image.save(
-        image_buffer,
-        format="PNG",
-    )
-
-
-    image_buffer.seek(
-        0
-    )
-
-
-    # ========================================================
-    # SAFE FILE NAME
-    # ========================================================
-
-    safe_business_name = (
-        "".join(
-            character
-
-            if (
-                character.isalnum()
-                or
-                character in {
-                    "-",
-                    "_",
-                }
-            )
-
-            else "-"
-
-            for character
-            in advert.business_name
-        )
-        .strip("-")
-        .lower()
-    )
-
-
-    if not safe_business_name:
-
-        safe_business_name = (
-            f"restaurant-{advert.id}"
-        )
-
-
-    filename = (
-        f"kalxa-{safe_business_name}-rating-qr.png"
-    )
-
-
-    # ========================================================
-    # DOWNLOAD
-    # ========================================================
-
-    return send_file(
-        image_buffer,
-
-        mimetype="image/png",
-
-        as_attachment=True,
-
-        download_name=filename,
-
-        max_age=0,
-    )
+    
 
 # ============================================================
 # ADMIN - MANAGE RESTAURANT
@@ -17109,59 +17495,50 @@ def get_restaurant_experience_session_id():
     return anonymous_session_id
 
 
-
 def get_taggable_restaurants():
 
-    now = datetime.utcnow()
+    now = (
+        datetime.utcnow()
+    )
+
 
     # ========================================================
-    # CUSTOMER EXPERIENCE ELIGIBILITY
+    # PAID PLAN GRACE CUTOFF
     # ========================================================
     #
-    # Only restaurants that are allowed to receive customer
-    # experiences should appear in the public:
+    # A paid subscription remains eligible while:
     #
-    #     "Select Restaurant"
+    #     subscription_expires_at
+    #         + 5 days
+    #         > now
     #
-    # field.
+    # Rearranged for SQL:
     #
-    # PLAN RULES:
-    #
-    # FREE
-    #     - Restaurant profile: YES
-    #     - Reel: YES
-    #     - Customer experiences: NO
-    #     - Excluded from this query
-    #
-    # STANDARD
-    #     - Customer experiences: YES
-    #     - Included when restaurant subscription is active
-    #
-    # PREMIUM
-    #     - Customer experiences: YES
-    #     - Included when restaurant subscription is active
-    #
-    # We also preserve the existing Organizer subscription
-    # checks because Organizer SaaS access and RestaurantAdvert
-    # feature access are currently separate layers.
+    #     subscription_expires_at
+    #         > now - 5 days
     # ========================================================
+
+    grace_cutoff = (
+        now
+        - timedelta(
+            days=RESTAURANT_SUBSCRIPTION_GRACE_DAYS
+        )
+    )
+
 
     restaurants = (
         RestaurantAdvert.query
 
-        # ====================================================
-        # ORGANIZER
-        # ====================================================
-
         .join(
             Organizer,
+
             RestaurantAdvert.organizer_id
-            == Organizer.id,
+            ==
+            Organizer.id,
         )
 
-
         # ====================================================
-        # RESTAURANT MUST BE ACTIVE
+        # RESTAURANT ACTIVE
         # ====================================================
 
         .filter(
@@ -17170,20 +17547,8 @@ def get_taggable_restaurants():
             )
         )
 
-
         # ====================================================
-        # RESTAURANT SUBSCRIPTION STATUS
-        # ====================================================
-        #
-        # Free restaurants can also have:
-        #
-        #     subscription_status = "active"
-        #
-        # Therefore this check by itself does NOT grant
-        # customer-experience access.
-        #
-        # The subscription tier check below is what excludes
-        # Free restaurants.
+        # RESTAURANT PLAN STATUS
         # ====================================================
 
         .filter(
@@ -17191,18 +17556,8 @@ def get_taggable_restaurants():
             == "active"
         )
 
-
         # ====================================================
-        # RESTAURANT PLAN
-        # ====================================================
-        #
-        # Only plans containing the customer_experiences
-        # capability are currently:
-        #
-        #     standard
-        #     premium
-        #
-        # FREE is deliberately excluded.
+        # STANDARD / PREMIUM ONLY
         # ====================================================
 
         .filter(
@@ -17214,48 +17569,29 @@ def get_taggable_restaurants():
             )
         )
 
-
         # ====================================================
-        # PAID RESTAURANT SUBSCRIPTION EXPIRY
-        # ====================================================
-        #
-        # Standard and Premium are paid restaurant plans.
-        #
-        # A paid restaurant must have:
-        #
-        #     subscription_expires_at != None
-        #
-        # and:
-        #
-        #     subscription_expires_at > now
-        #
-        # An expired Standard/Premium restaurant therefore
-        # cannot appear in the customer experience selector.
+        # PAID EXPIRY REQUIRED
         # ====================================================
 
         .filter(
-            RestaurantAdvert.subscription_expires_at.isnot(
+            RestaurantAdvert
+            .subscription_expires_at
+            .isnot(
                 None
             )
         )
 
+        # ====================================================
+        # ACTIVE OR WITHIN 5-DAY GRACE
+        # ====================================================
+
         .filter(
             RestaurantAdvert.subscription_expires_at
-            > now
+            > grace_cutoff
         )
 
-
         # ====================================================
-        # RESTAURANT CAMPAIGN START
-        # ====================================================
-        #
-        # Restaurant is available when:
-        #
-        #     starts_at is NULL
-        #
-        # OR
-        #
-        #     starts_at <= now
+        # CAMPAIGN START
         # ====================================================
 
         .filter(
@@ -17269,18 +17605,8 @@ def get_taggable_restaurants():
             )
         )
 
-
         # ====================================================
-        # RESTAURANT CAMPAIGN END
-        # ====================================================
-        #
-        # Restaurant is available when:
-        #
-        #     ends_at is NULL
-        #
-        # OR
-        #
-        #     ends_at > now
+        # CAMPAIGN END
         # ====================================================
 
         .filter(
@@ -17294,9 +17620,11 @@ def get_taggable_restaurants():
             )
         )
 
-
         # ====================================================
-        # ORGANIZER MUST BE ACTIVE
+        # ORGANIZER ACCOUNT
+        # ====================================================
+        #
+        # No Organizer SaaS subscription requirement.
         # ====================================================
 
         .filter(
@@ -17305,59 +17633,10 @@ def get_taggable_restaurants():
             )
         )
 
-
-        # ====================================================
-        # ORGANIZER MUST BE A RESTAURANT ACCOUNT
-        # ====================================================
-        #
-        # Prevent event organizer accounts or other future
-        # account types from entering the restaurant selector.
-        # ====================================================
-
         .filter(
             Organizer.account_type
             == "restaurant"
         )
-
-
-        # ====================================================
-        # ORGANIZER SaaS SUBSCRIPTION STATUS
-        # ====================================================
-        #
-        # IMPORTANT:
-        #
-        # This is separate from:
-        #
-        #     RestaurantAdvert.subscription_status
-        #
-        # Organizer subscription controls the organizer's
-        # broader Kalxa/Ticketing access.
-        #
-        # RestaurantAdvert subscription controls restaurant
-        # feature access.
-        # ====================================================
-
-        .filter(
-            Organizer.subscription_status
-            == "active"
-        )
-
-
-        # ====================================================
-        # ORGANIZER SaaS SUBSCRIPTION EXPIRY
-        # ====================================================
-
-        .filter(
-            Organizer.subscription_expires_at.isnot(
-                None
-            )
-        )
-
-        .filter(
-            Organizer.subscription_expires_at
-            > now
-        )
-
 
         # ====================================================
         # DISPLAY ORDER
@@ -17368,39 +17647,16 @@ def get_taggable_restaurants():
             RestaurantAdvert.area.asc(),
         )
 
-
-        # ====================================================
-        # RESULT
-        # ====================================================
-
         .all()
     )
 
 
     # ========================================================
-    # FINAL FEATURE SAFETY CHECK
-    # ========================================================
-    #
-    # The SQL query above performs the primary filtering.
-    #
-    # This final check deliberately uses the model-level
-    # capability helper as a second layer of protection.
-    #
-    # This means that if RESTAURANT_PLAN_FEATURES changes in
-    # the future, this selector still respects:
-    #
-    #     advert.can_receive_customer_experiences
-    #
-    # rather than relying only on the hard-coded tier names.
-    #
-    # Current result:
-    #
-    #     FREE       -> False
-    #     STANDARD   -> True
-    #     PREMIUM    -> True
+    # FINAL CAPABILITY CHECK
     # ========================================================
 
     return [
+
         advert
 
         for advert
@@ -17442,12 +17698,18 @@ def get_taggable_restaurants():
 # the URL.
 # ============================================================
 
+
+    # ========================================================
+    # ELIGIBLE
+    # ========================================================
+
+
 def restaurant_can_receive_experience_posts(
     advert,
 ):
 
     # ========================================================
-    # RESTAURANT MUST EXIST
+    # RESTAURANT REQUIRED
     # ========================================================
 
     if not advert:
@@ -17456,35 +17718,19 @@ def restaurant_can_receive_experience_posts(
 
 
     # ========================================================
-    # RESTAURANT MUST BE ACTIVE
+    # SYNCHRONIZE PLAN
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
     # ========================================================
 
     if not advert.active:
-
-        return False
-
-
-    # ========================================================
-    # RESTAURANT PLAN FEATURE
-    # ========================================================
-    #
-    # Uses the centralized RestaurantAdvert entitlement
-    # system.
-    #
-    # FREE:
-    #     False
-    #
-    # STANDARD:
-    #     True
-    #
-    # PREMIUM:
-    #     True
-    #
-    # This also checks restaurant subscription status and,
-    # for paid plans, subscription expiry.
-    # ========================================================
-
-    if not advert.can_receive_customer_experiences:
 
         return False
 
@@ -17503,9 +17749,10 @@ def restaurant_can_receive_experience_posts(
         return False
 
 
-    # ========================================================
-    # ORGANIZER ACCOUNT TYPE
-    # ========================================================
+    if not organizer.active:
+
+        return False
+
 
     if (
         getattr(
@@ -17520,171 +17767,59 @@ def restaurant_can_receive_experience_posts(
 
 
     # ========================================================
-    # ORGANIZER SaaS SUBSCRIPTION
+    # CUSTOMER EXPERIENCE FEATURE
     # ========================================================
     #
-    # This is intentionally separate from the restaurant's
-    # Free / Standard / Premium subscription.
+    # Free:
+    #     False
     #
-    # Both must be valid.
-    # ========================================================
-
-    if not organizer.is_subscription_active:
-
-        return False
-
-
-    # ========================================================
-    # RESTAURANT CAMPAIGN WINDOW
-    # ========================================================
-
-    now = (
-        datetime.utcnow()
-    )
-
-
-    # --------------------------------------------------------
-    # NOT STARTED YET
-    # --------------------------------------------------------
-
-    if (
-        advert.starts_at
-        and advert.starts_at > now
-    ):
-
-        return False
-
-
-    # --------------------------------------------------------
-    # EXPIRED
-    # --------------------------------------------------------
-
-    if (
-        advert.ends_at
-        and advert.ends_at <= now
-    ):
-
-        return False
-
-
-    # ========================================================
-    # ELIGIBLE
-    # ========================================================
-
-    return True
-
-def restaurant_can_receive_experience_posts(
-    advert,
-):
-
-    # --------------------------------------------------------
-    # RESTAURANT MUST EXIST
-    # --------------------------------------------------------
-
-    if not advert:
-        return False
-
-
-    # --------------------------------------------------------
-    # RESTAURANT MUST BE ACTIVE
-    # --------------------------------------------------------
-
-    if not advert.active:
-        return False
-
-
-    # --------------------------------------------------------
-    # RESTAURANT SUBSCRIPTION FEATURE
-    # --------------------------------------------------------
+    # Standard/Premium active:
+    #     True
     #
-    # This is the Free / Standard / Premium permission layer.
+    # Standard/Premium grace period:
+    #     True
     #
-    # Free     -> False
-    # Standard -> True
-    # Premium  -> True
-    #
-    # has_restaurant_feature() also verifies that the
-    # restaurant subscription itself is active.
-    # --------------------------------------------------------
+    # After grace:
+    #     sync_restaurant_subscription()
+    #     converts plan to Free
+    #     therefore this becomes False.
+    # ========================================================
 
     if not advert.can_receive_customer_experiences:
+
         return False
 
 
-    # --------------------------------------------------------
-    # ORGANIZER MUST EXIST
-    # --------------------------------------------------------
-
-    organizer = (
-        advert.organizer
-    )
-
-    if not organizer:
-        return False
-
-
-    # --------------------------------------------------------
-    # ORGANIZER MUST BE A RESTAURANT ACCOUNT
-    # --------------------------------------------------------
-
-    if (
-        getattr(
-            organizer,
-            "account_type",
-            None,
-        )
-        != "restaurant"
-    ):
-        return False
-
-
-    # --------------------------------------------------------
-    # ORGANIZER SaaS SUBSCRIPTION MUST BE ACTIVE
-    # --------------------------------------------------------
-    #
-    # This is separate from the RestaurantAdvert plan.
-    #
-    # Organizer subscription:
-    #     Controls general Kalxa Ticketing access.
-    #
-    # RestaurantAdvert subscription:
-    #     Controls Free / Standard / Premium restaurant
-    #     features.
-    # --------------------------------------------------------
-
-    if not organizer.is_subscription_active:
-        return False
-
-
-    # --------------------------------------------------------
-    # RESTAURANT CAMPAIGN MUST HAVE STARTED
-    # --------------------------------------------------------
+    # ========================================================
+    # CAMPAIGN WINDOW
+    # ========================================================
 
     now = (
         datetime.utcnow()
     )
 
+
     if (
         advert.starts_at
-        and advert.starts_at > now
+        and
+        advert.starts_at > now
     ):
+
         return False
 
-
-    # --------------------------------------------------------
-    # RESTAURANT CAMPAIGN MUST NOT BE EXPIRED
-    # --------------------------------------------------------
 
     if (
         advert.ends_at
-        and advert.ends_at <= now
+        and
+        advert.ends_at <= now
     ):
+
         return False
 
 
-    # --------------------------------------------------------
+    # ========================================================
     # ELIGIBLE
-    # --------------------------------------------------------
+    # ========================================================
 
     return True
 # ============================================================
@@ -19456,6 +19591,28 @@ def restaurant_page(
     )
 
 
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # Standard / Premium:
+    #
+    # Active
+    #     -> paid features available
+    #
+    # Expired <= 5 days
+    #     -> grace period
+    #     -> paid features remain available
+    #
+    # Expired > 5 days
+    #     -> automatically converted to Free
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
     now = (
         datetime.utcnow()
     )
@@ -19464,16 +19621,39 @@ def restaurant_page(
     # ========================================================
     # ORGANIZER / ACCOUNT SAFETY
     # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Restaurant visibility no longer depends on:
+    #
+    #     organizer.is_subscription_active
+    #
+    # Otherwise Free restaurants would disappear when the
+    # legacy Organizer SaaS subscription expires.
+    # ========================================================
 
     organizer = (
         advert.organizer
     )
 
 
+    if not organizer:
+
+        abort(404)
+
+
+    if not organizer.active:
+
+        abort(404)
+
+
     if (
-        not organizer
-        or
-        not organizer.is_subscription_active
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
     ):
 
         abort(404)
@@ -19481,16 +19661,6 @@ def restaurant_page(
 
     # ========================================================
     # RESTAURANT PROFILE PERMISSION
-    # ========================================================
-    #
-    # All current plans permit the restaurant profile:
-    #
-    # Free      -> YES
-    # Standard  -> YES
-    # Premium   -> YES
-    #
-    # Keeping this explicit makes the route future-proof if
-    # another plan is introduced later.
     # ========================================================
 
     if not advert.can_use_profile:
@@ -19523,12 +19693,6 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT PLAN PERMISSIONS
     # ========================================================
-    #
-    # Calculate these once and reuse them throughout the route.
-    #
-    # This keeps all public data exposure consistent with the
-    # RestaurantAdvert entitlement engine.
-    # ========================================================
 
     can_use_gallery = (
         advert.can_use_gallery
@@ -19556,16 +19720,21 @@ def restaurant_page(
 
 
     # ========================================================
-    # STAGE 6 - CAPTURE STORIES ATTRIBUTION
+    # GRACE PERIOD INFORMATION
     # ========================================================
-    #
-    # Checks whether this visitor arrived through a signed
-    # Kalxa Stories attribution token:
-    #
-    #     ?kat=<SIGNED_TOKEN>
-    #
-    # The verified attribution is persisted in the Ticketing
-    # Flask session so later actions can retain the source.
+
+    restaurant_subscription_in_grace = (
+        advert.is_restaurant_subscription_in_grace_period
+    )
+
+
+    restaurant_subscription_grace_ends_at = (
+        advert.restaurant_subscription_grace_ends_at
+    )
+
+
+    # ========================================================
+    # STORIES ATTRIBUTION
     # ========================================================
 
     restaurant_attribution = (
@@ -19585,17 +19754,13 @@ def restaurant_page(
 
 
     # ========================================================
-    # STAGE 6 - RESTAURANT VIEW
+    # RESTAURANT VIEW
     # ========================================================
 
     record_restaurant_analytics_event(
-        restaurant_id=(
-            advert.id
-        ),
+        restaurant_id=advert.id,
 
-        event_type=(
-            "restaurant_view"
-        ),
+        event_type="restaurant_view",
 
         metadata={
             "page":
@@ -19608,24 +19773,15 @@ def restaurant_page(
 
             "restaurant_plan":
                 advert.normalized_subscription_tier,
+
+            "subscription_grace":
+                restaurant_subscription_in_grace,
         },
     )
 
 
     # ========================================================
     # CUSTOMER EXPERIENCES
-    # ========================================================
-    #
-    # FREE
-    # --------------------------------------------------------
-    # Do NOT query/expose customer experience posts.
-    #
-    # STANDARD / PREMIUM
-    # --------------------------------------------------------
-    # Query approved + active experience posts normally.
-    #
-    # This means a downgrade does NOT delete historical
-    # experiences. They simply stop being exposed publicly.
     # ========================================================
 
     experience_posts = []
@@ -19637,15 +19793,9 @@ def restaurant_page(
             RestaurantExperiencePost.query
 
             .filter_by(
-                restaurant_advert_id=(
-                    advert.id
-                ),
-
+                restaurant_advert_id=advert.id,
                 active=True,
-
-                moderation_status=(
-                    "approved"
-                ),
+                moderation_status="approved",
             )
 
             .order_by(
@@ -19661,15 +19811,6 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT RATING SUMMARY
     # ========================================================
-    #
-    # Ratings are derived from approved customer experiences.
-    #
-    # Therefore:
-    #
-    # Free      -> no public experience rating summary
-    # Standard  -> rating summary enabled
-    # Premium   -> rating summary enabled
-    # ========================================================
 
     restaurant_ratings = [
 
@@ -19679,7 +19820,6 @@ def restaurant_page(
         in experience_posts
 
         if post.rating is not None
-
     ]
 
 
@@ -19695,9 +19835,7 @@ def restaurant_page(
     )
 
 
-    if (
-        restaurant_rating_count > 0
-    ):
+    if restaurant_rating_count > 0:
 
         restaurant_average_rating = (
             sum(
@@ -19719,7 +19857,8 @@ def restaurant_page(
 
     if (
         can_receive_customer_experiences
-        and experience_posts
+        and
+        experience_posts
     ):
 
         experience_post_ids = [
@@ -19728,7 +19867,6 @@ def restaurant_page(
 
             for post
             in experience_posts
-
         ]
 
 
@@ -19757,21 +19895,11 @@ def restaurant_page(
 
                 .all()
             )
-
         }
 
 
     # ========================================================
-    # RAW CONTACT LINK AVAILABILITY
-    # ========================================================
-    #
-    # Contact details belong to the basic restaurant profile.
-    #
-    # They remain available on:
-    #
-    # Free
-    # Standard
-    # Premium
+    # CONTACT LINKS
     # ========================================================
 
     raw_whatsapp_url = (
@@ -19795,18 +19923,11 @@ def restaurant_page(
     )
 
 
-    # ========================================================
-    # STAGE 6 - TRACKED CONTACT LINKS
-    # ========================================================
-
     whatsapp_url = (
 
         url_for(
             "restaurant_whatsapp_action",
-
-            advert_id=(
-                advert.id
-            ),
+            advert_id=advert.id,
         )
 
         if raw_whatsapp_url
@@ -19819,10 +19940,7 @@ def restaurant_page(
 
         url_for(
             "restaurant_phone_action",
-
-            advert_id=(
-                advert.id
-            ),
+            advert_id=advert.id,
         )
 
         if raw_phone_url
@@ -19835,10 +19953,7 @@ def restaurant_page(
 
         url_for(
             "restaurant_directions_action",
-
-            advert_id=(
-                advert.id
-            ),
+            advert_id=advert.id,
         )
 
         if raw_directions_url
@@ -19849,18 +19964,6 @@ def restaurant_page(
 
     # ========================================================
     # RESTAURANT HOURS
-    # ========================================================
-    #
-    # FREE
-    # --------------------------------------------------------
-    # Do NOT build/expose the public hours payload.
-    #
-    # STANDARD / PREMIUM
-    # --------------------------------------------------------
-    # Build hours normally.
-    #
-    # Existing hours remain stored in the database if a
-    # restaurant downgrades.
     # ========================================================
 
     restaurant_hours_payload = (
@@ -19900,11 +20003,11 @@ def restaurant_page(
     # RESTAURANT MANAGEMENT PERMISSION
     # ========================================================
     #
-    # Restaurant ownership remains independent of the
-    # restaurant's Free / Standard / Premium feature level.
+    # Free restaurant owners must still be able to manage
+    # their basic restaurant profile.
     #
-    # A Free restaurant owner still needs access to management
-    # so they can edit basic profile details and later upgrade.
+    # Therefore ownership does NOT depend on the legacy
+    # Organizer paid subscription.
     # ========================================================
 
     can_manage_restaurant = (
@@ -19919,10 +20022,14 @@ def restaurant_page(
         ==
         current_organizer_id
         and
-        advert.organizer
+        organizer.active
         and
-        advert.organizer
-        .is_subscription_active
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        == "restaurant"
     ):
 
         can_manage_restaurant = (
@@ -19931,12 +20038,7 @@ def restaurant_page(
 
 
     # ========================================================
-    # HOURS MANAGEMENT PERMISSION
-    # ========================================================
-    #
-    # Owner access alone is not enough.
-    #
-    # The restaurant plan must also include operational hours.
+    # HOURS MANAGEMENT
     # ========================================================
 
     can_manage_restaurant_hours = (
@@ -19947,14 +20049,7 @@ def restaurant_page(
 
 
     # ========================================================
-    # CUSTOMER EXPERIENCE / RATING QR PERMISSION
-    # ========================================================
-    #
-    # The rating QR leads customers into the restaurant
-    # experience system.
-    #
-    # Therefore it should only be available when customer
-    # experiences are included in the restaurant plan.
+    # RATING QR MANAGEMENT
     # ========================================================
 
     can_manage_restaurant_rating_qr = (
@@ -19984,13 +20079,8 @@ def restaurant_page(
             RestaurantRatingQRCode.query
 
             .filter_by(
-                restaurant_advert_id=(
-                    advert.id
-                ),
-
-                placement_type=(
-                    "main"
-                ),
+                restaurant_advert_id=advert.id,
+                placement_type="main",
             )
 
             .order_by(
@@ -20020,7 +20110,7 @@ def restaurant_page(
 
 
     # ========================================================
-    # STAGE 6 - ATTRIBUTION VALUES FOR TEMPLATE
+    # ATTRIBUTION VALUES
     # ========================================================
 
     attribution_source = (
@@ -20074,19 +20164,7 @@ def restaurant_page(
     return render_template(
         "restaurant.html",
 
-
-        # ====================================================
-        # RESTAURANT
-        # ====================================================
-
-        advert=(
-            advert
-        ),
-
-
-        # ====================================================
-        # RESTAURANT PLAN
-        # ====================================================
+        advert=advert,
 
         restaurant_plan=(
             advert.normalized_subscription_tier
@@ -20100,14 +20178,13 @@ def restaurant_page(
             advert.subscription_price
         ),
 
+        restaurant_subscription_in_grace=(
+            restaurant_subscription_in_grace
+        ),
 
-        # ====================================================
-        # RESTAURANT FEATURE PERMISSIONS
-        # ====================================================
-        #
-        # These values allow restaurant.html to show/hide
-        # features without duplicating subscription logic.
-        # ====================================================
+        restaurant_subscription_grace_ends_at=(
+            restaurant_subscription_grace_ends_at
+        ),
 
         can_use_gallery=(
             can_use_gallery
@@ -20129,11 +20206,6 @@ def restaurant_page(
             can_view_analytics
         ),
 
-
-        # ====================================================
-        # CONTACT
-        # ====================================================
-
         whatsapp_url=(
             whatsapp_url
         ),
@@ -20146,19 +20218,9 @@ def restaurant_page(
             directions_url
         ),
 
-
-        # ====================================================
-        # RESTAURANT HOURS
-        # ====================================================
-
         restaurant_hours_payload=(
             restaurant_hours_payload
         ),
-
-
-        # ====================================================
-        # RESTAURANT MANAGEMENT
-        # ====================================================
 
         can_manage_restaurant=(
             can_manage_restaurant
@@ -20172,21 +20234,13 @@ def restaurant_page(
 
             url_for(
                 "update_restaurant_hours",
-
-                advert_id=(
-                    advert.id
-                ),
+                advert_id=advert.id,
             )
 
             if can_manage_restaurant_hours
 
             else ""
         ),
-
-
-        # ====================================================
-        # CUSTOMER EXPERIENCES
-        # ====================================================
 
         experience_posts=(
             experience_posts
@@ -20196,11 +20250,6 @@ def restaurant_page(
             loved_experience_post_ids
         ),
 
-
-        # ====================================================
-        # RESTAURANT RATING SUMMARY
-        # ====================================================
-
         restaurant_average_rating=(
             restaurant_average_rating
         ),
@@ -20208,11 +20257,6 @@ def restaurant_page(
         restaurant_rating_count=(
             restaurant_rating_count
         ),
-
-
-        # ====================================================
-        # RESTAURANT RATING QR
-        # ====================================================
 
         can_manage_restaurant_rating_qr=(
             can_manage_restaurant_rating_qr
@@ -20230,21 +20274,13 @@ def restaurant_page(
 
             url_for(
                 "create_restaurant_rating_qr",
-
-                advert_id=(
-                    advert.id
-                ),
+                advert_id=advert.id,
             )
 
             if can_manage_restaurant_rating_qr
 
             else ""
         ),
-
-
-        # ====================================================
-        # STAGE 6 - ATTRIBUTION
-        # ====================================================
 
         attribution_source=(
             attribution_source
@@ -20262,7 +20298,6 @@ def restaurant_page(
             source_session_id
         ),
     )
-   
 # ============================================================
 # STAGE 6 - WHATSAPP CONVERSION
 # ============================================================
@@ -21808,7 +21843,6 @@ def internal_restaurant_analytics():
 # ============================================================
 
 
-
 @app.route(
     "/restaurant/<int:advert_id>/rating-qr/download"
 )
@@ -21838,8 +21872,7 @@ def download_restaurant_rating_qr(
         RestaurantAdvert.query
 
         .filter_by(
-            id=
-                advert_id
+            id=advert_id
         )
 
         .first_or_404()
@@ -21852,22 +21885,61 @@ def download_restaurant_rating_qr(
 
     if (
         advert.organizer_id
-        !=
-        current_organizer.id
+        != current_organizer.id
     ):
 
         abort(403)
 
 
     # ========================================================
-    # SUBSCRIPTION
+    # OWNER ACCOUNT
     # ========================================================
 
+    if not current_organizer.active:
+
+        abort(403)
+
+
     if (
-        not advert.organizer
-        or
-        not advert.organizer.is_subscription_active
+        getattr(
+            current_organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
     ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE FEATURE REQUIRED
+    # ========================================================
+    #
+    # Free:
+    #     No rating QR.
+    #
+    # Standard/Premium:
+    #     Yes.
+    #
+    # Standard/Premium within 5-day grace:
+    #     Yes.
+    #
+    # After grace:
+    #     Restaurant is downgraded to Free,
+    #     therefore QR download is disabled.
+    # ========================================================
+
+    if not advert.can_receive_customer_experiences:
 
         abort(403)
 
@@ -21891,8 +21963,9 @@ def download_restaurant_rating_qr(
         url_for(
             "restaurant_rating_qr_page",
 
-            public_code=
-                restaurant_qr.public_code,
+            public_code=(
+                restaurant_qr.public_code
+            ),
 
             _external=True,
 
@@ -21908,8 +21981,9 @@ def download_restaurant_rating_qr(
     qr = qrcode.QRCode(
         version=None,
 
-        error_correction=
-            qrcode.constants.ERROR_CORRECT_M,
+        error_correction=(
+            qrcode.constants.ERROR_CORRECT_M
+        ),
 
         box_size=12,
 
@@ -21964,7 +22038,9 @@ def download_restaurant_rating_qr(
             character
             if (
                 character.isalnum()
-                or character in {
+                or
+                character
+                in {
                     "-",
                     "_",
                 }
@@ -21973,7 +22049,9 @@ def download_restaurant_rating_qr(
             for character
             in advert.business_name
         )
+
         .strip("-")
+
         .lower()
     )
 
@@ -21997,17 +22075,13 @@ def download_restaurant_rating_qr(
     return send_file(
         image_buffer,
 
-        mimetype=
-            "image/png",
+        mimetype="image/png",
 
-        as_attachment=
-            True,
+        as_attachment=True,
 
-        download_name=
-            filename,
+        download_name=filename,
 
-        max_age=
-            0,
+        max_age=0,
     )
 # ============================================================
 # PUBLIC - LOVE / UNLOVE RESTAURANT EXPERIENCE
