@@ -736,6 +736,276 @@ class SubscriptionPayment(db.Model):
 
 
 # ============================================================
+# RESTAURANT SUBSCRIPTION PAYMENT
+# ============================================================
+#
+# Records money paid by RESTAURANT OWNERS to KALXA for a
+# specific RestaurantAdvert plan.
+#
+# IMPORTANT:
+#
+# This is deliberately separate from SubscriptionPayment.
+#
+# SubscriptionPayment:
+#     Organizer / event SaaS subscription
+#
+# RestaurantSubscriptionPayment:
+#     RestaurantAdvert Free / Standard / Premium subscription
+#
+# TicketOrder:
+#     Customer ticket purchases
+#
+# ============================================================
+
+class RestaurantSubscriptionPayment(db.Model):
+
+    __tablename__ = "restaurant_subscription_payments"
+
+
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # ORGANIZER / OWNER SNAPSHOT
+    # ========================================================
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+
+    # ========================================================
+    # PLAN SNAPSHOT
+    # ========================================================
+
+    plan_tier = db.Column(
+        db.String(30),
+        nullable=False,
+        index=True,
+    )
+
+    plan_name = db.Column(
+        db.String(120),
+        nullable=False,
+    )
+
+    amount = db.Column(
+        db.Numeric(
+            10,
+            2,
+        ),
+        nullable=False,
+    )
+
+    currency = db.Column(
+        db.String(10),
+        nullable=False,
+        default="ZAR",
+    )
+
+    period_days = db.Column(
+        db.Integer,
+        nullable=False,
+        default=30,
+    )
+
+
+    # ========================================================
+    # PAYMENT
+    # ========================================================
+
+    payment_reference = db.Column(
+        db.String(80),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    payment_method = db.Column(
+        db.String(30),
+        nullable=False,
+        default="paystack",
+        index=True,
+    )
+
+    payment_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+
+    # ========================================================
+    # PAYSTACK AUDIT
+    # ========================================================
+
+    paystack_access_code = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    paystack_authorization_url = db.Column(
+        db.String(500),
+        nullable=True,
+    )
+
+    paystack_transaction_id = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    payment_channel = db.Column(
+        db.String(50),
+        nullable=True,
+    )
+
+    payment_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+
+    # ========================================================
+    # PAYMENT CONFIRMATION
+    # ========================================================
+
+    paid_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    confirmed_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    confirmed_by = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # RESTAURANT SUBSCRIPTION PERIOD CREATED BY PAYMENT
+    # ========================================================
+
+    subscription_start = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    subscription_end = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        index=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+    )
+
+
+    # ========================================================
+    # STATUS HELPERS
+    # ========================================================
+
+    @property
+    def is_pending(self):
+
+        return (
+            self.payment_status
+            == "pending"
+        )
+
+
+    @property
+    def is_paid(self):
+
+        return (
+            self.payment_status
+            == "paid"
+        )
+
+
+    @property
+    def is_cancelled(self):
+
+        return (
+            self.payment_status
+            == "cancelled"
+        )
+
+
+    def __repr__(self):
+
+        return (
+            "<RestaurantSubscriptionPayment "
+            f"id={self.id} "
+            f"restaurant_advert_id={self.restaurant_advert_id} "
+            f"plan={self.plan_tier} "
+            f"reference={self.payment_reference} "
+            f"status={self.payment_status}>"
+        )
+# ============================================================
 # GEOCODED AREA CACHE
 # ============================================================
 
