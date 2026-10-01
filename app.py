@@ -16008,7 +16008,7 @@ def create_restaurant_experience():
 
   def sync_restaurant_subscription(
     advert,
-):
+  ):
 
     # ========================================================
     # RESTAURANT REQUIRED
