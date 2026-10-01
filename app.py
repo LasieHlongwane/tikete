@@ -15681,7 +15681,73 @@ def create_restaurant_experience():
 # ============================================================
 
 
-    
+  def sync_restaurant_subscription(
+    advert,
+):
+
+    # ========================================================
+    # RESTAURANT REQUIRED
+    # ========================================================
+
+    if not advert:
+        return False
+
+
+    # ========================================================
+    # DOWNGRADE AFTER GRACE PERIOD
+    # ========================================================
+
+    changed = (
+        advert
+        .downgrade_expired_restaurant_plan_to_free()
+    )
+
+
+    if not changed:
+        return False
+
+
+    # ========================================================
+    # SAVE DOWNGRADE
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+
+        current_app.logger.info(
+            (
+                "[Restaurant Subscription] "
+                "Restaurant automatically downgraded "
+                "to Free after grace period "
+                "advert_id=%s"
+            ),
+            advert.id,
+        )
+
+
+        return True
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Subscription] "
+                "Automatic downgrade failed "
+                "advert_id=%s "
+                "error=%s"
+            ),
+            advert.id,
+            error,
+        )
+
+
+        return False  
 
 # ============================================================
 # ADMIN - MANAGE RESTAURANT
