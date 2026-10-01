@@ -4078,6 +4078,206 @@ class RestaurantAdvert(db.Model):
         )
 
 
+    # ============================================================
+# RESTAURANT SUBSCRIPTION GRACE PERIOD
+# ============================================================
+
+@property
+def restaurant_subscription_grace_ends_at(self):
+
+    # Free does not expire.
+    if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+        return None
+
+    if self.subscription_expires_at is None:
+        return None
+
+    return (
+        self.subscription_expires_at
+        + timedelta(
+            days=RESTAURANT_SUBSCRIPTION_GRACE_DAYS
+        )
+    )
+
+
+# ============================================================
+# RESTAURANT SUBSCRIPTION IN GRACE PERIOD
+# ============================================================
+
+    @property
+    def is_restaurant_subscription_in_grace_period(self):
+
+      if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+        return False
+
+      if self.subscription_status != "active":
+        return False
+
+      if self.subscription_expires_at is None:
+        return False
+
+      now = (
+        datetime.utcnow()
+      )
+
+      grace_ends_at = (
+        self.restaurant_subscription_grace_ends_at
+      )
+
+      if grace_ends_at is None:
+        return False
+
+      return (
+        self.subscription_expires_at
+        <= now
+        < grace_ends_at
+      )
+
+
+# ============================================================
+# RESTAURANT SUBSCRIPTION GRACE EXPIRED
+# ============================================================
+
+    @property
+    def is_restaurant_subscription_grace_expired(self):
+
+      if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+        return False
+
+      if self.subscription_expires_at is None:
+        return False
+
+      grace_ends_at = (
+        self.restaurant_subscription_grace_ends_at
+      )
+
+      if grace_ends_at is None:
+        return False
+
+      return (
+        datetime.utcnow()
+        >= grace_ends_at
+      )
+
+
+# ============================================================
+# RESTAURANT SUBSCRIPTION ACTIVE
+# ============================================================
+
+    @property
+    def is_restaurant_subscription_active(self):
+
+    # --------------------------------------------------------
+    # RESTAURANT ACCOUNT STATUS
+    # --------------------------------------------------------
+
+      if self.subscription_status != "active":
+        return False
+
+
+    # --------------------------------------------------------
+    # FREE
+    # --------------------------------------------------------
+    #
+    # Free never requires an expiry date.
+    # --------------------------------------------------------
+
+      if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+        return True
+
+
+    # --------------------------------------------------------
+    # PAID PLAN REQUIRES EXPIRY
+    # --------------------------------------------------------
+
+      if self.subscription_expires_at is None:
+        return False
+
+
+    # --------------------------------------------------------
+    # STANDARD / PREMIUM
+    # --------------------------------------------------------
+    #
+    # Paid features remain active until the end of the
+    # 5-day payment grace period.
+    # --------------------------------------------------------
+
+      grace_ends_at = (
+        self.restaurant_subscription_grace_ends_at
+      )
+
+      if grace_ends_at is None:
+        return False
+
+      return (
+        datetime.utcnow()
+        < grace_ends_at
+      )
+
+
+# ============================================================
+# DOWNGRADE EXPIRED RESTAURANT PLAN TO FREE
+# ============================================================
+
+    def downgrade_expired_restaurant_plan_to_free(
+      self,
+    ):
+
+    # --------------------------------------------------------
+    # ALREADY FREE
+    # --------------------------------------------------------
+
+      if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+        return False
+
+
+    # --------------------------------------------------------
+    # STILL ACTIVE / STILL IN GRACE
+    # --------------------------------------------------------
+
+      if not self.is_restaurant_subscription_grace_expired:
+        return False
+
+
+    # --------------------------------------------------------
+    # DOWNGRADE
+    # --------------------------------------------------------
+    #
+    # IMPORTANT:
+    #
+    # We do NOT delete:
+    #
+    #     gallery images
+    #     opening hours
+    #     customer experiences
+    #     analytics history
+    #
+    # Free-plan permissions simply stop exposing paid
+    # features.
+    #
+    # If the restaurant upgrades again later, the stored
+    # content can become available again.
+    # --------------------------------------------------------
+
+      self.subscription_tier = (
+        RESTAURANT_PLAN_FREE
+      )
+
+      self.subscription_status = (
+        "active"
+      )
+
+      self.subscription_started_at = (
+        datetime.utcnow()
+      )
+
+      self.subscription_expires_at = (
+        None
+      )
+
+
+      return True
+
     @property
     def subscription_price(self):
 
