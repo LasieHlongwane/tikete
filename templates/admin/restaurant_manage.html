@@ -663,7 +663,7 @@
 
 
         /* =====================================================
-           FREE PLAN INFO
+           INFORMATION
         ===================================================== */
 
         .free-info {
@@ -685,6 +685,34 @@
 
             color:
                 #475569;
+
+            font-size:
+                11px;
+
+            line-height:
+                1.55;
+        }
+
+
+        .payment-info {
+
+            margin-top:
+                16px;
+
+            padding:
+                14px;
+
+            background:
+                var(--blue-bg);
+
+            border:
+                1px solid var(--blue-border);
+
+            border-radius:
+                12px;
+
+            color:
+                #1e40af;
 
             font-size:
                 11px;
@@ -872,6 +900,13 @@
         }
 
 
+        .plan-card form {
+
+            width:
+                100%;
+        }
+
+
         .plan-action {
 
             display:
@@ -912,6 +947,9 @@
 
             cursor:
                 pointer;
+
+            text-align:
+                center;
         }
 
 
@@ -945,6 +983,16 @@
 
             cursor:
                 not-allowed;
+        }
+
+
+        .plan-card-premium .plan-action-disabled {
+
+            background:
+                #374151;
+
+            color:
+                #cbd5e1;
         }
 
 
@@ -1810,7 +1858,7 @@
 
 
             <!-- =============================================
-                 STANDARD
+                 STANDARD PLAN
             ============================================== -->
 
             <article
@@ -1828,9 +1876,13 @@
                     <span class="current-label">
 
                         {% if restaurant_subscription_in_grace %}
+
                             Renewal required
+
                         {% else %}
+
                             Current plan
+
                         {% endif %}
 
                     </span>
@@ -1888,20 +1940,33 @@
 
 
                 <!-- =========================================
-                     PAYMENT BUTTON PLACEHOLDER
+                     STANDARD PAYSTACK ACTION
                 ========================================== -->
 
                 {% if is_standard_plan %}
 
+
                     {% if restaurant_subscription_in_grace %}
 
-                        <button
-                            type="button"
-                            class="plan-action plan-action-disabled"
-                            disabled
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin_restaurant_subscription_checkout',
+                                advert_id=advert.id,
+                                plan_tier='standard'
+                            ) }}"
                         >
-                            Renew Standard — R{{ standard_plan_price }}
-                        </button>
+
+                            <button
+                                type="submit"
+                                class="plan-action plan-action-dark"
+                            >
+                                Renew Standard —
+                                R{{ standard_plan_price }}
+                            </button>
+
+                        </form>
+
 
                     {% else %}
 
@@ -1915,25 +1980,51 @@
 
                     {% endif %}
 
+
+                {% elif is_free_plan %}
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_restaurant_subscription_checkout',
+                            advert_id=advert.id,
+                            plan_tier='standard'
+                        ) }}"
+                    >
+
+                        <button
+                            type="submit"
+                            class="plan-action plan-action-dark"
+                        >
+                            Upgrade to Standard —
+                            R{{ standard_plan_price }}
+                        </button>
+
+                    </form>
+
+
                 {% else %}
+
+
+                    <!--
+                        Restaurant is currently Premium.
+
+                        We deliberately do not allow an
+                        immediate downgrade to Standard from
+                        this screen because the restaurant has
+                        already paid for Premium access.
+                    -->
 
                     <button
                         type="button"
                         class="plan-action plan-action-disabled"
                         disabled
                     >
-
-                        {% if is_premium_plan %}
-
-                            Standard — R{{ standard_plan_price }}
-
-                        {% else %}
-
-                            Upgrade to Standard — R{{ standard_plan_price }}
-
-                        {% endif %}
-
+                        Standard —
+                        R{{ standard_plan_price }}
                     </button>
+
 
                 {% endif %}
 
@@ -1942,7 +2033,7 @@
 
 
             <!-- =============================================
-                 PREMIUM
+                 PREMIUM PLAN
             ============================================== -->
 
             <article
@@ -1962,9 +2053,13 @@
                     <span class="current-label">
 
                         {% if restaurant_subscription_in_grace %}
+
                             Renewal required
+
                         {% else %}
+
                             Current plan
+
                         {% endif %}
 
                     </span>
@@ -2018,20 +2113,33 @@
 
 
                 <!-- =========================================
-                     PAYMENT BUTTON PLACEHOLDER
+                     PREMIUM PAYSTACK ACTION
                 ========================================== -->
 
                 {% if is_premium_plan %}
 
+
                     {% if restaurant_subscription_in_grace %}
 
-                        <button
-                            type="button"
-                            class="plan-action plan-action-disabled"
-                            disabled
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'admin_restaurant_subscription_checkout',
+                                advert_id=advert.id,
+                                plan_tier='premium'
+                            ) }}"
                         >
-                            Renew Premium — R{{ premium_plan_price }}
-                        </button>
+
+                            <button
+                                type="submit"
+                                class="plan-action plan-action-light"
+                            >
+                                Renew Premium —
+                                R{{ premium_plan_price }}
+                            </button>
+
+                        </form>
+
 
                     {% else %}
 
@@ -2039,23 +2147,59 @@
                             type="button"
                             class="plan-action plan-action-light"
                             disabled
-                            style="cursor:not-allowed; opacity:.75;"
+                            style="
+                                cursor:not-allowed;
+                                opacity:.75;
+                            "
                         >
                             Current Premium Plan
                         </button>
 
                     {% endif %}
 
+
                 {% else %}
 
-                    <button
-                        type="button"
-                        class="plan-action plan-action-light"
-                        disabled
-                        style="cursor:not-allowed; opacity:.75;"
+
+                    <!--
+                        Free -> Premium
+
+                        Standard -> Premium
+
+                        Both are handled by the same secure
+                        backend checkout route.
+                    -->
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin_restaurant_subscription_checkout',
+                            advert_id=advert.id,
+                            plan_tier='premium'
+                        ) }}"
                     >
-                        Upgrade to Premium — R{{ premium_plan_price }}
-                    </button>
+
+                        <button
+                            type="submit"
+                            class="plan-action plan-action-light"
+                        >
+
+                            {% if is_standard_plan %}
+
+                                Upgrade to Premium —
+                                R{{ premium_plan_price }}
+
+                            {% else %}
+
+                                Upgrade to Premium —
+                                R{{ premium_plan_price }}
+
+                            {% endif %}
+
+                        </button>
+
+                    </form>
+
 
                 {% endif %}
 
@@ -2066,13 +2210,33 @@
         </div>
 
 
-        <div class="free-info">
+        <!-- =================================================
+             PAYMENT INFORMATION
+        ================================================== -->
 
-            Payment activation for Standard and Premium
-            will be connected to Paystack.
+        <div class="payment-info">
 
-            Your restaurant plan will only be upgraded
-            after Kalxa verifies the payment successfully.
+            <strong>
+                🔒 Secure payment
+            </strong>
+
+            <br><br>
+
+            Standard and Premium payments are processed
+            securely through Paystack.
+
+            Your restaurant plan changes only after Kalxa
+            verifies that the payment was successful.
+
+            {% if restaurant_subscription_in_grace %}
+
+                <br><br>
+
+                Renew before the grace period ends to keep
+                uninterrupted access to your paid restaurant
+                features.
+
+            {% endif %}
 
         </div>
 
@@ -2280,9 +2444,13 @@
                     <div class="detail-value">
 
                         {% if can_use_gallery %}
+
                             ✓ Enabled
+
                         {% else %}
+
                             Locked
+
                         {% endif %}
 
                     </div>
@@ -2295,9 +2463,13 @@
                     <div class="detail-value">
 
                         {% if can_use_opening_hours %}
+
                             ✓ Enabled
+
                         {% else %}
+
                             Locked
+
                         {% endif %}
 
                     </div>
@@ -2310,9 +2482,13 @@
                     <div class="detail-value">
 
                         {% if can_receive_customer_experiences %}
+
                             ✓ Enabled
+
                         {% else %}
+
                             Locked
+
                         {% endif %}
 
                     </div>
@@ -2325,9 +2501,13 @@
                     <div class="detail-value">
 
                         {% if can_use_stories %}
+
                             ✓ Enabled
+
                         {% else %}
+
                             Not included
+
                         {% endif %}
 
                     </div>
@@ -2340,9 +2520,13 @@
                     <div class="detail-value">
 
                         {% if can_view_analytics %}
+
                             ✓ Enabled
+
                         {% else %}
+
                             Not included
+
                         {% endif %}
 
                     </div>
@@ -2368,13 +2552,6 @@
         <!-- =================================================
              EDIT
         ================================================== -->
-        <!--
-            FREE restaurant owners are deliberately allowed
-            to edit their basic profile.
-
-            Backend feature checks must continue protecting
-            gallery/hours/etc.
-        -->
 
         <a
             href="{{ url_for(
@@ -2494,4 +2671,4 @@
 
 </body>
 
-</html>
+    </html>
