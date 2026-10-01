@@ -14094,7 +14094,6 @@ def admin_create_restaurant():
 
         poster_public_id = None
 
-
         try:
 
             # =================================================
@@ -14243,7 +14242,6 @@ def admin_create_restaurant():
 
             db.session.commit()
 
-
         except Exception as error:
 
             db.session.rollback()
@@ -14300,35 +14298,6 @@ def admin_create_restaurant():
             )
 
 
-        # ====================================================
-        # AUTOMATIC RESTAURANT PUSH
-        # ====================================================
-        #
-        # Restaurant reels/discovery remain available across:
-        #
-        # FREE
-        # STANDARD
-        # PREMIUM
-        #
-        # Existing Organizer subscription behaviour is still
-        # retained here until we explicitly refactor the
-        # Organizer SaaS subscription layer.
-        # ====================================================
-     # ====================================================
-# AUTOMATIC RESTAURANT PUSH
-# ====================================================
-#
-# Restaurant discovery/reels are available on:
-#
-# FREE
-# STANDARD
-# PREMIUM
-#
-# Therefore this uses the RestaurantAdvert feature
-# permission instead of the legacy Organizer paid
-# subscription.
-# ====================================================
-
     if advert.can_use_reel:
 
       try:
@@ -14353,21 +14322,7 @@ def admin_create_restaurant():
             error,
         )
 
-            except Exception as error:
-
-                current_app.logger.exception(
-                    (
-                        "[Restaurant Advert] "
-                        "Advert created but automatic "
-                        "push notification failed "
-                        "advert_id=%s "
-                        "organizer_id=%s "
-                        "error=%s"
-                    ),
-                    advert.id,
-                    organizer.id,
-                    error,
-                )
+            
 
 
         # ====================================================
