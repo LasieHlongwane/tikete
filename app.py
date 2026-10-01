@@ -4323,10 +4323,9 @@ RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
     "30": 30,
 }
 
-
- def parse_restaurant_campaign_date(
+def parse_restaurant_campaign_date(
     value,
- ):
+):
 
     value = (
         str(
