@@ -4287,33 +4287,7 @@ def restaurant_subscription_grace_ends_at(self):
         )
 
 
-    @property
-    def is_restaurant_subscription_active(self):
 
-        if (
-            self.subscription_status
-            != "active"
-        ):
-            return False
-
-        # Free does not expire.
-        if (
-            self.normalized_subscription_tier
-            == RESTAURANT_PLAN_FREE
-        ):
-            return True
-
-        # Paid plans must have an expiry date.
-        if (
-            self.subscription_expires_at
-            is None
-        ):
-            return False
-
-        return (
-            self.subscription_expires_at
-            > datetime.utcnow()
-        )
 
 
     def has_restaurant_feature(
