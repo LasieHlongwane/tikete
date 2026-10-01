@@ -361,9 +361,6 @@
         display: block;
 
         object-fit: cover;
-
-        filter: none;
-        opacity: 1;
     }
 
     .poster-brand-strip {
@@ -943,6 +940,10 @@
             );
 
         gap: 16px;
+    }
+
+    .visit-grid.location-only {
+        grid-template-columns: 1fr;
     }
 
     .visit-block {
@@ -2621,22 +2622,6 @@
 <body>
 
 
-<!-- =====================================================
-     STAGE 6
-
-     The Flask restaurant_page route now supplies tracked
-     internal URLs for:
-
-     directions_url
-     whatsapp_url
-     phone_url
-
-     The corresponding Flask action routes record the
-     analytics event and then redirect the visitor to the
-     real external destination.
-====================================================== -->
-
-
 <div class="restaurant-page">
 
 
@@ -2645,7 +2630,6 @@
     ========================================== -->
 
     <div class="topbar">
-
 
         <a
             href="{{ url_for('home') }}"
@@ -2689,7 +2673,6 @@
         {% if advert.poster_image_url %}
 
             <div class="poster-shell">
-
 
                 <img
                     src="{{ advert.poster_image_url }}"
@@ -2746,63 +2729,86 @@
 
 
             <!-- =================================
-                 RATING
+                 RATING + OPEN STATUS
+
+                 Free:
+                 hidden
+
+                 Standard / Premium:
+                 enabled
             ================================== -->
 
-            <div class="restaurant-summary">
+            {% if
+                can_receive_customer_experiences|default(false)
+                or
+                can_use_opening_hours|default(false)
+            %}
+
+                <div class="restaurant-summary">
 
 
-                {% if restaurant_average_rating is not none %}
+                    {% if
+                        can_receive_customer_experiences|default(false)
+                        and
+                        restaurant_average_rating is not none
+                    %}
 
-                    <div class="rating-summary">
+                        <div class="rating-summary">
 
-                        <span class="rating-summary-star">
-                            ★
-                        </span>
-
-
-                        <span class="rating-summary-score">
-
-                            {{
-                                "%.1f"|format(
-                                    restaurant_average_rating
-                                )
-                            }}
-
-                        </span>
+                            <span class="rating-summary-star">
+                                ★
+                            </span>
 
 
-                        <span class="rating-summary-count">
+                            <span class="rating-summary-score">
 
-                            · {{ restaurant_rating_count }}
+                                {{
+                                    "%.1f"|format(
+                                        restaurant_average_rating
+                                    )
+                                }}
 
-                            {% if restaurant_rating_count == 1 %}
-                                rating
-                            {% else %}
-                                ratings
-                            {% endif %}
-
-                        </span>
-
-                    </div>
-
-                {% endif %}
+                            </span>
 
 
-                <div
-                    class="open-status-pill"
-                    id="restaurant-open-status"
-                >
+                            <span class="rating-summary-count">
 
-                    <span class="open-status-dot"></span>
+                                · {{ restaurant_rating_count }}
 
-                    <span id="restaurant-open-status-text">
-                        Checking hours…
-                    </span>
+                                {% if restaurant_rating_count == 1 %}
+                                    rating
+                                {% else %}
+                                    ratings
+                                {% endif %}
+
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if can_use_opening_hours|default(false) %}
+
+                        <div
+                            class="open-status-pill"
+                            id="restaurant-open-status"
+                        >
+
+                            <span class="open-status-dot"></span>
+
+                            <span id="restaurant-open-status-text">
+                                Checking hours…
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
 
                 </div>
 
-            </div>
+            {% endif %}
 
 
             <!-- =================================
@@ -2875,9 +2881,20 @@
 
             <!-- =================================
                  RESTAURANT GALLERY
+
+                 Free:
+                 hidden even if old images remain
+                 in the database.
+
+                 Standard / Premium:
+                 enabled.
             ================================== -->
 
-            {% if advert.gallery_images %}
+            {% if
+                can_use_gallery|default(false)
+                and
+                advert.gallery_images
+            %}
 
                 <section class="restaurant-gallery">
 
@@ -2955,6 +2972,12 @@
 
             <!-- =================================
                  VISIT
+
+                 Location:
+                 all plans
+
+                 Operational hours:
+                 Standard / Premium only
             ================================== -->
 
             {% if
@@ -2962,7 +2985,7 @@
                 or
                 advert.area
                 or
-                restaurant_hours_payload|default({})
+                can_use_opening_hours|default(false)
             %}
 
                 <section class="visit-card">
@@ -2972,7 +2995,14 @@
                     </span>
 
 
-                    <div class="visit-grid">
+                    <div
+                        class="
+                            visit-grid
+                            {% if not can_use_opening_hours|default(false) %}
+                                location-only
+                            {% endif %}
+                        "
+                    >
 
 
                         {% if advert.address or advert.area %}
@@ -3006,65 +3036,74 @@
                         {% endif %}
 
 
-                        <div class="visit-block">
+                        {% if can_use_opening_hours|default(false) %}
 
-                            <span class="visit-label">
-                                🕒 Today
-                            </span>
+                            <div class="visit-block">
+
+                                <span class="visit-label">
+                                    🕒 Today
+                                </span>
+
+
+                                <div
+                                    class="visit-main"
+                                    id="today-hours-main"
+                                >
+                                    Hours not set
+                                </div>
+
+
+                                <span
+                                    class="visit-sub"
+                                    id="today-hours-sub"
+                                >
+                                    Restaurant working hours
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    {% if can_use_opening_hours|default(false) %}
+
+                        <div
+                            class="hours-shell"
+                            id="hours-shell"
+                        >
+
+                            <button
+                                type="button"
+                                class="hours-toggle"
+                                id="hours-toggle"
+                            >
+
+                                <span>
+                                    View full working hours
+                                </span>
+
+                                <span class="hours-toggle-arrow">
+                                    ↓
+                                </span>
+
+                            </button>
 
 
                             <div
-                                class="visit-main"
-                                id="today-hours-main"
-                            >
-                                Hours not set
-                            </div>
-
-
-                            <span
-                                class="visit-sub"
-                                id="today-hours-sub"
-                            >
-                                Restaurant working hours
-                            </span>
+                                class="hours-list"
+                                id="hours-list"
+                            ></div>
 
                         </div>
 
-                    </div>
-
-
-                    <div
-                        class="hours-shell"
-                        id="hours-shell"
-                    >
-
-                        <button
-                            type="button"
-                            class="hours-toggle"
-                            id="hours-toggle"
-                        >
-
-                            <span>
-                                View full working hours
-                            </span>
-
-                            <span class="hours-toggle-arrow">
-                                ↓
-                            </span>
-
-                        </button>
-
-
-                        <div
-                            class="hours-list"
-                            id="hours-list"
-                        ></div>
-
-                    </div>
+                    {% endif %}
 
 
                     {% if
-                        can_manage_restaurant|default(false)
+                        can_manage_restaurant_hours|default(false)
                         and
                         restaurant_hours_update_url|default('')
                     %}
@@ -3164,7 +3203,9 @@
 
 
             <!-- =================================
-                 STAGE 6 - TRACKED CONTACT ACTIONS
+                 CONTACT ACTIONS
+
+                 Available to all restaurant plans.
             ================================== -->
 
             <section class="actions-section">
@@ -3252,41 +3293,51 @@
 
             <!-- =================================
                  EXPERIENCE CTA
+
+                 Free:
+                 completely hidden
+
+                 Standard / Premium:
+                 enabled
             ================================== -->
 
-            <section class="experience-cta">
+            {% if can_receive_customer_experiences|default(false) %}
+
+                <section class="experience-cta">
 
 
-                <span class="experience-cta-kicker">
-                    BEEN HERE?
-                </span>
+                    <span class="experience-cta-kicker">
+                        BEEN HERE?
+                    </span>
 
 
-                <h2>
-                    Share your experience
-                </h2>
+                    <h2>
+                        Share your experience
+                    </h2>
 
 
-                <p>
-                    Post up to 3 photos or a short reel
-                    and tell people what your experience
-                    at {{ advert.business_name }} was like.
-                    No Kalxa account required.
-                </p>
+                    <p>
+                        Post up to 3 photos or a short reel
+                        and tell people what your experience
+                        at {{ advert.business_name }} was like.
+                        No Kalxa account required.
+                    </p>
 
 
-                <a
-                    href="{{ url_for(
-                        'create_restaurant_experience',
-                        restaurant_id=advert.id
-                    ) }}"
-                    class="experience-cta-link"
-                >
-                    + Post your experience
-                </a>
+                    <a
+                        href="{{ url_for(
+                            'create_restaurant_experience',
+                            restaurant_id=advert.id
+                        ) }}"
+                        class="experience-cta-link"
+                    >
+                        + Post your experience
+                    </a>
 
 
-            </section>
+                </section>
+
+            {% endif %}
 
 
         </div>
@@ -3296,294 +3347,106 @@
 
     <!-- =========================================
          CUSTOMER EXPERIENCES
+
+         Free:
+         completely hidden
+
+         Standard / Premium:
+         enabled
     ========================================== -->
 
-    <section class="experience-section">
+    {% if can_receive_customer_experiences|default(false) %}
+
+        <section class="experience-section">
 
 
-        <div class="experience-section-header">
+            <div class="experience-section-header">
 
-            <div>
+                <div>
 
-                <span class="section-kicker">
-                    People love
+                    <span class="section-kicker">
+                        People love
+                    </span>
+
+
+                    <h2>
+                        What People Love About {{ advert.business_name }}
+                    </h2>
+
+
+                    <p>
+                        Ratings, photos and real experiences
+                        from people who’ve been here.
+                    </p>
+
+                </div>
+
+
+                <span class="experience-count">
+
+                    {{ experience_posts|length }}
+
+                    {% if experience_posts|length == 1 %}
+                        post
+                    {% else %}
+                        posts
+                    {% endif %}
+
                 </span>
-
-
-                <h2>
-                    What People Love About {{ advert.business_name }}
-                </h2>
-
-
-                <p>
-                    Ratings, photos and real experiences
-                    from people who’ve been here.
-                </p>
 
             </div>
 
 
-            <span class="experience-count">
+            {% if experience_posts %}
 
-                {{ experience_posts|length }}
 
-                {% if experience_posts|length == 1 %}
-                    post
-                {% else %}
-                    posts
-                {% endif %}
+                {% set featured_post =
+                    experience_posts[0]
+                %}
 
-            </span>
+                {% set featured_primary =
+                    featured_post.primary_media
+                %}
 
-        </div>
 
+                {% if featured_primary %}
 
-        {% if experience_posts %}
+                    <article class="featured-experience">
 
 
-            {% set featured_post =
-                experience_posts[0]
-            %}
+                        <span class="featured-experience-label">
+                            Featured experience
+                        </span>
 
-            {% set featured_primary =
-                featured_post.primary_media
-            %}
 
+                        <div class="featured-experience-layout">
 
-            {% if featured_primary %}
 
-                <article class="featured-experience">
-
-
-                    <span class="featured-experience-label">
-                        Featured experience
-                    </span>
-
-
-                    <div class="featured-experience-layout">
-
-
-                        <div class="featured-experience-media">
-
-
-                            <button
-                                type="button"
-                                class="experience-media-open"
-                                data-experience-open
-                                data-post-id="{{ featured_post.id }}"
-                            >
-
-
-                                {% if featured_primary.is_video %}
-
-                                    <video
-                                        playsinline
-                                        muted
-                                        loop
-                                        preload="metadata"
-                                        {% if featured_primary.thumbnail_url %}
-                                            poster="{{ featured_primary.thumbnail_url }}"
-                                        {% endif %}
-                                    >
-
-                                        <source
-                                            src="{{ featured_primary.media_url }}"
-                                        >
-
-                                    </video>
-
-
-                                    <span class="experience-media-type">
-                                        ▶ Reel
-                                    </span>
-
-
-                                {% else %}
-
-                                    <img
-                                        src="{{ featured_primary.media_url }}"
-                                        alt="{{ featured_post.poster_name }}"
-                                    >
-
-                                {% endif %}
-
-
-                                {% if featured_post.media_count > 1 %}
-
-                                    <span class="experience-media-count">
-                                        ▣ {{ featured_post.media_count }}
-                                    </span>
-
-                                {% endif %}
-
-
-                            </button>
-
-
-                        </div>
-
-
-                        <div class="featured-experience-copy">
-
-
-                            {% if featured_post.rating %}
-
-                                <div class="experience-rating">
-
-                                    {% for star in range(1, 6) %}
-
-                                        <span
-                                            class="
-                                                experience-star
-                                                {% if star <= featured_post.rating %}
-                                                    filled
-                                                {% endif %}
-                                            "
-                                        >
-                                            ★
-                                        </span>
-
-                                    {% endfor %}
-
-
-                                    <span class="experience-rating-number">
-                                        {{ featured_post.rating }}/5
-                                    </span>
-
-                                </div>
-
-                            {% endif %}
-
-
-                            <p class="experience-name">
-                                {{ featured_post.poster_name }}
-                            </p>
-
-
-                            {% if featured_post.experience_text %}
-
-                                <p class="experience-text">
-                                    “{{ featured_post.experience_text }}”
-                                </p>
-
-                            {% endif %}
-
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-            {% endif %}
-
-
-            <div class="experience-grid">
-
-
-                {% for post in experience_posts %}
-
-
-                    {% set experience_media =
-                        post.media_items
-                        if post.media_items
-                        else []
-                    %}
-
-
-                    {% set primary_media =
-                        post.primary_media
-                    %}
-
-
-                    <article class="experience-card">
-
-
-                        {% if experience_media %}
-
-                            <div
-                                class="experience-media-source"
-                                data-experience-media-source="{{ post.id }}"
-                                data-experience-rating="{{ post.rating or '' }}"
-                                data-restaurant-url="{{
-                                    url_for(
-                                        'restaurant_page',
-                                        advert_id=advert.id
-                                    )
-                                }}"
-                                data-restaurant-name="{{ advert.business_name }}"
-                            >
-
-                                {% for media in experience_media %}
-
-                                    <span
-                                        data-experience-media-item
-                                        data-media-url="{{ media.media_url }}"
-                                        data-media-type="{{ media.media_type }}"
-                                        data-thumbnail-url="{{ media.thumbnail_url or '' }}"
-                                    ></span>
-
-                                {% endfor %}
-
-                            </div>
-
-                        {% endif %}
-
-
-                        {% if primary_media %}
-
-                            <div class="experience-media">
-
-
-                                <button
-                                    type="button"
-                                    class="
-                                        experience-love
-                                        {% if
-                                            post.id
-                                            in loved_experience_post_ids
-                                        %}
-                                            loved
-                                        {% endif %}
-                                    "
-                                    data-experience-love
-                                    data-post-id="{{ post.id }}"
-                                >
-
-                                    <span class="heart">
-                                        ♥
-                                    </span>
-
-
-                                    <span data-love-count>
-                                        {{ post.love_count }}
-                                    </span>
-
-                                </button>
+                            <div class="featured-experience-media">
 
 
                                 <button
                                     type="button"
                                     class="experience-media-open"
                                     data-experience-open
-                                    data-post-id="{{ post.id }}"
+                                    data-post-id="{{ featured_post.id }}"
                                 >
 
 
-                                    {% if primary_media.is_video %}
+                                    {% if featured_primary.is_video %}
 
                                         <video
                                             playsinline
                                             muted
                                             loop
                                             preload="metadata"
-                                            {% if primary_media.thumbnail_url %}
-                                                poster="{{ primary_media.thumbnail_url }}"
+                                            {% if featured_primary.thumbnail_url %}
+                                                poster="{{ featured_primary.thumbnail_url }}"
                                             {% endif %}
                                         >
 
                                             <source
-                                                src="{{ primary_media.media_url }}"
+                                                src="{{ featured_primary.media_url }}"
                                             >
 
                                         </video>
@@ -3597,18 +3460,17 @@
                                     {% else %}
 
                                         <img
-                                            src="{{ primary_media.media_url }}"
-                                            alt="{{ post.poster_name }}"
-                                            loading="lazy"
+                                            src="{{ featured_primary.media_url }}"
+                                            alt="{{ featured_post.poster_name }}"
                                         >
 
                                     {% endif %}
 
 
-                                    {% if post.media_count > 1 %}
+                                    {% if featured_post.media_count > 1 %}
 
                                         <span class="experience-media-count">
-                                            ▣ {{ post.media_count }}
+                                            ▣ {{ featured_post.media_count }}
                                         </span>
 
                                     {% endif %}
@@ -3619,102 +3481,301 @@
 
                             </div>
 
-                        {% endif %}
+
+                            <div class="featured-experience-copy">
 
 
-                        <div class="experience-copy">
+                                {% if featured_post.rating %}
+
+                                    <div class="experience-rating">
+
+                                        {% for star in range(1, 6) %}
+
+                                            <span
+                                                class="
+                                                    experience-star
+                                                    {% if star <= featured_post.rating %}
+                                                        filled
+                                                    {% endif %}
+                                                "
+                                            >
+                                                ★
+                                            </span>
+
+                                        {% endfor %}
 
 
-                            {% if post.rating %}
-
-                                <div class="experience-rating">
-
-                                    {% for star in range(1, 6) %}
-
-                                        <span
-                                            class="
-                                                experience-star
-                                                {% if star <= post.rating %}
-                                                    filled
-                                                {% endif %}
-                                            "
-                                        >
-                                            ★
+                                        <span class="experience-rating-number">
+                                            {{ featured_post.rating }}/5
                                         </span>
 
+                                    </div>
+
+                                {% endif %}
+
+
+                                <p class="experience-name">
+                                    {{ featured_post.poster_name }}
+                                </p>
+
+
+                                {% if featured_post.experience_text %}
+
+                                    <p class="experience-text">
+                                        “{{ featured_post.experience_text }}”
+                                    </p>
+
+                                {% endif %}
+
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {% endif %}
+
+
+                <div class="experience-grid">
+
+
+                    {% for post in experience_posts %}
+
+
+                        {% set experience_media =
+                            post.media_items
+                            if post.media_items
+                            else []
+                        %}
+
+
+                        {% set primary_media =
+                            post.primary_media
+                        %}
+
+
+                        <article class="experience-card">
+
+
+                            {% if experience_media %}
+
+                                <div
+                                    class="experience-media-source"
+                                    data-experience-media-source="{{ post.id }}"
+                                    data-experience-rating="{{ post.rating or '' }}"
+                                    data-restaurant-url="{{
+                                        url_for(
+                                            'restaurant_page',
+                                            advert_id=advert.id
+                                        )
+                                    }}"
+                                    data-restaurant-name="{{ advert.business_name }}"
+                                >
+
+                                    {% for media in experience_media %}
+
+                                        <span
+                                            data-experience-media-item
+                                            data-media-url="{{ media.media_url }}"
+                                            data-media-type="{{ media.media_type }}"
+                                            data-thumbnail-url="{{ media.thumbnail_url or '' }}"
+                                        ></span>
+
                                     {% endfor %}
-
-
-                                    <span class="experience-rating-number">
-                                        {{ post.rating }}/5
-                                    </span>
 
                                 </div>
 
                             {% endif %}
 
 
-                            <p class="experience-name">
-                                {{ post.poster_name }}
-                            </p>
+                            {% if primary_media %}
+
+                                <div class="experience-media">
 
 
-                            {% if post.experience_text %}
+                                    <button
+                                        type="button"
+                                        class="
+                                            experience-love
+                                            {% if
+                                                post.id
+                                                in loved_experience_post_ids
+                                            %}
+                                                loved
+                                            {% endif %}
+                                        "
+                                        data-experience-love
+                                        data-post-id="{{ post.id }}"
+                                    >
 
-                                <p class="experience-text">
-                                    “{{ post.experience_text }}”
+                                        <span class="heart">
+                                            ♥
+                                        </span>
+
+
+                                        <span data-love-count>
+                                            {{ post.love_count }}
+                                        </span>
+
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="experience-media-open"
+                                        data-experience-open
+                                        data-post-id="{{ post.id }}"
+                                    >
+
+
+                                        {% if primary_media.is_video %}
+
+                                            <video
+                                                playsinline
+                                                muted
+                                                loop
+                                                preload="metadata"
+                                                {% if primary_media.thumbnail_url %}
+                                                    poster="{{ primary_media.thumbnail_url }}"
+                                                {% endif %}
+                                            >
+
+                                                <source
+                                                    src="{{ primary_media.media_url }}"
+                                                >
+
+                                            </video>
+
+
+                                            <span class="experience-media-type">
+                                                ▶ Reel
+                                            </span>
+
+
+                                        {% else %}
+
+                                            <img
+                                                src="{{ primary_media.media_url }}"
+                                                alt="{{ post.poster_name }}"
+                                                loading="lazy"
+                                            >
+
+                                        {% endif %}
+
+
+                                        {% if post.media_count > 1 %}
+
+                                            <span class="experience-media-count">
+                                                ▣ {{ post.media_count }}
+                                            </span>
+
+                                        {% endif %}
+
+
+                                    </button>
+
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <div class="experience-copy">
+
+
+                                {% if post.rating %}
+
+                                    <div class="experience-rating">
+
+                                        {% for star in range(1, 6) %}
+
+                                            <span
+                                                class="
+                                                    experience-star
+                                                    {% if star <= post.rating %}
+                                                        filled
+                                                    {% endif %}
+                                                "
+                                            >
+                                                ★
+                                            </span>
+
+                                        {% endfor %}
+
+
+                                        <span class="experience-rating-number">
+                                            {{ post.rating }}/5
+                                        </span>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                <p class="experience-name">
+                                    {{ post.poster_name }}
                                 </p>
 
-                            {% endif %}
+
+                                {% if post.experience_text %}
+
+                                    <p class="experience-text">
+                                        “{{ post.experience_text }}”
+                                    </p>
+
+                                {% endif %}
 
 
-                            {% if post.created_at_johannesburg %}
+                                {% if post.created_at_johannesburg %}
 
-                                <span class="experience-date">
+                                    <span class="experience-date">
 
-                                    {{
-                                        post.created_at_johannesburg.strftime(
-                                            '%d %b %Y · %H:%M'
-                                        )
-                                    }}
+                                        {{
+                                            post.created_at_johannesburg.strftime(
+                                                '%d %b %Y · %H:%M'
+                                            )
+                                        }}
 
-                                </span>
+                                    </span>
 
-                            {% endif %}
-
-
-                        </div>
+                                {% endif %}
 
 
-                    </article>
+                            </div>
 
 
-                {% endfor %}
+                        </article>
 
 
-            </div>
+                    {% endfor %}
 
 
-        {% else %}
+                </div>
 
 
-            <div class="experience-empty">
-
-                No customer experiences have been
-                published for {{ advert.business_name }}
-                yet.
-
-                <br><br>
-
-                Be the first person to share one.
-
-            </div>
+            {% else %}
 
 
-        {% endif %}
+                <div class="experience-empty">
+
+                    No customer experiences have been
+                    published for {{ advert.business_name }}
+                    yet.
+
+                    <br><br>
+
+                    Be the first person to share one.
+
+                </div>
 
 
-    </section>
+            {% endif %}
+
+
+        </section>
+
+    {% endif %}
 
 
 </div>
@@ -3722,151 +3783,168 @@
 
 <!-- =========================================
      RESTAURANT GALLERY VIEWER
+
+     Only create this DOM when gallery access is allowed.
 ========================================== -->
 
-<div
-    class="restaurant-gallery-viewer"
-    id="restaurant-gallery-viewer"
-    aria-hidden="true"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Restaurant photo gallery"
->
-
-
-    <button
-        type="button"
-        class="restaurant-gallery-viewer-close"
-        id="restaurant-gallery-viewer-close"
-        aria-label="Close gallery"
-    >
-        ×
-    </button>
-
+{% if
+    can_use_gallery|default(false)
+    and
+    advert.gallery_images
+%}
 
     <div
-        class="restaurant-gallery-viewer-counter"
-        id="restaurant-gallery-viewer-counter"
-    ></div>
-
-
-    <button
-        type="button"
-        class="
-            restaurant-gallery-nav
-            restaurant-gallery-prev
-        "
-        id="restaurant-gallery-prev"
-        aria-label="Previous photo"
+        class="restaurant-gallery-viewer"
+        id="restaurant-gallery-viewer"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Restaurant photo gallery"
     >
-        ‹
-    </button>
 
 
-    <div
-        class="restaurant-gallery-viewer-stage"
-        id="restaurant-gallery-viewer-stage"
-    ></div>
-
-
-    <button
-        type="button"
-        class="
-            restaurant-gallery-nav
-            restaurant-gallery-next
-        "
-        id="restaurant-gallery-next"
-        aria-label="Next photo"
-    >
-        ›
-    </button>
-
-
-</div>
-
-
-<!-- =========================================
-     EXPERIENCE VIEWER
-========================================== -->
-
-<div
-    class="experience-viewer"
-    id="experience-viewer"
-    aria-hidden="true"
-    role="dialog"
-    aria-modal="true"
->
-
-
-    <button
-        type="button"
-        class="experience-viewer-close"
-        id="experience-viewer-close"
-    >
-        ×
-    </button>
-
-
-    <div
-        class="experience-viewer-stage"
-        id="experience-viewer-stage"
-    ></div>
-
-
-    <div
-        class="experience-viewer-counter"
-        id="experience-viewer-counter"
-        hidden
-    ></div>
-
-
-    <div class="experience-viewer-details">
+        <button
+            type="button"
+            class="restaurant-gallery-viewer-close"
+            id="restaurant-gallery-viewer-close"
+            aria-label="Close gallery"
+        >
+            ×
+        </button>
 
 
         <div
-            class="viewer-rating"
-            id="viewer-rating"
-            hidden
+            class="restaurant-gallery-viewer-counter"
+            id="restaurant-gallery-viewer-counter"
+        ></div>
+
+
+        <button
+            type="button"
+            class="
+                restaurant-gallery-nav
+                restaurant-gallery-prev
+            "
+            id="restaurant-gallery-prev"
+            aria-label="Previous photo"
         >
-
-            <span id="viewer-stars"></span>
-
-            <span
-                class="viewer-rating-number"
-                id="viewer-rating-number"
-            ></span>
-
-        </div>
+            ‹
+        </button>
 
 
         <div
-            class="viewer-swipe-hint"
-            id="viewer-swipe-hint"
-            hidden
-        >
-            Swipe left or right
-        </div>
+            class="restaurant-gallery-viewer-stage"
+            id="restaurant-gallery-viewer-stage"
+        ></div>
 
 
-        <a
-            href="#"
-            class="viewer-restaurant-link"
-            id="viewer-restaurant-link"
-            hidden
+        <button
+            type="button"
+            class="
+                restaurant-gallery-nav
+                restaurant-gallery-next
+            "
+            id="restaurant-gallery-next"
+            aria-label="Next photo"
         >
-            View restaurant →
-        </a>
+            ›
+        </button>
 
 
     </div>
 
+{% endif %}
 
-</div>
+
+<!-- =========================================
+     EXPERIENCE VIEWER
+
+     Only Standard / Premium.
+========================================== -->
+
+{% if can_receive_customer_experiences|default(false) %}
+
+    <div
+        class="experience-viewer"
+        id="experience-viewer"
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+    >
+
+
+        <button
+            type="button"
+            class="experience-viewer-close"
+            id="experience-viewer-close"
+        >
+            ×
+        </button>
+
+
+        <div
+            class="experience-viewer-stage"
+            id="experience-viewer-stage"
+        ></div>
+
+
+        <div
+            class="experience-viewer-counter"
+            id="experience-viewer-counter"
+            hidden
+        ></div>
+
+
+        <div class="experience-viewer-details">
+
+
+            <div
+                class="viewer-rating"
+                id="viewer-rating"
+                hidden
+            >
+
+                <span id="viewer-stars"></span>
+
+                <span
+                    class="viewer-rating-number"
+                    id="viewer-rating-number"
+                ></span>
+
+            </div>
+
+
+            <div
+                class="viewer-swipe-hint"
+                id="viewer-swipe-hint"
+                hidden
+            >
+                Swipe left or right
+            </div>
+
+
+            <a
+                href="#"
+                class="viewer-restaurant-link"
+                id="viewer-restaurant-link"
+                hidden
+            >
+                View restaurant →
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+{% endif %}
 
 
 <!-- =========================================
      MOBILE ACTION BAR
-     Uses the same Stage 6 tracked URLs.
+
+     Contact remains available on all plans.
 ========================================== -->
 
 <nav
@@ -3928,60 +4006,68 @@
 
 <!-- =========================================
      HOURS DATA
+
+     Do not expose stored hours for Free.
 ========================================== -->
 
-<script
-    id="restaurant-hours-data"
-    type="application/json"
->
-    {{
-        restaurant_hours_payload
-        |default({})
-        |tojson
-    }}
-</script>
+{% if can_use_opening_hours|default(false) %}
+
+    <script
+        id="restaurant-hours-data"
+        type="application/json"
+    >
+        {{
+            restaurant_hours_payload
+            |default({})
+            |tojson
+        }}
+    </script>
+
+{% endif %}
 
 
 <!-- =========================================
-     STAGE 6 ANALYTICS CONFIG
+     ANALYTICS CONFIG
 
-     This keeps the restaurant ID generated by Flask
-     instead of hard-coding it into JavaScript.
-
-     The experience-view endpoint expected by this
-     template is:
-
-     /restaurant/<advert_id>/analytics/experience/
-     <post_id>/view
+     Experience-view configuration is only needed when
+     customer experiences are enabled.
 ========================================== -->
 
-<script>
+{% if can_receive_customer_experiences|default(false) %}
 
-window.KalxaRestaurantAnalytics = {
+    <script>
 
-    restaurantId:
-        {{ advert.id|tojson }},
+    window.KalxaRestaurantAnalytics = {
 
-    experienceViewBaseUrl:
-        {{
-            (
-                "/restaurant/"
-                ~
-                advert.id
-                ~
-                "/analytics/experience"
-            )
-            |tojson
-        }}
+        restaurantId:
+            {{ advert.id|tojson }},
 
-};
+        experienceViewBaseUrl:
+            {{
+                (
+                    "/restaurant/"
+                    ~
+                    advert.id
+                    ~
+                    "/analytics/experience"
+                )
+                |tojson
+            }}
 
-</script>
+    };
+
+    </script>
+
+{% endif %}
 
 
 <!-- =========================================
      WORKING HOURS
+
+     Standard / Premium only.
 ========================================== -->
+
+{% if can_use_opening_hours|default(false) %}
 
 <script>
 
@@ -4367,9 +4453,28 @@ window.KalxaRestaurantAnalytics = {
         ) {
 
             if (statusText) {
+
                 statusText.textContent =
                     "Hours not set";
+
             }
+
+
+            if (todayMain) {
+
+                todayMain.textContent =
+                    "Hours not set";
+
+            }
+
+
+            if (todaySub) {
+
+                todaySub.textContent =
+                    "Restaurant working hours";
+
+            }
+
 
             return;
         }
@@ -4433,6 +4538,14 @@ window.KalxaRestaurantAnalytics = {
 
                 todayMain.textContent =
                     "Closed today";
+
+            }
+
+
+            if (todaySub) {
+
+                todaySub.textContent =
+                    "Not open today";
 
             }
 
@@ -4632,10 +4745,20 @@ window.KalxaRestaurantAnalytics = {
 
 </script>
 
+{% endif %}
+
 
 <!-- =========================================
      RESTAURANT GALLERY
+
+     Standard / Premium only.
 ========================================== -->
+
+{% if
+    can_use_gallery|default(false)
+    and
+    advert.gallery_images
+%}
 
 <script>
 
@@ -5177,6 +5300,8 @@ window.KalxaRestaurantAnalytics = {
 
 </script>
 
+{% endif %}
+
 
 <!-- =========================================
      RESTAURANT SHARE
@@ -5253,6 +5378,19 @@ window.KalxaRestaurantAnalytics = {
 
         } catch (error) {
 
+            if (
+                error
+                &&
+                error.name
+                ===
+                "AbortError"
+            ) {
+
+                return;
+
+            }
+
+
             console.error(
                 "[Kalxa Restaurant Share]",
                 error
@@ -5282,8 +5420,12 @@ window.KalxaRestaurantAnalytics = {
 
 
 <!-- =========================================
-     STAGE 6 - EXPERIENCE VIEWER + ANALYTICS
+     EXPERIENCE VIEWER + ANALYTICS
+
+     Standard / Premium only.
 ========================================== -->
+
+{% if can_receive_customer_experiences|default(false) %}
 
 <script>
 
@@ -5369,13 +5511,6 @@ window.KalxaRestaurantAnalytics = {
     let touchEndX = 0;
 
 
-    /* =========================================
-       STAGE 6 - RECORD EXPERIENCE VIEW
-
-       Analytics must never block the viewer.
-       The Flask backend performs deduplication.
-    ========================================== */
-
     function recordExperienceView(
         postId
     ) {
@@ -5439,11 +5574,6 @@ window.KalxaRestaurantAnalytics = {
         )
         .catch(
             (error) => {
-
-                /*
-                 * Analytics failure must never
-                 * interrupt the customer experience.
-                 */
 
                 console.warn(
                     "[Kalxa Analytics] "
@@ -5755,14 +5885,6 @@ window.KalxaRestaurantAnalytics = {
         }
 
 
-        /*
-         * Open the experience first.
-         *
-         * We only count the analytics event after
-         * confirming that the post has media and
-         * the viewer can actually be opened.
-         */
-
         viewer.classList.add(
             "open"
         );
@@ -5781,10 +5903,6 @@ window.KalxaRestaurantAnalytics = {
 
         renderMedia();
 
-
-        /* =====================================
-           STAGE 6 ANALYTICS
-        ====================================== */
 
         recordExperienceView(
             postId
@@ -6040,6 +6158,8 @@ window.KalxaRestaurantAnalytics = {
 
 <!-- =========================================
      LOVES
+
+     Standard / Premium only.
 ========================================== -->
 
 <script>
@@ -6163,6 +6283,8 @@ window.KalxaRestaurantAnalytics = {
 })();
 
 </script>
+
+{% endif %}
 
 
 </body>
