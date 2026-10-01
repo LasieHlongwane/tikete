@@ -16005,10 +16005,9 @@ def create_restaurant_experience():
 # RESTAURANT RATING QR - DOWNLOAD
 # ============================================================
 
-
-  def sync_restaurant_subscription(
+def sync_restaurant_subscription(
     advert,
-  ):
+):
 
     # ========================================================
     # RESTAURANT REQUIRED
