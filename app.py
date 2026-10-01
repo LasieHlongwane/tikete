@@ -17633,6 +17633,61 @@ def event_page(
 # PUBLIC RESTAURANT PAGE
 # ============================================================
 
+# ============================================================
+# PUBLIC - RESTAURANT PAGE
+# ============================================================
+#
+# Restaurant plan behaviour:
+#
+# FREE
+# ------------------------------------------------------------
+# Profile                 YES
+# Contact details         YES
+# Gallery                 NO  -> template enforcement next
+# Operational hours       NO
+# Customer experiences    NO
+# Stories                 NO
+# Analytics dashboard     NO
+#
+# STANDARD
+# ------------------------------------------------------------
+# Profile                 YES
+# Contact details         YES
+# Gallery                 YES
+# Operational hours       YES
+# Customer experiences    YES
+# Stories                 NO
+# Analytics dashboard     NO
+#
+# PREMIUM
+# ------------------------------------------------------------
+# Profile                 YES
+# Contact details         YES
+# Gallery                 YES
+# Operational hours       YES
+# Customer experiences    YES
+# Stories                 YES
+# Analytics dashboard     YES
+#
+# IMPORTANT:
+#
+# Existing database rows are NOT deleted when a restaurant
+# downgrades.
+#
+# Instead, paid features are hidden while the restaurant is
+# on a plan that does not permit them.
+#
+# Example:
+#
+# Premium -> Free
+#
+# Existing gallery images, hours and customer experiences stay
+# in the database but are no longer exposed publicly.
+#
+# If the restaurant upgrades again, the existing content can
+# become available again.
+# ============================================================
+
 @app.route(
     "/restaurant/<int:advert_id>"
 )
@@ -17662,7 +17717,7 @@ def restaurant_page(
 
 
     # ========================================================
-    # SUBSCRIPTION SAFETY
+    # ORGANIZER / ACCOUNT SAFETY
     # ========================================================
 
     organizer = (
@@ -17675,6 +17730,25 @@ def restaurant_page(
         or
         not organizer.is_subscription_active
     ):
+
+        abort(404)
+
+
+    # ========================================================
+    # RESTAURANT PROFILE PERMISSION
+    # ========================================================
+    #
+    # All current plans permit the restaurant profile:
+    #
+    # Free      -> YES
+    # Standard  -> YES
+    # Premium   -> YES
+    #
+    # Keeping this explicit makes the route future-proof if
+    # another plan is introduced later.
+    # ========================================================
+
+    if not advert.can_use_profile:
 
         abort(404)
 
@@ -17702,32 +17776,51 @@ def restaurant_page(
 
 
     # ========================================================
+    # RESTAURANT PLAN PERMISSIONS
+    # ========================================================
+    #
+    # Calculate these once and reuse them throughout the route.
+    #
+    # This keeps all public data exposure consistent with the
+    # RestaurantAdvert entitlement engine.
+    # ========================================================
+
+    can_use_gallery = (
+        advert.can_use_gallery
+    )
+
+
+    can_use_opening_hours = (
+        advert.can_use_opening_hours
+    )
+
+
+    can_receive_customer_experiences = (
+        advert.can_receive_customer_experiences
+    )
+
+
+    can_use_stories = (
+        advert.can_use_stories
+    )
+
+
+    can_view_analytics = (
+        advert.can_view_analytics
+    )
+
+
+    # ========================================================
     # STAGE 6 - CAPTURE STORIES ATTRIBUTION
     # ========================================================
     #
-    # This checks whether the visitor arrived from
-    # Kalxa Stories.
+    # Checks whether this visitor arrived through a signed
+    # Kalxa Stories attribution token:
     #
-    # The attribution is persisted inside the Ticketing
-    # Flask session so that later actions such as:
+    #     ?kat=<SIGNED_TOKEN>
     #
-    # restaurant_view
-    # experience_view
-    # whatsapp_click
-    # phone_click
-    # directions_click
-    #
-    # can all retain the same Stories attribution.
-    #
-    # NOTE:
-    #
-    # We will inspect capture_restaurant_attribution()
-    # separately to make sure it uses the secure signed
-    # attribution token:
-    #
-    # ?kat=<SIGNED_TOKEN>
-    #
-    # rather than trusting editable query parameters.
+    # The verified attribution is persisted in the Ticketing
+    # Flask session so later actions can retain the source.
     # ========================================================
 
     restaurant_attribution = (
@@ -17740,11 +17833,6 @@ def restaurant_page(
     # ========================================================
     # ANONYMOUS RESTAURANT SESSION
     # ========================================================
-    #
-    # Reuse the existing anonymous restaurant experience
-    # session for customer experience loves and other
-    # anonymous restaurant behaviour.
-    # ========================================================
 
     anonymous_session_id = (
         get_restaurant_experience_session_id()
@@ -17753,25 +17841,6 @@ def restaurant_page(
 
     # ========================================================
     # STAGE 6 - RESTAURANT VIEW
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # record_restaurant_analytics_event() currently accepts:
-    #
-    # restaurant_id
-    # event_type
-    # metadata
-    #
-    # Therefore we pass restaurant_id=advert.id.
-    #
-    # We are NOT passing:
-    #
-    # advert=advert
-    # deduplicate=True
-    #
-    # because the current analytics helper does not accept
-    # those arguments.
     # ========================================================
 
     record_restaurant_analytics_event(
@@ -17791,6 +17860,9 @@ def restaurant_page(
                 bool(
                     restaurant_attribution
                 ),
+
+            "restaurant_plan":
+                advert.normalized_subscription_tier,
         },
     )
 
@@ -17798,41 +17870,60 @@ def restaurant_page(
     # ========================================================
     # CUSTOMER EXPERIENCES
     # ========================================================
+    #
+    # FREE
+    # --------------------------------------------------------
+    # Do NOT query/expose customer experience posts.
+    #
+    # STANDARD / PREMIUM
+    # --------------------------------------------------------
+    # Query approved + active experience posts normally.
+    #
+    # This means a downgrade does NOT delete historical
+    # experiences. They simply stop being exposed publicly.
+    # ========================================================
 
-    experience_posts = (
-        RestaurantExperiencePost.query
+    experience_posts = []
 
-        .filter_by(
-            restaurant_advert_id=(
-                advert.id
-            ),
 
-            active=True,
+    if can_receive_customer_experiences:
 
-            moderation_status=(
-                "approved"
-            ),
+        experience_posts = (
+            RestaurantExperiencePost.query
+
+            .filter_by(
+                restaurant_advert_id=(
+                    advert.id
+                ),
+
+                active=True,
+
+                moderation_status=(
+                    "approved"
+                ),
+            )
+
+            .order_by(
+                RestaurantExperiencePost
+                .created_at
+                .desc()
+            )
+
+            .all()
         )
-
-        .order_by(
-            RestaurantExperiencePost
-            .created_at
-            .desc()
-        )
-
-        .all()
-    )
 
 
     # ========================================================
     # RESTAURANT RATING SUMMARY
     # ========================================================
     #
-    # Only approved + active customer experiences contribute
-    # to the public restaurant rating.
+    # Ratings are derived from approved customer experiences.
     #
-    # Pending, rejected and inactive experience posts are
-    # excluded.
+    # Therefore:
+    #
+    # Free      -> no public experience rating summary
+    # Standard  -> rating summary enabled
+    # Premium   -> rating summary enabled
     # ========================================================
 
     restaurant_ratings = [
@@ -17881,7 +17972,10 @@ def restaurant_page(
     )
 
 
-    if experience_posts:
+    if (
+        can_receive_customer_experiences
+        and experience_posts
+    ):
 
         experience_post_ids = [
 
@@ -17926,13 +18020,13 @@ def restaurant_page(
     # RAW CONTACT LINK AVAILABILITY
     # ========================================================
     #
-    # These URLs are used only to determine whether the
-    # restaurant actually has a valid destination.
+    # Contact details belong to the basic restaurant profile.
     #
-    # They are NOT sent directly to restaurant.html.
+    # They remain available on:
     #
-    # The public template receives Kalxa internal tracking
-    # URLs instead.
+    # Free
+    # Standard
+    # Premium
     # ========================================================
 
     raw_whatsapp_url = (
@@ -17958,25 +18052,6 @@ def restaurant_page(
 
     # ========================================================
     # STAGE 6 - TRACKED CONTACT LINKS
-    # ========================================================
-    #
-    # Flow:
-    #
-    # Restaurant page
-    #       ↓
-    # Kalxa action route
-    #       ↓
-    # Analytics event
-    #       ↓
-    # External destination
-    #
-    # Examples:
-    #
-    # /restaurant/2/action/whatsapp
-    #
-    # /restaurant/2/action/phone
-    #
-    # /restaurant/2/action/directions
     # ========================================================
 
     whatsapp_url = (
@@ -18030,12 +18105,31 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT HOURS
     # ========================================================
+    #
+    # FREE
+    # --------------------------------------------------------
+    # Do NOT build/expose the public hours payload.
+    #
+    # STANDARD / PREMIUM
+    # --------------------------------------------------------
+    # Build hours normally.
+    #
+    # Existing hours remain stored in the database if a
+    # restaurant downgrades.
+    # ========================================================
 
     restaurant_hours_payload = (
-        build_restaurant_hours_payload(
-            advert
-        )
+        None
     )
+
+
+    if can_use_opening_hours:
+
+        restaurant_hours_payload = (
+            build_restaurant_hours_payload(
+                advert
+            )
+        )
 
 
     # ========================================================
@@ -18059,6 +18153,13 @@ def restaurant_page(
 
     # ========================================================
     # RESTAURANT MANAGEMENT PERMISSION
+    # ========================================================
+    #
+    # Restaurant ownership remains independent of the
+    # restaurant's Free / Standard / Premium feature level.
+    #
+    # A Free restaurant owner still needs access to management
+    # so they can edit basic profile details and later upgrade.
     # ========================================================
 
     can_manage_restaurant = (
@@ -18085,6 +18186,40 @@ def restaurant_page(
 
 
     # ========================================================
+    # HOURS MANAGEMENT PERMISSION
+    # ========================================================
+    #
+    # Owner access alone is not enough.
+    #
+    # The restaurant plan must also include operational hours.
+    # ========================================================
+
+    can_manage_restaurant_hours = (
+        can_manage_restaurant
+        and
+        can_use_opening_hours
+    )
+
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE / RATING QR PERMISSION
+    # ========================================================
+    #
+    # The rating QR leads customers into the restaurant
+    # experience system.
+    #
+    # Therefore it should only be available when customer
+    # experiences are included in the restaurant plan.
+    # ========================================================
+
+    can_manage_restaurant_rating_qr = (
+        can_manage_restaurant
+        and
+        can_receive_customer_experiences
+    )
+
+
+    # ========================================================
     # RESTAURANT RATING QR
     # ========================================================
 
@@ -18092,12 +18227,13 @@ def restaurant_page(
         None
     )
 
+
     restaurant_rating_url = (
         ""
     )
 
 
-    if can_manage_restaurant:
+    if can_manage_restaurant_rating_qr:
 
         restaurant_rating_qr = (
             RestaurantRatingQRCode.query
@@ -18140,14 +18276,6 @@ def restaurant_page(
 
     # ========================================================
     # STAGE 6 - ATTRIBUTION VALUES FOR TEMPLATE
-    # ========================================================
-    #
-    # Contact tracking itself does not depend on these
-    # template values because attribution is persisted in
-    # the Flask session.
-    #
-    # These values remain useful for debugging and possible
-    # future client-side analytics/UI.
     # ========================================================
 
     attribution_source = (
@@ -18212,19 +18340,53 @@ def restaurant_page(
 
 
         # ====================================================
-        # CONTACT
+        # RESTAURANT PLAN
+        # ====================================================
+
+        restaurant_plan=(
+            advert.normalized_subscription_tier
+        ),
+
+        restaurant_plan_name=(
+            advert.subscription_plan_name
+        ),
+
+        restaurant_plan_price=(
+            advert.subscription_price
+        ),
+
+
+        # ====================================================
+        # RESTAURANT FEATURE PERMISSIONS
         # ====================================================
         #
-        # These are INTERNAL Kalxa tracking routes.
-        #
-        # restaurant.html can continue using:
-        #
-        # href="{{ whatsapp_url }}"
-        # href="{{ phone_url }}"
-        # href="{{ directions_url }}"
-        #
-        # The tracking route records the event and then
-        # redirects the visitor to the real destination.
+        # These values allow restaurant.html to show/hide
+        # features without duplicating subscription logic.
+        # ====================================================
+
+        can_use_gallery=(
+            can_use_gallery
+        ),
+
+        can_use_opening_hours=(
+            can_use_opening_hours
+        ),
+
+        can_receive_customer_experiences=(
+            can_receive_customer_experiences
+        ),
+
+        can_use_stories=(
+            can_use_stories
+        ),
+
+        can_view_analytics=(
+            can_view_analytics
+        ),
+
+
+        # ====================================================
+        # CONTACT
         # ====================================================
 
         whatsapp_url=(
@@ -18257,6 +18419,10 @@ def restaurant_page(
             can_manage_restaurant
         ),
 
+        can_manage_restaurant_hours=(
+            can_manage_restaurant_hours
+        ),
+
         restaurant_hours_update_url=(
 
             url_for(
@@ -18267,7 +18433,7 @@ def restaurant_page(
                 ),
             )
 
-            if can_manage_restaurant
+            if can_manage_restaurant_hours
 
             else ""
         ),
@@ -18303,6 +18469,10 @@ def restaurant_page(
         # RESTAURANT RATING QR
         # ====================================================
 
+        can_manage_restaurant_rating_qr=(
+            can_manage_restaurant_rating_qr
+        ),
+
         restaurant_rating_qr=(
             restaurant_rating_qr
         ),
@@ -18321,7 +18491,7 @@ def restaurant_page(
                 ),
             )
 
-            if can_manage_restaurant
+            if can_manage_restaurant_rating_qr
 
             else ""
         ),
@@ -18347,6 +18517,7 @@ def restaurant_page(
             source_session_id
         ),
     )
+   
 # ============================================================
 # STAGE 6 - WHATSAPP CONVERSION
 # ============================================================
