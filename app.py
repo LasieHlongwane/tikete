@@ -3520,6 +3520,27 @@ def restaurant_has_active_subscription(
   )
 
 
+# ============================================================
+# RESTAURANT - UPDATE OPERATIONAL HOURS
+# ============================================================
+#
+# Restaurant plan rules:
+#
+# FREE:
+#     Operational hours = NO
+#
+# STANDARD:
+#     Operational hours = YES
+#
+# PREMIUM:
+#     Operational hours = YES
+#
+# IMPORTANT:
+# This permission is enforced server-side.
+#
+# Hiding the hours form in the frontend is not enough because
+# a user could manually send a POST request to this endpoint.
+# ============================================================
 
 @app.route(
     "/restaurant/<int:advert_id>/hours",
@@ -3529,253 +3550,360 @@ def update_restaurant_hours(
     advert_id,
 ):
 
+    # ========================================================
+    # REQUIRE ORGANIZER LOGIN
+    # ========================================================
 
-# --------------------------------------------------------
-# REQUIRE ORGANIZER LOGIN
-# --------------------------------------------------------
-
- require_ticketing_organizer()
-
-
- current_organizer = (
-    get_current_organizer()
- )
-
- if not current_organizer:
-    abort(401)
-
- organizer_id = (
-    current_organizer.id
- )
-
-
-# --------------------------------------------------------
-# FIND RESTAURANT
-# --------------------------------------------------------
-
- advert = (
-    RestaurantAdvert.query
-    .filter_by(
-        id=advert_id
+    auth = (
+        require_ticketing_organizer()
     )
-    .first_or_404()
- )
+
+    if auth:
+        return auth
 
 
-# --------------------------------------------------------
-# OWNERSHIP CHECK
-# --------------------------------------------------------
-
- if (
-    advert.organizer_id
-    !=
-    organizer_id
- ):
-
-    abort(
-        403
+    current_organizer = (
+        get_current_organizer()
     )
 
 
-# --------------------------------------------------------
-# SUBSCRIPTION CHECK
-# --------------------------------------------------------
+    if not current_organizer:
+        abort(401)
 
- if (
-    not advert.organizer
-    or
-    not advert.organizer.is_subscription_active
- ):
 
-    flash(
-        (
-            "An active restaurant subscription "
-            "is required to manage working hours."
-        ),
-        "error",
+    organizer_id = (
+        current_organizer.id
     )
 
 
-    return redirect(
-        url_for(
-            "restaurant_page",
-            advert_id=advert.id,
+    # ========================================================
+    # FIND RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id
         )
+        .first_or_404()
     )
 
 
-# --------------------------------------------------------
-# EXISTING HOURS
-# --------------------------------------------------------
+    # ========================================================
+    # OWNERSHIP CHECK
+    # ========================================================
 
- existing_hours = {
+    if (
+        advert.organizer_id
+        != organizer_id
+    ):
 
-    opening_hour.day_of_week:
-        opening_hour
-
-    for opening_hour
-    in RestaurantOpeningHour.query
-    .filter_by(
-        restaurant_advert_id=
-            advert.id
-    )
-    .all()
-
- }
+        abort(403)
 
 
-# --------------------------------------------------------
-# UPDATE ALL 7 DAYS
-# --------------------------------------------------------
+    # ========================================================
+    # ORGANIZER SUBSCRIPTION CHECK
+    # ========================================================
+    #
+    # Keep the existing organizer-level subscription check.
+    #
+    # This protects the organizer account itself.
+    # Restaurant-plan permissions are checked separately below.
+    # ========================================================
 
- try:
+    if (
+        not advert.organizer
+        or
+        not advert.organizer.is_subscription_active
+    ):
 
-    for day in RESTAURANT_WEEKDAYS:
-
-        is_closed = (
-            request.form.get(
-                f"{day}_closed"
-            )
-            ==
-            "1"
+        flash(
+            (
+                "An active restaurant account "
+                "is required to manage working hours."
+            ),
+            "error",
         )
 
 
-        open_raw = (
-            request.form.get(
-                f"{day}_open"
+        return redirect(
+            url_for(
+                "restaurant_page",
+                advert_id=advert.id,
             )
-            or
-            ""
-        ).strip()
+        )
 
 
-        close_raw = (
-            request.form.get(
-                f"{day}_close"
+    # ========================================================
+    # RESTAURANT PLAN PERMISSION CHECK
+    # ========================================================
+    #
+    # FREE:
+    #     can_use_opening_hours = False
+    #
+    # STANDARD:
+    #     can_use_opening_hours = True
+    #
+    # PREMIUM:
+    #     can_use_opening_hours = True
+    #
+    # This check MUST remain on the backend even after the
+    # frontend hours form is hidden/locked for Free accounts.
+    # ========================================================
+
+    if not advert.can_use_opening_hours:
+
+        flash(
+            (
+                "Operational hours are available "
+                "on the Standard and Premium "
+                "restaurant plans."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "restaurant_page",
+                advert_id=advert.id,
             )
-            or
-            ""
-        ).strip()
+        )
 
 
-        # ------------------------------------------------
-        # VALIDATE TIMES
-        # ------------------------------------------------
+    # ========================================================
+    # EXISTING HOURS
+    # ========================================================
 
-        if is_closed:
+    existing_hours = {
 
-            open_time = None
+        opening_hour.day_of_week:
+            opening_hour
 
-            close_time = None
+        for opening_hour
+        in RestaurantOpeningHour.query
+        .filter_by(
+            restaurant_advert_id=
+                advert.id
+        )
+        .all()
+
+    }
 
 
-        else:
+    # ========================================================
+    # UPDATE ALL 7 DAYS
+    # ========================================================
 
-            if (
-                not open_raw
-                or
-                not close_raw
-            ):
+    try:
 
-                flash(
-                    (
-                        f"{day.capitalize()} requires "
-                        f"both an opening and closing time, "
-                        f"or mark the day as closed."
-                    ),
-                    "error",
+        for day in RESTAURANT_WEEKDAYS:
+
+            # =================================================
+            # CLOSED STATUS
+            # =================================================
+
+            is_closed = (
+                request.form.get(
+                    f"{day}_closed"
                 )
+                == "1"
+            )
 
 
-                return redirect(
-                    url_for(
-                        "restaurant_page",
-                        advert_id=
-                            advert.id,
+            # =================================================
+            # RAW TIMES
+            # =================================================
+
+            open_raw = (
+                request.form.get(
+                    f"{day}_open"
+                )
+                or ""
+            ).strip()
+
+
+            close_raw = (
+                request.form.get(
+                    f"{day}_close"
+                )
+                or ""
+            ).strip()
+
+
+            # =================================================
+            # VALIDATE TIMES
+            # =================================================
+
+            if is_closed:
+
+                open_time = None
+                close_time = None
+
+
+            else:
+
+                if (
+                    not open_raw
+                    or not close_raw
+                ):
+
+                    flash(
+                        (
+                            f"{day.capitalize()} requires "
+                            "both an opening and closing time, "
+                            "or mark the day as closed."
+                        ),
+                        "error",
+                    )
+
+
+                    return redirect(
+                        url_for(
+                            "restaurant_page",
+                            advert_id=advert.id,
+                        )
+                    )
+
+
+                open_time = (
+                    parse_restaurant_time(
+                        open_raw
                     )
                 )
 
 
-            open_time = (
-                parse_restaurant_time(
-                    open_raw
+                close_time = (
+                    parse_restaurant_time(
+                        close_raw
+                    )
                 )
-            )
 
 
-            close_time = (
-                parse_restaurant_time(
-                    close_raw
-                )
-            )
-
-
-        # ------------------------------------------------
-        # GET OR CREATE DAY
-        # ------------------------------------------------
-
-        opening_hour = (
-            existing_hours.get(
-                day
-            )
-        )
-
-
-        if not opening_hour:
+            # =================================================
+            # GET OR CREATE DAY
+            # =================================================
 
             opening_hour = (
-                RestaurantOpeningHour(
-                    restaurant_advert_id=
-                        advert.id,
-
-                    day_of_week=
-                        day,
+                existing_hours.get(
+                    day
                 )
             )
 
 
-            db.session.add(
-                opening_hour
+            if not opening_hour:
+
+                opening_hour = (
+                    RestaurantOpeningHour(
+                        restaurant_advert_id=
+                            advert.id,
+
+                        day_of_week=
+                            day,
+                    )
+                )
+
+
+                db.session.add(
+                    opening_hour
+                )
+
+
+            # =================================================
+            # SAVE VALUES
+            # =================================================
+
+            opening_hour.open_time = (
+                open_time
             )
 
 
-        # ------------------------------------------------
-        # SAVE VALUES
-        # ------------------------------------------------
+            opening_hour.close_time = (
+                close_time
+            )
 
-        opening_hour.open_time = (
-            open_time
+
+            opening_hour.is_closed = (
+                is_closed
+            )
+
+
+        # ====================================================
+        # COMMIT
+        # ====================================================
+
+        db.session.commit()
+
+
+    # ========================================================
+    # INVALID TIME
+    # ========================================================
+
+    except ValueError as error:
+
+        db.session.rollback()
+
+
+        flash(
+            str(
+                error
+            ),
+            "error",
         )
 
 
-        opening_hour.close_time = (
-            close_time
+        return redirect(
+            url_for(
+                "restaurant_page",
+                advert_id=advert.id,
+            )
         )
 
 
-        opening_hour.is_closed = (
-            is_closed
+    # ========================================================
+    # GENERAL ERROR
+    # ========================================================
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "Unable to update restaurant "
+                "working hours for restaurant %s "
+                "error=%s"
+            ),
+            advert.id,
+            error,
         )
 
 
-    # ----------------------------------------------------
-    # COMMIT
-    # ----------------------------------------------------
+        flash(
+            (
+                "Unable to update working hours. "
+                "Please try again."
+            ),
+            "error",
+        )
 
-    db.session.commit()
+
+        return redirect(
+            url_for(
+                "restaurant_page",
+                advert_id=advert.id,
+            )
+        )
 
 
- except ValueError as error:
-
-    db.session.rollback()
-
+    # ========================================================
+    # SUCCESS
+    # ========================================================
 
     flash(
-        str(
-            error
-        ),
-        "error",
+        "Restaurant working hours updated.",
+        "success",
     )
 
 
@@ -3785,62 +3913,17 @@ def update_restaurant_hours(
             advert_id=advert.id,
         )
     )
-
-
- except Exception as error:
-
-    db.session.rollback()
-
-
-    app.logger.exception(
-        (
-            "Unable to update restaurant "
-            "working hours for restaurant %s"
-        ),
-        advert.id,
-    )
-
-
-    flash(
-        (
-            "Unable to update working hours. "
-            "Please try again."
-        ),
-        "error",
-    )
-
-
-    return redirect(
-        url_for(
-            "restaurant_page",
-            advert_id=advert.id,
-        )
-    )
-
-
- flash(
-    "Restaurant working hours updated.",
-    "success",
- )
-
-
- return redirect(
-    url_for(
-        "restaurant_page",
-        advert_id=advert.id,
-    )
- )
 
 
 # ============================================================
 # RESTAURANT CAMPAIGN SCHEDULING
 # ============================================================
 
- RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
+RESTAURANT_CAMPAIGN_DURATION_OPTIONS = {
     "7": 7,
     "14": 14,
     "30": 30,
- }
+}
 
 
  def parse_restaurant_campaign_date(
