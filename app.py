@@ -13754,7 +13754,6 @@ def admin_edit_restaurant(
         require_ticketing_organizer()
     )
 
-
     if auth:
         return auth
 
@@ -13762,7 +13761,6 @@ def admin_edit_restaurant(
     subscription_auth = (
         require_restaurant_subscription()
     )
-
 
     if subscription_auth:
         return subscription_auth
@@ -13779,15 +13777,10 @@ def admin_edit_restaurant(
 
     advert = (
         RestaurantAdvert.query
-
         .filter_by(
-            id=
-                advert_id,
-
-            organizer_id=
-                organizer.id,
+            id=advert_id,
+            organizer_id=organizer.id,
         )
-
         .first_or_404()
     )
 
@@ -13823,38 +13816,61 @@ def admin_edit_restaurant(
         return render_template(
             "admin/restaurant_form.html",
 
-            organizer=
-                organizer,
+            organizer=organizer,
 
-            advert=
-                advert,
+            advert=advert,
 
-            today_iso=
-                today_iso,
+            today_iso=today_iso,
 
-            subscription_end_iso=
-                subscription_end_iso,
+            subscription_end_iso=(
+                subscription_end_iso
+            ),
 
-            restaurant_plan=
-                advert.normalized_subscription_tier,
 
-            restaurant_plan_name=
-                advert.subscription_plan_name,
+            # =================================================
+            # RESTAURANT PLAN
+            # =================================================
 
-            can_use_gallery=
-                advert.can_use_gallery,
+            restaurant_plan=(
+                advert.normalized_subscription_tier
+            ),
 
-            can_use_opening_hours=
-                advert.can_use_opening_hours,
+            restaurant_plan_name=(
+                advert.subscription_plan_name
+            ),
 
-            can_receive_customer_experiences=
-                advert.can_receive_customer_experiences,
+            restaurant_plan_price=(
+                advert.subscription_price
+            ),
 
-            can_use_stories=
-                advert.can_use_stories,
 
-            can_view_analytics=
-                advert.can_view_analytics,
+            # =================================================
+            # RESTAURANT PLAN CAPABILITIES
+            # =================================================
+
+            can_use_reel=(
+                advert.can_use_reel
+            ),
+
+            can_use_gallery=(
+                advert.can_use_gallery
+            ),
+
+            can_use_opening_hours=(
+                advert.can_use_opening_hours
+            ),
+
+            can_receive_customer_experiences=(
+                advert.can_receive_customer_experiences
+            ),
+
+            can_use_stories=(
+                advert.can_use_stories
+            ),
+
+            can_view_analytics=(
+                advert.can_view_analytics
+            ),
         )
 
 
@@ -13898,8 +13914,7 @@ def admin_edit_restaurant(
         ) = build_restaurant_campaign_schedule(
             request.form,
             organizer,
-            existing_advert=
-                advert,
+            existing_advert=advert,
         )
 
 
@@ -13930,25 +13945,31 @@ def admin_edit_restaurant(
 
 
         # ----------------------------------------------------
-        # SUBSCRIPTION PERMISSION
+        # RESTAURANT PLAN PERMISSION
         # ----------------------------------------------------
         #
         # FREE:
-        #     Gallery upload rejected.
+        #     Gallery upload disabled.
         #
         # STANDARD:
-        #     Gallery enabled.
+        #     Gallery upload enabled.
         #
         # PREMIUM:
-        #     Gallery enabled.
+        #     Gallery upload enabled.
         #
-        # This is enforced server-side. A user cannot bypass
-        # it by manually changing the HTML/file input.
+        # IMPORTANT:
+        #
+        # This is server-side enforcement.
+        #
+        # Hiding the gallery input in restaurant_form.html
+        # improves UX, but this check is the actual security
+        # boundary.
         # ----------------------------------------------------
 
         if (
             gallery_files
-            and not advert.can_use_gallery
+            and
+            not advert.can_use_gallery
         ):
 
             flash(
@@ -13974,8 +13995,9 @@ def admin_edit_restaurant(
                 gallery_error,
             ) = validate_restaurant_gallery_files(
                 gallery_files,
-                existing_count=
-                    existing_gallery_count,
+                existing_count=(
+                    existing_gallery_count
+                ),
             )
 
 
@@ -13992,6 +14014,16 @@ def admin_edit_restaurant(
         # ====================================================
         # OPTIONAL NEW POSTER
         # ====================================================
+        #
+        # The main restaurant poster belongs to the basic
+        # restaurant profile.
+        #
+        # It remains available on:
+        #
+        # FREE
+        # STANDARD
+        # PREMIUM
+        # ====================================================
 
         new_poster = (
             request.files.get(
@@ -13999,6 +14031,14 @@ def admin_edit_restaurant(
             )
         )
 
+
+        # ====================================================
+        # UPLOAD TRACKING
+        # ====================================================
+        #
+        # These IDs are kept so that Cloudinary uploads can
+        # be removed if the database transaction fails.
+        # ====================================================
 
         uploaded_public_id = None
 
@@ -14012,15 +14052,16 @@ def admin_edit_restaurant(
             # =================================================
             # OPTIONAL POSTER UPLOAD
             # =================================================
-            #
-            # Poster remains available on every restaurant
-            # plan because it belongs to the basic profile.
-            # =================================================
 
             if (
                 new_poster
-                and new_poster.filename
+                and
+                new_poster.filename
             ):
+
+                # ---------------------------------------------
+                # POSTER FILE TYPE
+                # ---------------------------------------------
 
                 if not allowed_restaurant_poster_filename(
                     new_poster.filename
@@ -14036,6 +14077,10 @@ def admin_edit_restaurant(
 
                     return render_form()
 
+
+                # ---------------------------------------------
+                # POSTER FILE SIZE
+                # ---------------------------------------------
 
                 new_poster.stream.seek(
                     0,
@@ -14055,7 +14100,8 @@ def admin_edit_restaurant(
 
                 if (
                     file_size
-                    > RESTAURANT_POSTER_MAX_FILE_BYTES
+                    >
+                    RESTAURANT_POSTER_MAX_FILE_BYTES
                 ):
 
                     flash(
@@ -14069,12 +14115,15 @@ def admin_edit_restaurant(
                     return render_form()
 
 
+                # ---------------------------------------------
+                # UPLOAD POSTER TO CLOUDINARY
+                # ---------------------------------------------
+
                 upload_result = (
                     cloudinary.uploader.upload(
                         new_poster,
 
-                        resource_type=
-                            "image",
+                        resource_type="image",
 
                         folder=(
                             f"kalxa/organizers/"
@@ -14082,14 +14131,11 @@ def admin_edit_restaurant(
                             "restaurants/posters"
                         ),
 
-                        use_filename=
-                            True,
+                        use_filename=True,
 
-                        unique_filename=
-                            True,
+                        unique_filename=True,
 
-                        overwrite=
-                            False,
+                        overwrite=False,
                     )
                 )
 
@@ -14110,7 +14156,8 @@ def admin_edit_restaurant(
 
                 if (
                     not uploaded_public_id
-                    or not secure_url
+                    or
+                    not secure_url
                 ):
 
                     raise RuntimeError(
@@ -14122,7 +14169,8 @@ def admin_edit_restaurant(
 
 
                 old_public_id = (
-                    advert.poster_cloudinary_public_id
+                    advert
+                    .poster_cloudinary_public_id
                 )
 
 
@@ -14229,8 +14277,14 @@ def admin_edit_restaurant(
             # ADD GALLERY PHOTOS
             # =================================================
             #
-            # We already performed the subscription permission
-            # check above.
+            # By the time execution reaches this section:
+            #
+            #     advert.can_use_gallery == True
+            #
+            # whenever gallery_files contains files.
+            #
+            # Therefore only Standard/Premium restaurants can
+            # create RestaurantGalleryImage rows.
             # =================================================
 
             next_image_order = (
@@ -14264,35 +14318,41 @@ def admin_edit_restaurant(
 
                 gallery_image = (
                     RestaurantGalleryImage(
+                        restaurant_advert_id=(
+                            advert.id
+                        ),
 
-                        restaurant_advert_id=
-                            advert.id,
+                        cloudinary_public_id=(
+                            public_id
+                        ),
 
-                        cloudinary_public_id=
-                            public_id,
-
-                        image_url=
+                        image_url=(
                             gallery_result[
                                 "secure_url"
-                            ],
+                            ]
+                        ),
 
-                        image_order=
-                            next_image_order,
+                        image_order=(
+                            next_image_order
+                        ),
 
-                        width=
+                        width=(
                             gallery_result[
                                 "width"
-                            ],
+                            ]
+                        ),
 
-                        height=
+                        height=(
                             gallery_result[
                                 "height"
-                            ],
+                            ]
+                        ),
 
-                        file_bytes=
+                        file_bytes=(
                             gallery_result[
                                 "file_bytes"
-                            ],
+                            ]
+                        ),
                     )
                 )
 
@@ -14306,7 +14366,7 @@ def admin_edit_restaurant(
 
 
             # =================================================
-            # SAVE
+            # SAVE DATABASE CHANGES
             # =================================================
 
             db.session.commit()
@@ -14319,6 +14379,11 @@ def admin_edit_restaurant(
 
             # =================================================
             # CLEAN NEW POSTER
+            # =================================================
+            #
+            # If Cloudinary succeeded but the DB transaction
+            # failed, remove the newly uploaded poster so we
+            # do not leave orphaned Cloudinary assets.
             # =================================================
 
             if uploaded_public_id:
@@ -14367,6 +14432,10 @@ def admin_edit_restaurant(
                     )
 
 
+            # =================================================
+            # LOG ERROR
+            # =================================================
+
             current_app.logger.exception(
                 (
                     "[Restaurant Advert Edit] "
@@ -14391,8 +14460,9 @@ def admin_edit_restaurant(
             return redirect(
                 url_for(
                     "admin_edit_restaurant",
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
@@ -14400,10 +14470,20 @@ def admin_edit_restaurant(
         # ====================================================
         # REMOVE OLD POSTER AFTER SUCCESS
         # ====================================================
+        #
+        # IMPORTANT:
+        #
+        # The old Cloudinary poster is removed only AFTER the
+        # database transaction succeeds.
+        #
+        # This prevents us from losing the old poster when the
+        # new update fails.
+        # ====================================================
 
         if (
             old_public_id
-            and old_public_id
+            and
+            old_public_id
             != uploaded_public_id
         ):
 
@@ -14439,7 +14519,9 @@ def admin_edit_restaurant(
 
             photo_label = (
                 "photo"
+
                 if photo_count == 1
+
                 else "photos"
             )
 
@@ -14462,11 +14544,16 @@ def admin_edit_restaurant(
             )
 
 
+        # ====================================================
+        # REDIRECT TO RESTAURANT CONTROL CENTRE
+        # ====================================================
+
         return redirect(
             url_for(
                 "admin_manage_restaurant",
-                advert_id=
-                    advert.id,
+                advert_id=(
+                    advert.id
+                ),
             )
         )
 
@@ -14477,6 +14564,10 @@ def admin_edit_restaurant(
 
     return render_form()
 
+
+        
+
+          
 # ============================================================
 # ADMIN - PAUSE RESTAURANT ADVERT
 # ============================================================
