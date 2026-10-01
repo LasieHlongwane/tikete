@@ -13847,83 +13847,83 @@ def admin_create_restaurant():
         # BASIC FORM VALUES
         # ====================================================
 
-        business_name = (
+          business_name = (
             request.form.get(
                 "business_name",
                 "",
             )
             .strip()
-        )
+          )
 
 
-        headline = (
+          headline = (
             request.form.get(
                 "headline",
                 "",
             )
             .strip()
             or None
-        )
+          )
 
 
-        description = (
+          description = (
             request.form.get(
                 "description",
                 "",
             )
             .strip()
             or None
-        )
+          )
 
 
-        area = (
+          area = (
             request.form.get(
                 "area",
                 "",
             )
             .strip()
             or None
-        )
+          )
 
 
-        address = (
+          address = (
             request.form.get(
                 "address",
                 "",
             )
             .strip()
             or None
-        )
+          )
 
 
-        whatsapp_number = (
+          whatsapp_number = (
             request.form.get(
                 "whatsapp_number",
                 "",
             )
             .strip()
             or None
-        )
+         )
 
 
-        phone_number = (
+          phone_number = (
             request.form.get(
                 "phone_number",
                 "",
             )
             .strip()
             or None
-        )
+          )
 
 
-        directions_url = (
+          directions_url = (
             valid_restaurant_directions_url(
                 request.form.get(
                     "directions_url",
                     "",
                 )
             )
-        )
+          )
 
 
         # ====================================================
