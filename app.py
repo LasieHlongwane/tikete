@@ -230,6 +230,26 @@ RESTAURANT_ATTRIBUTION_SESSION_KEY = (
     "kalxa_restaurant_attribution"
 )
 
+
+# ============================================================
+# RESTAURANT SUBSCRIPTION PAYMENT SETTINGS
+# ============================================================
+
+RESTAURANT_SUBSCRIPTION_PERIOD_DAYS = 30
+
+
+RESTAURANT_PAYABLE_PLANS = {
+
+    RESTAURANT_PLAN_STANDARD: {
+        "name": "Kalxa Restaurant Standard",
+        "price": Decimal("219.00"),
+    },
+
+    RESTAURANT_PLAN_PREMIUM: {
+        "name": "Kalxa Restaurant Premium",
+        "price": Decimal("299.00"),
+    },
+}
 # ============================================================
 # KALXA CROSS-APP ATTRIBUTION
 # ============================================================
@@ -2340,6 +2360,492 @@ def send_automatic_restaurant_push(
     return campaign
 
 
+
+# ============================================================
+# FINALIZE RESTAURANT SUBSCRIPTION PAYMENT
+# ============================================================
+
+def finalize_restaurant_subscription_payment(
+    payment,
+    transaction_data,
+):
+
+    # ========================================================
+    # PAYMENT REQUIRED
+    # ========================================================
+
+    if not payment:
+
+        raise RuntimeError(
+            "Restaurant subscription payment was not found."
+        )
+
+
+    # ========================================================
+    # IDEMPOTENCY
+    # ========================================================
+    #
+    # The callback and webhook may both try to finalize the
+    # same transaction.
+    #
+    # Never extend the subscription twice.
+    # ========================================================
+
+    if payment.payment_status == "paid":
+
+        return payment
+
+
+    if payment.payment_status == "cancelled":
+
+        raise RuntimeError(
+            "This restaurant subscription payment was cancelled."
+        )
+
+
+    # ========================================================
+    # TRANSACTION STATUS
+    # ========================================================
+
+    transaction_status = (
+        str(
+            transaction_data.get(
+                "status",
+                "",
+            )
+        )
+        .strip()
+        .lower()
+    )
+
+
+    if transaction_status != "success":
+
+        raise RuntimeError(
+            (
+                "Paystack transaction is not successful. "
+                f"status={transaction_status or 'unknown'}"
+            )
+        )
+
+
+    # ========================================================
+    # REFERENCE
+    # ========================================================
+
+    transaction_reference = (
+        str(
+            transaction_data.get(
+                "reference",
+                "",
+            )
+        )
+        .strip()
+    )
+
+
+    if (
+        not transaction_reference
+        or transaction_reference
+        != payment.payment_reference
+    ):
+
+        raise RuntimeError(
+            "Paystack transaction reference does not match."
+        )
+
+
+    # ========================================================
+    # CURRENCY
+    # ========================================================
+
+    transaction_currency = (
+        str(
+            transaction_data.get(
+                "currency",
+                "",
+            )
+        )
+        .strip()
+        .upper()
+    )
+
+
+    expected_currency = (
+        payment.currency
+        or "ZAR"
+    ).strip().upper()
+
+
+    if transaction_currency != expected_currency:
+
+        raise RuntimeError(
+            "Paystack transaction currency does not match."
+        )
+
+
+    # ========================================================
+    # AMOUNT
+    # ========================================================
+    #
+    # Paystack returns the amount in cents.
+    #
+    # R219.00 = 21900
+    # R299.00 = 29900
+    # ========================================================
+
+    expected_amount_cents = int(
+        (
+            Decimal(
+                str(
+                    payment.amount
+                )
+            )
+            * 100
+        )
+        .quantize(
+            Decimal("1"),
+            rounding=ROUND_UP,
+        )
+    )
+
+
+    try:
+
+        transaction_amount_cents = int(
+            transaction_data.get(
+                "amount"
+            )
+        )
+
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        raise RuntimeError(
+            "Paystack transaction amount is invalid."
+        )
+
+
+    if (
+        transaction_amount_cents
+        != expected_amount_cents
+    ):
+
+        raise RuntimeError(
+            "Paystack transaction amount does not match."
+        )
+
+
+    # ========================================================
+    # VALIDATE PLAN SNAPSHOT
+    # ========================================================
+
+    plan_tier = (
+        payment.plan_tier
+        or ""
+    ).strip().lower()
+
+
+    if plan_tier not in RESTAURANT_PAYABLE_PLANS:
+
+        raise RuntimeError(
+            "Restaurant subscription plan is invalid."
+        )
+
+
+    expected_plan = (
+        RESTAURANT_PAYABLE_PLANS[
+            plan_tier
+        ]
+    )
+
+
+    expected_plan_amount = (
+        Decimal(
+            str(
+                expected_plan[
+                    "price"
+                ]
+            )
+        )
+    )
+
+
+    payment_amount = (
+        Decimal(
+            str(
+                payment.amount
+            )
+        )
+    )
+
+
+    if payment_amount != expected_plan_amount:
+
+        raise RuntimeError(
+            "Restaurant subscription plan price does not match."
+        )
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=payment.restaurant_advert_id,
+            organizer_id=payment.organizer_id,
+        )
+        .first()
+    )
+
+
+    if not advert:
+
+        raise RuntimeError(
+            "Restaurant linked to payment was not found."
+        )
+
+
+    # ========================================================
+    # ORGANIZER
+    # ========================================================
+
+    organizer = (
+        Organizer.query
+        .filter_by(
+            id=payment.organizer_id
+        )
+        .first()
+    )
+
+
+    if not organizer:
+
+        raise RuntimeError(
+            "Restaurant owner was not found."
+        )
+
+
+    if not organizer.active:
+
+        raise RuntimeError(
+            "Restaurant owner account is inactive."
+        )
+
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if account_type != "restaurant":
+
+        raise RuntimeError(
+            "Payment does not belong to a restaurant account."
+        )
+
+
+    # ========================================================
+    # PAYMENT TIME
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # SUBSCRIPTION START
+    # ========================================================
+    #
+    # RULE:
+    #
+    # If the restaurant is renewing the SAME paid plan while
+    # still active or within grace, continue from the previous
+    # paid expiry date.
+    #
+    # Example:
+    #
+    # Premium expired 1 Oct
+    # Restaurant pays 3 Oct during grace
+    #
+    # New period:
+    #     1 Oct -> 31 Oct
+    #
+    # This preserves the restaurant's billing cycle.
+    #
+    # For:
+    #
+    #     Free -> Standard
+    #     Free -> Premium
+    #     Standard -> Premium
+    #
+    # start a fresh period from payment time.
+    # ========================================================
+
+    same_paid_plan = (
+        advert.normalized_subscription_tier
+        == plan_tier
+        and
+        plan_tier
+        in (
+            RESTAURANT_PLAN_STANDARD,
+            RESTAURANT_PLAN_PREMIUM,
+        )
+    )
+
+
+    if (
+        same_paid_plan
+        and
+        advert.subscription_expires_at
+    ):
+
+        subscription_start = (
+            advert.subscription_expires_at
+        )
+
+
+    else:
+
+        subscription_start = (
+            now
+        )
+
+
+    # ========================================================
+    # SUBSCRIPTION END
+    # ========================================================
+
+    subscription_end = (
+        subscription_start
+        +
+        timedelta(
+            days=payment.period_days
+        )
+    )
+
+
+    # ========================================================
+    # PAYSTACK AUDIT
+    # ========================================================
+
+    transaction_id = (
+        transaction_data.get(
+            "id"
+        )
+    )
+
+
+    payment_channel = (
+        transaction_data.get(
+            "channel"
+        )
+    )
+
+
+    # ========================================================
+    # UPDATE PAYMENT
+    # ========================================================
+
+    payment.payment_status = (
+        "paid"
+    )
+
+    payment.paystack_transaction_id = (
+        str(transaction_id)
+        if transaction_id is not None
+        else None
+    )
+
+    payment.payment_channel = (
+        str(payment_channel)
+        if payment_channel
+        else None
+    )
+
+    payment.payment_verified_at = (
+        now
+    )
+
+    payment.paid_at = (
+        now
+    )
+
+    payment.confirmed_at = (
+        now
+    )
+
+    payment.confirmed_by = (
+        "paystack"
+    )
+
+    payment.subscription_start = (
+        subscription_start
+    )
+
+    payment.subscription_end = (
+        subscription_end
+    )
+
+
+    # ========================================================
+    # ACTIVATE RESTAURANT PLAN
+    # ========================================================
+
+    advert.subscription_tier = (
+        plan_tier
+    )
+
+    advert.subscription_status = (
+        "active"
+    )
+
+    advert.subscription_started_at = (
+        subscription_start
+    )
+
+    advert.subscription_expires_at = (
+        subscription_end
+    )
+
+
+    # ========================================================
+    # COMMIT ATOMICALLY
+    # ========================================================
+
+    db.session.commit()
+
+
+    current_app.logger.info(
+        (
+            "[Restaurant Subscription] "
+            "Payment finalized "
+            "restaurant_id=%s "
+            "organizer_id=%s "
+            "plan=%s "
+            "reference=%s "
+            "subscription_end=%s"
+        ),
+        advert.id,
+        organizer.id,
+        plan_tier,
+        payment.payment_reference,
+        subscription_end,
+    )
+
+
+    return payment
 # ============================================================
 # FIREBASE WEB PUSH CONFIGURED
 # ============================================================
@@ -3101,6 +3607,20 @@ def send_push_campaign(
     return campaign
 
 
+# ============================================================
+# RESTAURANT SUBSCRIPTION PAYMENT REFERENCE
+# ============================================================
+
+def generate_restaurant_subscription_payment_reference():
+
+    return (
+        "KXR-"
+        + datetime.utcnow().strftime(
+            "%Y%m%d%H%M%S"
+        )
+        + "-"
+        + secrets.token_hex(6).upper()
+    )
 
 # ============================================================
 # PUBLIC RESTAURANT API
@@ -23486,6 +24006,15 @@ def paystack_ticket_webhook():
     # ========================================================
     # RAW WEBHOOK BODY
     # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # The exact raw body received from Paystack must be used
+    # when calculating the webhook signature.
+    #
+    # Do not JSON-decode and then re-encode the payload before
+    # calculating the HMAC.
+    # ========================================================
 
     raw_body = (
         request.get_data()
@@ -23522,6 +24051,13 @@ def paystack_ticket_webhook():
         )
     ):
 
+        current_app.logger.warning(
+            (
+                "[Paystack Webhook] "
+                "Rejected webhook with invalid signature."
+            )
+        )
+
         abort(400)
 
 
@@ -23538,7 +24074,16 @@ def paystack_ticket_webhook():
         )
 
 
-    except Exception:
+    except Exception as error:
+
+        current_app.logger.warning(
+            (
+                "[Paystack Webhook] "
+                "Unable to parse webhook payload "
+                "error=%s"
+            ),
+            error,
+        )
 
         abort(400)
 
@@ -23547,18 +24092,24 @@ def paystack_ticket_webhook():
     # ONLY PROCESS SUCCESSFUL CHARGES
     # ========================================================
 
-    if (
+    event_type = (
         payload.get(
             "event"
         )
-        != "charge.success"
-    ):
+    )
+
+
+    if event_type != "charge.success":
 
         return (
             "",
             200,
         )
 
+
+    # ========================================================
+    # TRANSACTION DATA
+    # ========================================================
 
     transaction_data = (
         payload.get(
@@ -23567,6 +24118,10 @@ def paystack_ticket_webhook():
         or {}
     )
 
+
+    # ========================================================
+    # PAYMENT REFERENCE
+    # ========================================================
 
     reference = (
         str(
@@ -23581,6 +24136,14 @@ def paystack_ticket_webhook():
 
     if not reference:
 
+        current_app.logger.warning(
+            (
+                "[Paystack Webhook] "
+                "charge.success received without "
+                "a payment reference."
+            )
+        )
+
         return (
             "",
             200,
@@ -23588,7 +24151,13 @@ def paystack_ticket_webhook():
 
 
     # ========================================================
-    # TICKET ORDER
+    # 1. TICKET ORDER
+    # ========================================================
+    #
+    # Customer pays for event tickets.
+    #
+    # Money may be settled to the organizer through the
+    # organizer's Paystack subaccount.
     # ========================================================
 
     order = (
@@ -23601,222 +24170,12 @@ def paystack_ticket_webhook():
     )
 
 
-    # ========================================================
-    # NON-TICKET PAYMENTS
-    # ========================================================
-
-    if not order:
-
-        # ====================================================
-        # SUBSCRIPTION PAYMENT
-        # ====================================================
-
-        subscription_payment = (
-            SubscriptionPayment.query
-            .filter_by(
-                payment_reference=
-                    reference
-            )
-            .first()
-        )
-
-
-        # ====================================================
-        # NOT A SUBSCRIPTION PAYMENT
-        # ====================================================
-
-        if not subscription_payment:
-
-            # ================================================
-            # EVENT BOOST
-            # ================================================
-
-            boost = (
-                EventBoost.query
-                .filter_by(
-                    payment_reference=
-                        reference
-                )
-                .first()
-            )
-
-
-            # ================================================
-            # NOT AN EVENT BOOST
-            # ================================================
-
-            if not boost:
-
-                # ============================================
-                # FEATURED LISTING
-                # ============================================
-
-                featured_listing = (
-                    FeaturedListing.query
-                    .filter_by(
-                        payment_reference=
-                            reference
-                    )
-                    .first()
-                )
-
-
-                # ============================================
-                # UNKNOWN PAYMENT REFERENCE
-                # ============================================
-
-                if not featured_listing:
-
-                    current_app.logger.warning(
-                        (
-                            "[Paystack Webhook] "
-                            "No Kalxa payment record found "
-                            "for reference=%s"
-                        ),
-                        reference,
-                    )
-
-
-                    return (
-                        "",
-                        200,
-                    )
-
-
-                # ============================================
-                # FINALIZE FEATURED LISTING
-                # ============================================
-
-                try:
-
-                    finalize_featured_listing_payment(
-                        featured_listing,
-                        transaction_data,
-                    )
-
-
-                except Exception as error:
-
-                    db.session.rollback()
-
-                    current_app.logger.exception(
-                        (
-                            "[Paystack Featured Listing Webhook] "
-                            "Failed reference=%s error=%s"
-                        ),
-                        reference,
-                        error,
-                    )
-
-
-                    return (
-                        "",
-                        500,
-                    )
-
-
-                return (
-                    "",
-                    200,
-                )
-
-
-            # ================================================
-            # FINALIZE EVENT BOOST
-            # ================================================
-
-            try:
-
-                finalize_event_boost_payment(
-                    boost,
-                    transaction_data,
-                )
-
-
-            except Exception as error:
-
-                db.session.rollback()
-
-                current_app.logger.exception(
-                    (
-                        "[Paystack Event Boost Webhook] "
-                        "Failed reference=%s error=%s"
-                    ),
-                    reference,
-                    error,
-                )
-
-
-                return (
-                    "",
-                    500,
-                )
-
-
-            return (
-                "",
-                200,
-            )
-
-
-        # ====================================================
-        # CANCELLED SUBSCRIPTION PAYMENT
-        # ====================================================
-        #
-        # IMPORTANT:
-        #
-        # A cancelled subscription payment can belong to an
-        # outdated Paystack checkout.
-        #
-        # Example:
-        #
-        # Restaurant previously created an R199 checkout.
-        #
-        # Restaurant subscription pricing changes to R219.
-        #
-        # The old R199 SubscriptionPayment is cancelled and
-        # replaced with a new R219 payment.
-        #
-        # If the old checkout is somehow completed later,
-        # Paystack may still send charge.success.
-        #
-        # We acknowledge the webhook with HTTP 200 so Paystack
-        # does not repeatedly retry it, but we DO NOT activate
-        # or extend the organizer subscription.
-        # ====================================================
-
-        if (
-            subscription_payment.payment_status
-            == "cancelled"
-        ):
-
-            current_app.logger.warning(
-                (
-                    "[Paystack Subscription Webhook] "
-                    "Ignoring successful transaction for "
-                    "cancelled subscription payment "
-                    "reference=%s organizer_id=%s payment_id=%s"
-                ),
-                reference,
-                subscription_payment.organizer_id,
-                subscription_payment.id,
-            )
-
-
-            return (
-                "",
-                200,
-            )
-
-
-        # ====================================================
-        # FINALIZE SUBSCRIPTION PAYMENT
-        # ====================================================
+    if order:
 
         try:
 
-            finalize_paystack_subscription_payment(
-                subscription_payment,
+            finalize_paystack_ticket_order(
+                order,
                 transaction_data,
             )
 
@@ -23825,12 +24184,17 @@ def paystack_ticket_webhook():
 
             db.session.rollback()
 
+
             current_app.logger.exception(
                 (
-                    "[Paystack Subscription Webhook] "
-                    "Failed reference=%s error=%s"
+                    "[Paystack Ticket Webhook] "
+                    "Failed "
+                    "reference=%s "
+                    "order_id=%s "
+                    "error=%s"
                 ),
                 reference,
+                order.id,
                 error,
             )
 
@@ -23848,41 +24212,355 @@ def paystack_ticket_webhook():
 
 
     # ========================================================
-    # FINALIZE TICKET ORDER
+    # 2. RESTAURANT SUBSCRIPTION PAYMENT
+    # ========================================================
+    #
+    # Restaurant owner pays Kalxa for:
+    #
+    #     Standard
+    #         R219
+    #
+    #     Premium
+    #         R299
+    #
+    # This is completely separate from the legacy Organizer
+    # SaaS subscription.
     # ========================================================
 
-    try:
-
-        finalize_paystack_ticket_order(
-            order,
-            transaction_data,
+    restaurant_subscription_payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            payment_reference=
+                reference
         )
+        .first()
+    )
 
 
-    except Exception as error:
+    if restaurant_subscription_payment:
 
-        db.session.rollback()
+        # ====================================================
+        # CANCELLED RESTAURANT PAYMENT
+        # ====================================================
+        #
+        # An old checkout may have been cancelled because:
+        #
+        #     price changed
+        #     owner selected another plan
+        #     checkout was replaced
+        #
+        # If the old Paystack checkout somehow succeeds later,
+        # acknowledge it but DO NOT activate the restaurant.
+        # ====================================================
+
+        if (
+            restaurant_subscription_payment.payment_status
+            == "cancelled"
+        ):
+
+            current_app.logger.warning(
+                (
+                    "[Restaurant Subscription Webhook] "
+                    "Ignoring successful transaction for "
+                    "cancelled payment "
+                    "reference=%s "
+                    "restaurant_id=%s "
+                    "organizer_id=%s "
+                    "payment_id=%s"
+                ),
+                reference,
+                restaurant_subscription_payment.restaurant_advert_id,
+                restaurant_subscription_payment.organizer_id,
+                restaurant_subscription_payment.id,
+            )
 
 
-        current_app.logger.exception(
-            (
-                "[Paystack Webhook] Failed "
-                "reference=%s error=%s"
-            ),
-            reference,
-            error,
-        )
+            return (
+                "",
+                200,
+            )
+
+
+        # ====================================================
+        # FINALIZE RESTAURANT SUBSCRIPTION
+        # ====================================================
+
+        try:
+
+            finalize_restaurant_subscription_payment(
+                restaurant_subscription_payment,
+                transaction_data,
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Subscription Webhook] "
+                    "Finalization failed "
+                    "reference=%s "
+                    "restaurant_id=%s "
+                    "payment_id=%s "
+                    "error=%s"
+                ),
+                reference,
+                restaurant_subscription_payment.restaurant_advert_id,
+                restaurant_subscription_payment.id,
+                error,
+            )
+
+
+            return (
+                "",
+                500,
+            )
 
 
         return (
             "",
-            500,
+            200,
         )
 
 
     # ========================================================
-    # SUCCESS
+    # 3. LEGACY / ORGANIZER SUBSCRIPTION PAYMENT
     # ========================================================
+    #
+    # This is the existing SubscriptionPayment table.
+    #
+    # IMPORTANT:
+    #
+    # This activates Organizer SaaS access.
+    #
+    # It does NOT control:
+    #
+    #     RestaurantAdvert.subscription_tier
+    #
+    # Restaurant Standard/Premium payments are handled by the
+    # RestaurantSubscriptionPayment branch above.
+    # ========================================================
+
+    subscription_payment = (
+        SubscriptionPayment.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first()
+    )
+
+
+    if subscription_payment:
+
+        # ====================================================
+        # CANCELLED ORGANIZER SUBSCRIPTION PAYMENT
+        # ====================================================
+
+        if (
+            subscription_payment.payment_status
+            == "cancelled"
+        ):
+
+            current_app.logger.warning(
+                (
+                    "[Paystack Subscription Webhook] "
+                    "Ignoring successful transaction for "
+                    "cancelled organizer subscription "
+                    "reference=%s "
+                    "organizer_id=%s "
+                    "payment_id=%s"
+                ),
+                reference,
+                subscription_payment.organizer_id,
+                subscription_payment.id,
+            )
+
+
+            return (
+                "",
+                200,
+            )
+
+
+        # ====================================================
+        # FINALIZE ORGANIZER SUBSCRIPTION
+        # ====================================================
+
+        try:
+
+            finalize_paystack_subscription_payment(
+                subscription_payment,
+                transaction_data,
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Paystack Subscription Webhook] "
+                    "Finalization failed "
+                    "reference=%s "
+                    "organizer_id=%s "
+                    "payment_id=%s "
+                    "error=%s"
+                ),
+                reference,
+                subscription_payment.organizer_id,
+                subscription_payment.id,
+                error,
+            )
+
+
+            return (
+                "",
+                500,
+            )
+
+
+        return (
+            "",
+            200,
+        )
+
+
+    # ========================================================
+    # 4. EVENT BOOST
+    # ========================================================
+
+    boost = (
+        EventBoost.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first()
+    )
+
+
+    if boost:
+
+        try:
+
+            finalize_event_boost_payment(
+                boost,
+                transaction_data,
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Paystack Event Boost Webhook] "
+                    "Finalization failed "
+                    "reference=%s "
+                    "boost_id=%s "
+                    "error=%s"
+                ),
+                reference,
+                boost.id,
+                error,
+            )
+
+
+            return (
+                "",
+                500,
+            )
+
+
+        return (
+            "",
+            200,
+        )
+
+
+    # ========================================================
+    # 5. FEATURED LISTING
+    # ========================================================
+
+    featured_listing = (
+        FeaturedListing.query
+        .filter_by(
+            payment_reference=
+                reference
+        )
+        .first()
+    )
+
+
+    if featured_listing:
+
+        try:
+
+            finalize_featured_listing_payment(
+                featured_listing,
+                transaction_data,
+            )
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+
+            current_app.logger.exception(
+                (
+                    "[Paystack Featured Listing Webhook] "
+                    "Finalization failed "
+                    "reference=%s "
+                    "featured_listing_id=%s "
+                    "error=%s"
+                ),
+                reference,
+                featured_listing.id,
+                error,
+            )
+
+
+            return (
+                "",
+                500,
+            )
+
+
+        return (
+            "",
+            200,
+        )
+
+
+    # ========================================================
+    # UNKNOWN PAYMENT REFERENCE
+    # ========================================================
+    #
+    # The webhook is valid and signed by Paystack, but Kalxa
+    # does not currently have a matching payment record.
+    #
+    # We return 200 so Paystack does not repeatedly resend a
+    # transaction that Kalxa cannot associate with a record.
+    # ========================================================
+
+    current_app.logger.warning(
+        (
+            "[Paystack Webhook] "
+            "No Kalxa payment record found "
+            "for reference=%s"
+        ),
+        reference,
+    )
+
 
     return (
         "",
@@ -26549,6 +27227,696 @@ def admin_request_subscription_payment():
 
     return redirect(
         authorization_url
+    )
+    
+    
+    
+# ============================================================
+# RESTAURANT SUBSCRIPTION CHECKOUT
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/subscription/checkout/<plan_tier>",
+    methods=[
+        "POST",
+    ],
+)
+def admin_restaurant_subscription_checkout(
+    advert_id,
+    plan_tier,
+):
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+
+    if auth:
+
+        return auth
+
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if not organizer:
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT ONLY
+    # ========================================================
+
+    account_type = (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        or "event"
+    )
+
+
+    if account_type != "restaurant":
+
+        abort(403)
+
+
+    if not organizer.active:
+
+        flash(
+            "Your restaurant account is currently inactive.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_dashboard"
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            organizer_id=organizer.id,
+        )
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # SYNCHRONIZE EXISTING PLAN
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # VALIDATE REQUESTED PLAN
+    # ========================================================
+    #
+    # Never accept the price from HTML.
+    #
+    # The browser only supplies:
+    #
+    #     standard
+    #     premium
+    #
+    # Price comes from server-side constants.
+    # ========================================================
+
+    requested_plan = (
+        plan_tier
+        or ""
+    ).strip().lower()
+
+
+    if requested_plan not in RESTAURANT_PAYABLE_PLANS:
+
+        abort(400)
+
+
+    plan_config = (
+        RESTAURANT_PAYABLE_PLANS[
+            requested_plan
+        ]
+    )
+
+
+    plan_name = (
+        plan_config[
+            "name"
+        ]
+    )
+
+
+    plan_price = (
+        Decimal(
+            str(
+                plan_config[
+                    "price"
+                ]
+            )
+        )
+    )
+
+
+    # ========================================================
+    # PAYSTACK CONFIGURATION
+    # ========================================================
+
+    if not paystack_is_configured():
+
+        flash(
+            "Paystack is not configured on Kalxa yet.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+                advert_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # FIND EXISTING PENDING PAYMENT
+    # ========================================================
+
+    payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            restaurant_advert_id=advert.id,
+            organizer_id=organizer.id,
+            plan_tier=requested_plan,
+            payment_status="pending",
+        )
+        .order_by(
+            RestaurantSubscriptionPayment.created_at.desc()
+        )
+        .first()
+    )
+
+
+    # ========================================================
+    # CANCEL OUTDATED PENDING PAYMENT
+    # ========================================================
+
+    if payment:
+
+        existing_amount = (
+            Decimal(
+                str(
+                    payment.amount
+                )
+            )
+        )
+
+
+        if existing_amount != plan_price:
+
+            payment.payment_status = (
+                "cancelled"
+            )
+
+
+            try:
+
+                db.session.commit()
+
+
+            except Exception as error:
+
+                db.session.rollback()
+
+                current_app.logger.exception(
+                    (
+                        "[Restaurant Subscription] "
+                        "Unable to cancel outdated checkout "
+                        "restaurant_id=%s "
+                        "payment_id=%s "
+                        "error=%s"
+                    ),
+                    advert.id,
+                    payment.id,
+                    error,
+                )
+
+
+                flash(
+                    (
+                        "Unable to update your restaurant "
+                        "subscription checkout."
+                    ),
+                    "error",
+                )
+
+
+                return redirect(
+                    url_for(
+                        "admin_manage_restaurant",
+                        advert_id=advert.id,
+                    )
+                )
+
+
+            payment = None
+
+
+    # ========================================================
+    # REUSE EXISTING PAYSTACK CHECKOUT
+    # ========================================================
+
+    if (
+        payment
+        and
+        payment.paystack_authorization_url
+    ):
+
+        return redirect(
+            payment.paystack_authorization_url
+        )
+
+
+    # ========================================================
+    # CREATE PAYMENT RECORD
+    # ========================================================
+
+    if not payment:
+
+        payment = (
+            RestaurantSubscriptionPayment(
+
+                restaurant_advert_id=
+                    advert.id,
+
+                organizer_id=
+                    organizer.id,
+
+                plan_tier=
+                    requested_plan,
+
+                plan_name=
+                    plan_name,
+
+                amount=
+                    plan_price,
+
+                currency=
+                    "ZAR",
+
+                period_days=
+                    RESTAURANT_SUBSCRIPTION_PERIOD_DAYS,
+
+                payment_reference=
+                    generate_restaurant_subscription_payment_reference(),
+
+                payment_method=
+                    "paystack",
+
+                payment_status=
+                    "pending",
+            )
+        )
+
+
+        try:
+
+            db.session.add(
+                payment
+            )
+
+            db.session.commit()
+
+
+        except Exception as error:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Subscription] "
+                    "Unable to create payment "
+                    "restaurant_id=%s "
+                    "plan=%s "
+                    "error=%s"
+                ),
+                advert.id,
+                requested_plan,
+                error,
+            )
+
+
+            flash(
+                (
+                    "Unable to start restaurant "
+                    "subscription payment."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "admin_manage_restaurant",
+                    advert_id=advert.id,
+                )
+            )
+
+
+    # ========================================================
+    # CALLBACK
+    # ========================================================
+
+    callback_url = url_for(
+        "paystack_restaurant_subscription_callback",
+        _external=True,
+        _scheme="https",
+    )
+
+
+    # ========================================================
+    # CANCEL URL
+    # ========================================================
+
+    cancel_url = url_for(
+        "admin_manage_restaurant",
+        advert_id=advert.id,
+        _external=True,
+        _scheme="https",
+    )
+
+
+    # ========================================================
+    # PAYSTACK AMOUNT
+    # ========================================================
+
+    amount_cents = int(
+        (
+            plan_price
+            * 100
+        )
+        .quantize(
+            Decimal("1"),
+            rounding=ROUND_UP,
+        )
+    )
+
+
+    # ========================================================
+    # PAYSTACK PAYLOAD
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # There is NO restaurant subaccount here.
+    #
+    # Restaurant subscriptions are payments from the
+    # restaurant TO Kalxa.
+    # ========================================================
+
+    payload = {
+
+        "email":
+            organizer.email,
+
+        "amount":
+            str(
+                amount_cents
+            ),
+
+        "currency":
+            "ZAR",
+
+        "reference":
+            payment.payment_reference,
+
+        "callback_url":
+            callback_url,
+
+        "channels": [
+            "eft",
+            "capitec_pay",
+        ],
+
+        "metadata":
+            json.dumps(
+                {
+
+                    "payment_type":
+                        "restaurant_subscription",
+
+                    "restaurant_subscription_payment_id":
+                        payment.id,
+
+                    "restaurant_advert_id":
+                        advert.id,
+
+                    "organizer_id":
+                        organizer.id,
+
+                    "restaurant_plan":
+                        requested_plan,
+
+                    "plan_name":
+                        plan_name,
+
+                    "amount":
+                        str(
+                            plan_price
+                        ),
+
+                    "period_days":
+                        RESTAURANT_SUBSCRIPTION_PERIOD_DAYS,
+
+                    "cancel_action":
+                        cancel_url,
+                }
+            ),
+    }
+
+
+    # ========================================================
+    # INITIALIZE PAYSTACK
+    # ========================================================
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "POST",
+                "/transaction/initialize",
+                payload,
+            )
+        )
+
+
+        data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        authorization_url = (
+            data.get(
+                "authorization_url"
+            )
+        )
+
+
+        if not authorization_url:
+
+            raise RuntimeError(
+                (
+                    "Paystack did not return "
+                    "a checkout URL."
+                )
+            )
+
+
+        payment.paystack_access_code = (
+            data.get(
+                "access_code"
+            )
+            or None
+        )
+
+
+        payment.paystack_authorization_url = (
+            authorization_url
+        )
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Subscription] "
+                "Paystack initialization failed "
+                "restaurant_id=%s "
+                "payment_id=%s "
+                "plan=%s "
+                "error=%s"
+            ),
+            advert.id,
+            payment.id,
+            requested_plan,
+            error,
+        )
+
+
+        flash(
+            (
+                "Secure Paystack checkout could not "
+                "be started. Please try again."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+                advert_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # REDIRECT TO PAYSTACK
+    # ========================================================
+
+    return redirect(
+        authorization_url
+    )  
+    
+# ============================================================
+# RESTAURANT SUBSCRIPTION PAYSTACK CALLBACK
+# ============================================================
+
+@app.route(
+    "/payments/paystack/restaurant-subscription/callback"
+)
+def paystack_restaurant_subscription_callback():
+
+    # ========================================================
+    # REFERENCE
+    # ========================================================
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+
+    if not reference:
+
+        abort(400)
+
+
+    # ========================================================
+    # PAYMENT
+    # ========================================================
+
+    payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # VERIFY WITH PAYSTACK
+    # ========================================================
+
+    try:
+
+        result = (
+            paystack_api_request(
+                "GET",
+                (
+                    "/transaction/verify/"
+                    +
+                    urllib.parse.quote(
+                        reference,
+                        safe="",
+                    )
+                ),
+            )
+        )
+
+
+        transaction_data = (
+            result.get(
+                "data"
+            )
+            or {}
+        )
+
+
+        finalize_restaurant_subscription_payment(
+            payment,
+            transaction_data,
+        )
+
+
+        flash(
+            (
+                f"{payment.plan_name} payment confirmed. "
+                "Your restaurant plan is now active."
+            ),
+            "success",
+        )
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Subscription Callback] "
+                "Verification failed "
+                "reference=%s "
+                "error=%s"
+            ),
+            reference,
+            error,
+        )
+
+
+        flash(
+            (
+                "Your restaurant subscription payment "
+                "is still being verified. "
+                "Please refresh shortly."
+            ),
+            "error",
+        )
+
+
+    # ========================================================
+    # RETURN TO RESTAURANT
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+            advert_id=
+                payment.restaurant_advert_id,
+        )
     )
 # ============================================================
 # PAYSTACK SUBSCRIPTION CALLBACK
