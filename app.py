@@ -15454,39 +15454,44 @@ def get_restaurant_experience_session_id():
     return anonymous_session_id
 
 
-# ============================================================
-# GET TAGGABLE RESTAURANTS
-# ============================================================
-#
-# Returns restaurants that customers are allowed to select
-# when posting a restaurant experience.
-#
-# Restaurant subscription rules:
-#
-# FREE:
-#     Hidden from Share Experience.
-#
-# STANDARD:
-#     Can receive customer experiences.
-#
-# PREMIUM:
-#     Can receive customer experiences.
-#
-# This query performs the first eligibility filter.
-#
-# restaurant_can_receive_experience_posts() remains the final
-# server-side permission check when a restaurant is submitted
-# directly or reached through a QR code.
-# ============================================================
 
 def get_taggable_restaurants():
 
-    now = (
-        datetime.utcnow()
-    )
+    now = datetime.utcnow()
 
+    # ========================================================
+    # CUSTOMER EXPERIENCE ELIGIBILITY
+    # ========================================================
+    #
+    # Only restaurants that are allowed to receive customer
+    # experiences should appear in the public:
+    #
+    #     "Select Restaurant"
+    #
+    # field.
+    #
+    # PLAN RULES:
+    #
+    # FREE
+    #     - Restaurant profile: YES
+    #     - Reel: YES
+    #     - Customer experiences: NO
+    #     - Excluded from this query
+    #
+    # STANDARD
+    #     - Customer experiences: YES
+    #     - Included when restaurant subscription is active
+    #
+    # PREMIUM
+    #     - Customer experiences: YES
+    #     - Included when restaurant subscription is active
+    #
+    # We also preserve the existing Organizer subscription
+    # checks because Organizer SaaS access and RestaurantAdvert
+    # feature access are currently separate layers.
+    # ========================================================
 
-    return (
+    restaurants = (
         RestaurantAdvert.query
 
         # ====================================================
@@ -15495,7 +15500,6 @@ def get_taggable_restaurants():
 
         .join(
             Organizer,
-
             RestaurantAdvert.organizer_id
             == Organizer.id,
         )
@@ -15516,9 +15520,15 @@ def get_taggable_restaurants():
         # RESTAURANT SUBSCRIPTION STATUS
         # ====================================================
         #
-        # Free restaurants are also "active", so status alone
-        # is not enough. The tier check below determines
-        # whether customer experiences are available.
+        # Free restaurants can also have:
+        #
+        #     subscription_status = "active"
+        #
+        # Therefore this check by itself does NOT grant
+        # customer-experience access.
+        #
+        # The subscription tier check below is what excludes
+        # Free restaurants.
         # ====================================================
 
         .filter(
@@ -15531,14 +15541,13 @@ def get_taggable_restaurants():
         # RESTAURANT PLAN
         # ====================================================
         #
-        # FREE:
-        #     excluded
+        # Only plans containing the customer_experiences
+        # capability are currently:
         #
-        # STANDARD:
-        #     included
+        #     standard
+        #     premium
         #
-        # PREMIUM:
-        #     included
+        # FREE is deliberately excluded.
         # ====================================================
 
         .filter(
@@ -15555,9 +15564,18 @@ def get_taggable_restaurants():
         # PAID RESTAURANT SUBSCRIPTION EXPIRY
         # ====================================================
         #
-        # Standard and Premium are paid plans.
+        # Standard and Premium are paid restaurant plans.
         #
-        # They must therefore have a valid future expiry date.
+        # A paid restaurant must have:
+        #
+        #     subscription_expires_at != None
+        #
+        # and:
+        #
+        #     subscription_expires_at > now
+        #
+        # An expired Standard/Premium restaurant therefore
+        # cannot appear in the customer experience selector.
         # ====================================================
 
         .filter(
@@ -15575,6 +15593,15 @@ def get_taggable_restaurants():
         # ====================================================
         # RESTAURANT CAMPAIGN START
         # ====================================================
+        #
+        # Restaurant is available when:
+        #
+        #     starts_at is NULL
+        #
+        # OR
+        #
+        #     starts_at <= now
+        # ====================================================
 
         .filter(
             or_(
@@ -15590,6 +15617,15 @@ def get_taggable_restaurants():
 
         # ====================================================
         # RESTAURANT CAMPAIGN END
+        # ====================================================
+        #
+        # Restaurant is available when:
+        #
+        #     ends_at is NULL
+        #
+        # OR
+        #
+        #     ends_at > now
         # ====================================================
 
         .filter(
@@ -15616,7 +15652,11 @@ def get_taggable_restaurants():
 
 
         # ====================================================
-        # ORGANIZER MUST BE RESTAURANT ACCOUNT
+        # ORGANIZER MUST BE A RESTAURANT ACCOUNT
+        # ====================================================
+        #
+        # Prevent event organizer accounts or other future
+        # account types from entering the restaurant selector.
         # ====================================================
 
         .filter(
@@ -15626,13 +15666,31 @@ def get_taggable_restaurants():
 
 
         # ====================================================
-        # ORGANIZER SaaS SUBSCRIPTION
+        # ORGANIZER SaaS SUBSCRIPTION STATUS
+        # ====================================================
+        #
+        # IMPORTANT:
+        #
+        # This is separate from:
+        #
+        #     RestaurantAdvert.subscription_status
+        #
+        # Organizer subscription controls the organizer's
+        # broader Kalxa/Ticketing access.
+        #
+        # RestaurantAdvert subscription controls restaurant
+        # feature access.
         # ====================================================
 
         .filter(
             Organizer.subscription_status
             == "active"
         )
+
+
+        # ====================================================
+        # ORGANIZER SaaS SUBSCRIPTION EXPIRY
+        # ====================================================
 
         .filter(
             Organizer.subscription_expires_at.isnot(
@@ -15663,6 +15721,38 @@ def get_taggable_restaurants():
         .all()
     )
 
+
+    # ========================================================
+    # FINAL FEATURE SAFETY CHECK
+    # ========================================================
+    #
+    # The SQL query above performs the primary filtering.
+    #
+    # This final check deliberately uses the model-level
+    # capability helper as a second layer of protection.
+    #
+    # This means that if RESTAURANT_PLAN_FEATURES changes in
+    # the future, this selector still respects:
+    #
+    #     advert.can_receive_customer_experiences
+    #
+    # rather than relying only on the hard-coded tier names.
+    #
+    # Current result:
+    #
+    #     FREE       -> False
+    #     STANDARD   -> True
+    #     PREMIUM    -> True
+    # ========================================================
+
+    return [
+        advert
+
+        for advert
+        in restaurants
+
+        if advert.can_receive_customer_experiences
+    ]
 
 # ============================================================
 # RESTAURANT TAGGING ELIGIBILITY
