@@ -2830,10 +2830,18 @@ def serialize_public_restaurant(
 
 def require_restaurant_subscription():
 
+    # ========================================================
+    # CURRENT ORGANIZER
+    # ========================================================
+
     organizer = (
         get_current_organizer()
     )
 
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
 
     if not organizer:
 
@@ -2843,6 +2851,10 @@ def require_restaurant_subscription():
             )
         )
 
+
+    # ========================================================
+    # ACCOUNT TYPE
+    # ========================================================
 
     account_type = (
         getattr(
@@ -2854,9 +2866,18 @@ def require_restaurant_subscription():
     )
 
 
-    # --------------------------------------------------------
-    # Only restaurant accounts should enter restaurant tools.
-    # --------------------------------------------------------
+    # ========================================================
+    # RESTAURANT ACCOUNT REQUIRED
+    # ========================================================
+    #
+    # Restaurant tools are only available to accounts whose
+    # account_type is:
+    #
+    #     restaurant
+    #
+    # Event organizer accounts should not be able to enter
+    # restaurant management routes.
+    # ========================================================
 
     if (
         account_type
@@ -2865,7 +2886,7 @@ def require_restaurant_subscription():
 
         flash(
             (
-                "Restaurant advertising is only "
+                "Restaurant tools are only "
                 "available to restaurant accounts."
             ),
             "error",
@@ -2878,27 +2899,63 @@ def require_restaurant_subscription():
         )
 
 
-    # --------------------------------------------------------
-    # Subscription required.
-    # --------------------------------------------------------
+    # ========================================================
+    # RESTAURANT PLAN ARCHITECTURE
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # We deliberately DO NOT check:
+    #
+    #     organizer.is_subscription_active
+    #
+    # here anymore.
+    #
+    # Restaurant access now follows the RestaurantAdvert plan:
+    #
+    # FREE
+    #     R0
+    #     Basic restaurant profile
+    #     Main poster
+    #     Restaurant reel/discovery
+    #
+    # STANDARD
+    #     R219/month
+    #     Free features
+    #     Gallery
+    #     Operational hours
+    #     Customer experiences
+    #     Rating QR
+    #
+    # PREMIUM
+    #     R299/month
+    #     Standard features
+    #     Kalxa Stories eligibility
+    #     Restaurant analytics
+    #
+    # Because Free is a valid active restaurant plan, a
+    # restaurant account must NOT be forced to purchase the
+    # old Organizer subscription merely to create/manage its
+    # Free restaurant profile.
+    #
+    # Paid feature permissions are enforced on the actual
+    # RestaurantAdvert through:
+    #
+    #     advert.can_use_gallery
+    #     advert.can_use_opening_hours
+    #     advert.can_receive_customer_experiences
+    #     advert.can_use_stories
+    #     advert.can_view_analytics
+    #
+    # This helper therefore controls access to RESTAURANT
+    # TOOLS, not access to a particular paid restaurant
+    # feature.
+    # ========================================================
 
-    if not organizer.is_subscription_active:
 
-        flash(
-            (
-                "Activate your Kalxa subscription "
-                "before creating restaurant adverts "
-                "or publishing restaurant reels."
-            ),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin_subscription"
-            )
-        )
-
+    # ========================================================
+    # ACCESS ALLOWED
+    # ========================================================
 
     return None
 # ============================================================
@@ -4000,10 +4057,55 @@ def build_restaurant_campaign_schedule(
     existing_advert=None,
 ):
 
+    # ========================================================
+    # CURRENT DATE
+    # ========================================================
+
     today = (
         datetime.utcnow()
         .date()
     )
+
+
+    # ========================================================
+    # IMPORTANT - RESTAURANT PLAN ARCHITECTURE
+    # ========================================================
+    #
+    # Restaurant campaign scheduling is no longer limited by:
+    #
+    #     organizer.subscription_expires_at
+    #
+    # The old architecture tied restaurant visibility to the
+    # Organizer SaaS subscription.
+    #
+    # The new architecture uses RestaurantAdvert plans:
+    #
+    # FREE
+    #     R0
+    #     Profile + basic discovery/reel
+    #
+    # STANDARD
+    #     R219/month
+    #     Additional restaurant features
+    #
+    # PREMIUM
+    #     R299/month
+    #     Standard features + Stories + analytics
+    #
+    # Therefore this helper is now responsible ONLY for
+    # validating the restaurant campaign's requested dates.
+    #
+    # Restaurant-plan expiry is handled separately through:
+    #
+    #     RestaurantAdvert.subscription_expires_at
+    #
+    # and the feature capability properties.
+    #
+    # NOTE:
+    #
+    # We keep the organizer argument in this function for now
+    # so existing route calls do not need to change.
+    # ========================================================
 
 
     # ========================================================
@@ -4026,15 +4128,35 @@ def build_restaurant_campaign_schedule(
     )
 
 
+    # ========================================================
+    # DEFAULT START DATE
+    # ========================================================
+    #
+    # If no start date is supplied, start today.
+    # ========================================================
+
     if not start_date:
 
-        start_date = today
+        start_date = (
+            today
+        )
 
 
-    # New campaigns cannot begin in the past.
+    # ========================================================
+    # NEW RESTAURANT - PAST DATE PROTECTION
+    # ========================================================
+    #
+    # A newly created restaurant campaign cannot start in
+    # the past.
+    #
+    # Existing adverts are allowed to retain/edit campaigns
+    # whose original start date may already be in the past.
+    # ========================================================
+
     if (
         existing_advert is None
-        and start_date < today
+        and
+        start_date < today
     ):
 
         return (
@@ -4046,6 +4168,10 @@ def build_restaurant_campaign_schedule(
             ),
         )
 
+
+    # ========================================================
+    # START DATETIME
+    # ========================================================
 
     starts_at = (
         datetime.combine(
@@ -4069,8 +4195,9 @@ def build_restaurant_campaign_schedule(
     )
 
 
-    requested_last_visible_date = None
-
+    # ========================================================
+    # PRESET DURATION
+    # ========================================================
 
     if (
         duration_choice
@@ -4084,6 +4211,63 @@ def build_restaurant_campaign_schedule(
         )
 
 
+        # ----------------------------------------------------
+        # SAFETY
+        # ----------------------------------------------------
+        #
+        # Duration options should always contain positive
+        # integer day values.
+        # ----------------------------------------------------
+
+        try:
+
+            duration_days = int(
+                duration_days
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            return (
+                None,
+                None,
+                (
+                    "Choose a valid "
+                    "campaign duration."
+                ),
+            )
+
+
+        if duration_days <= 0:
+
+            return (
+                None,
+                None,
+                (
+                    "Choose a valid "
+                    "campaign duration."
+                ),
+            )
+
+
+        # ----------------------------------------------------
+        # EXCLUSIVE END
+        # ----------------------------------------------------
+        #
+        # Example:
+        #
+        # Start:
+        #     01 October 00:00
+        #
+        # 14-day duration:
+        #     ends_at = 15 October 00:00
+        #
+        # This means the restaurant remains visible throughout
+        # 14 October and stops being active at midnight.
+        # ----------------------------------------------------
+
         ends_at = (
             starts_at
             + timedelta(
@@ -4092,31 +4276,34 @@ def build_restaurant_campaign_schedule(
         )
 
 
-        requested_last_visible_date = (
-            (
-                ends_at
-                - timedelta(
-                    microseconds=1
-                )
-            )
-            .date()
-        )
-
+    # ========================================================
+    # CUSTOM DURATION
+    # ========================================================
 
     elif (
         duration_choice
         == "custom"
     ):
 
+        custom_end_date_raw = (
+            form.get(
+                "custom_end_date",
+                "",
+            )
+            .strip()
+        )
+
+
         custom_end_date = (
             parse_restaurant_campaign_date(
-                form.get(
-                    "custom_end_date",
-                    "",
-                )
+                custom_end_date_raw
             )
         )
 
+
+        # ----------------------------------------------------
+        # END DATE REQUIRED
+        # ----------------------------------------------------
 
         if not custom_end_date:
 
@@ -4129,6 +4316,10 @@ def build_restaurant_campaign_schedule(
                 ),
             )
 
+
+        # ----------------------------------------------------
+        # END CANNOT PRECEDE START
+        # ----------------------------------------------------
 
         if (
             custom_end_date
@@ -4145,12 +4336,20 @@ def build_restaurant_campaign_schedule(
             )
 
 
-        requested_last_visible_date = (
-            custom_end_date
-        )
+        # ----------------------------------------------------
+        # EXCLUSIVE END
+        # ----------------------------------------------------
+        #
+        # If the user selects:
+        #
+        #     31 October
+        #
+        # the restaurant remains visible throughout that day
+        # and ends:
+        #
+        #     01 November 00:00
+        # ----------------------------------------------------
 
-
-        # Exclusive end.
         ends_at = (
             datetime.combine(
                 (
@@ -4164,94 +4363,76 @@ def build_restaurant_campaign_schedule(
         )
 
 
+    # ========================================================
+    # INVALID DURATION
+    # ========================================================
+
     else:
 
         return (
             None,
             None,
-            "Choose a valid campaign duration.",
+            (
+                "Choose a valid "
+                "campaign duration."
+            ),
         )
 
 
     # ========================================================
-    # SUBSCRIPTION LIMIT
+    # FINAL DATE SAFETY
     # ========================================================
 
-    subscription_expires_at = (
-        organizer.subscription_expires_at
-    )
-
-
-    if not subscription_expires_at:
-
-        return (
-            None,
-            None,
-            (
-                "Your subscription does not "
-                "have an expiry date. "
-                "Please contact Kalxa."
-            ),
-        )
-
-
-    if (
-        starts_at
-        >= subscription_expires_at
-    ):
-
-        return (
-            None,
-            None,
-            (
-                "Your campaign cannot start "
-                "after your subscription expires."
-            ),
-        )
-
-
-    subscription_last_date = (
-        subscription_expires_at.date()
-    )
-
-
-    if (
-        requested_last_visible_date
-        > subscription_last_date
-    ):
-
-        return (
-            None,
-            None,
-            (
-                "This campaign would run beyond "
-                "your current subscription. "
-                "Your subscription expires on "
-                f"{subscription_expires_at.strftime('%d %B %Y')}."
-            ),
-        )
-
-
-    # If the campaign finishes on the same calendar date
-    # that the subscription expires, stop it at the exact
-    # subscription expiry time.
     if (
         ends_at
-        > subscription_expires_at
+        <= starts_at
     ):
 
-        ends_at = (
-            subscription_expires_at
+        return (
+            None,
+            None,
+            (
+                "Campaign end date must "
+                "be after the start date."
+            ),
         )
 
+
+    # ========================================================
+    # NO ORGANIZER SUBSCRIPTION LIMIT
+    # ========================================================
+    #
+    # OLD LOGIC REMOVED:
+    #
+    #     organizer.subscription_expires_at
+    #
+    # Restaurant campaigns must not disappear simply because
+    # the old Organizer SaaS subscription expires.
+    #
+    # RestaurantAdvert subscription rules now determine which
+    # paid restaurant features are available.
+    #
+    # This is especially important for FREE restaurants:
+    #
+    #     subscription_tier = "free"
+    #     subscription_status = "active"
+    #     subscription_expires_at = None
+    #
+    # A Free restaurant is therefore allowed to maintain its
+    # basic restaurant presence without requiring an expiry
+    # date.
+    # ========================================================
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
 
     return (
         starts_at,
         ends_at,
         None,
     )
-
-
 
 # ============================================================
 # STAGE 6 - RESTAURANT CONVERSION ANALYTICS
