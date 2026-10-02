@@ -14394,7 +14394,6 @@ def admin_restaurants():
 # ============================================================
 # ADMIN - CREATE RESTAURANT
 # ============================================================
-
 @app.route(
     "/admin/restaurants/new",
     methods=["GET", "POST"],
@@ -14411,6 +14410,18 @@ def admin_create_restaurant():
         return auth
 
 
+    # ========================================================
+    # RESTAURANT ACCOUNT ACCESS
+    # ========================================================
+    #
+    # This checks that the logged-in organizer is allowed to
+    # use the restaurant side of Kalxa.
+    #
+    # IMPORTANT:
+    # This must NOT use the legacy Organizer subscription.
+    # Restaurant plan access belongs to RestaurantAdvert.
+    # ========================================================
+
     subscription_auth = require_restaurant_subscription()
 
     if subscription_auth:
@@ -14418,6 +14429,47 @@ def admin_create_restaurant():
 
 
     organizer = get_current_organizer()
+
+
+    if not organizer:
+
+        flash(
+            "Organizer account could not be found.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    # ========================================================
+    # ORGANIZER STATUS
+    # ========================================================
+
+    if not organizer.active:
+
+        flash(
+            "Your organizer account is inactive.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    if organizer.account_type != "restaurant":
+
+        abort(403)
 
 
     # ========================================================
@@ -14430,6 +14482,16 @@ def admin_create_restaurant():
         .isoformat()
     )
 
+
+    # ========================================================
+    # LEGACY ORGANIZER SUBSCRIPTION DATE
+    # ========================================================
+    #
+    # Keep this only because restaurant_form.html may still
+    # expect subscription_end_iso.
+    #
+    # It is NOT used to decide RestaurantAdvert plan access.
+    # ========================================================
 
     subscription_end_iso = (
         organizer.subscription_expires_at
@@ -14449,9 +14511,9 @@ def admin_create_restaurant():
     # Every restaurant created through this route begins on
     # the Free restaurant plan.
     #
-    # Passing the plan capabilities to the template allows
-    # restaurant_form.html to hide/lock paid features during
-    # initial creation.
+    # There is no RestaurantAdvert yet during GET, therefore
+    # capability values are supplied directly from the Free
+    # plan.
     # ========================================================
 
     def render_form():
@@ -14508,519 +14570,555 @@ def admin_create_restaurant():
 
 
     # ========================================================
+    # GET
+    # ========================================================
+    #
+    # No RestaurantAdvert exists yet.
+    #
+    # Therefore:
+    #
+    #     advert.can_use_reel
+    #
+    # must NEVER be evaluated here.
+    # ========================================================
+
+    if request.method == "GET":
+
+        return render_form()
+
+
+    # ========================================================
     # POST
     # ========================================================
 
-        if request.method == "POST":
+    # ========================================================
+    # BASIC FORM VALUES
+    # ========================================================
 
-        # ====================================================
-        # BASIC FORM VALUES
-        # ====================================================
+    business_name = (
+        request.form.get(
+            "business_name",
+            "",
+        )
+        .strip()
+    )
 
-          business_name = (
+
+    headline = (
+        request.form.get(
+            "headline",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    description = (
+        request.form.get(
+            "description",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    area = (
+        request.form.get(
+            "area",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    address = (
+        request.form.get(
+            "address",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    whatsapp_number = (
+        request.form.get(
+            "whatsapp_number",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    phone_number = (
+        request.form.get(
+            "phone_number",
+            "",
+        )
+        .strip()
+        or None
+    )
+
+
+    directions_url = (
+        valid_restaurant_directions_url(
             request.form.get(
-                "business_name",
+                "directions_url",
                 "",
             )
-            .strip()
-          )
+        )
+    )
 
 
-          headline = (
-            request.form.get(
-                "headline",
-                "",
-            )
-            .strip()
-            or None
-          )
+    # ========================================================
+    # BUSINESS NAME
+    # ========================================================
+
+    if not business_name:
+
+        flash(
+            "Business name is required.",
+            "error",
+        )
+
+        return render_form()
 
 
-          description = (
-            request.form.get(
-                "description",
-                "",
-            )
-            .strip()
-            or None
-          )
+    # ========================================================
+    # CAMPAIGN SCHEDULE
+    # ========================================================
+
+    (
+        starts_at,
+        ends_at,
+        schedule_error,
+    ) = build_restaurant_campaign_schedule(
+        request.form,
+        organizer,
+    )
 
 
-          area = (
-            request.form.get(
-                "area",
-                "",
-            )
-            .strip()
-            or None
-          )
+    if schedule_error:
 
-
-          address = (
-            request.form.get(
-                "address",
-                "",
-            )
-            .strip()
-            or None
-          )
-
-
-          whatsapp_number = (
-            request.form.get(
-                "whatsapp_number",
-                "",
-            )
-            .strip()
-            or None
-         )
-
-
-          phone_number = (
-            request.form.get(
-                "phone_number",
-                "",
-            )
-            .strip()
-            or None
-          )
-
-
-          directions_url = (
-            valid_restaurant_directions_url(
-                request.form.get(
-                    "directions_url",
-                    "",
-                )
-            )
-          )
-
-
-        # ====================================================
-        # BUSINESS NAME
-        # ====================================================
-
-        if not business_name:
-
-            flash(
-                "Business name is required.",
-                "error",
-            )
-
-            return render_form()
-
-
-        # ====================================================
-        # CAMPAIGN SCHEDULE
-        # ====================================================
-
-        (
-            starts_at,
-            ends_at,
+        flash(
             schedule_error,
-        ) = build_restaurant_campaign_schedule(
-            request.form,
-            organizer,
+            "error",
+        )
+
+        return render_form()
+
+
+    # ========================================================
+    # MAIN POSTER
+    # ========================================================
+    #
+    # Main restaurant poster belongs to the basic profile.
+    #
+    # FREE       -> YES
+    # STANDARD   -> YES
+    # PREMIUM    -> YES
+    # ========================================================
+
+    poster = (
+        request.files.get(
+            "poster"
+        )
+    )
+
+
+    if (
+        not poster
+        or
+        not poster.filename
+    ):
+
+        flash(
+            "Upload a restaurant poster.",
+            "error",
+        )
+
+        return render_form()
+
+
+    # ========================================================
+    # POSTER FILE TYPE
+    # ========================================================
+
+    if not allowed_restaurant_poster_filename(
+        poster.filename
+    ):
+
+        flash(
+            (
+                "Use a JPG, JPEG, PNG "
+                "or WebP poster."
+            ),
+            "error",
+        )
+
+        return render_form()
+
+
+    # ========================================================
+    # POSTER FILE SIZE
+    # ========================================================
+
+    poster.stream.seek(
+        0,
+        os.SEEK_END,
+    )
+
+
+    poster_file_size = (
+        poster.stream.tell()
+    )
+
+
+    poster.stream.seek(
+        0
+    )
+
+
+    if (
+        poster_file_size
+        >
+        RESTAURANT_POSTER_MAX_FILE_BYTES
+    ):
+
+        flash(
+            (
+                "The poster is too large. "
+                "Maximum size is 8 MB."
+            ),
+            "error",
+        )
+
+        return render_form()
+
+
+    # ========================================================
+    # GALLERY FILES
+    # ========================================================
+    #
+    # Every newly created restaurant starts on Free.
+    #
+    # FREE:
+    #     Gallery disabled.
+    #
+    # STANDARD / PREMIUM:
+    #     Gallery enabled after payment/upgrade.
+    #
+    # This is enforced server-side so manually adding a
+    # gallery input to the HTML cannot bypass the plan.
+    # ========================================================
+
+    gallery_files = (
+        get_restaurant_gallery_files()
+    )
+
+
+    if gallery_files:
+
+        flash(
+            (
+                "Gallery photos are available on "
+                "the Standard and Premium restaurant "
+                "plans. Create your restaurant first, "
+                "then upgrade to add gallery photos."
+            ),
+            "error",
+        )
+
+        return render_form()
+
+
+    # ========================================================
+    # CLOUDINARY TRACKING
+    # ========================================================
+
+    poster_public_id = None
+
+
+    try:
+
+        # ====================================================
+        # UPLOAD MAIN POSTER
+        # ====================================================
+
+        upload_result = (
+            cloudinary.uploader.upload(
+                poster,
+
+                resource_type="image",
+
+                folder=(
+                    "kalxa/"
+                    f"organizers/{organizer.id}/"
+                    "restaurants/posters"
+                ),
+
+                use_filename=True,
+
+                unique_filename=True,
+
+                overwrite=False,
+            )
         )
 
 
-        if schedule_error:
-
-            flash(
-                schedule_error,
-                "error",
+        poster_public_id = (
+            upload_result.get(
+                "public_id"
             )
+        )
 
-            return render_form()
 
-
-        # ====================================================
-        # MAIN POSTER
-        # ====================================================
-        #
-        # Main restaurant poster belongs to the basic profile.
-        #
-        # FREE       -> YES
-        # STANDARD   -> YES
-        # PREMIUM    -> YES
-        # ====================================================
-
-        poster = (
-            request.files.get(
-                "poster"
+        poster_secure_url = (
+            upload_result.get(
+                "secure_url"
             )
         )
 
 
         if (
-            not poster
+            not poster_public_id
             or
-            not poster.filename
+            not poster_secure_url
         ):
 
-            flash(
-                "Upload a restaurant poster.",
-                "error",
-            )
-
-            return render_form()
-
-
-        # ====================================================
-        # POSTER FILE TYPE
-        # ====================================================
-
-        if not allowed_restaurant_poster_filename(
-            poster.filename
-        ):
-
-            flash(
+            raise RuntimeError(
                 (
-                    "Use a JPG, JPEG, PNG "
-                    "or WebP poster."
-                ),
-                "error",
+                    "Cloudinary did not return "
+                    "the uploaded poster."
+                )
             )
 
-            return render_form()
-
 
         # ====================================================
-        # POSTER FILE SIZE
+        # CREATE RESTAURANT
+        # ====================================================
+        #
+        # Every new RestaurantAdvert starts on Free.
+        #
+        # Free:
+        #
+        #     subscription_tier = free
+        #     subscription_status = active
+        #     subscription_expires_at = None
+        #
+        # Free therefore remains active indefinitely unless
+        # the restaurant upgrades to a paid plan.
         # ====================================================
 
-        poster.stream.seek(
-            0,
-            os.SEEK_END,
+        advert = RestaurantAdvert(
+
+            organizer_id=(
+                organizer.id
+            ),
+
+            business_name=(
+                business_name
+            ),
+
+            headline=(
+                headline
+            ),
+
+            description=(
+                description
+            ),
+
+            area=(
+                area
+            ),
+
+            address=(
+                address
+            ),
+
+            directions_url=(
+                directions_url
+            ),
+
+            whatsapp_number=(
+                whatsapp_number
+            ),
+
+            phone_number=(
+                phone_number
+            ),
+
+            poster_image_url=(
+                poster_secure_url
+            ),
+
+            poster_cloudinary_public_id=(
+                poster_public_id
+            ),
+
+            starts_at=(
+                starts_at
+            ),
+
+            ends_at=(
+                ends_at
+            ),
+
+            active=True,
+
+            # ================================================
+            # RESTAURANT SUBSCRIPTION
+            # ================================================
+
+            subscription_tier=(
+                RESTAURANT_PLAN_FREE
+            ),
+
+            subscription_status=(
+                "active"
+            ),
+
+            subscription_started_at=(
+                datetime.utcnow()
+            ),
+
+            subscription_expires_at=None,
         )
 
 
-        poster_file_size = (
-            poster.stream.tell()
-        )
-
-
-        poster.stream.seek(
-            0
-        )
-
-
-        if (
-            poster_file_size
-            >
-            RESTAURANT_POSTER_MAX_FILE_BYTES
-        ):
-
-            flash(
-                (
-                    "The poster is too large. "
-                    "Maximum size is 8 MB."
-                ),
-                "error",
-            )
-
-            return render_form()
-
-
-        # ====================================================
-        # GALLERY FILES
-        # ====================================================
-        #
-        # New restaurants always begin on FREE.
-        #
-        # FREE:
-        #     Gallery disabled.
-        #
-        # STANDARD / PREMIUM:
-        #     Gallery enabled after upgrade.
-        #
-        # This server-side check prevents someone from
-        # manually adding a gallery_images input to the HTML.
-        # ====================================================
-
-        gallery_files = (
-            get_restaurant_gallery_files()
-        )
-
-
-        if gallery_files:
-
-            flash(
-                (
-                    "Gallery photos are available on "
-                    "the Standard and Premium restaurant "
-                    "plans. Create your restaurant first, "
-                    "then upgrade to add gallery photos."
-                ),
-                "error",
-            )
-
-            return render_form()
-
-
-        # ====================================================
-        # CLOUDINARY TRACKING
-        # ====================================================
-
-        poster_public_id = None
-
-        try:
-
-            # =================================================
-            # UPLOAD MAIN POSTER
-            # =================================================
-
-            upload_result = (
-                cloudinary.uploader.upload(
-                    poster,
-
-                    resource_type="image",
-
-                    folder=(
-                        "kalxa/"
-                        f"organizers/{organizer.id}/"
-                        "restaurants/posters"
-                    ),
-
-                    use_filename=True,
-
-                    unique_filename=True,
-
-                    overwrite=False,
-                )
-            )
-
-
-            poster_public_id = (
-                upload_result.get(
-                    "public_id"
-                )
-            )
-
-
-            poster_secure_url = (
-                upload_result.get(
-                    "secure_url"
-                )
-            )
-
-
-            if (
-                not poster_public_id
-                or
-                not poster_secure_url
-            ):
-
-                raise RuntimeError(
-                    (
-                        "Cloudinary did not return "
-                        "the uploaded poster."
-                    )
-                )
-
-
-            # =================================================
-            # CREATE RESTAURANT
-            # =================================================
-            #
-            # Every restaurant begins on Free.
-            #
-            # Free has no expiry because it does not require
-            # a restaurant-plan payment.
-            # =================================================
-
-            advert = RestaurantAdvert(
-
-                organizer_id=(
-                    organizer.id
-                ),
-
-                business_name=(
-                    business_name
-                ),
-
-                headline=(
-                    headline
-                ),
-
-                description=(
-                    description
-                ),
-
-                area=(
-                    area
-                ),
-
-                address=(
-                    address
-                ),
-
-                directions_url=(
-                    directions_url
-                ),
-
-                whatsapp_number=(
-                    whatsapp_number
-                ),
-
-                phone_number=(
-                    phone_number
-                ),
-
-                poster_image_url=(
-                    poster_secure_url
-                ),
-
-                poster_cloudinary_public_id=(
-                    poster_public_id
-                ),
-
-                starts_at=(
-                    starts_at
-                ),
-
-                ends_at=(
-                    ends_at
-                ),
-
-                active=True,
-
-                # =============================================
-                # RESTAURANT PLAN
-                # =============================================
-
-                subscription_tier=(
-                    RESTAURANT_PLAN_FREE
-                ),
-
-                subscription_status=(
-                    "active"
-                ),
-
-                subscription_started_at=(
-                    datetime.utcnow()
-                ),
-
-                subscription_expires_at=None,
-            )
-
-
-            db.session.add(
-                advert
-            )
-
-
-            db.session.commit()
-
-        except Exception as error:
-
-            db.session.rollback()
-
-
-            # =================================================
-            # REMOVE FAILED POSTER UPLOAD
-            # =================================================
-
-            if poster_public_id:
-
-                try:
-
-                    cloudinary.uploader.destroy(
-                        poster_public_id,
-                        resource_type="image",
-                    )
-
-                except Exception:
-
-                    current_app.logger.exception(
-                        (
-                            "[Restaurant Advert] "
-                            "Unable to remove failed "
-                            "poster upload."
-                        )
-                    )
-
-
-            current_app.logger.exception(
-                (
-                    "[Restaurant Advert] "
-                    "Create failed "
-                    "organizer_id=%s error=%s"
-                ),
-                organizer.id,
-                error,
-            )
-
-
-            flash(
-                (
-                    "Restaurant advert could "
-                    "not be created."
-                ),
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_create_restaurant"
-                )
-            )
-
-
-    if advert.can_use_reel:
-
-      try:
-
-        send_automatic_restaurant_push(
+        db.session.add(
             advert
         )
 
-      except Exception as error:
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        # ====================================================
+        # REMOVE FAILED CLOUDINARY UPLOAD
+        # ====================================================
+
+        if poster_public_id:
+
+            try:
+
+                cloudinary.uploader.destroy(
+                    poster_public_id,
+                    resource_type="image",
+                )
+
+            except Exception:
+
+                current_app.logger.exception(
+                    (
+                        "[Restaurant Advert] "
+                        "Unable to remove failed "
+                        "poster upload."
+                    )
+                )
+
 
         current_app.logger.exception(
             (
                 "[Restaurant Advert] "
-                "Advert created but automatic "
-                "push notification failed "
-                "advert_id=%s "
+                "Create failed "
                 "organizer_id=%s "
                 "error=%s"
             ),
-            advert.id,
             organizer.id,
             error,
         )
 
-            
-
-
-        # ====================================================
-        # SUCCESS
-        # ====================================================
 
         flash(
             (
-                "Restaurant created successfully "
-                "on the Free plan."
+                "Restaurant advert could "
+                "not be created."
             ),
-            "success",
+            "error",
         )
 
 
         return redirect(
             url_for(
-                "admin_manage_restaurant",
-                advert_id=advert.id,
+                "admin_create_restaurant"
             )
         )
 
 
     # ========================================================
-    # GET
+    # AUTOMATIC RESTAURANT PUSH
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # `advert` now exists because the RestaurantAdvert was
+    # successfully created and committed above.
+    #
+    # Free restaurants are allowed to use Reel/discovery,
+    # therefore can_use_reel should return True.
+    #
+    # This is intentionally AFTER creation, never during GET.
     # ========================================================
 
-    return render_form()
+    if advert.can_use_reel:
+
+        try:
+
+            send_automatic_restaurant_push(
+                advert
+            )
+
+        except Exception as error:
+
+            # ------------------------------------------------
+            # Restaurant creation must NOT fail merely because
+            # the optional automatic notification failed.
+            # ------------------------------------------------
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Advert] "
+                    "Advert created but automatic "
+                    "push notification failed "
+                    "advert_id=%s "
+                    "organizer_id=%s "
+                    "error=%s"
+                ),
+                advert.id,
+                organizer.id,
+                error,
+            )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        (
+            "Restaurant created successfully "
+            "on the Free plan."
+        ),
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+            advert_id=advert.id,
+        )
+    )
 
 
 # ============================================================
