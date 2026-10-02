@@ -139,6 +139,8 @@ RESTAURANT_PLAN_FEATURES = {
 
 }
 
+RESTAURANT_SUBSCRIPTION_GRACE_DAYS = 5
+
 
 # ============================================================
 # ORGANIZER
