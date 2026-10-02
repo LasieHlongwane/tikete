@@ -15880,6 +15880,9 @@ def admin_create_restaurant():
 # ============================================================
 # EDIT RESTAURANT
 # ============================================================
+# ============================================================
+# EDIT RESTAURANT
+# ============================================================
 
 @app.route(
     "/admin/restaurants/<int:advert_id>/edit",
@@ -15909,6 +15912,10 @@ def admin_edit_restaurant(
     #
     # This must NOT require the legacy Organizer/Event SaaS
     # subscription.
+    #
+    # Restaurant subscription permissions belong to:
+    #
+    #     RestaurantAdvert
     # ========================================================
 
     subscription_auth = (
@@ -15989,33 +15996,54 @@ def admin_edit_restaurant(
 
 
     # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ORGANIZER SAFETY
+    # ========================================================
+
+    if not advert.organizer:
+
+        abort(403)
+
+
+    if not advert.organizer.active:
+
+        abort(403)
+
+
+    if (
+        getattr(
+            advert.organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
     # SYNCHRONIZE RESTAURANT SUBSCRIPTION
     # ========================================================
     #
-    # This is important BEFORE:
+    # STANDARD / PREMIUM ACTIVE
+    #     -> paid features enabled
     #
-    #     render_form()
-    #     advert.can_use_gallery
-    #     advert.can_use_opening_hours
-    #     advert.can_receive_customer_experiences
-    #     advert.can_use_stories
-    #     advert.can_view_analytics
+    # STANDARD / PREMIUM GRACE
+    #     -> paid features remain enabled
     #
-    # Example:
+    # GRACE EXPIRED
+    #     -> automatically downgrade to Free
     #
-    # Premium expires
-    #       ↓
-    # 5-day grace expires
-    #       ↓
-    # owner opens Edit Restaurant
-    #       ↓
-    # sync
-    #       ↓
-    # restaurant becomes Free
-    #       ↓
-    # paid capabilities immediately become unavailable
-    #
-    # Stored paid content is NOT deleted.
+    # Existing paid content is NOT deleted.
     # ========================================================
 
     sync_restaurant_subscription(
@@ -16038,9 +16066,9 @@ def admin_edit_restaurant(
     # LEGACY ORGANIZER SUBSCRIPTION DATE
     # ========================================================
     #
-    # Keep only for compatibility with the existing template.
+    # Keep only if restaurant_form.html still expects it.
     #
-    # Do NOT use this value for restaurant permissions.
+    # It does NOT control RestaurantAdvert capabilities.
     # ========================================================
 
     subscription_end_iso = (
@@ -16136,10 +16164,7 @@ def admin_edit_restaurant(
     # RE-SYNC BEFORE MUTATION
     # ========================================================
     #
-    # GET and POST may happen at different times.
-    #
-    # Rechecking here prevents a paid capability from being
-    # used after grace expires between page load and submit.
+    # The subscription may have changed between GET and POST.
     # ========================================================
 
     sync_restaurant_subscription(
@@ -16174,7 +16199,7 @@ def admin_edit_restaurant(
     # CAMPAIGN SCHEDULE
     # ========================================================
     #
-    # Campaign editing is available to ALL restaurant plans.
+    # Campaign is available on ALL restaurant plans:
     #
     # FREE       -> YES
     # STANDARD   -> YES
@@ -16203,15 +16228,23 @@ def admin_edit_restaurant(
 
 
     # ========================================================
-    # GALLERY
+    # EXISTING GALLERY COUNT
     # ========================================================
 
     existing_gallery_count = (
-        len(
-            advert.gallery_images
+        RestaurantGalleryImage.query
+
+        .filter_by(
+            restaurant_advert_id=advert.id
         )
+
+        .count()
     )
 
+
+    # ========================================================
+    # NEW GALLERY FILES
+    # ========================================================
 
     gallery_files = (
         get_restaurant_gallery_files()
@@ -16222,18 +16255,17 @@ def admin_edit_restaurant(
     # GALLERY PLAN PERMISSION
     # ========================================================
     #
-    # FREE       -> NO
-    # STANDARD   -> YES
-    # PREMIUM    -> YES
+    # FREE
+    #     Upload gallery        NO
     #
-    # IMPORTANT:
+    # STANDARD
+    #     Upload gallery        YES
     #
-    # Existing gallery images are NOT deleted when a
-    # restaurant becomes Free.
+    # PREMIUM
+    #     Upload gallery        YES
     #
-    # Free simply cannot upload new gallery images and the
-    # public route/template must not expose stored gallery
-    # content.
+    # Existing images are retained when a restaurant
+    # downgrades to Free.
     # ========================================================
 
     if (
@@ -16255,7 +16287,7 @@ def admin_edit_restaurant(
 
 
     # ========================================================
-    # VALIDATE GALLERY
+    # VALIDATE GALLERY FILES
     # ========================================================
 
     if gallery_files:
@@ -16285,7 +16317,7 @@ def admin_edit_restaurant(
     # OPTIONAL NEW POSTER
     # ========================================================
     #
-    # Main poster is part of the basic restaurant profile.
+    # Main poster belongs to the basic restaurant profile.
     #
     # FREE       -> YES
     # STANDARD   -> YES
@@ -16301,6 +16333,10 @@ def admin_edit_restaurant(
 
     # ========================================================
     # UPLOAD TRACKING
+    # ========================================================
+    #
+    # Used for Cloudinary cleanup if database persistence
+    # fails.
     # ========================================================
 
     uploaded_public_id = None
@@ -16350,9 +16386,11 @@ def admin_edit_restaurant(
                 os.SEEK_END,
             )
 
+
             file_size = (
                 new_poster.stream.tell()
             )
+
 
             new_poster.stream.seek(
                 0
@@ -16449,7 +16487,7 @@ def admin_edit_restaurant(
         # UPDATE BASIC RESTAURANT DETAILS
         # ========================================================
         #
-        # These are available to Free, Standard and Premium.
+        # Available on Free, Standard and Premium.
         # ====================================================
 
         advert.business_name = (
@@ -16530,13 +16568,11 @@ def admin_edit_restaurant(
         # ====================================================
         # UPDATE CAMPAIGN
         # ========================================================
-        #
-        # Campaign remains available on Free.
-        # ====================================================
 
         advert.starts_at = (
             starts_at
         )
+
 
         advert.ends_at = (
             ends_at
@@ -16544,14 +16580,50 @@ def admin_edit_restaurant(
 
 
         # ====================================================
-        # ADD GALLERY PHOTOS
+        # FINAL GALLERY CAPABILITY CHECK
         # ========================================================
         #
-        # Server-side permission was already checked above.
+        # This is intentionally close to the actual gallery
+        # database mutation.
         #
-        # Therefore gallery_files can only reach this point
-        # for Standard/Premium restaurants.
+        # It provides another server-side boundary before
+        # Cloudinary uploads and RestaurantGalleryImage rows
+        # are created.
+        # ========================================================
+
+        if gallery_files:
+
+            sync_restaurant_subscription(
+                advert
+            )
+
+
+            if not advert.can_use_gallery:
+
+                db.session.rollback()
+
+
+                flash(
+                    (
+                        "Gallery photos are available "
+                        "on the Standard and Premium "
+                        "restaurant plans."
+                    ),
+                    "error",
+                )
+
+
+                return redirect(
+                    url_for(
+                        "admin_edit_restaurant",
+                        advert_id=advert.id,
+                    )
+                )
+
+
         # ====================================================
+        # ADD GALLERY PHOTOS
+        # ========================================================
 
         next_image_order = (
             existing_gallery_count
@@ -16560,6 +16632,10 @@ def admin_edit_restaurant(
 
 
         for image in gallery_files:
+
+            # =================================================
+            # UPLOAD GALLERY IMAGE
+            # =================================================
 
             gallery_result = (
                 upload_restaurant_gallery_image(
@@ -16581,6 +16657,10 @@ def admin_edit_restaurant(
                 public_id
             )
 
+
+            # =================================================
+            # CREATE GALLERY DATABASE ROW
+            # =================================================
 
             gallery_image = (
                 RestaurantGalleryImage(
@@ -16639,6 +16719,10 @@ def admin_edit_restaurant(
         db.session.commit()
 
 
+    # ========================================================
+    # UPDATE FAILURE
+    # ========================================================
+
     except Exception as error:
 
         db.session.rollback()
@@ -16655,6 +16739,7 @@ def admin_edit_restaurant(
                 cloudinary.uploader.destroy(
                     uploaded_public_id,
                     resource_type="image",
+                    invalidate=True,
                 )
 
             except Exception:
@@ -16681,6 +16766,7 @@ def admin_edit_restaurant(
                 cloudinary.uploader.destroy(
                     public_id,
                     resource_type="image",
+                    invalidate=True,
                 )
 
             except Exception:
@@ -16689,8 +16775,10 @@ def admin_edit_restaurant(
                     (
                         "[Restaurant Gallery] "
                         "Failed to clean up newly "
-                        "uploaded gallery image."
-                    )
+                        "uploaded gallery image "
+                        "public_id=%s"
+                    ),
+                    public_id,
                 )
 
 
@@ -16722,9 +16810,7 @@ def admin_edit_restaurant(
         return redirect(
             url_for(
                 "admin_edit_restaurant",
-                advert_id=(
-                    advert.id
-                ),
+                advert_id=advert.id,
             )
         )
 
@@ -16733,7 +16819,10 @@ def admin_edit_restaurant(
     # REMOVE OLD POSTER AFTER SUCCESS
     # ========================================================
     #
-    # Never remove the old poster before the database commit.
+    # IMPORTANT:
+    #
+    # Delete the previous Cloudinary poster only AFTER the
+    # database transaction succeeds.
     # ========================================================
 
     if (
@@ -16748,6 +16837,7 @@ def admin_edit_restaurant(
             cloudinary.uploader.destroy(
                 old_public_id,
                 resource_type="image",
+                invalidate=True,
             )
 
         except Exception:
@@ -16755,8 +16845,10 @@ def admin_edit_restaurant(
             current_app.logger.exception(
                 (
                     "[Restaurant Advert Edit] "
-                    "Old poster cleanup failed."
-                )
+                    "Old poster cleanup failed "
+                    "public_id=%s"
+                ),
+                old_public_id,
             )
 
 
@@ -16807,11 +16899,70 @@ def admin_edit_restaurant(
     return redirect(
         url_for(
             "admin_manage_restaurant",
-            advert_id=(
-                advert.id
-            ),
+            advert_id=advert.id,
         )
     )
+
+
+# ============================================================
+# DELETE CLOUDINARY REEL
+# ============================================================
+
+def delete_cloudinary_reel(
+    public_id,
+):
+
+    # ========================================================
+    # NOTHING TO DELETE
+    # ========================================================
+
+    if not public_id:
+        return
+
+
+    # ========================================================
+    # DELETE CLOUDINARY VIDEO
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # This helper only removes the Cloudinary asset.
+    #
+    # Restaurant plan permissions must be checked by the
+    # restaurant Reel route BEFORE this helper is called.
+    #
+    # Do NOT add:
+    #
+    #     Organizer.is_subscription_active
+    #
+    # here.
+    #
+    # This helper can also be used for cleanup after a failed
+    # upload, where subscription checks would be inappropriate.
+    # ========================================================
+
+    try:
+
+        cloudinary.uploader.destroy(
+            public_id,
+            resource_type="video",
+            invalidate=True,
+        )
+
+
+    except Exception as error:
+
+        current_app.logger.exception(
+            (
+                "[Restaurant/Event Reel] "
+                "Unable to delete Cloudinary "
+                "video asset "
+                "public_id=%s "
+                "error=%s"
+            ),
+            public_id,
+            error,
+        )
 
 
 @app.route(
