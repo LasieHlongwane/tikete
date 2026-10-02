@@ -98,6 +98,13 @@ from models import (
     RestaurantRatingQRCode,
     RestaurantAnalyticsEvent,
     RestaurantSubscriptionPayment,
+    RESTAURANT_PLAN_FREE,
+    RESTAURANT_PLAN_STANDARD,
+    RESTAURANT_PLAN_PREMIUM,
+    RESTAURANT_PLAN_PRICES,
+    RESTAURANT_PLAN_NAMES,
+    RESTAURANT_PLAN_FEATURES,
+    RESTAURANT_SUBSCRIPTION_GRACE_DAYS,
    
 )
 
