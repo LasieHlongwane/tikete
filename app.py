@@ -15387,6 +15387,667 @@ def admin_create_restaurant():
         )
     )
 
+
+@app.route(
+    "/restaurant/<int:advert_id>/rating-qr",
+    methods=["POST"],
+)
+def create_restaurant_rating_qr(
+    advert_id,
+):
+
+    # ========================================================
+    # ORGANIZER AUTHENTICATION
+    # ========================================================
+
+    current_organizer = (
+        get_current_organizer()
+    )
+
+
+    if not current_organizer:
+
+        abort(401)
+
+
+    # ========================================================
+    # OWNER ACCOUNT ACTIVE
+    # ========================================================
+
+    if not current_organizer.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+    #
+    # Rating QR codes belong only to restaurant accounts.
+    #
+    # Do NOT use:
+    #
+    #     organizer.is_subscription_active
+    #
+    # That belongs to the legacy Organizer/Event SaaS
+    # subscription system.
+    # ========================================================
+
+    if (
+        getattr(
+            current_organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+
+        .filter_by(
+            id=advert_id,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # OWNERSHIP SAFETY
+    # ========================================================
+
+    if (
+        advert.organizer_id
+        !=
+        current_organizer.id
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ORGANIZER SAFETY
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        abort(403)
+
+
+    if not organizer.active:
+
+        abort(403)
+
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # STANDARD / PREMIUM ACTIVE
+    #     -> Rating QR available
+    #
+    # STANDARD / PREMIUM EXPIRED <= 5 DAYS
+    #     -> grace period
+    #     -> Rating QR remains available
+    #
+    # STANDARD / PREMIUM EXPIRED > 5 DAYS
+    #     -> automatically downgraded to Free
+    #
+    # FREE
+    #     -> Rating QR unavailable
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE FEATURE REQUIRED
+    # ========================================================
+    #
+    # The Rating QR exists specifically to collect customer
+    # restaurant experiences.
+    #
+    # Therefore its availability must follow the same
+    # customer_experiences capability.
+    #
+    #
+    # FREE
+    # --------------------------------------------------------
+    #
+    # Public profile               YES
+    # Campaign                     YES
+    # Reel / Discovery             YES
+    #
+    # Customer experiences         NO
+    # Rating QR                    NO
+    #
+    #
+    # STANDARD
+    # --------------------------------------------------------
+    #
+    # Active                       YES
+    # 5-day grace                  YES
+    #
+    #
+    # PREMIUM
+    # --------------------------------------------------------
+    #
+    # Active                       YES
+    # 5-day grace                  YES
+    # ========================================================
+
+    if not advert.can_receive_customer_experiences:
+
+        abort(403)
+
+
+    # ========================================================
+    # CAMPAIGN AVAILABILITY
+    # ========================================================
+    #
+    # Keep QR creation aligned with the public customer
+    # experience system.
+    #
+    # Operational hours are NOT checked.
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        abort(403)
+
+
+    if (
+        advert.ends_at
+        and
+        advert.ends_at <= now
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # FINAL EXPERIENCE ELIGIBILITY
+    # ========================================================
+    #
+    # Use the same centralized eligibility helper used by:
+    #
+    #     /experiences/new
+    #
+    #     /r/<public_code>
+    #
+    #     get_taggable_restaurants()
+    #
+    # This keeps Rating QR creation consistent with the rest
+    # of the customer-experience system.
+    # ========================================================
+
+    if not restaurant_can_receive_experience_posts(
+        advert
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # CREATE OR REUSE PERMANENT QR
+    # ========================================================
+    #
+    # We reuse the restaurant's existing main Rating QR where
+    # possible.
+    #
+    # If the restaurant later falls back to Free, the QR
+    # record can remain stored in PostgreSQL.
+    #
+    # It simply becomes unusable because the public QR route
+    # checks the current RestaurantAdvert capability.
+    # ========================================================
+
+    restaurant_qr = (
+        get_or_create_restaurant_main_qr(
+            advert
+        )
+    )
+
+
+    # ========================================================
+    # PUBLIC RATING URL
+    # ========================================================
+
+    restaurant_rating_url = (
+        url_for(
+            "restaurant_rating_qr_page",
+
+            public_code=(
+                restaurant_qr.public_code
+            ),
+
+            _external=True,
+
+            _scheme="https",
+        )
+    )
+
+
+    # ========================================================
+    # RESPONSE
+    # ========================================================
+
+    return {
+        "success": True,
+
+        "restaurant_id": (
+            advert.id
+        ),
+
+        "business_name": (
+            advert.business_name
+        ),
+
+        "public_code": (
+            restaurant_qr.public_code
+        ),
+
+        "rating_url": (
+            restaurant_rating_url
+        ),
+    }
+
+
+# ============================================================
+# DOWNLOAD RESTAURANT RATING QR
+# ============================================================
+
+@app.route(
+    "/restaurant/<int:advert_id>/rating-qr/download"
+)
+def download_restaurant_rating_qr(
+    advert_id,
+):
+
+    # ========================================================
+    # ORGANIZER AUTHENTICATION
+    # ========================================================
+
+    current_organizer = (
+        get_current_organizer()
+    )
+
+
+    if not current_organizer:
+
+        abort(401)
+
+
+    # ========================================================
+    # OWNER ACCOUNT ACTIVE
+    # ========================================================
+
+    if not current_organizer.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    if (
+        getattr(
+            current_organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+
+        .filter_by(
+            id=advert_id
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # OWNERSHIP
+    # ========================================================
+
+    if (
+        advert.organizer_id
+        !=
+        current_organizer.id
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ORGANIZER SAFETY
+    # ========================================================
+    #
+    # Do NOT check:
+    #
+    #     organizer.is_subscription_active
+    #
+    # Restaurant subscription access belongs to
+    # RestaurantAdvert.
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        abort(403)
+
+
+    if not organizer.active:
+
+        abort(403)
+
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE FEATURE REQUIRED
+    # ========================================================
+    #
+    # FREE
+    #     -> Rating QR download disabled
+    #
+    # STANDARD ACTIVE
+    #     -> enabled
+    #
+    # STANDARD GRACE
+    #     -> enabled
+    #
+    # PREMIUM ACTIVE
+    #     -> enabled
+    #
+    # PREMIUM GRACE
+    #     -> enabled
+    #
+    # AFTER GRACE
+    #     -> restaurant becomes Free
+    #     -> download disabled
+    # ========================================================
+
+    if not advert.can_receive_customer_experiences:
+
+        abort(403)
+
+
+    # ========================================================
+    # CAMPAIGN AVAILABILITY
+    # ========================================================
+    #
+    # Rating QR download follows the same campaign
+    # availability rules as customer experience submission.
+    #
+    # Operational hours are deliberately NOT checked.
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        abort(403)
+
+
+    if (
+        advert.ends_at
+        and
+        advert.ends_at <= now
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # FINAL EXPERIENCE ELIGIBILITY
+    # ========================================================
+
+    if not restaurant_can_receive_experience_posts(
+        advert
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # GET OR CREATE PERMANENT QR
+    # ========================================================
+
+    restaurant_qr = (
+        get_or_create_restaurant_main_qr(
+            advert
+        )
+    )
+
+
+    # ========================================================
+    # PUBLIC DESTINATION
+    # ========================================================
+
+    rating_url = (
+        url_for(
+            "restaurant_rating_qr_page",
+
+            public_code=(
+                restaurant_qr.public_code
+            ),
+
+            _external=True,
+
+            _scheme="https",
+        )
+    )
+
+
+    # ========================================================
+    # GENERATE QR
+    # ========================================================
+
+    qr = qrcode.QRCode(
+        version=None,
+
+        error_correction=(
+            qrcode.constants.ERROR_CORRECT_M
+        ),
+
+        box_size=12,
+
+        border=4,
+    )
+
+
+    qr.add_data(
+        rating_url
+    )
+
+
+    qr.make(
+        fit=True
+    )
+
+
+    qr_image = (
+        qr.make_image(
+            fill_color="black",
+            back_color="white",
+        )
+    )
+
+
+    # ========================================================
+    # PNG BUFFER
+    # ========================================================
+
+    image_buffer = (
+        io.BytesIO()
+    )
+
+
+    qr_image.save(
+        image_buffer,
+        format="PNG",
+    )
+
+
+    image_buffer.seek(
+        0
+    )
+
+
+    # ========================================================
+    # SAFE FILE NAME
+    # ========================================================
+
+    safe_business_name = (
+        "".join(
+            character
+
+            if (
+                character.isalnum()
+                or
+                character
+                in {
+                    "-",
+                    "_",
+                }
+            )
+
+            else "-"
+
+            for character
+            in advert.business_name
+        )
+
+        .strip("-")
+
+        .lower()
+    )
+
+
+    if not safe_business_name:
+
+        safe_business_name = (
+            f"restaurant-{advert.id}"
+        )
+
+
+    filename = (
+        f"kalxa-{safe_business_name}-rating-qr.png"
+    )
+
+
+    # ========================================================
+    # DOWNLOAD
+    # ========================================================
+
+    return send_file(
+        image_buffer,
+
+        mimetype="image/png",
+
+        as_attachment=True,
+
+        download_name=filename,
+
+        max_age=0,
+    )
 def restaurant_can_receive_experience_posts(
     advert,
 ):
@@ -22592,116 +23253,6 @@ def restaurant_directions_action(
 # CREATE / GET RESTAURANT RATING QR
 # ============================================================
 
-@app.route(
-    "/restaurant/<int:advert_id>/rating-qr",
-    methods=["POST"],
-)
-def create_restaurant_rating_qr(
-    advert_id,
-):
-
-    # ========================================================
-    # AUTHENTICATION
-    # ========================================================
-
-    current_organizer = (
-        get_current_organizer()
-    )
-
-
-    if not current_organizer:
-
-        abort(401)
-
-
-    # ========================================================
-    # RESTAURANT
-    # ========================================================
-
-    advert = (
-        RestaurantAdvert.query
-
-        .filter_by(
-            id=
-                advert_id,
-        )
-
-        .first_or_404()
-    )
-
-
-    # ========================================================
-    # OWNERSHIP SAFETY
-    # ========================================================
-
-    if (
-        advert.organizer_id
-        !=
-        current_organizer.id
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # SUBSCRIPTION SAFETY
-    # ========================================================
-
-    if (
-        not advert.organizer
-        or
-        not advert.organizer.is_subscription_active
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # CREATE OR REUSE PERMANENT QR
-    # ========================================================
-
-    restaurant_qr = (
-        get_or_create_restaurant_main_qr(
-            advert
-        )
-    )
-
-
-    # ========================================================
-    # PUBLIC RATING URL
-    # ========================================================
-
-    restaurant_rating_url = (
-        url_for(
-            "restaurant_rating_qr_page",
-
-            public_code=
-                restaurant_qr.public_code,
-
-            _external=True,
-        )
-    )
-
-
-    # ========================================================
-    # RESPONSE
-    # ========================================================
-
-    return {
-        "success": True,
-
-        "restaurant_id":
-            advert.id,
-
-        "business_name":
-            advert.business_name,
-
-        "public_code":
-            restaurant_qr.public_code,
-
-        "rating_url":
-            restaurant_rating_url,
-    }
 
 
 
@@ -23876,246 +24427,7 @@ def internal_restaurant_analytics():
 # ============================================================
 
 
-@app.route(
-    "/restaurant/<int:advert_id>/rating-qr/download"
-)
-def download_restaurant_rating_qr(
-    advert_id,
-):
 
-    # ========================================================
-    # ORGANIZER AUTHENTICATION
-    # ========================================================
-
-    current_organizer = (
-        get_current_organizer()
-    )
-
-
-    if not current_organizer:
-
-        abort(401)
-
-
-    # ========================================================
-    # RESTAURANT
-    # ========================================================
-
-    advert = (
-        RestaurantAdvert.query
-
-        .filter_by(
-            id=advert_id
-        )
-
-        .first_or_404()
-    )
-
-
-    # ========================================================
-    # OWNERSHIP
-    # ========================================================
-
-    if (
-        advert.organizer_id
-        != current_organizer.id
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # OWNER ACCOUNT
-    # ========================================================
-
-    if not current_organizer.active:
-
-        abort(403)
-
-
-    if (
-        getattr(
-            current_organizer,
-            "account_type",
-            None,
-        )
-        != "restaurant"
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
-    # ========================================================
-
-    sync_restaurant_subscription(
-        advert
-    )
-
-
-    # ========================================================
-    # CUSTOMER EXPERIENCE FEATURE REQUIRED
-    # ========================================================
-    #
-    # Free:
-    #     No rating QR.
-    #
-    # Standard/Premium:
-    #     Yes.
-    #
-    # Standard/Premium within 5-day grace:
-    #     Yes.
-    #
-    # After grace:
-    #     Restaurant is downgraded to Free,
-    #     therefore QR download is disabled.
-    # ========================================================
-
-    if not advert.can_receive_customer_experiences:
-
-        abort(403)
-
-
-    # ========================================================
-    # GET OR CREATE PERMANENT QR
-    # ========================================================
-
-    restaurant_qr = (
-        get_or_create_restaurant_main_qr(
-            advert
-        )
-    )
-
-
-    # ========================================================
-    # PUBLIC DESTINATION
-    # ========================================================
-
-    rating_url = (
-        url_for(
-            "restaurant_rating_qr_page",
-
-            public_code=(
-                restaurant_qr.public_code
-            ),
-
-            _external=True,
-
-            _scheme="https",
-        )
-    )
-
-
-    # ========================================================
-    # GENERATE QR
-    # ========================================================
-
-    qr = qrcode.QRCode(
-        version=None,
-
-        error_correction=(
-            qrcode.constants.ERROR_CORRECT_M
-        ),
-
-        box_size=12,
-
-        border=4,
-    )
-
-
-    qr.add_data(
-        rating_url
-    )
-
-
-    qr.make(
-        fit=True
-    )
-
-
-    qr_image = (
-        qr.make_image(
-            fill_color="black",
-            back_color="white",
-        )
-    )
-
-
-    # ========================================================
-    # PNG BUFFER
-    # ========================================================
-
-    image_buffer = (
-        io.BytesIO()
-    )
-
-
-    qr_image.save(
-        image_buffer,
-        format="PNG",
-    )
-
-
-    image_buffer.seek(
-        0
-    )
-
-
-    # ========================================================
-    # SAFE FILE NAME
-    # ========================================================
-
-    safe_business_name = (
-        "".join(
-            character
-            if (
-                character.isalnum()
-                or
-                character
-                in {
-                    "-",
-                    "_",
-                }
-            )
-            else "-"
-            for character
-            in advert.business_name
-        )
-
-        .strip("-")
-
-        .lower()
-    )
-
-
-    if not safe_business_name:
-
-        safe_business_name = (
-            f"restaurant-{advert.id}"
-        )
-
-
-    filename = (
-        f"kalxa-{safe_business_name}-rating-qr.png"
-    )
-
-
-    # ========================================================
-    # DOWNLOAD
-    # ========================================================
-
-    return send_file(
-        image_buffer,
-
-        mimetype="image/png",
-
-        as_attachment=True,
-
-        download_name=filename,
-
-        max_age=0,
-    )
 # ============================================================
 # PUBLIC - LOVE / UNLOVE RESTAURANT EXPERIENCE
 # ============================================================
