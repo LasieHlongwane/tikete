@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -31,85 +30,47 @@
         box-sizing: border-box;
     }
 
+
     :root {
 
-        --page-bg:
-            #d9dce0;
+        --page-bg: #e5e7eb;
+        --surface: #ffffff;
+        --surface-soft: #f7f8fa;
+        --surface-muted: #eceef1;
 
-        --surface:
-            #ffffff;
+        --text: #17191d;
+        --text-soft: #5f6670;
+        --muted: #858b94;
 
-        --surface-soft:
-            #f5f6f7;
+        --border: #dfe2e6;
+        --border-soft: #eceef1;
 
-        --surface-muted:
-            #eceef1;
+        --black: #0b0c0e;
+        --charcoal: #202328;
+        --charcoal-soft: #30343a;
 
-        --text:
-            #17191d;
+        --green: #226943;
+        --green-bg: #e9f7ef;
 
-        --text-soft:
-            #525862;
+        --orange: #9a5a15;
+        --orange-bg: #fff3df;
 
-        --muted:
-            #7b818a;
+        --red: #9c3737;
+        --red-bg: #fbeaea;
 
-        --border:
-            #d7dade;
+        --blue: #234d8f;
+        --blue-bg: #eaf0fa;
 
-        --border-soft:
-            #e7e9ec;
-
-        --black:
-            #0b0c0e;
-
-        --charcoal:
-            #202328;
-
-        --charcoal-soft:
-            #30343a;
-
-        --green:
-            #226943;
-
-        --green-bg:
-            #e9f7ef;
-
-        --orange:
-            #9a5a15;
-
-        --orange-bg:
-            #fff3df;
-
-        --red:
-            #9c3737;
-
-        --red-bg:
-            #fbeaea;
-
-        --blue:
-            #234d8f;
-
-        --blue-bg:
-            #eaf0fa;
+        --purple: #5b3ea8;
+        --purple-bg: #f0ebff;
 
         --shadow:
-            0 16px 40px
-            rgba(
-                15,
-                23,
-                42,
-                .09
-            );
+            0 18px 45px
+            rgba(15, 23, 42, .08);
 
         --shadow-soft:
             0 8px 24px
-            rgba(
-                15,
-                23,
-                42,
-                .06
-            );
+            rgba(15, 23, 42, .055);
     }
 
 
@@ -119,17 +80,17 @@
 
 
     body {
+
         margin: 0;
 
         background:
             linear-gradient(
                 180deg,
-                #e0e2e5 0%,
-                #d0d3d7 100%
+                #e9eaec 0%,
+                #d8dade 100%
             );
 
-        color:
-            var(--text);
+        color: var(--text);
 
         font-family:
             Inter,
@@ -141,11 +102,8 @@
             Arial,
             sans-serif;
 
-        -webkit-font-smoothing:
-            antialiased;
-
-        text-rendering:
-            optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
     }
 
 
@@ -165,8 +123,13 @@
     }
 
 
+    form {
+        margin: 0;
+    }
+
+
     /* =====================================================
-       APP
+       APP SHELL
     ===================================================== */
 
     .app-shell {
@@ -174,11 +137,10 @@
         width:
             min(
                 100% - 28px,
-                1380px
+                1440px
             );
 
-        margin:
-            0 auto;
+        margin: 0 auto;
 
         padding:
             18px 0
@@ -190,26 +152,25 @@
        TOP NAV
     ===================================================== */
 
-    .nav {
+    .top-nav {
 
         display: flex;
 
         align-items: center;
         justify-content: space-between;
 
-        gap: 16px;
+        gap: 18px;
 
-        margin-bottom: 16px;
+        margin-bottom: 18px;
 
         padding:
-            15px 18px;
+            14px 18px;
 
         background:
             linear-gradient(
                 135deg,
-                #090a0c 0%,
-                #181b1f 52%,
-                #292d33 100%
+                #090a0c,
+                #1c1f24
             );
 
         border:
@@ -218,57 +179,125 @@
         border-radius: 17px;
 
         box-shadow:
-            0 14px 34px
-            rgba(
-                0,
-                0,
-                0,
-                .20
-            );
+            0 14px 35px
+            rgba(0, 0, 0, .18);
     }
 
 
     .brand {
 
-        color: #d4d8dd;
+        display: flex;
 
-        font-size: 13px;
-        font-weight: 950;
+        align-items: center;
+
+        gap: 10px;
+
+        color: #ffffff;
 
         text-decoration: none;
+    }
+
+
+    .brand-mark {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 32px;
+        height: 32px;
+
+        background: #ffffff;
+
+        color: #111318;
+
+        border-radius: 9px;
+
+        font-size: 12px;
+        font-weight: 950;
+    }
+
+
+    .brand-copy strong {
+
+        display: block;
+
+        font-size: 11px;
+        font-weight: 950;
 
         letter-spacing: .08em;
     }
 
 
-    .nav-actions {
+    .brand-copy span {
+
+        display: block;
+
+        margin-top: 2px;
+
+        color: #8f969f;
+
+        font-size: 7px;
+
+        letter-spacing: .08em;
+
+        text-transform: uppercase;
+    }
+
+
+    .top-nav-actions {
 
         display: flex;
 
         align-items: center;
 
-        gap: 12px;
+        gap: 8px;
     }
 
 
-    .nav-link {
+    .top-nav-link {
 
-        color: #b7bdc6;
+        display: inline-flex;
 
-        font-size: 10px;
-        font-weight: 850;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 34px;
+
+        padding:
+            6px 10px;
+
+        color: #bfc4cb;
+
+        border-radius: 8px;
+
+        font-size: 8px;
+        font-weight: 900;
 
         text-decoration: none;
     }
 
 
-    .nav-link:hover {
+    .top-nav-link:hover {
+
+        background:
+            rgba(255,255,255,.07);
+
         color: #ffffff;
     }
 
 
+    .top-nav-logout {
+
+        border:
+            1px solid
+            rgba(255,255,255,.12);
+    }
+
+
     /* =====================================================
-       DESKTOP MANAGEMENT LAYOUT
+       LAYOUT
     ===================================================== */
 
     .control-layout {
@@ -276,15 +305,17 @@
         display: grid;
 
         grid-template-columns:
-            250px
-            minmax(
-                0,
-                1fr
-            );
+            255px
+            minmax(0, 1fr);
 
         gap: 18px;
 
         align-items: start;
+    }
+
+
+    .main-content {
+        min-width: 0;
     }
 
 
@@ -303,55 +334,46 @@
         background:
             linear-gradient(
                 180deg,
-                #17191d 0%,
-                #22262b 100%
+                #141619 0%,
+                #202328 100%
             );
 
         color: #ffffff;
 
         border:
-            1px solid #34383f;
+            1px solid #33373d;
 
         border-radius: 20px;
 
         box-shadow:
-            0 16px 38px
-            rgba(
-                15,
-                23,
-                42,
-                .15
-            );
+            0 18px 42px
+            rgba(15,23,42,.16);
     }
 
 
     .sidebar-header {
 
         padding:
-            20px 18px
-            17px;
+            21px 18px
+            18px;
 
         border-bottom:
             1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .08
-            );
+            rgba(255,255,255,.07);
     }
 
 
     .sidebar-eyebrow {
 
-        margin: 0 0 5px;
+        margin:
+            0 0 6px;
 
-        color: #8f969f;
+        color: #777f89;
 
-        font-size: 8px;
+        font-size: 7px;
         font-weight: 950;
 
-        letter-spacing: .14em;
+        letter-spacing: .15em;
 
         text-transform: uppercase;
     }
@@ -361,56 +383,25 @@
 
         margin: 0;
 
-        color: #f4f5f6;
+        color: #f5f6f7;
 
-        font-size: 17px;
+        font-size: 18px;
         font-weight: 950;
 
-        letter-spacing: -.025em;
+        letter-spacing: -.03em;
     }
 
 
-    .sidebar-status {
+    .sidebar-description {
 
-        display: inline-flex;
+        margin:
+            7px 0 0;
 
-        align-items: center;
-
-        gap: 5px;
-
-        margin-top: 10px;
-
-        padding:
-            5px 8px;
-
-        background:
-            rgba(
-                255,
-                255,
-                255,
-                .07
-            );
-
-        color: #c9ced5;
-
-        border:
-            1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .08
-            );
-
-        border-radius: 999px;
+        color: #8f969f;
 
         font-size: 8px;
-        font-weight: 900;
-    }
 
-
-    .sidebar-status.active {
-        color: #a9e1bf;
+        line-height: 1.5;
     }
 
 
@@ -421,17 +412,17 @@
         gap: 5px;
 
         padding:
-            14px 11px;
+            13px 11px;
     }
 
 
-    .sidebar-section-label {
+    .sidebar-label {
 
         margin:
-            12px 7px
+            13px 8px
             4px;
 
-        color: #777f89;
+        color: #6f7680;
 
         font-size: 7px;
         font-weight: 950;
@@ -455,14 +446,14 @@
         padding:
             8px 10px;
 
-        color: #c4c9d0;
+        color: #c3c8cf;
 
         border:
             1px solid transparent;
 
         border-radius: 10px;
 
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 850;
 
         text-decoration: none;
@@ -472,46 +463,32 @@
     .sidebar-link:hover {
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .07
-            );
+            rgba(255,255,255,.065);
 
         color: #ffffff;
     }
 
 
-    .sidebar-link-primary {
+    .sidebar-link.active {
 
         background:
             linear-gradient(
                 135deg,
-                #eceef1,
-                #d9dce0
+                #f4f5f6,
+                #dfe2e5
             );
 
-        color: #1d2025;
+        color: #17191d;
 
         border-color: #d1d4d8;
     }
 
 
-    .sidebar-link-primary:hover {
-
-        background: #ffffff;
-
-        color: #111318;
-    }
-
-
     .sidebar-icon {
 
-        flex:
-            0 0 auto;
-
         width: 20px;
+
+        flex: 0 0 auto;
 
         text-align: center;
 
@@ -519,33 +496,43 @@
     }
 
 
-    .sidebar-restaurant {
+    /* =====================================================
+       SIDEBAR RESTAURANTS
+    ===================================================== */
 
-        margin:
-            0 11px
-            11px;
+    .sidebar-restaurants {
 
         padding:
-            11px;
+            0 11px
+            12px;
+    }
+
+
+    .sidebar-restaurant {
+
+        margin-top: 8px;
+
+        padding: 12px;
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .045
-            );
+            rgba(255,255,255,.045);
 
         border:
             1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .07
-            );
+            rgba(255,255,255,.07);
 
         border-radius: 12px;
+    }
+
+
+    .sidebar-restaurant-top {
+
+        display: flex;
+
+        align-items: flex-start;
+        justify-content: space-between;
+
+        gap: 8px;
     }
 
 
@@ -553,41 +540,89 @@
 
         margin: 0;
 
-        color: #f1f2f4;
+        color: #f2f3f4;
 
         font-size: 10px;
         font-weight: 950;
+
+        line-height: 1.35;
     }
 
 
-    .sidebar-restaurant-area {
+    .sidebar-area {
 
         display: block;
 
-        margin-top: 2px;
+        margin-top: 3px;
 
         color: #858d97;
 
-        font-size: 8px;
+        font-size: 7px;
     }
 
 
-    .sidebar-restaurant-actions {
+    .plan-badge {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        min-height: 20px;
+
+        padding:
+            3px 6px;
+
+        border-radius: 999px;
+
+        font-size: 6px;
+        font-weight: 950;
+
+        text-transform: uppercase;
+
+        white-space: nowrap;
+    }
+
+
+    .plan-free {
+
+        background:
+            rgba(255,255,255,.08);
+
+        color: #c5cad0;
+    }
+
+
+    .plan-standard {
+
+        background:
+            rgba(93,146,255,.16);
+
+        color: #9fc0ff;
+    }
+
+
+    .plan-premium {
+
+        background:
+            rgba(230,205,126,.15);
+
+        color: #f1d985;
+    }
+
+
+    .sidebar-actions {
 
         display: grid;
 
         grid-template-columns:
             repeat(
                 2,
-                minmax(
-                    0,
-                    1fr
-                )
+                minmax(0,1fr)
             );
 
         gap: 5px;
 
-        margin-top: 9px;
+        margin-top: 10px;
     }
 
 
@@ -601,26 +636,16 @@
         min-height: 30px;
 
         padding:
-            4px 6px;
+            5px 6px;
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .06
-            );
+            rgba(255,255,255,.055);
 
-        color: #c7ccd3;
+        color: #c8cdd3;
 
         border:
             1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .07
-            );
+            rgba(255,255,255,.07);
 
         border-radius: 7px;
 
@@ -636,24 +661,98 @@
     .sidebar-mini-link:hover {
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .11
-            );
+            rgba(255,255,255,.11);
 
         color: #ffffff;
     }
 
 
-    .main-content {
-        min-width: 0;
+    .sidebar-upgrade-form {
+
+        grid-column:
+            1 / -1;
+    }
+
+
+    .sidebar-upgrade {
+
+        width: 100%;
+
+        min-height: 31px;
+
+        padding:
+            5px 7px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #ffffff,
+                #e7e9ec
+            );
+
+        color: #17191d;
+
+        border: 0;
+
+        border-radius: 7px;
+
+        font-size: 7px;
+        font-weight: 950;
     }
 
 
     /* =====================================================
-       MOBILE MANAGEMENT NAV
+       SIDEBAR LOGOUT
+    ===================================================== */
+
+    .sidebar-footer {
+
+        padding:
+            11px;
+
+        border-top:
+            1px solid
+            rgba(255,255,255,.07);
+    }
+
+
+    .logout-link {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 39px;
+
+        width: 100%;
+
+        color: #e4a9a9;
+
+        border:
+            1px solid
+            rgba(239,120,120,.18);
+
+        border-radius: 9px;
+
+        font-size: 8px;
+        font-weight: 950;
+
+        text-decoration: none;
+    }
+
+
+    .logout-link:hover {
+
+        background:
+            rgba(180,60,60,.12);
+
+        color: #ffffff;
+    }
+
+
+    /* =====================================================
+       MOBILE NAV
     ===================================================== */
 
     .mobile-management-nav {
@@ -685,7 +784,7 @@
     }
 
 
-    .mobile-management-nav-inner {
+    .mobile-management-inner {
 
         display: flex;
 
@@ -735,11 +834,25 @@
     }
 
 
+    .mobile-management-link.logout {
+
+        background: var(--red-bg);
+
+        color: var(--red);
+
+        border-color: #eccccc;
+    }
+
+
     /* =====================================================
        HERO
     ===================================================== */
 
     .hero {
+
+        position: relative;
+
+        overflow: hidden;
 
         display: flex;
 
@@ -750,14 +863,13 @@
 
         margin-bottom: 18px;
 
-        padding: 26px;
+        padding: 30px;
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .94
+            linear-gradient(
+                135deg,
+                #ffffff 0%,
+                #f7f8f9 100%
             );
 
         border:
@@ -770,7 +882,35 @@
     }
 
 
+    .hero::after {
+
+        content: "";
+
+        position: absolute;
+
+        top: -80px;
+        right: -80px;
+
+        width: 220px;
+        height: 220px;
+
+        background:
+            radial-gradient(
+                circle,
+                rgba(17,24,39,.06),
+                transparent 68%
+            );
+
+        pointer-events: none;
+    }
+
+
     .hero-copy {
+
+        position: relative;
+
+        z-index: 1;
+
         min-width: 0;
     }
 
@@ -778,14 +918,14 @@
     .eyebrow {
 
         margin:
-            0 0 7px;
+            0 0 8px;
 
         color: #737982;
 
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 950;
 
-        letter-spacing: .16em;
+        letter-spacing: .17em;
 
         text-transform: uppercase;
     }
@@ -799,35 +939,39 @@
 
         font-size:
             clamp(
-                30px,
+                31px,
                 5vw,
-                44px
+                46px
             );
 
         line-height: 1;
 
         font-weight: 950;
 
-        letter-spacing: -.045em;
+        letter-spacing: -.05em;
     }
 
 
     .subtitle {
 
-        max-width: 640px;
+        max-width: 670px;
 
         margin:
-            10px 0 0;
+            11px 0 0;
 
         color: #666d76;
 
-        font-size: 13px;
+        font-size: 12px;
 
-        line-height: 1.6;
+        line-height: 1.65;
     }
 
 
     .button {
+
+        position: relative;
+
+        z-index: 1;
 
         display: inline-flex;
 
@@ -853,7 +997,7 @@
 
         border-radius: 11px;
 
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 950;
 
         text-decoration: none;
@@ -888,7 +1032,7 @@
 
         border-radius: 12px;
 
-        font-size: 11px;
+        font-size: 10px;
 
         box-shadow:
             var(--shadow-soft);
@@ -897,88 +1041,66 @@
 
     .flash-success {
 
-        background:
-            var(--green-bg);
+        background: var(--green-bg);
 
-        color:
-            var(--green);
+        color: var(--green);
 
-        border-color:
-            #c7e7d3;
+        border-color: #c7e7d3;
     }
 
 
     .flash-error {
 
-        background:
-            var(--red-bg);
+        background: var(--red-bg);
 
-        color:
-            var(--red);
+        color: var(--red);
 
-        border-color:
-            #eccccc;
+        border-color: #eccccc;
     }
 
 
     /* =====================================================
-       SUBSCRIPTION
+       PLAN OVERVIEW
     ===================================================== */
 
-    .subscription {
+    .plan-overview {
 
-        display: flex;
-
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 18px;
-
-        margin-bottom: 18px;
+        margin-bottom: 20px;
 
         padding:
-            16px 18px;
+            18px 20px;
 
-        border-radius: 16px;
+        background:
+            linear-gradient(
+                135deg,
+                #17191d,
+                #292d33
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid #34383f;
+
+        border-radius: 17px;
 
         box-shadow:
             var(--shadow-soft);
     }
 
 
-    .subscription-active {
+    .plan-overview-top {
 
-        background:
-            linear-gradient(
-                135deg,
-                #eef9f2,
-                #e3f3ea
-            );
+        display: flex;
 
-        color: #1f5d3c;
+        align-items: center;
+        justify-content: space-between;
 
-        border:
-            1px solid #c4e2cf;
+        gap: 16px;
     }
 
 
-    .subscription-locked {
-
-        background:
-            linear-gradient(
-                135deg,
-                #fff5e8,
-                #faead4
-            );
-
-        color: #8c5016;
-
-        border:
-            1px solid #ecd2af;
-    }
-
-
-    .subscription strong {
+    .plan-overview strong {
 
         display: block;
 
@@ -987,25 +1109,28 @@
     }
 
 
-    .subscription p {
+    .plan-overview p {
+
+        max-width: 760px;
 
         margin:
-            4px 0 0;
+            5px 0 0;
 
-        font-size: 10px;
+        color: #aeb4bc;
 
-        line-height: 1.5;
+        font-size: 9px;
+
+        line-height: 1.55;
     }
 
 
-    .subscription-link {
+    .plan-overview-link {
 
-        flex:
-            0 0 auto;
+        flex: 0 0 auto;
 
-        color: inherit;
+        color: #ffffff;
 
-        font-size: 10px;
+        font-size: 8px;
         font-weight: 950;
 
         text-decoration: none;
@@ -1023,31 +1148,21 @@
         grid-template-columns:
             repeat(
                 5,
-                minmax(
-                    0,
-                    1fr
-                )
+                minmax(0,1fr)
             );
 
         gap: 11px;
 
-        margin-bottom: 24px;
+        margin-bottom: 25px;
     }
 
 
     .metric {
 
-        min-width: 0;
-
         padding: 16px;
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .94
-            );
+            rgba(255,255,255,.95);
 
         border:
             1px solid var(--border);
@@ -1065,7 +1180,7 @@
 
         color: #7b818a;
 
-        font-size: 8px;
+        font-size: 7px;
         font-weight: 950;
 
         letter-spacing: .10em;
@@ -1078,7 +1193,7 @@
 
         display: block;
 
-        margin-top: 5px;
+        margin-top: 6px;
 
         color: #17191d;
 
@@ -1094,7 +1209,7 @@
     ===================================================== */
 
     .section {
-        margin-top: 24px;
+        margin-top: 25px;
     }
 
 
@@ -1131,14 +1246,15 @@
 
         color: #737983;
 
-        font-size: 10px;
+        font-size: 9px;
+
+        line-height: 1.5;
     }
 
 
     .section-count {
 
-        flex:
-            0 0 auto;
+        flex: 0 0 auto;
 
         padding:
             5px 9px;
@@ -1152,467 +1268,8 @@
 
         border-radius: 999px;
 
-        font-size: 9px;
-        font-weight: 900;
-    }
-
-
-    /* =====================================================
-       CUSTOMER RATING QR
-    ===================================================== */
-
-    .qr-grid {
-
-        display: grid;
-
-        gap: 16px;
-    }
-
-
-    .qr-card {
-
-        overflow: hidden;
-
-        background: #ffffff;
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 20px;
-
-        box-shadow:
-            var(--shadow);
-    }
-
-
-    .qr-card-header {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 14px;
-
-        padding:
-            17px 19px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #17191d,
-                #2d3137
-            );
-
-        color: #ffffff;
-    }
-
-
-    .qr-card-header h3 {
-
-        margin: 0;
-
-        font-size: 15px;
-        font-weight: 950;
-    }
-
-
-    .qr-card-header p {
-
-        margin:
-            4px 0 0;
-
-        color: #aeb4bd;
-
-        font-size: 9px;
-    }
-
-
-    .qr-status {
-
-        flex:
-            0 0 auto;
-
-        padding:
-            6px 9px;
-
-        background:
-            rgba(
-                255,
-                255,
-                255,
-                .08
-            );
-
-        border:
-            1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .10
-            );
-
-        border-radius: 999px;
-
-        color: #cdd2d8;
-
         font-size: 8px;
-        font-weight: 950;
-    }
-
-
-    .qr-status.active {
-        color: #a9e1bf;
-    }
-
-
-    .qr-card-body {
-
-        display: grid;
-
-        grid-template-columns:
-            230px
-            minmax(
-                0,
-                1fr
-            );
-
-        gap: 24px;
-
-        padding: 22px;
-    }
-
-
-    .qr-preview {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-height: 230px;
-
-        padding: 14px;
-
-        background: #ffffff;
-
-        border:
-            1px solid #d9dce0;
-
-        border-radius: 15px;
-    }
-
-
-    .qr-preview img {
-
-        display: block;
-
-        width: 100%;
-        max-width: 200px;
-
-        height: auto;
-    }
-
-
-    .qr-details {
-        min-width: 0;
-    }
-
-
-    .qr-eyebrow {
-
-        margin:
-            0 0 6px;
-
-        color: #767d86;
-
-        font-size: 8px;
-        font-weight: 950;
-
-        letter-spacing: .13em;
-
-        text-transform: uppercase;
-    }
-
-
-    .qr-details h4 {
-
-        margin: 0;
-
-        color: #191b1f;
-
-        font-size: 21px;
-        font-weight: 950;
-
-        letter-spacing: -.03em;
-    }
-
-
-    .qr-description {
-
-        max-width: 620px;
-
-        margin:
-            8px 0 18px;
-
-        color: #666d76;
-
-        font-size: 11px;
-
-        line-height: 1.6;
-    }
-
-
-    .qr-info-box {
-
-        margin-top: 10px;
-
-        padding:
-            12px 13px;
-
-        background: #f5f6f7;
-
-        border:
-            1px solid #e0e3e6;
-
-        border-radius: 10px;
-    }
-
-
-    .qr-info-label {
-
-        display: block;
-
-        margin-bottom: 5px;
-
-        color: #7b818a;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        letter-spacing: .11em;
-
-        text-transform: uppercase;
-    }
-
-
-    .qr-url {
-
-        display: block;
-
-        overflow-wrap: anywhere;
-
-        color: #25282d;
-
-        font-size: 10px;
-        font-weight: 800;
-
-        line-height: 1.5;
-    }
-
-
-    .qr-code-value {
-
-        color: #25282d;
-
-        font-family:
-            ui-monospace,
-            SFMono-Regular,
-            Menlo,
-            Monaco,
-            Consolas,
-            monospace;
-
-        font-size: 11px;
         font-weight: 900;
-    }
-
-
-    .qr-actions {
-
-        display: flex;
-
-        flex-wrap: wrap;
-
-        gap: 8px;
-
-        margin-top: 17px;
-    }
-
-
-    .qr-action {
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-height: 40px;
-
-        padding:
-            8px 12px;
-
-        border-radius: 9px;
-
-        font-size: 9px;
-        font-weight: 950;
-
-        text-decoration: none;
-    }
-
-
-    .qr-action-primary {
-
-        background: #202328;
-
-        color: #ffffff;
-
-        border:
-            1px solid #202328;
-    }
-
-
-    .qr-action-secondary {
-
-        background: #ffffff;
-
-        color: #25282d;
-
-        border:
-            1px solid #ccd0d5;
-    }
-
-
-    .qr-action-download {
-
-        background:
-            var(--green-bg);
-
-        color:
-            var(--green);
-
-        border:
-            1px solid #c7e7d3;
-    }
-
-
-    .qr-generate {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 20px;
-
-        padding: 22px;
-    }
-
-
-    .qr-generate-copy h4 {
-
-        margin: 0;
-
-        color: #1d2025;
-
-        font-size: 17px;
-        font-weight: 950;
-    }
-
-
-    .qr-generate-copy p {
-
-        max-width: 640px;
-
-        margin:
-            7px 0 0;
-
-        color: #707780;
-
-        font-size: 10px;
-
-        line-height: 1.6;
-    }
-
-
-    .qr-generate-button {
-
-        flex:
-            0 0 auto;
-
-        min-height: 43px;
-
-        padding:
-            9px 14px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #202328,
-                #353940
-            );
-
-        color: #ffffff;
-
-        border:
-            1px solid #202328;
-
-        border-radius: 10px;
-
-        font-size: 9px;
-        font-weight: 950;
-    }
-
-
-    .qr-generate-button:disabled {
-
-        cursor: wait;
-
-        opacity: .6;
-    }
-
-
-    .qr-message {
-
-        display: none;
-
-        margin-top: 12px;
-
-        padding:
-            10px 12px;
-
-        border-radius: 9px;
-
-        font-size: 9px;
-        font-weight: 850;
-    }
-
-
-    .qr-message.show {
-        display: block;
-    }
-
-
-    .qr-message.success {
-
-        background: var(--green-bg);
-
-        color: var(--green);
-
-        border:
-            1px solid #c7e7d3;
-    }
-
-
-    .qr-message.error {
-
-        background: var(--red-bg);
-
-        color: var(--red);
-
-        border:
-            1px solid #eccccc;
     }
 
 
@@ -1642,8 +1299,7 @@
 
         overflow-x: auto;
 
-        -webkit-overflow-scrolling:
-            touch;
+        -webkit-overflow-scrolling: touch;
     }
 
 
@@ -1651,9 +1307,9 @@
 
         width: 100%;
 
-        border-collapse: collapse;
+        min-width: 1080px;
 
-        min-width: 980px;
+        border-collapse: collapse;
     }
 
 
@@ -1675,7 +1331,7 @@
         padding:
             13px 14px;
 
-        font-size: 8px;
+        font-size: 7px;
         font-weight: 950;
 
         letter-spacing: .10em;
@@ -1697,7 +1353,7 @@
 
         color: #31353b;
 
-        font-size: 10px;
+        font-size: 9px;
 
         vertical-align: middle;
     }
@@ -1758,7 +1414,7 @@
 
         color: #17191d;
 
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 950;
     }
 
@@ -1771,9 +1427,13 @@
 
         color: #7a8089;
 
-        font-size: 9px;
+        font-size: 8px;
     }
 
+
+    /* =====================================================
+       STATUS
+    ===================================================== */
 
     .status-badge {
 
@@ -1781,14 +1441,14 @@
 
         align-items: center;
 
-        min-height: 26px;
+        min-height: 25px;
 
         padding:
             0 8px;
 
         border-radius: 999px;
 
-        font-size: 8px;
+        font-size: 7px;
         font-weight: 950;
 
         white-space: nowrap;
@@ -1843,6 +1503,10 @@
     }
 
 
+    /* =====================================================
+       TABLE ACTIONS
+    ===================================================== */
+
     .table-actions {
 
         display: flex;
@@ -1851,7 +1515,7 @@
 
         gap: 6px;
 
-        min-width: 250px;
+        min-width: 270px;
     }
 
 
@@ -1862,14 +1526,16 @@
         align-items: center;
         justify-content: center;
 
-        min-height: 33px;
+        min-height: 32px;
 
         padding:
             6px 9px;
 
+        border: 0;
+
         border-radius: 8px;
 
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 900;
 
         text-decoration: none;
@@ -1919,14 +1585,420 @@
     }
 
 
-    /* =====================================================
-       WORKING HOURS
-    ===================================================== */
+    .table-action-upgrade {
 
-    .hours-management {
-        margin-top: 28px;
+        background:
+            linear-gradient(
+                135deg,
+                #17191d,
+                #353940
+            );
+
+        color: #ffffff;
+
+        border:
+            1px solid #17191d;
     }
 
+
+    /* =====================================================
+       QR
+    ===================================================== */
+
+    .qr-grid {
+
+        display: grid;
+
+        gap: 16px;
+    }
+
+
+    .qr-card {
+
+        overflow: hidden;
+
+        background: #ffffff;
+
+        border:
+            1px solid var(--border);
+
+        border-radius: 18px;
+
+        box-shadow:
+            var(--shadow);
+    }
+
+
+    .qr-card-header {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 14px;
+
+        padding:
+            16px 18px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #17191d,
+                #2d3137
+            );
+
+        color: #ffffff;
+    }
+
+
+    .qr-card-header h3 {
+
+        margin: 0;
+
+        font-size: 14px;
+        font-weight: 950;
+    }
+
+
+    .qr-card-header p {
+
+        margin:
+            4px 0 0;
+
+        color: #aeb4bd;
+
+        font-size: 8px;
+    }
+
+
+    .qr-status {
+
+        padding:
+            5px 8px;
+
+        background:
+            rgba(255,255,255,.08);
+
+        border-radius: 999px;
+
+        color: #cdd2d8;
+
+        font-size: 7px;
+        font-weight: 950;
+    }
+
+
+    .qr-status.active {
+        color: #a9e1bf;
+    }
+
+
+    .qr-card-body {
+
+        display: grid;
+
+        grid-template-columns:
+            220px
+            minmax(0,1fr);
+
+        gap: 22px;
+
+        padding: 21px;
+    }
+
+
+    .qr-preview {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        padding: 14px;
+
+        background: #ffffff;
+
+        border:
+            1px solid #d9dce0;
+
+        border-radius: 14px;
+    }
+
+
+    .qr-preview img {
+
+        display: block;
+
+        width: 100%;
+        max-width: 190px;
+
+        height: auto;
+    }
+
+
+    .qr-details h4 {
+
+        margin: 0;
+
+        font-size: 20px;
+        font-weight: 950;
+    }
+
+
+    .qr-eyebrow {
+
+        margin:
+            0 0 6px;
+
+        color: #767d86;
+
+        font-size: 7px;
+        font-weight: 950;
+
+        letter-spacing: .13em;
+
+        text-transform: uppercase;
+    }
+
+
+    .qr-description {
+
+        margin:
+            8px 0 16px;
+
+        color: #666d76;
+
+        font-size: 10px;
+
+        line-height: 1.6;
+    }
+
+
+    .qr-info-box {
+
+        margin-top: 9px;
+
+        padding:
+            11px 12px;
+
+        background: #f5f6f7;
+
+        border:
+            1px solid #e0e3e6;
+
+        border-radius: 9px;
+    }
+
+
+    .qr-info-label {
+
+        display: block;
+
+        margin-bottom: 4px;
+
+        color: #7b818a;
+
+        font-size: 6px;
+        font-weight: 950;
+
+        text-transform: uppercase;
+    }
+
+
+    .qr-url {
+
+        display: block;
+
+        overflow-wrap: anywhere;
+
+        color: #25282d;
+
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+
+    .qr-code-value {
+
+        font-family: monospace;
+
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+
+    .qr-actions {
+
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 7px;
+
+        margin-top: 15px;
+    }
+
+
+    .qr-action {
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-height: 38px;
+
+        padding:
+            7px 11px;
+
+        border-radius: 8px;
+
+        font-size: 8px;
+        font-weight: 950;
+
+        text-decoration: none;
+    }
+
+
+    button.qr-action {
+        cursor: pointer;
+    }
+
+
+    .qr-action-primary {
+
+        background: #202328;
+
+        color: #ffffff;
+
+        border:
+            1px solid #202328;
+    }
+
+
+    .qr-action-secondary {
+
+        background: #ffffff;
+
+        color: #25282d;
+
+        border:
+            1px solid #ccd0d5;
+    }
+
+
+    .qr-action-download {
+
+        background: var(--green-bg);
+
+        color: var(--green);
+
+        border:
+            1px solid #c7e7d3;
+    }
+
+
+    .qr-generate {
+
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        padding: 21px;
+    }
+
+
+    .qr-generate h4 {
+
+        margin: 0;
+
+        font-size: 16px;
+        font-weight: 950;
+    }
+
+
+    .qr-generate p {
+
+        max-width: 640px;
+
+        margin:
+            7px 0 0;
+
+        color: #707780;
+
+        font-size: 9px;
+
+        line-height: 1.6;
+    }
+
+
+    .qr-generate-button {
+
+        flex: 0 0 auto;
+
+        min-height: 41px;
+
+        padding:
+            8px 13px;
+
+        background: #202328;
+
+        color: #ffffff;
+
+        border:
+            1px solid #202328;
+
+        border-radius: 9px;
+
+        font-size: 8px;
+        font-weight: 950;
+    }
+
+
+    .qr-message {
+
+        display: none;
+
+        margin-top: 10px;
+
+        padding:
+            9px 11px;
+
+        border-radius: 8px;
+
+        font-size: 8px;
+        font-weight: 850;
+    }
+
+
+    .qr-message.show {
+        display: block;
+    }
+
+
+    .qr-message.success {
+
+        background: var(--green-bg);
+
+        color: var(--green);
+    }
+
+
+    .qr-message.error {
+
+        background: var(--red-bg);
+
+        color: var(--red);
+    }
+
+
+    /* =====================================================
+       HOURS
+    ===================================================== */
 
     .hours-card {
 
@@ -1974,9 +2046,7 @@
 
         margin: 0;
 
-        color: #1b1e22;
-
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 950;
     }
 
@@ -1988,7 +2058,7 @@
 
         color: #767d86;
 
-        font-size: 9px;
+        font-size: 8px;
     }
 
 
@@ -1996,31 +2066,16 @@
 
         display: flex;
 
-        align-items: center;
-
         gap: 9px;
     }
 
 
-    .hours-public-link,
-    .hours-edit-link {
+    .hours-card-actions a {
 
-        flex: 0 0 auto;
-
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 900;
 
         text-decoration: none;
-    }
-
-
-    .hours-public-link {
-        color: var(--blue);
-    }
-
-
-    .hours-edit-link {
-        color: #34383e;
     }
 
 
@@ -2042,15 +2097,7 @@
     }
 
 
-    .hours-table td {
-        padding: 11px 13px;
-    }
-
-
     .hours-day {
-
-        color: #25282d;
-
         font-weight: 950;
     }
 
@@ -2059,21 +2106,19 @@
 
         width: 125px;
 
-        min-height: 38px;
+        min-height: 37px;
 
         padding:
             6px 8px;
 
         background: #ffffff;
 
-        color: #25282d;
-
         border:
             1px solid #cfd2d6;
 
         border-radius: 8px;
 
-        font-size: 10px;
+        font-size: 9px;
     }
 
 
@@ -2085,17 +2130,8 @@
 
         gap: 6px;
 
-        color: #656b74;
-
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 850;
-    }
-
-
-    .closed-label input {
-
-        width: 15px;
-        height: 15px;
     }
 
 
@@ -2109,7 +2145,7 @@
         gap: 14px;
 
         padding:
-            14px 18px;
+            13px 18px;
 
         background: #fafbfc;
 
@@ -2122,26 +2158,20 @@
 
         color: #7a8089;
 
-        font-size: 9px;
-        line-height: 1.45;
+        font-size: 8px;
+
+        line-height: 1.5;
     }
 
 
     .save-hours {
 
-        flex: 0 0 auto;
-
-        min-height: 40px;
+        min-height: 39px;
 
         padding:
-            8px 14px;
+            8px 13px;
 
-        background:
-            linear-gradient(
-                135deg,
-                #202328,
-                #34383e
-            );
+        background: #202328;
 
         color: #ffffff;
 
@@ -2150,8 +2180,51 @@
 
         border-radius: 9px;
 
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 950;
+    }
+
+
+    /* =====================================================
+       LOCKED FEATURE
+    ===================================================== */
+
+    .locked-feature {
+
+        padding: 22px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #f7f8fa,
+                #eef0f2
+            );
+
+        border:
+            1px dashed #c7cbd0;
+
+        border-radius: 15px;
+    }
+
+
+    .locked-feature strong {
+
+        display: block;
+
+        font-size: 11px;
+    }
+
+
+    .locked-feature p {
+
+        margin:
+            5px 0 0;
+
+        color: #6e747d;
+
+        font-size: 9px;
+
+        line-height: 1.55;
     }
 
 
@@ -2165,12 +2238,7 @@
             38px 24px;
 
         background:
-            rgba(
-                255,
-                255,
-                255,
-                .92
-            );
+            rgba(255,255,255,.94);
 
         border:
             1px dashed #bfc4ca;
@@ -2181,7 +2249,7 @@
 
         color: #69707a;
 
-        font-size: 11px;
+        font-size: 10px;
 
         box-shadow:
             var(--shadow-soft);
@@ -2200,39 +2268,26 @@
        RESPONSIVE
     ===================================================== */
 
-    @media (
-        max-width: 1050px
-    ) {
+    @media (max-width: 1050px) {
 
         .control-layout {
 
             grid-template-columns:
-                215px
-                minmax(
-                    0,
-                    1fr
-                );
+                220px
+                minmax(0,1fr);
         }
 
 
         .metrics {
 
             grid-template-columns:
-                repeat(
-                    3,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
+                repeat(3, minmax(0,1fr));
         }
 
     }
 
 
-    @media (
-        max-width: 820px
-    ) {
+    @media (max-width: 820px) {
 
         .control-layout {
             display: block;
@@ -2249,61 +2304,53 @@
         }
 
 
-        .qr-card-body {
-
-            grid-template-columns: 190px 1fr;
-
-            gap: 18px;
-        }
-
-
         .metrics {
 
             grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
+                repeat(2, minmax(0,1fr));
+        }
+
+
+        .qr-card-body {
+
+            grid-template-columns:
+                180px
+                1fr;
         }
 
     }
 
 
-    @media (
-        max-width: 620px
-    ) {
+    @media (max-width: 620px) {
 
         .app-shell {
 
             width:
                 min(
                     100% - 18px,
-                    1380px
+                    1440px
                 );
 
             padding-top: 10px;
         }
 
 
-        .nav {
+        .top-nav {
 
             padding:
-                13px 14px;
+                11px 12px;
 
-            border-radius: 14px;
+            border-radius: 13px;
         }
 
 
-        .nav-actions {
-            gap: 8px;
+        .brand-copy span {
+            display: none;
         }
 
 
-        .nav-link {
-            font-size: 9px;
+        .top-nav-actions .top-nav-link:first-child {
+            display: none;
         }
 
 
@@ -2313,18 +2360,18 @@
 
             flex-direction: column;
 
-            padding: 20px;
+            padding: 21px;
 
             border-radius: 18px;
         }
 
 
-        .hero > .button {
+        .hero .button {
             width: 100%;
         }
 
 
-        .subscription {
+        .plan-overview-top {
 
             align-items: flex-start;
 
@@ -2335,13 +2382,7 @@
         .metrics {
 
             grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
+                repeat(2, minmax(0,1fr));
         }
 
 
@@ -2370,12 +2411,9 @@
 
             width: 100%;
 
-            max-width: 260px;
+            max-width: 250px;
 
-            min-height: 0;
-
-            margin:
-                0 auto;
+            margin: 0 auto;
         }
 
 
@@ -2413,11 +2451,6 @@
         }
 
 
-        .hours-card-actions {
-            flex-wrap: wrap;
-        }
-
-
         .hours-footer {
 
             align-items: stretch;
@@ -2434,7 +2467,6 @@
 
 </style>
 
-
 </head>
 
 
@@ -2448,45 +2480,62 @@
          TOP NAV
     ====================================================== -->
 
-    <div class="nav">
+    <header class="top-nav">
 
 
         <a
             href="{{ url_for('home') }}"
             class="brand"
         >
-            KALXA RESTAURANT
+
+            <span class="brand-mark">
+                K
+            </span>
+
+
+            <span class="brand-copy">
+
+                <strong>
+                    KALXA
+                </strong>
+
+                <span>
+                    Restaurant Business Centre
+                </span>
+
+            </span>
+
         </a>
 
 
-        <div class="nav-actions">
+        <div class="top-nav-actions">
 
 
             <a
                 href="https://lac-local-access.onrender.com/"
-                class="nav-link"
                 target="_blank"
                 rel="noopener noreferrer"
+                class="top-nav-link"
             >
-                Local Deals
+                Explore Kalxa
             </a>
 
 
             <a
-                href="{{ url_for(
-                    'admin_subscription'
-                ) }}"
-                class="nav-link"
+                href="{{ url_for('organizer_logout') }}"
+                class="
+                    top-nav-link
+                    top-nav-logout
+                "
             >
-                Subscription ·
-                R{{ "%.2f"|format(subscription_price) }}
+                Logout
             </a>
 
 
         </div>
 
 
-    </div>
+    </header>
 
 
     <!-- =====================================================
@@ -2498,7 +2547,7 @@
         aria-label="Restaurant management"
     >
 
-        <div class="mobile-management-nav-inner">
+        <div class="mobile-management-inner">
 
 
             <a
@@ -2513,56 +2562,54 @@
 
 
             <a
-                href="{{ url_for(
-                    'admin_subscription'
-                ) }}"
+                href="{{ url_for('admin_create_restaurant') }}"
                 class="mobile-management-link"
             >
-                Subscription ·
-                R{{ "%.2f"|format(subscription_price) }}
+                + Campaign
             </a>
-
-
-            {% if subscription_active %}
-
-                <a
-                    href="{{ url_for(
-                        'admin_create_restaurant'
-                    ) }}"
-                    class="mobile-management-link"
-                >
-                    + Campaign
-                </a>
-
-            {% endif %}
 
 
             <a
                 href="#campaigns"
                 class="mobile-management-link"
             >
-                Campaigns
+                Restaurants
             </a>
 
 
-            {% if subscription_active and adverts %}
-
-                <a
-                    href="#customer-rating-qr"
-                    class="mobile-management-link"
-                >
-                    Rating QR
-                </a>
+            <a
+                href="#customer-rating-qr"
+                class="mobile-management-link"
+            >
+                Rating QR
+            </a>
 
 
-                <a
-                    href="#working-hours"
-                    class="mobile-management-link"
-                >
-                    Working Hours
-                </a>
+            <a
+                href="#working-hours"
+                class="mobile-management-link"
+            >
+                Hours
+            </a>
 
-            {% endif %}
+
+            <a
+                href="#setup-checklist"
+                class="mobile-management-link"
+            >
+                Checklist
+            </a>
+
+
+            <a
+                href="{{ url_for('organizer_logout') }}"
+                class="
+                    mobile-management-link
+                    logout
+                "
+            >
+                Logout
+            </a>
 
 
         </div>
@@ -2588,7 +2635,7 @@
 
 
                 <p class="sidebar-eyebrow">
-                    MANAGEMENT
+                    BUSINESS MANAGEMENT
                 </p>
 
 
@@ -2597,42 +2644,23 @@
                 </h2>
 
 
-                <span
-                    class="
-                        sidebar-status
-                        {% if subscription_active %}
-                            active
-                        {% endif %}
-                    "
-                >
-
-                    {% if subscription_active %}
-
-                        ● Subscription active
-
-                    {% else %}
-
-                        ● Subscription locked
-
-                    {% endif %}
-
-                </span>
+                <p class="sidebar-description">
+                    Manage your restaurant presence,
+                    campaigns and customer tools.
+                </p>
 
 
             </div>
 
 
-            <nav
-                class="sidebar-nav"
-                aria-label="Restaurant control centre"
-            >
+            <nav class="sidebar-nav">
 
 
                 <a
                     href="#overview"
                     class="
                         sidebar-link
-                        sidebar-link-primary
+                        active
                     "
                 >
 
@@ -2640,46 +2668,23 @@
                         ◫
                     </span>
 
-                    Overview
+                    Dashboard
 
                 </a>
 
 
                 <a
-                    href="{{ url_for(
-                        'admin_subscription'
-                    ) }}"
+                    href="{{ url_for('admin_create_restaurant') }}"
                     class="sidebar-link"
                 >
 
                     <span class="sidebar-icon">
-                        ◈
+                        ＋
                     </span>
 
-                    Subscription ·
-                    R{{ "%.2f"|format(subscription_price) }}
+                    Create Campaign
 
                 </a>
-
-
-                {% if subscription_active %}
-
-                    <a
-                        href="{{ url_for(
-                            'admin_create_restaurant'
-                        ) }}"
-                        class="sidebar-link"
-                    >
-
-                        <span class="sidebar-icon">
-                            ＋
-                        </span>
-
-                        Create Campaign
-
-                    </a>
-
-                {% endif %}
 
 
                 <a
@@ -2691,61 +2696,57 @@
                         ▤
                     </span>
 
-                    Campaigns
+                    Restaurants
 
                 </a>
 
 
-                {% if subscription_active and adverts %}
+                <a
+                    href="#customer-rating-qr"
+                    class="sidebar-link"
+                >
 
-                    <a
-                        href="#customer-rating-qr"
-                        class="sidebar-link"
-                    >
+                    <span class="sidebar-icon">
+                        ▦
+                    </span>
 
-                        <span class="sidebar-icon">
-                            ▦
-                        </span>
+                    Customer Rating QR
 
-                        Customer Rating QR
-
-                    </a>
+                </a>
 
 
-                    <a
-                        href="#working-hours"
-                        class="sidebar-link"
-                    >
+                <a
+                    href="#working-hours"
+                    class="sidebar-link"
+                >
 
-                        <span class="sidebar-icon">
-                            ◷
-                        </span>
+                    <span class="sidebar-icon">
+                        ◷
+                    </span>
 
-                        Working Hours
+                    Working Hours
 
-                    </a>
+                </a>
 
 
-                    <a
-                        href="#setup-checklist"
-                        class="sidebar-link"
-                    >
+                <a
+                    href="#setup-checklist"
+                    class="sidebar-link"
+                >
 
-                        <span class="sidebar-icon">
-                            ✓
-                        </span>
+                    <span class="sidebar-icon">
+                        ✓
+                    </span>
 
-                        Setup Checklist
+                    Setup Checklist
 
-                    </a>
-
-                {% endif %}
+                </a>
 
 
                 {% if adverts %}
 
-                    <div class="sidebar-section-label">
-                        Restaurants
+                    <div class="sidebar-label">
+                        Your Restaurants
                     </div>
 
                 {% endif %}
@@ -2754,91 +2755,204 @@
             </nav>
 
 
-            {% for advert in adverts %}
+            <!-- =================================================
+                 SIDEBAR RESTAURANTS
+            ================================================== -->
+
+            {% if adverts %}
+
+                <div class="sidebar-restaurants">
 
 
-                <div class="sidebar-restaurant">
+                    {% for advert in adverts %}
 
 
-                    <p class="sidebar-restaurant-name">
-                        {{ advert.business_name }}
-                    </p>
+                        <div class="sidebar-restaurant">
 
 
-                    {% if advert.area %}
-
-                        <span class="sidebar-restaurant-area">
-                            📍 {{ advert.area }}
-                        </span>
-
-                    {% endif %}
+                            <div class="sidebar-restaurant-top">
 
 
-                    <div class="sidebar-restaurant-actions">
+                                <div>
+
+                                    <p class="sidebar-restaurant-name">
+                                        {{ advert.business_name }}
+                                    </p>
 
 
-                        <a
-                            href="{{ url_for(
-                                'admin_manage_restaurant',
-                                advert_id=advert.id
-                            ) }}"
-                            class="sidebar-mini-link"
-                        >
-                            Manage
-                        </a>
+                                    {% if advert.area %}
+
+                                        <span class="sidebar-area">
+                                            📍 {{ advert.area }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
 
 
-                        {% if subscription_active %}
+                                {% if advert.is_premium_plan %}
 
-                            <a
-                                href="{{ url_for(
-                                    'admin_edit_restaurant',
-                                    advert_id=advert.id
-                                ) }}"
-                                class="sidebar-mini-link"
-                            >
-                                Edit Campaign
-                            </a>
+                                    <span class="
+                                        plan-badge
+                                        plan-premium
+                                    ">
+                                        Premium
+                                    </span>
 
 
-                            <a
-                                href="#qr-{{ advert.id }}"
-                                class="sidebar-mini-link"
-                            >
-                                Rating QR
-                            </a>
+                                {% elif advert.is_standard_plan %}
+
+                                    <span class="
+                                        plan-badge
+                                        plan-standard
+                                    ">
+                                        Standard
+                                    </span>
 
 
-                            <a
-                                href="#hours-{{ advert.id }}"
-                                class="sidebar-mini-link"
-                            >
-                                Hours
-                            </a>
+                                {% else %}
 
-                        {% endif %}
+                                    <span class="
+                                        plan-badge
+                                        plan-free
+                                    ">
+                                        Free
+                                    </span>
 
-
-                        <a
-                            href="{{ url_for(
-                                'restaurant_page',
-                                advert_id=advert.id
-                            ) }}"
-                            class="sidebar-mini-link"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Public Page
-                        </a>
+                                {% endif %}
 
 
-                    </div>
+                            </div>
+
+
+                            <div class="sidebar-actions">
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_manage_restaurant',
+                                        advert_id=advert.id
+                                    ) }}"
+                                    class="sidebar-mini-link"
+                                >
+                                    Manage
+                                </a>
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_edit_restaurant',
+                                        advert_id=advert.id
+                                    ) }}"
+                                    class="sidebar-mini-link"
+                                >
+                                    Edit
+                                </a>
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_restaurant_reel',
+                                        advert_id=advert.id
+                                    ) }}"
+                                    class="sidebar-mini-link"
+                                >
+                                    Reel
+                                </a>
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'restaurant_page',
+                                        advert_id=advert.id
+                                    ) }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="sidebar-mini-link"
+                                >
+                                    Public Page
+                                </a>
+
+
+                                <!-- =====================================
+                                     STANDARD -> PREMIUM
+                                ====================================== -->
+
+                                {% if advert.is_standard_plan %}
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'admin_restaurant_subscription_checkout',
+                                            advert_id=advert.id,
+                                            plan_tier='premium'
+                                        ) }}"
+                                        class="sidebar-upgrade-form"
+                                    >
+
+                                        <button
+                                            type="submit"
+                                            class="sidebar-upgrade"
+                                        >
+                                            ★ Upgrade to Premium — R299
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
+
+
+                                <!-- =====================================
+                                     FREE -> MANAGE PLAN
+                                ====================================== -->
+
+                                {% if advert.is_free_plan %}
+
+                                    <a
+                                        href="{{ url_for(
+                                            'admin_manage_restaurant',
+                                            advert_id=advert.id
+                                        ) }}"
+                                        class="sidebar-mini-link"
+                                        style="grid-column:1 / -1;"
+                                    >
+                                        Upgrade Restaurant Plan
+                                    </a>
+
+                                {% endif %}
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    {% endfor %}
 
 
                 </div>
 
+            {% endif %}
 
-            {% endfor %}
+
+            <!-- =================================================
+                 LOGOUT
+            ================================================== -->
+
+            <div class="sidebar-footer">
+
+
+                <a
+                    href="{{ url_for('organizer_logout') }}"
+                    class="logout-link"
+                >
+                    ↪ Logout
+                </a>
+
+
+            </div>
 
 
         </aside>
@@ -2865,7 +2979,7 @@
 
 
                     <p class="eyebrow">
-                        RESTAURANT CONTROL CENTRE
+                        KALXA RESTAURANT BUSINESS CENTRE
                     </p>
 
 
@@ -2876,10 +2990,10 @@
 
                     <p class="subtitle">
 
-                        Manage restaurant campaigns,
-                        public profiles, customer rating QR codes,
-                        gallery photos, working hours, reels and
-                        subscription from one place.
+                        Control your restaurant profile,
+                        campaigns, Reels, customer experiences,
+                        opening hours and subscription from one
+                        professional dashboard.
 
                     </p>
 
@@ -2887,37 +3001,21 @@
                 </div>
 
 
-                {% if subscription_active %}
-
-                    <a
-                        href="{{ url_for(
-                            'admin_create_restaurant'
-                        ) }}"
-                        class="button"
-                    >
-                        + Create Campaign
-                    </a>
-
-
-                {% else %}
-
-                    <a
-                        href="{{ url_for(
-                            'admin_subscription'
-                        ) }}"
-                        class="button"
-                    >
-                        🔒 Activate — R{{ "%.2f"|format(subscription_price) }}
-                    </a>
-
-                {% endif %}
+                <a
+                    href="{{ url_for(
+                        'admin_create_restaurant'
+                    ) }}"
+                    class="button"
+                >
+                    + Create Campaign
+                </a>
 
 
             </section>
 
 
             <!-- =================================================
-                 FLASH
+                 FLASH MESSAGES
             ================================================== -->
 
             {% with messages =
@@ -2936,6 +3034,7 @@
                             <div
                                 class="
                                     flash
+
                                     {% if category == 'success' %}
                                         flash-success
                                     {% elif category == 'error' %}
@@ -2957,114 +3056,58 @@
 
 
             <!-- =================================================
-                 SUBSCRIPTION
+                 RESTAURANT PLAN OVERVIEW
             ================================================== -->
 
-            {% if subscription_active %}
+            <div class="plan-overview">
 
-                <div
-                    class="
-                        subscription
-                        subscription-active
-                    "
-                >
+
+                <div class="plan-overview-top">
 
 
                     <div>
 
-
                         <strong>
-                            ✅ Restaurant subscription active
+                            Restaurant plans are managed individually
                         </strong>
 
 
                         <p>
 
-                            Your restaurant management tools
-                            are currently unlocked.
+                            Free restaurants keep their profile,
+                            campaign and Reel.
 
-                            {% if subscription_expires_at %}
+                            Standard unlocks gallery photos,
+                            working hours, customer experiences
+                            and Customer Rating QR.
 
-                                Subscription valid until
-                                {{ subscription_expires_at.strftime('%d %B %Y') }}.
-
-                            {% endif %}
-
-                            Renewal price:
-                            <strong style="display:inline;">
-                                R{{ "%.2f"|format(subscription_price) }}
-                            </strong>.
+                            Premium adds Kalxa Stories exposure
+                            and restaurant analytics.
 
                         </p>
-
 
                     </div>
 
 
-                    <a
-                        href="{{ url_for(
-                            'admin_subscription'
-                        ) }}"
-                        class="subscription-link"
-                    >
-                        Manage subscription →
-                    </a>
+                    {% if adverts %}
+
+                        <a
+                            href="{{ url_for(
+                                'admin_manage_restaurant',
+                                advert_id=adverts[0].id
+                            ) }}"
+                            class="plan-overview-link"
+                        >
+                            View plans →
+                        </a>
+
+                    {% endif %}
 
 
                 </div>
 
 
-            {% else %}
-
-                <div
-                    class="
-                        subscription
-                        subscription-locked
-                    "
-                >
-
-
-                    <div>
-
-
-                        <strong>
-                            🔒 Restaurant management locked
-                        </strong>
-
-
-                        <p>
-
-                            Activate your restaurant subscription
-                            for
-                            <strong style="display:inline;">
-                                R{{ "%.2f"|format(subscription_price) }}
-                            </strong>
-                            every 30 days to create campaigns,
-                            edit restaurant details,
-                            gallery photos and
-                            working hours.
-
-                        </p>
-
-
-                    </div>
-
-
-                    <a
-                        href="{{ url_for(
-                            'admin_subscription'
-                        ) }}"
-                        class="subscription-link"
-                    >
-                        Activate for
-                        R{{ "%.2f"|format(subscription_price) }}
-                        →
-                    </a>
-
-
-                </div>
-
-            {% endif %}
+            </div>
 
 
             <!-- =================================================
@@ -3077,7 +3120,7 @@
                 <div class="metric">
 
                     <span class="metric-label">
-                        Total Restaurants
+                        Restaurants
                     </span>
 
                     <span class="metric-value">
@@ -3157,17 +3200,14 @@
 
                     <div>
 
-
                         <h2>
-                            Restaurant Campaigns
+                            Your Restaurants
                         </h2>
 
-
                         <p>
-                            Review campaign status,
-                            schedules and edit existing campaigns.
+                            Manage campaigns, plans,
+                            restaurant profiles and customer tools.
                         </p>
-
 
                     </div>
 
@@ -3204,10 +3244,11 @@
                                     <tr>
 
                                         <th>Restaurant</th>
+                                        <th>Plan</th>
                                         <th>Status</th>
                                         <th>Area</th>
-                                        <th>Campaign Start</th>
-                                        <th>Campaign End</th>
+                                        <th>Start</th>
+                                        <th>End</th>
                                         <th>Reel</th>
                                         <th>Remaining</th>
                                         <th>Actions</th>
@@ -3225,6 +3266,8 @@
 
                                         <tr>
 
+
+                                            <!-- RESTAURANT -->
 
                                             <td>
 
@@ -3252,6 +3295,7 @@
                                                             {{ advert.business_name }}
                                                         </strong>
 
+
                                                         {% if advert.headline %}
 
                                                             <span>
@@ -3268,29 +3312,84 @@
                                             </td>
 
 
+                                            <!-- PLAN -->
+
+                                            <td>
+
+                                                {% if advert.is_premium_plan %}
+
+                                                    <span class="
+                                                        plan-badge
+                                                        plan-premium
+                                                    ">
+                                                        Premium
+                                                    </span>
+
+
+                                                {% elif advert.is_standard_plan %}
+
+                                                    <span class="
+                                                        plan-badge
+                                                        plan-standard
+                                                    ">
+                                                        Standard
+                                                    </span>
+
+
+                                                {% else %}
+
+                                                    <span class="
+                                                        plan-badge
+                                                        plan-free
+                                                    ">
+                                                        Free
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+                                            <!-- STATUS -->
+
                                             <td>
 
                                                 {% if advert.campaign_status == "live" %}
 
-                                                    <span class="status-badge badge-live">
+                                                    <span class="
+                                                        status-badge
+                                                        badge-live
+                                                    ">
                                                         ● LIVE
                                                     </span>
 
+
                                                 {% elif advert.campaign_status == "scheduled" %}
 
-                                                    <span class="status-badge badge-scheduled">
+                                                    <span class="
+                                                        status-badge
+                                                        badge-scheduled
+                                                    ">
                                                         ● SCHEDULED
                                                     </span>
 
+
                                                 {% elif advert.campaign_status == "expired" %}
 
-                                                    <span class="status-badge badge-expired">
+                                                    <span class="
+                                                        status-badge
+                                                        badge-expired
+                                                    ">
                                                         ● EXPIRED
                                                     </span>
 
+
                                                 {% else %}
 
-                                                    <span class="status-badge badge-paused">
+                                                    <span class="
+                                                        status-badge
+                                                        badge-paused
+                                                    ">
                                                         ● PAUSED
                                                     </span>
 
@@ -3299,38 +3398,52 @@
                                             </td>
 
 
+                                            <!-- AREA -->
+
                                             <td>
-
-                                                {% if advert.area %}
-                                                    {{ advert.area }}
-                                                {% else %}
-                                                    —
-                                                {% endif %}
-
+                                                {{ advert.area or "—" }}
                                             </td>
 
+
+                                            <!-- START -->
 
                                             <td>
 
                                                 {% if advert.campaign_start_date %}
-                                                    {{ advert.campaign_start_date.strftime('%d %b %Y') }}
+
+                                                    {{ advert.campaign_start_date.strftime(
+                                                        '%d %b %Y'
+                                                    ) }}
+
                                                 {% else %}
+
                                                     —
+
                                                 {% endif %}
 
                                             </td>
 
+
+                                            <!-- END -->
 
                                             <td>
 
                                                 {% if advert.campaign_end_date %}
-                                                    {{ advert.campaign_end_date.strftime('%d %b %Y') }}
+
+                                                    {{ advert.campaign_end_date.strftime(
+                                                        '%d %b %Y'
+                                                    ) }}
+
                                                 {% else %}
+
                                                     —
+
                                                 {% endif %}
 
                                             </td>
 
+
+                                            <!-- REEL -->
 
                                             <td>
 
@@ -3351,20 +3464,33 @@
                                             </td>
 
 
+                                            <!-- REMAINING -->
+
                                             <td>
 
                                                 {% if advert.campaign_status == "live" %}
 
-                                                    {{ advert.days_remaining }}
-                                                    day{% if advert.days_remaining != 1 %}s{% endif %}
+                                                    {% if advert.days_remaining is not none %}
+
+                                                        {{ advert.days_remaining }}
+                                                        day{% if advert.days_remaining != 1 %}s{% endif %}
+
+                                                    {% else %}
+
+                                                        Live
+
+                                                    {% endif %}
+
 
                                                 {% elif advert.campaign_status == "scheduled" %}
 
                                                     Starts soon
 
+
                                                 {% elif advert.campaign_status == "expired" %}
 
                                                     Ended
+
 
                                                 {% else %}
 
@@ -3374,6 +3500,8 @@
 
                                             </td>
 
+
+                                            <!-- ACTIONS -->
 
                                             <td>
 
@@ -3394,21 +3522,35 @@
                                                     </a>
 
 
-                                                    {% if subscription_active %}
+                                                    <a
+                                                        href="{{ url_for(
+                                                            'admin_edit_restaurant',
+                                                            advert_id=advert.id
+                                                        ) }}"
+                                                        class="
+                                                            table-action
+                                                            table-action-edit
+                                                        "
+                                                    >
+                                                        ✏ Edit
+                                                    </a>
 
-                                                        <a
-                                                            href="{{ url_for(
-                                                                'admin_edit_restaurant',
-                                                                advert_id=advert.id
-                                                            ) }}"
-                                                            class="
-                                                                table-action
-                                                                table-action-edit
-                                                            "
-                                                        >
-                                                            ✏ Edit Campaign
-                                                        </a>
 
+                                                    <a
+                                                        href="{{ url_for(
+                                                            'admin_restaurant_reel',
+                                                            advert_id=advert.id
+                                                        ) }}"
+                                                        class="
+                                                            table-action
+                                                            table-action-secondary
+                                                        "
+                                                    >
+                                                        🎬 Reel
+                                                    </a>
+
+
+                                                    {% if advert.can_receive_customer_experiences %}
 
                                                         <a
                                                             href="#qr-{{ advert.id }}"
@@ -3420,6 +3562,10 @@
                                                             Rating QR
                                                         </a>
 
+                                                    {% endif %}
+
+
+                                                    {% if advert.can_use_opening_hours %}
 
                                                         <a
                                                             href="#hours-{{ advert.id }}"
@@ -3428,8 +3574,34 @@
                                                                 table-action-hours
                                                             "
                                                         >
-                                                            Working Hours
+                                                            Hours
                                                         </a>
+
+                                                    {% endif %}
+
+
+                                                    {% if advert.is_standard_plan %}
+
+                                                        <form
+                                                            method="POST"
+                                                            action="{{ url_for(
+                                                                'admin_restaurant_subscription_checkout',
+                                                                advert_id=advert.id,
+                                                                plan_tier='premium'
+                                                            ) }}"
+                                                        >
+
+                                                            <button
+                                                                type="submit"
+                                                                class="
+                                                                    table-action
+                                                                    table-action-upgrade
+                                                                "
+                                                            >
+                                                                ★ Premium R299
+                                                            </button>
+
+                                                        </form>
 
                                                     {% endif %}
 
@@ -3478,49 +3650,26 @@
                     <div class="empty">
 
                         <strong>
-                            No restaurant campaigns yet.
+                            No restaurants yet.
                         </strong>
 
                         <br><br>
 
-                        {% if subscription_active %}
+                        Create your first restaurant campaign.
+                        Kalxa Free does not require payment
+                        to create your basic restaurant presence.
 
-                            Create your first campaign
-                            and start building your restaurant
-                            presence on Kalxa.
+                        <br><br>
 
-                            <br><br>
 
-                            <a
-                                href="{{ url_for(
-                                    'admin_create_restaurant'
-                                ) }}"
-                                class="button"
-                            >
-                                + Create First Campaign
-                            </a>
-
-                        {% else %}
-
-                            Activate your
-                            R{{ "%.2f"|format(subscription_price) }}
-                            restaurant subscription
-                            before creating your first
-                            restaurant campaign.
-
-                            <br><br>
-
-                            <a
-                                href="{{ url_for(
-                                    'admin_subscription'
-                                ) }}"
-                                class="button"
-                            >
-                                Activate Subscription —
-                                R{{ "%.2f"|format(subscription_price) }}
-                            </a>
-
-                        {% endif %}
+                        <a
+                            href="{{ url_for(
+                                'admin_create_restaurant'
+                            ) }}"
+                            class="button"
+                        >
+                            + Create First Restaurant
+                        </a>
 
                     </div>
 
@@ -3535,7 +3684,8 @@
                  CUSTOMER RATING QR
             ================================================== -->
 
-            {% if subscription_active and adverts %}
+            {% if adverts %}
+
 
                 <section
                     class="section"
@@ -3553,17 +3703,16 @@
                             </h2>
 
                             <p>
-                                Generate a permanent QR code for each
-                                restaurant. Print it and place it inside
-                                the restaurant so customers can scan,
-                                rate and share their experience.
+                                Standard and Premium restaurants
+                                can create permanent customer
+                                experience QR codes.
                             </p>
 
                         </div>
 
 
                         <span class="section-count">
-                            Permanent QR
+                            Standard + Premium
                         </span>
 
 
@@ -3576,236 +3725,231 @@
                         {% for advert in adverts %}
 
 
-                            {% set qr_data =
-                                restaurant_qr_data.get(
-                                    advert.id
-                                )
-                            %}
+                            {% if advert.can_receive_customer_experiences %}
 
 
-                            <article
-                                class="qr-card"
-                                id="qr-{{ advert.id }}"
-                            >
+                                {% set qr_data =
+                                    restaurant_qr_data.get(
+                                        advert.id
+                                    )
+                                %}
 
 
-                                <div class="qr-card-header">
+                                <article
+                                    class="qr-card"
+                                    id="qr-{{ advert.id }}"
+                                >
 
 
-                                    <div>
+                                    <div class="qr-card-header">
 
-                                        <h3>
-                                            {{ advert.business_name }}
-                                        </h3>
 
-                                        <p>
+                                        <div>
 
-                                            {% if advert.area %}
-                                                📍 {{ advert.area }}
-                                            {% else %}
-                                                Kalxa Restaurant
-                                            {% endif %}
+                                            <h3>
+                                                {{ advert.business_name }}
+                                            </h3>
 
-                                        </p>
+                                            <p>
+                                                Customer Experience QR
+                                            </p>
+
+                                        </div>
+
+
+                                        {% if qr_data and qr_data.exists %}
+
+                                            <span class="
+                                                qr-status
+                                                active
+                                            ">
+                                                ● QR ACTIVE
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="qr-status">
+                                                QR NOT CREATED
+                                            </span>
+
+                                        {% endif %}
+
 
                                     </div>
 
 
                                     {% if qr_data and qr_data.exists %}
 
-                                        <span class="qr-status active">
-                                            ● QR ACTIVE
-                                        </span>
+
+                                        <div class="qr-card-body">
+
+
+                                            <div class="qr-preview">
+
+                                                <img
+                                                    src="{{ qr_data.image_url }}"
+                                                    alt="Customer rating QR code for {{ advert.business_name }}"
+                                                    loading="lazy"
+                                                >
+
+                                            </div>
+
+
+                                            <div class="qr-details">
+
+
+                                                <p class="qr-eyebrow">
+                                                    CUSTOMER EXPERIENCE
+                                                </p>
+
+
+                                                <h4>
+                                                    Scan. Rate. Share.
+                                                </h4>
+
+
+                                                <p class="qr-description">
+
+                                                    Place this QR inside
+                                                    <strong>
+                                                        {{ advert.business_name }}
+                                                    </strong>.
+
+                                                    Customers can scan it
+                                                    after their visit and
+                                                    share their experience.
+
+                                                </p>
+
+
+                                                <div class="qr-info-box">
+
+                                                    <span class="qr-info-label">
+                                                        Permanent Rating Link
+                                                    </span>
+
+                                                    <span class="qr-url">
+                                                        {{ qr_data.rating_url }}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div class="qr-info-box">
+
+                                                    <span class="qr-info-label">
+                                                        QR Code
+                                                    </span>
+
+                                                    <span class="qr-code-value">
+                                                        {{ qr_data.public_code }}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div class="qr-actions">
+
+
+                                                    <a
+                                                        href="{{ qr_data.rating_url }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="
+                                                            qr-action
+                                                            qr-action-primary
+                                                        "
+                                                    >
+                                                        Open Rating Page
+                                                    </a>
+
+
+                                                    <a
+                                                        href="{{ qr_data.download_url }}"
+                                                        class="
+                                                            qr-action
+                                                            qr-action-download
+                                                        "
+                                                    >
+                                                        ↓ Download QR
+                                                    </a>
+
+
+                                                    <button
+                                                        type="button"
+                                                        class="
+                                                            qr-action
+                                                            qr-action-secondary
+                                                        "
+                                                        data-copy-rating-url="{{ qr_data.rating_url }}"
+                                                    >
+                                                        Copy Link
+                                                    </button>
+
+
+                                                </div>
+
+
+                                            </div>
+
+
+                                        </div>
+
 
                                     {% else %}
 
-                                        <span class="qr-status">
-                                            QR NOT CREATED
-                                        </span>
+
+                                        <div class="qr-generate">
+
+
+                                            <div>
+
+
+                                                <h4>
+                                                    Create Customer Rating QR
+                                                </h4>
+
+
+                                                <p>
+
+                                                    Generate one permanent
+                                                    QR code for
+                                                    <strong>
+                                                        {{ advert.business_name }}
+                                                    </strong>.
+
+                                                </p>
+
+
+                                                <div
+                                                    class="qr-message"
+                                                    id="qr-message-{{ advert.id }}"
+                                                ></div>
+
+
+                                            </div>
+
+
+                                            <button
+                                                type="button"
+                                                class="qr-generate-button"
+                                                data-create-qr-url="{{ qr_data.create_url if qr_data else '' }}"
+                                                data-restaurant-id="{{ advert.id }}"
+                                            >
+                                                Generate Rating QR
+                                            </button>
+
+
+                                        </div>
+
 
                                     {% endif %}
 
 
-                                </div>
+                                </article>
 
 
-                                {% if qr_data and qr_data.exists %}
-
-
-                                    <div class="qr-card-body">
-
-
-                                        <div class="qr-preview">
-
-                                            <img
-                                                src="{{ qr_data.image_url }}"
-                                                alt="Customer rating QR code for {{ advert.business_name }}"
-                                                loading="lazy"
-                                            >
-
-                                        </div>
-
-
-                                        <div class="qr-details">
-
-
-                                            <p class="qr-eyebrow">
-                                                CUSTOMER EXPERIENCE QR
-                                            </p>
-
-
-                                            <h4>
-                                                Scan. Rate. Share.
-                                            </h4>
-
-
-                                            <p class="qr-description">
-
-                                                Print this QR code and place it
-                                                somewhere customers can easily
-                                                scan it after their visit.
-
-                                                The QR is permanently connected
-                                                to <strong>{{ advert.business_name }}</strong>.
-
-                                            </p>
-
-
-                                            <div class="qr-info-box">
-
-                                                <span class="qr-info-label">
-                                                    Permanent Rating Link
-                                                </span>
-
-                                                <span
-                                                    class="qr-url"
-                                                    id="rating-url-{{ advert.id }}"
-                                                >
-                                                    {{ qr_data.rating_url }}
-                                                </span>
-
-                                            </div>
-
-
-                                            <div class="qr-info-box">
-
-                                                <span class="qr-info-label">
-                                                    Kalxa QR Code
-                                                </span>
-
-                                                <span class="qr-code-value">
-                                                    {{ qr_data.public_code }}
-                                                </span>
-
-                                            </div>
-
-
-                                            <div class="qr-actions">
-
-
-                                                <a
-                                                    href="{{ qr_data.rating_url }}"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    class="
-                                                        qr-action
-                                                        qr-action-primary
-                                                    "
-                                                >
-                                                    Open Rating Page
-                                                </a>
-
-
-                                                <a
-                                                    href="{{ qr_data.download_url }}"
-                                                    class="
-                                                        qr-action
-                                                        qr-action-download
-                                                    "
-                                                >
-                                                    ↓ Download QR
-                                                </a>
-
-
-                                                <button
-                                                    type="button"
-                                                    class="
-                                                        qr-action
-                                                        qr-action-secondary
-                                                    "
-                                                    data-copy-rating-url="{{ qr_data.rating_url }}"
-                                                >
-                                                    Copy Link
-                                                </button>
-
-
-                                            </div>
-
-
-                                            <div
-                                                class="qr-message"
-                                                id="copy-message-{{ advert.id }}"
-                                            ></div>
-
-
-                                        </div>
-
-
-                                    </div>
-
-
-                                {% else %}
-
-
-                                    <div class="qr-generate">
-
-
-                                        <div class="qr-generate-copy">
-
-                                            <h4>
-                                                Create a permanent customer rating QR
-                                            </h4>
-
-
-                                            <p>
-
-                                                Kalxa will create one permanent
-                                                QR code for
-                                                <strong>{{ advert.business_name }}</strong>.
-
-                                                Customers who scan it will be
-                                                sent directly to the restaurant
-                                                experience form with this
-                                                restaurant already selected.
-
-                                            </p>
-
-
-                                            <div
-                                                class="qr-message"
-                                                id="qr-message-{{ advert.id }}"
-                                            ></div>
-
-                                        </div>
-
-
-                                        <button
-                                            type="button"
-                                            class="qr-generate-button"
-                                            data-create-qr-url="{{ qr_data.create_url if qr_data else '' }}"
-                                            data-restaurant-id="{{ advert.id }}"
-                                        >
-                                            Generate Customer Rating QR
-                                        </button>
-
-
-                                    </div>
-
-
-                                {% endif %}
-
-
-                            </article>
+                            {% endif %}
 
 
                         {% endfor %}
@@ -3824,14 +3968,11 @@
                  WORKING HOURS
             ================================================== -->
 
-            {% if subscription_active and adverts %}
+            {% if adverts %}
 
 
                 <section
-                    class="
-                        section
-                        hours-management
-                    "
+                    class="section"
                     id="working-hours"
                 >
 
@@ -3846,15 +3987,15 @@
                             </h2>
 
                             <p>
-                                Set the normal weekly opening
-                                and closing times for each restaurant.
+                                Operational hours are available
+                                on Standard and Premium.
                             </p>
 
                         </div>
 
 
                         <span class="section-count">
-                            Owner controls
+                            Standard + Premium
                         </span>
 
 
@@ -3864,287 +4005,283 @@
                     {% for advert in adverts %}
 
 
-                        <section
-                            class="hours-card"
-                            id="hours-{{ advert.id }}"
-                        >
+                        {% if advert.can_use_opening_hours %}
 
 
-                            <div class="hours-card-header">
-
-
-                                <div>
-
-                                    <h3>
-                                        {{ advert.business_name }}
-                                    </h3>
-
-                                    <p>
-                                        These hours appear
-                                        on the public restaurant page.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="hours-card-actions">
-
-
-                                    <a
-                                        href="{{ url_for(
-                                            'admin_edit_restaurant',
-                                            advert_id=advert.id
-                                        ) }}"
-                                        class="hours-edit-link"
-                                    >
-                                        Edit Campaign
-                                    </a>
-
-
-                                    <a
-                                        href="{{ url_for(
-                                            'restaurant_page',
-                                            advert_id=advert.id
-                                        ) }}"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="hours-public-link"
-                                    >
-                                        Public Page →
-                                    </a>
-
-
-                                </div>
-
-
-                            </div>
-
-
-                            <form
-                                method="POST"
-                                action="{{ url_for(
-                                    'update_restaurant_hours',
-                                    advert_id=advert.id
-                                ) }}"
+                            <section
+                                class="hours-card"
+                                id="hours-{{ advert.id }}"
                             >
 
 
-                                <div class="table-scroll">
+                                <div class="hours-card-header">
 
 
-                                    <table class="hours-table">
+                                    <div>
+
+                                        <h3>
+                                            {{ advert.business_name }}
+                                        </h3>
+
+                                        <p>
+                                            Weekly public restaurant hours.
+                                        </p>
+
+                                    </div>
 
 
-                                        <thead>
-
-                                            <tr>
-
-                                                <th>Day</th>
-                                                <th>Opening Time</th>
-                                                <th>Closing Time</th>
-                                                <th>Closed</th>
-                                                <th>Public Status</th>
-
-                                            </tr>
-
-                                        </thead>
+                                    <div class="hours-card-actions">
 
 
-                                        <tbody>
+                                        <a
+                                            href="{{ url_for(
+                                                'admin_edit_restaurant',
+                                                advert_id=advert.id
+                                            ) }}"
+                                        >
+                                            Edit Restaurant
+                                        </a>
 
 
-                                            {% for day in [
-                                                'monday',
-                                                'tuesday',
-                                                'wednesday',
-                                                'thursday',
-                                                'friday',
-                                                'saturday',
-                                                'sunday'
-                                            ] %}
+                                        <a
+                                            href="{{ url_for(
+                                                'restaurant_page',
+                                                advert_id=advert.id
+                                            ) }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style="color:var(--blue);"
+                                        >
+                                            Public Page →
+                                        </a>
 
 
-                                                {% set hour_ns =
-                                                    namespace(
-                                                        found=false,
-                                                        open_time='',
-                                                        close_time='',
-                                                        is_closed=true
-                                                    )
-                                                %}
+                                    </div>
 
 
-                                                {% for opening_hour in advert.opening_hours %}
+                                </div>
 
 
-                                                    {% if opening_hour.day_of_week == day %}
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'update_restaurant_hours',
+                                        advert_id=advert.id
+                                    ) }}"
+                                >
 
-                                                        {% set hour_ns.found = true %}
 
-                                                        {% set hour_ns.open_time =
-                                                            opening_hour.open_time.strftime('%H:%M')
-                                                            if opening_hour.open_time
-                                                            else ''
-                                                        %}
+                                    <div class="table-scroll">
 
-                                                        {% set hour_ns.close_time =
-                                                            opening_hour.close_time.strftime('%H:%M')
-                                                            if opening_hour.close_time
-                                                            else ''
-                                                        %}
 
-                                                        {% set hour_ns.is_closed =
-                                                            opening_hour.is_closed
-                                                        %}
+                                        <table class="hours-table">
 
-                                                    {% endif %}
+
+                                            <thead>
+
+                                                <tr>
+                                                    <th>Day</th>
+                                                    <th>Opening</th>
+                                                    <th>Closing</th>
+                                                    <th>Closed</th>
+                                                    <th>Status</th>
+                                                </tr>
+
+                                            </thead>
+
+
+                                            <tbody>
+
+
+                                                {% for day in [
+                                                    'monday',
+                                                    'tuesday',
+                                                    'wednesday',
+                                                    'thursday',
+                                                    'friday',
+                                                    'saturday',
+                                                    'sunday'
+                                                ] %}
+
+
+                                                    {% set hour_ns =
+                                                        namespace(
+                                                            open_time='',
+                                                            close_time='',
+                                                            is_closed=true
+                                                        )
+                                                    %}
+
+
+                                                    {% for opening_hour in advert.opening_hours %}
+
+
+                                                        {% if opening_hour.day_of_week == day %}
+
+                                                            {% set hour_ns.open_time =
+                                                                opening_hour.open_time.strftime('%H:%M')
+                                                                if opening_hour.open_time
+                                                                else ''
+                                                            %}
+
+                                                            {% set hour_ns.close_time =
+                                                                opening_hour.close_time.strftime('%H:%M')
+                                                                if opening_hour.close_time
+                                                                else ''
+                                                            %}
+
+                                                            {% set hour_ns.is_closed =
+                                                                opening_hour.is_closed
+                                                            %}
+
+                                                        {% endif %}
+
+
+                                                    {% endfor %}
+
+
+                                                    <tr>
+
+
+                                                        <td>
+                                                            <span class="hours-day">
+                                                                {{ day|capitalize }}
+                                                            </span>
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <input
+                                                                type="time"
+                                                                name="{{ day }}_open"
+                                                                value="{{ hour_ns.open_time }}"
+                                                                class="time-input"
+                                                            >
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <input
+                                                                type="time"
+                                                                name="{{ day }}_close"
+                                                                value="{{ hour_ns.close_time }}"
+                                                                class="time-input"
+                                                            >
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            <label class="closed-label">
+
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="{{ day }}_closed"
+                                                                    value="1"
+                                                                    {% if hour_ns.is_closed %}
+                                                                        checked
+                                                                    {% endif %}
+                                                                >
+
+                                                                Closed
+
+                                                            </label>
+
+                                                        </td>
+
+
+                                                        <td>
+
+                                                            {% if hour_ns.is_closed %}
+
+                                                                <span class="
+                                                                    status-badge
+                                                                    badge-paused
+                                                                ">
+                                                                    Closed
+                                                                </span>
+
+
+                                                            {% elif hour_ns.open_time and hour_ns.close_time %}
+
+                                                                <span class="
+                                                                    status-badge
+                                                                    badge-live
+                                                                ">
+
+                                                                    {{ hour_ns.open_time }}
+                                                                    –
+                                                                    {{ hour_ns.close_time }}
+
+                                                                </span>
+
+
+                                                            {% else %}
+
+                                                                <span class="
+                                                                    status-badge
+                                                                    badge-scheduled
+                                                                ">
+                                                                    Not configured
+                                                                </span>
+
+                                                            {% endif %}
+
+                                                        </td>
+
+
+                                                    </tr>
 
 
                                                 {% endfor %}
 
 
-                                                <tr>
+                                            </tbody>
 
 
-                                                    <td>
+                                        </table>
 
-                                                        <span class="hours-day">
-                                                            {{ day|capitalize }}
-                                                        </span>
-
-                                                    </td>
-
-
-                                                    <td>
-
-                                                        <input
-                                                            type="time"
-                                                            name="{{ day }}_open"
-                                                            value="{{ hour_ns.open_time }}"
-                                                            class="time-input"
-                                                            aria-label="{{ day|capitalize }} opening time"
-                                                        >
-
-                                                    </td>
-
-
-                                                    <td>
-
-                                                        <input
-                                                            type="time"
-                                                            name="{{ day }}_close"
-                                                            value="{{ hour_ns.close_time }}"
-                                                            class="time-input"
-                                                            aria-label="{{ day|capitalize }} closing time"
-                                                        >
-
-                                                    </td>
-
-
-                                                    <td>
-
-                                                        <label class="closed-label">
-
-                                                            <input
-                                                                type="checkbox"
-                                                                name="{{ day }}_closed"
-                                                                value="1"
-                                                                {% if hour_ns.is_closed %}
-                                                                    checked
-                                                                {% endif %}
-                                                            >
-
-                                                            Closed
-
-                                                        </label>
-
-                                                    </td>
-
-
-                                                    <td>
-
-
-                                                        {% if hour_ns.is_closed %}
-
-                                                            <span class="
-                                                                status-badge
-                                                                badge-paused
-                                                            ">
-                                                                Closed
-                                                            </span>
-
-                                                        {% elif hour_ns.open_time and hour_ns.close_time %}
-
-                                                            <span class="
-                                                                status-badge
-                                                                badge-live
-                                                            ">
-
-                                                                {{ hour_ns.open_time }}
-                                                                –
-                                                                {{ hour_ns.close_time }}
-
-                                                            </span>
-
-                                                        {% else %}
-
-                                                            <span class="
-                                                                status-badge
-                                                                badge-scheduled
-                                                            ">
-                                                                Not configured
-                                                            </span>
-
-                                                        {% endif %}
-
-
-                                                    </td>
-
-
-                                                </tr>
-
-
-                                            {% endfor %}
-
-
-                                        </tbody>
-
-
-                                    </table>
-
-
-                                </div>
-
-
-                                <div class="hours-footer">
-
-
-                                    <div class="hours-footer-note">
-
-                                        Tick <strong>Closed</strong>
-                                        for days the restaurant does not operate.
-
-                                        Overnight hours such as
-                                        18:00 → 02:00 are supported.
 
                                     </div>
 
 
-                                    <button
-                                        type="submit"
-                                        class="save-hours"
-                                    >
-                                        Save Working Hours
-                                    </button>
+                                    <div class="hours-footer">
 
 
-                                </div>
+                                        <div class="hours-footer-note">
+
+                                            Tick <strong>Closed</strong>
+                                            when the restaurant does not
+                                            operate that day.
+
+                                            Overnight hours such as
+                                            18:00 → 02:00 are supported.
+
+                                        </div>
 
 
-                            </form>
+                                        <button
+                                            type="submit"
+                                            class="save-hours"
+                                        >
+                                            Save Working Hours
+                                        </button>
 
 
-                        </section>
+                                    </div>
+
+
+                                </form>
+
+
+                            </section>
+
+
+                        {% endif %}
 
 
                     {% endfor %}
@@ -4160,7 +4297,7 @@
                  SETUP CHECKLIST
             ================================================== -->
 
-            {% if subscription_active and adverts %}
+            {% if adverts %}
 
 
                 <section
@@ -4179,8 +4316,8 @@
                             </h2>
 
                             <p>
-                                Keep each restaurant profile complete
-                                so customers have useful information.
+                                Review each restaurant's
+                                Kalxa setup and plan access.
                             </p>
 
                         </div>
@@ -4191,7 +4328,6 @@
 
                     <div class="table-card">
 
-
                         <div class="table-scroll">
 
 
@@ -4201,17 +4337,16 @@
                                 <thead>
 
                                     <tr>
-
                                         <th>Restaurant</th>
+                                        <th>Plan</th>
                                         <th>Poster</th>
                                         <th>Gallery</th>
                                         <th>Location</th>
                                         <th>Reel</th>
-                                        <th>Working Hours</th>
+                                        <th>Hours</th>
                                         <th>Rating QR</th>
                                         <th>Campaign</th>
-                                        <th>Edit</th>
-
+                                        <th>Action</th>
                                     </tr>
 
                                 </thead>
@@ -4237,33 +4372,65 @@
                                         %}
 
 
-                                        {% for opening_hour in advert.opening_hours %}
+                                        {% if advert.can_use_opening_hours %}
 
+                                            {% for opening_hour in advert.opening_hours %}
 
-                                            {% if
-                                                opening_hour.open_time
-                                                or
-                                                opening_hour.is_closed
-                                            %}
-
-                                                {% set setup_ns.has_hours =
-                                                    true
+                                                {% if
+                                                    opening_hour.open_time
+                                                    or
+                                                    opening_hour.is_closed
                                                 %}
 
-                                            {% endif %}
+                                                    {% set setup_ns.has_hours = true %}
 
+                                                {% endif %}
 
-                                        {% endfor %}
+                                            {% endfor %}
+
+                                        {% endif %}
 
 
                                         <tr>
 
 
                                             <td>
-
                                                 <strong>
                                                     {{ advert.business_name }}
                                                 </strong>
+                                            </td>
+
+
+                                            <td>
+
+                                                {% if advert.is_premium_plan %}
+
+                                                    <span class="
+                                                        plan-badge
+                                                        plan-premium
+                                                    ">
+                                                        Premium
+                                                    </span>
+
+                                                {% elif advert.is_standard_plan %}
+
+                                                    <span class="
+                                                        plan-badge
+                                                        plan-standard
+                                                    ">
+                                                        Standard
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="
+                                                        plan-badge
+                                                        plan-free
+                                                    ">
+                                                        Free
+                                                    </span>
+
+                                                {% endif %}
 
                                             </td>
 
@@ -4289,14 +4456,16 @@
 
                                             <td>
 
-                                                {% if advert.gallery_images %}
+                                                {% if not advert.can_use_gallery %}
+
+                                                    <span class="no-badge">
+                                                        Locked
+                                                    </span>
+
+                                                {% elif advert.gallery_images %}
 
                                                     <span class="yes-badge">
-
-                                                        ✓
-                                                        {{ advert.gallery_images|length }}
-                                                        / 5
-
+                                                        ✓ {{ advert.gallery_images|length }} / 5
                                                     </span>
 
                                                 {% else %}
@@ -4350,7 +4519,13 @@
 
                                             <td>
 
-                                                {% if setup_ns.has_hours %}
+                                                {% if not advert.can_use_opening_hours %}
+
+                                                    <span class="no-badge">
+                                                        Locked
+                                                    </span>
+
+                                                {% elif setup_ns.has_hours %}
 
                                                     <span class="yes-badge">
                                                         ✓ Configured
@@ -4369,7 +4544,14 @@
 
                                             <td>
 
-                                                {% if qr_data and qr_data.exists %}
+                                                {% if not advert.can_receive_customer_experiences %}
+
+                                                    <span class="no-badge">
+                                                        Locked
+                                                    </span>
+
+
+                                                {% elif qr_data and qr_data.exists %}
 
                                                     <a
                                                         href="#qr-{{ advert.id }}"
@@ -4378,6 +4560,7 @@
                                                     >
                                                         ✓ Created
                                                     </a>
+
 
                                                 {% else %}
 
@@ -4439,18 +4622,46 @@
 
                                             <td>
 
-                                                <a
-                                                    href="{{ url_for(
-                                                        'admin_edit_restaurant',
-                                                        advert_id=advert.id
-                                                    ) }}"
-                                                    class="
-                                                        table-action
-                                                        table-action-edit
-                                                    "
-                                                >
-                                                    Edit Campaign
-                                                </a>
+                                                {% if advert.is_standard_plan %}
+
+                                                    <form
+                                                        method="POST"
+                                                        action="{{ url_for(
+                                                            'admin_restaurant_subscription_checkout',
+                                                            advert_id=advert.id,
+                                                            plan_tier='premium'
+                                                        ) }}"
+                                                    >
+
+                                                        <button
+                                                            type="submit"
+                                                            class="
+                                                                table-action
+                                                                table-action-upgrade
+                                                            "
+                                                        >
+                                                            Upgrade Premium
+                                                        </button>
+
+                                                    </form>
+
+
+                                                {% else %}
+
+                                                    <a
+                                                        href="{{ url_for(
+                                                            'admin_manage_restaurant',
+                                                            advert_id=advert.id
+                                                        ) }}"
+                                                        class="
+                                                            table-action
+                                                            table-action-edit
+                                                        "
+                                                    >
+                                                        Manage
+                                                    </a>
+
+                                                {% endif %}
 
                                             </td>
 
@@ -4468,7 +4679,6 @@
 
 
                         </div>
-
 
                     </div>
 
@@ -4494,277 +4704,297 @@
 
 <script>
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            /* =================================================
-               GENERATE QR
-            ================================================== */
-
-            const generateButtons =
-                document.querySelectorAll(
-                    "[data-create-qr-url]"
-                );
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
 
-            generateButtons.forEach(
-                function (button) {
+        /* =================================================
+           GENERATE CUSTOMER RATING QR
+        ================================================== */
 
-                    button.addEventListener(
-                        "click",
-                        async function () {
-
-                            const createUrl =
-                                button.dataset.createQrUrl;
-
-                            const restaurantId =
-                                button.dataset.restaurantId;
-
-                            const messageBox =
-                                document.getElementById(
-                                    "qr-message-" +
-                                    restaurantId
-                                );
+        const generateButtons =
+            document.querySelectorAll(
+                "[data-create-qr-url]"
+            );
 
 
-                            if (!createUrl) {
-
-                                if (messageBox) {
-
-                                    messageBox.textContent =
-                                        "Unable to create this QR code.";
-
-                                    messageBox.className =
-                                        "qr-message show error";
-                                }
-
-                                return;
-                            }
+        generateButtons.forEach(
+            function (button) {
 
 
-                            const originalText =
-                                button.textContent;
+                button.addEventListener(
+                    "click",
+                    async function () {
 
 
-                            button.disabled = true;
+                        const createUrl =
+                            button.dataset.createQrUrl;
 
-                            button.textContent =
-                                "Generating QR...";
+
+                        const restaurantId =
+                            button.dataset.restaurantId;
+
+
+                        const messageBox =
+                            document.getElementById(
+                                "qr-message-" +
+                                restaurantId
+                            );
+
+
+                        if (!createUrl) {
 
 
                             if (messageBox) {
 
-                                messageBox.textContent = "";
+                                messageBox.textContent =
+                                    "Unable to create this QR code.";
 
                                 messageBox.className =
-                                    "qr-message";
+                                    "qr-message show error";
+
                             }
+
+
+                            return;
+
+                        }
+
+
+                        const originalText =
+                            button.textContent;
+
+
+                        button.disabled = true;
+
+                        button.textContent =
+                            "Generating QR...";
+
+
+                        if (messageBox) {
+
+                            messageBox.textContent = "";
+
+                            messageBox.className =
+                                "qr-message";
+
+                        }
+
+
+                        try {
+
+
+                            const response =
+                                await fetch(
+                                    createUrl,
+                                    {
+                                        method: "POST",
+
+                                        headers: {
+                                            "Accept":
+                                                "application/json"
+                                        }
+                                    }
+                                );
+
+
+                            let data = {};
 
 
                             try {
 
-                                const response =
-                                    await fetch(
-                                        createUrl,
-                                        {
-                                            method: "POST",
+                                data =
+                                    await response.json();
 
-                                            headers: {
-                                                "Accept":
-                                                    "application/json"
-                                            }
-                                        }
-                                    );
+                            } catch (jsonError) {
+
+                                data = {};
+
+                            }
 
 
-                                let data = {};
+                            if (
+                                !response.ok
+                                ||
+                                !data.success
+                            ) {
 
-
-                                try {
-
-                                    data =
-                                        await response.json();
-
-                                } catch (jsonError) {
-
-                                    data = {};
-                                }
-
-
-                                if (
-                                    !response.ok
+                                throw new Error(
+                                    data.error
                                     ||
-                                    !data.success
-                                ) {
-
-                                    throw new Error(
-                                        data.error
-                                        ||
-                                        "Unable to generate QR code."
-                                    );
-                                }
-
-
-                                if (messageBox) {
-
-                                    messageBox.textContent =
-                                        "QR created successfully. Loading your permanent QR...";
-
-                                    messageBox.className =
-                                        "qr-message show success";
-                                }
-
-
-                                window.setTimeout(
-                                    function () {
-
-                                        window.location.reload();
-
-                                    },
-                                    650
+                                    "Unable to generate QR code."
                                 );
 
-
-                            } catch (error) {
-
-                                button.disabled = false;
-
-                                button.textContent =
-                                    originalText;
+                            }
 
 
-                                if (messageBox) {
+                            if (messageBox) {
 
-                                    messageBox.textContent =
-                                        error.message
-                                        ||
-                                        "Unable to generate QR code.";
+                                messageBox.textContent =
+                                    "QR created successfully. Loading...";
 
-                                    messageBox.className =
-                                        "qr-message show error";
-                                }
+                                messageBox.className =
+                                    "qr-message show success";
+
+                            }
+
+
+                            window.setTimeout(
+                                function () {
+
+                                    window.location.reload();
+
+                                },
+                                650
+                            );
+
+
+                        } catch (error) {
+
+
+                            button.disabled = false;
+
+                            button.textContent =
+                                originalText;
+
+
+                            if (messageBox) {
+
+                                messageBox.textContent =
+                                    error.message
+                                    ||
+                                    "Unable to generate QR code.";
+
+                                messageBox.className =
+                                    "qr-message show error";
 
                             }
 
                         }
-                    );
 
-                }
-            );
-
-
-            /* =================================================
-               COPY PERMANENT RATING LINK
-            ================================================== */
-
-            const copyButtons =
-                document.querySelectorAll(
-                    "[data-copy-rating-url]"
+                    }
                 );
 
-
-            copyButtons.forEach(
-                function (button) {
-
-                    button.addEventListener(
-                        "click",
-                        async function () {
-
-                            const ratingUrl =
-                                button.dataset.copyRatingUrl;
+            }
+        );
 
 
-                            if (!ratingUrl) {
-                                return;
-                            }
+        /* =================================================
+           COPY CUSTOMER RATING LINK
+        ================================================== */
 
-
-                            const originalText =
-                                button.textContent;
-
-
-                            try {
-
-                                await navigator.clipboard.writeText(
-                                    ratingUrl
-                                );
-
-
-                                button.textContent =
-                                    "Copied ✓";
-
-
-                                window.setTimeout(
-                                    function () {
-
-                                        button.textContent =
-                                            originalText;
-
-                                    },
-                                    1800
-                                );
-
-
-                            } catch (error) {
-
-                                const temporaryInput =
-                                    document.createElement(
-                                        "textarea"
-                                    );
-
-
-                                temporaryInput.value =
-                                    ratingUrl;
-
-
-                                temporaryInput.style.position =
-                                    "fixed";
-
-                                temporaryInput.style.opacity =
-                                    "0";
-
-
-                                document.body.appendChild(
-                                    temporaryInput
-                                );
-
-
-                                temporaryInput.select();
-
-
-                                document.execCommand(
-                                    "copy"
-                                );
-
-
-                                temporaryInput.remove();
-
-
-                                button.textContent =
-                                    "Copied ✓";
-
-
-                                window.setTimeout(
-                                    function () {
-
-                                        button.textContent =
-                                            originalText;
-
-                                    },
-                                    1800
-                                );
-
-                            }
-
-                        }
-                    );
-
-                }
+        const copyButtons =
+            document.querySelectorAll(
+                "[data-copy-rating-url]"
             );
 
-        }
-    );
+
+        copyButtons.forEach(
+            function (button) {
+
+
+                button.addEventListener(
+                    "click",
+                    async function () {
+
+
+                        const ratingUrl =
+                            button.dataset.copyRatingUrl;
+
+
+                        if (!ratingUrl) {
+                            return;
+                        }
+
+
+                        const originalText =
+                            button.textContent;
+
+
+                        try {
+
+
+                            await navigator.clipboard.writeText(
+                                ratingUrl
+                            );
+
+
+                            button.textContent =
+                                "Copied ✓";
+
+
+                            window.setTimeout(
+                                function () {
+
+                                    button.textContent =
+                                        originalText;
+
+                                },
+                                1800
+                            );
+
+
+                        } catch (error) {
+
+
+                            const temporaryInput =
+                                document.createElement(
+                                    "textarea"
+                                );
+
+
+                            temporaryInput.value =
+                                ratingUrl;
+
+
+                            temporaryInput.style.position =
+                                "fixed";
+
+                            temporaryInput.style.opacity =
+                                "0";
+
+
+                            document.body.appendChild(
+                                temporaryInput
+                            );
+
+
+                            temporaryInput.select();
+
+
+                            document.execCommand(
+                                "copy"
+                            );
+
+
+                            temporaryInput.remove();
+
+
+                            button.textContent =
+                                "Copied ✓";
+
+
+                            window.setTimeout(
+                                function () {
+
+                                    button.textContent =
+                                        originalText;
+
+                                },
+                                1800
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    }
+);
 
 </script>
 
