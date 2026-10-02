@@ -4662,8 +4662,10 @@ def restaurant_can_be_managed_by_current_organizer(
 
 # ============================================================
 
-
 # ============================================================
+# UPDATE RESTAURANT OPERATIONAL HOURS
+# ============================================================
+
 @app.route(
     "/restaurant/<int:advert_id>/hours",
     methods=["POST"],
@@ -4673,7 +4675,7 @@ def update_restaurant_hours(
 ):
 
     # ========================================================
-    # ORGANIZER LOGIN
+    # ORGANIZER AUTHENTICATION
     # ========================================================
 
     auth = (
@@ -4696,40 +4698,31 @@ def update_restaurant_hours(
 
 
     # ========================================================
-    # RESTAURANT
-    # ========================================================
-
-    advert = (
-        RestaurantAdvert.query
-
-        .filter_by(
-            id=advert_id
-        )
-
-        .first_or_404()
-    )
-
-
-    # ========================================================
-    # OWNERSHIP
-    # ========================================================
-
-    if (
-        advert.organizer_id
-        != current_organizer.id
-    ):
-
-        abort(403)
-
-
-    # ========================================================
-    # OWNER ACCOUNT SAFETY
+    # OWNER ACCOUNT ACTIVE
     # ========================================================
 
     if not current_organizer.active:
 
         abort(403)
 
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+    #
+    # Operational hours belong only to restaurant accounts.
+    #
+    # IMPORTANT:
+    #
+    # Do NOT check:
+    #
+    #     current_organizer.is_subscription_active
+    #
+    # That belongs to the legacy Organizer/Event SaaS
+    # subscription.
+    #
+    # Restaurant plan access belongs to RestaurantAdvert.
+    # ========================================================
 
     if (
         getattr(
@@ -4744,7 +4737,88 @@ def update_restaurant_hours(
 
 
     # ========================================================
-    # SYNCHRONIZE SUBSCRIPTION
+    # RESTAURANT + OWNERSHIP
+    # ========================================================
+    #
+    # Fetching using both IDs gives us an additional ownership
+    # boundary.
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+
+        .filter_by(
+            id=advert_id,
+            organizer_id=current_organizer.id,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ORGANIZER SAFETY
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        abort(403)
+
+
+    if not organizer.active:
+
+        abort(403)
+
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # STANDARD / PREMIUM ACTIVE
+    #     -> operational hours available
+    #
+    # STANDARD / PREMIUM IN 5-DAY GRACE
+    #     -> operational hours remain available
+    #
+    # AFTER GRACE
+    #     -> sync automatically downgrades to Free
+    #
+    # FREE
+    #     -> operational hours unavailable
+    #
+    # IMPORTANT:
+    #
+    # Existing RestaurantOpeningHour rows are NOT deleted when
+    # a restaurant becomes Free.
+    #
+    # They remain stored so that upgrading again can restore
+    # the feature.
     # ========================================================
 
     sync_restaurant_subscription(
@@ -4786,13 +4860,15 @@ def update_restaurant_hours(
             opening_hour
 
         for opening_hour
-        in RestaurantOpeningHour.query
+        in (
+            RestaurantOpeningHour.query
 
-        .filter_by(
-            restaurant_advert_id=advert.id
+            .filter_by(
+                restaurant_advert_id=advert.id
+            )
+
+            .all()
         )
-
-        .all()
     }
 
 
@@ -4802,7 +4878,48 @@ def update_restaurant_hours(
 
     try:
 
+        # ====================================================
+        # FINAL CAPABILITY CHECK
+        # ====================================================
+        #
+        # Keep the actual database mutation behind the
+        # RestaurantAdvert capability boundary.
+        # ====================================================
+
+        sync_restaurant_subscription(
+            advert
+        )
+
+
+        if not advert.can_use_opening_hours:
+
+            flash(
+                (
+                    "Operational hours are available "
+                    "on the Standard and Premium "
+                    "restaurant plans."
+                ),
+                "error",
+            )
+
+
+            return redirect(
+                url_for(
+                    "restaurant_page",
+                    advert_id=advert.id,
+                )
+            )
+
+
+        # ====================================================
+        # PROCESS EACH DAY
+        # ====================================================
+
         for day in RESTAURANT_WEEKDAYS:
+
+            # =================================================
+            # CLOSED STATE
+            # =================================================
 
             is_closed = (
                 request.form.get(
@@ -4812,6 +4929,10 @@ def update_restaurant_hours(
             )
 
 
+            # =================================================
+            # OPENING TIME
+            # =================================================
+
             open_raw = (
                 request.form.get(
                     f"{day}_open"
@@ -4819,6 +4940,10 @@ def update_restaurant_hours(
                 or ""
             ).strip()
 
+
+            # =================================================
+            # CLOSING TIME
+            # =================================================
 
             close_raw = (
                 request.form.get(
@@ -4835,10 +4960,15 @@ def update_restaurant_hours(
             if is_closed:
 
                 open_time = None
+
                 close_time = None
 
 
             else:
+
+                # =============================================
+                # BOTH TIMES REQUIRED
+                # =============================================
 
                 if (
                     not open_raw
@@ -4864,12 +4994,20 @@ def update_restaurant_hours(
                     )
 
 
+                # =============================================
+                # PARSE OPENING TIME
+                # =============================================
+
                 open_time = (
                     parse_restaurant_time(
                         open_raw
                     )
                 )
 
+
+                # =============================================
+                # PARSE CLOSING TIME
+                # =============================================
 
                 close_time = (
                     parse_restaurant_time(
@@ -4893,8 +5031,14 @@ def update_restaurant_hours(
 
                 opening_hour = (
                     RestaurantOpeningHour(
-                        restaurant_advert_id=advert.id,
-                        day_of_week=day,
+
+                        restaurant_advert_id=(
+                            advert.id
+                        ),
+
+                        day_of_week=(
+                            day
+                        ),
                     )
                 )
 
@@ -4902,6 +5046,15 @@ def update_restaurant_hours(
                 db.session.add(
                     opening_hour
                 )
+
+
+                # =============================================
+                # KEEP LOCAL LOOKUP SYNCHRONIZED
+                # =============================================
+
+                existing_hours[
+                    day
+                ] = opening_hour
 
 
             # =================================================
@@ -4930,6 +5083,10 @@ def update_restaurant_hours(
         db.session.commit()
 
 
+    # ========================================================
+    # INVALID TIME VALUE
+    # ========================================================
+
     except ValueError as error:
 
         db.session.rollback()
@@ -4951,6 +5108,10 @@ def update_restaurant_hours(
         )
 
 
+    # ========================================================
+    # UNEXPECTED ERROR
+    # ========================================================
+
     except Exception as error:
 
         db.session.rollback()
@@ -4958,11 +5119,15 @@ def update_restaurant_hours(
 
         current_app.logger.exception(
             (
+                "[Restaurant Hours] "
                 "Unable to update restaurant "
-                "working hours for restaurant %s "
+                "working hours "
+                "advert_id=%s "
+                "organizer_id=%s "
                 "error=%s"
             ),
             advert.id,
+            current_organizer.id,
             error,
         )
 
@@ -5000,6 +5165,7 @@ def update_restaurant_hours(
             advert_id=advert.id,
         )
     )
+# ============================================================
 
 # ============================================================
 # RESTAURANT CAMPAIGN SCHEDULING
