@@ -16938,6 +16938,376 @@ def delete_cloudinary_reel(
         )
 
 
+
+# ============================================================
+# DELETE RESTAURANT GALLERY IMAGE
+# ============================================================
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/gallery/<int:image_id>/delete",
+    methods=["POST"],
+)
+def admin_delete_restaurant_gallery_image(
+    advert_id,
+    image_id,
+):
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
+    if auth:
+        return auth
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT ACCESS
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # This checks restaurant-account access only.
+    #
+    # It must NOT require the legacy Organizer/Event SaaS
+    # subscription.
+    # ========================================================
+
+    subscription_auth = (
+        require_restaurant_subscription()
+    )
+
+    if subscription_auth:
+        return subscription_auth
+
+
+    # ========================================================
+    # CURRENT ORGANIZER
+    # ========================================================
+
+    organizer = (
+        get_current_organizer()
+    )
+
+
+    if not organizer:
+
+        abort(401)
+
+
+    # ========================================================
+    # ORGANIZER ACTIVE
+    # ========================================================
+
+    if not organizer.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT + OWNERSHIP
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+
+        .filter_by(
+            id=advert_id,
+            organizer_id=organizer.id,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT ORGANIZER SAFETY
+    # ========================================================
+
+    if not advert.organizer:
+
+        abort(403)
+
+
+    if not advert.organizer.active:
+
+        abort(403)
+
+
+    if (
+        getattr(
+            advert.organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # STANDARD / PREMIUM ACTIVE
+    #     -> gallery management allowed
+    #
+    # STANDARD / PREMIUM GRACE
+    #     -> gallery management allowed
+    #
+    # GRACE EXPIRED
+    #     -> automatically downgraded to Free
+    #
+    # FREE
+    #     -> gallery management blocked
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # GALLERY PLAN PERMISSION
+    # ========================================================
+
+    if not advert.can_use_gallery:
+
+        flash(
+            (
+                "Gallery management is available "
+                "on the Standard and Premium "
+                "restaurant plans."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_edit_restaurant",
+                advert_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # FIND GALLERY IMAGE
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Query using BOTH:
+    #
+    #     image_id
+    #     restaurant_advert_id
+    #
+    # This prevents one restaurant owner from submitting an
+    # image ID belonging to another restaurant.
+    # ========================================================
+
+    gallery_image = (
+        RestaurantGalleryImage.query
+
+        .filter_by(
+            id=image_id,
+            restaurant_advert_id=advert.id,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # SAVE CLOUDINARY PUBLIC ID
+    # ========================================================
+    #
+    # Keep this before deleting the database record.
+    # ========================================================
+
+    public_id = (
+        gallery_image.cloudinary_public_id
+    )
+
+
+    # ========================================================
+    # FINAL SUBSCRIPTION CHECK
+    # ========================================================
+    #
+    # Keep the destructive operation behind a final
+    # capability boundary.
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    if not advert.can_use_gallery:
+
+        flash(
+            (
+                "Gallery management is available "
+                "on the Standard and Premium "
+                "restaurant plans."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_edit_restaurant",
+                advert_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # DELETE DATABASE RECORD
+    # ========================================================
+    #
+    # Database first.
+    #
+    # If the database operation fails, the Cloudinary asset
+    # remains intact.
+    #
+    # If the database succeeds but Cloudinary cleanup fails,
+    # the user-facing gallery is still correctly updated and
+    # the orphaned Cloudinary asset can be cleaned later.
+    # ========================================================
+
+    try:
+
+        db.session.delete(
+            gallery_image
+        )
+
+
+        db.session.commit()
+
+
+    except Exception as error:
+
+        db.session.rollback()
+
+
+        current_app.logger.exception(
+            (
+                "[Restaurant Gallery] "
+                "Unable to delete gallery image "
+                "advert_id=%s "
+                "image_id=%s "
+                "organizer_id=%s "
+                "error=%s"
+            ),
+            advert.id,
+            image_id,
+            organizer.id,
+            error,
+        )
+
+
+        flash(
+            (
+                "The gallery photo could not "
+                "be deleted. Please try again."
+            ),
+            "error",
+        )
+
+
+        return redirect(
+            url_for(
+                "admin_edit_restaurant",
+                advert_id=advert.id,
+            )
+        )
+
+
+    # ========================================================
+    # DELETE CLOUDINARY ASSET
+    # ========================================================
+    #
+    # Only remove the Cloudinary image AFTER the database
+    # commit succeeds.
+    # ========================================================
+
+    if public_id:
+
+        try:
+
+            cloudinary.uploader.destroy(
+                public_id,
+                resource_type="image",
+                invalidate=True,
+            )
+
+
+        except Exception as error:
+
+            current_app.logger.exception(
+                (
+                    "[Restaurant Gallery] "
+                    "Database row deleted but "
+                    "Cloudinary cleanup failed "
+                    "advert_id=%s "
+                    "image_id=%s "
+                    "public_id=%s "
+                    "error=%s"
+                ),
+                advert.id,
+                image_id,
+                public_id,
+                error,
+            )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    flash(
+        "Gallery photo deleted.",
+        "success",
+    )
+
+
+    return redirect(
+        url_for(
+            "admin_edit_restaurant",
+            advert_id=advert.id,
+        )
+    )
 @app.route(
     "/restaurant/<int:advert_id>/rating-qr",
     methods=["POST"],
