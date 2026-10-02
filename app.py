@@ -913,33 +913,6 @@ def allowed_event_reel_filename(filename):
 
 
 
-def delete_cloudinary_reel(public_id):
-
-    if not public_id:
-        return
-
-    try:
-
-        cloudinary.uploader.destroy(
-            public_id,
-            resource_type="video",
-            invalidate=True,
-        )
-
-    except Exception as error:
-
-        current_app.logger.exception(
-            (
-                "[Event Reel] Unable to delete "
-                "Cloudinary asset "
-                "public_id=%s error=%s"
-            ),
-            public_id,
-            error,
-        )
-
-
-
 def finalize_paystack_ticket_order(
     order,
     transaction_data,
