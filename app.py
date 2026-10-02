@@ -13165,11 +13165,17 @@ def superadmin_reactivate_organizer(
     )
 
 
+
 # ============================================================
 # HOME
 # ============================================================
+
 @app.route("/")
 def home():
+
+    # ========================================================
+    # CURRENT DATE / TIME
+    # ========================================================
 
     today = (
         date.today()
@@ -13219,7 +13225,8 @@ def home():
             TicketEvent,
 
             FeaturedListing.event_id
-            == TicketEvent.id,
+            ==
+            TicketEvent.id,
         )
 
         .filter(
@@ -13325,7 +13332,8 @@ def home():
             TicketEvent,
 
             EventReel.event_id
-            == TicketEvent.id,
+            ==
+            TicketEvent.id,
         )
 
         .filter(
@@ -13358,7 +13366,26 @@ def home():
     #
     # EAT AROUND YOU
     #
-    # Subscription is now checked here too.
+    # IMPORTANT:
+    #
+    # Restaurant Reels are available on:
+    #
+    #     FREE        YES
+    #     STANDARD    YES
+    #     PREMIUM     YES
+    #
+    # Therefore this query must NOT use:
+    #
+    #     Organizer.subscription_status
+    #
+    # or:
+    #
+    #     Organizer.subscription_expires_at
+    #
+    # Those belong to the legacy Organizer/Event SaaS
+    # subscription.
+    #
+    # Restaurant Reel access belongs to RestaurantAdvert.
     # ========================================================
 
     restaurant_reels = (
@@ -13368,28 +13395,66 @@ def home():
             RestaurantAdvert,
 
             RestaurantReel.advert_id
-            == RestaurantAdvert.id,
+            ==
+            RestaurantAdvert.id,
         )
 
         .join(
             Organizer,
 
             RestaurantAdvert.organizer_id
-            == Organizer.id,
+            ==
+            Organizer.id,
         )
 
         .filter(
-            RestaurantReel.active.is_(True),
+            # =================================================
+            # REEL ACTIVE
+            # =================================================
 
-            RestaurantAdvert.active.is_(True),
+            RestaurantReel.active.is_(
+                True
+            ),
 
-            Organizer.active.is_(True),
+            # =================================================
+            # RESTAURANT ACTIVE
+            # =================================================
 
-            Organizer.subscription_status
+            RestaurantAdvert.active.is_(
+                True
+            ),
+
+            # =================================================
+            # RESTAURANT SUBSCRIPTION STATUS
+            # =================================================
+            #
+            # Free restaurants are active indefinitely.
+            #
+            # Paid restaurants remain active during their
+            # grace period.
+            # =================================================
+
+            RestaurantAdvert.subscription_status
             == "active",
 
-            Organizer.subscription_expires_at
-            > now,
+            # =================================================
+            # ORGANIZER ACTIVE
+            # =================================================
+
+            Organizer.active.is_(
+                True
+            ),
+
+            # =================================================
+            # RESTAURANT ACCOUNT
+            # =================================================
+
+            Organizer.account_type
+            == "restaurant",
+
+            # =================================================
+            # CAMPAIGN START
+            # =================================================
 
             or_(
                 RestaurantAdvert.starts_at.is_(
@@ -13399,6 +13464,10 @@ def home():
                 RestaurantAdvert.starts_at
                 <= now,
             ),
+
+            # =================================================
+            # CAMPAIGN END
+            # =================================================
 
             or_(
                 RestaurantAdvert.ends_at.is_(
@@ -13421,37 +13490,288 @@ def home():
 
 
     # ========================================================
+    # FINAL RESTAURANT REEL CAPABILITY CHECK
+    # ========================================================
+    #
+    # Keep the public feed aligned with the centralized
+    # RestaurantAdvert capability system.
+    #
+    # Free, Standard and Premium currently all have:
+    #
+    #     can_use_reel == True
+    #
+    # If plan rules change later, this filter will follow
+    # those rules.
+    # ========================================================
+
+    visible_restaurant_reels = []
+
+
+    for restaurant_reel in restaurant_reels:
+
+        advert = (
+            restaurant_reel.advert
+        )
+
+
+        if not advert:
+
+            continue
+
+
+        # ====================================================
+        # SYNCHRONIZE PAID PLAN LIFECYCLE
+        # ====================================================
+        #
+        # If Standard/Premium grace has expired, this can
+        # downgrade the restaurant to Free.
+        #
+        # That does NOT remove the Reel because Free is
+        # allowed to use Reel/Discovery.
+        # ====================================================
+
+        sync_restaurant_subscription(
+            advert
+        )
+
+
+        if not advert.can_use_reel:
+
+            continue
+
+
+        visible_restaurant_reels.append(
+            restaurant_reel
+        )
+
+
+    restaurant_reels = (
+        visible_restaurant_reels
+    )
+
+
+    # ========================================================
     # CUSTOMER RESTAURANT EXPERIENCES
     # ========================================================
     #
-    # Approved testimonials / tagged posts.
+    # Customer experiences are a paid restaurant capability.
     #
-    # Existing approved posts remain visible even when the
-    # restaurant subscription later expires.
+    # FREE
+    #     -> hidden
+    #
+    # STANDARD
+    #     -> visible
+    #
+    # PREMIUM
+    #     -> visible
+    #
+    # PAID GRACE
+    #     -> visible
+    #
+    # AFTER GRACE
+    #     -> restaurant becomes Free
+    #     -> existing posts remain stored
+    #     -> existing posts are NOT publicly exposed
+    #
+    # IMPORTANT:
+    #
+    # We do not delete experience posts when a restaurant
+    # downgrades.
+    #
+    # Re-upgrading can expose the approved posts again.
     # ========================================================
 
-    restaurant_experiences = (
+    restaurant_experience_candidates = (
         RestaurantExperiencePost.query
 
-        .filter(
-            RestaurantExperiencePost.active.is_(
-                True
-            )
+        .join(
+            RestaurantAdvert,
+
+            RestaurantExperiencePost.restaurant_advert_id
+            ==
+            RestaurantAdvert.id,
+        )
+
+        .join(
+            Organizer,
+
+            RestaurantAdvert.organizer_id
+            ==
+            Organizer.id,
         )
 
         .filter(
+            # =================================================
+            # EXPERIENCE ACTIVE
+            # =================================================
+
+            RestaurantExperiencePost.active.is_(
+                True
+            ),
+
+            # =================================================
+            # APPROVED ONLY
+            # =================================================
+
             RestaurantExperiencePost.moderation_status
-            == "approved"
+            == "approved",
+
+            # =================================================
+            # RESTAURANT ACTIVE
+            # =================================================
+
+            RestaurantAdvert.active.is_(
+                True
+            ),
+
+            # =================================================
+            # RESTAURANT SUBSCRIPTION STATUS
+            # =================================================
+
+            RestaurantAdvert.subscription_status
+            == "active",
+
+            # =================================================
+            # STANDARD / PREMIUM ONLY
+            # =================================================
+
+            RestaurantAdvert.subscription_tier.in_(
+                [
+                    RESTAURANT_PLAN_STANDARD,
+                    RESTAURANT_PLAN_PREMIUM,
+                ]
+            ),
+
+            # =================================================
+            # PAID EXPIRY REQUIRED
+            # =================================================
+
+            RestaurantAdvert.subscription_expires_at
+            .isnot(
+                None
+            ),
+
+            # =================================================
+            # ORGANIZER ACTIVE
+            # =================================================
+
+            Organizer.active.is_(
+                True
+            ),
+
+            # =================================================
+            # RESTAURANT ORGANIZER
+            # =================================================
+
+            Organizer.account_type
+            == "restaurant",
+
+            # =================================================
+            # CAMPAIGN START
+            # =================================================
+
+            or_(
+                RestaurantAdvert.starts_at.is_(
+                    None
+                ),
+
+                RestaurantAdvert.starts_at
+                <= now,
+            ),
+
+            # =================================================
+            # CAMPAIGN END
+            # =================================================
+
+            or_(
+                RestaurantAdvert.ends_at.is_(
+                    None
+                ),
+
+                RestaurantAdvert.ends_at
+                > now,
+            ),
         )
 
         .order_by(
             RestaurantExperiencePost.created_at.desc()
         )
 
-        .limit(20)
+        # ====================================================
+        # FETCH EXTRA CANDIDATES
+        # ====================================================
+        #
+        # Some candidates may be removed below because their
+        # paid grace period has expired.
+        #
+        # Fetching more than 20 gives us room to still return
+        # up to 20 eligible posts.
+        # ====================================================
+
+        .limit(60)
 
         .all()
     )
+
+
+    # ========================================================
+    # FINAL EXPERIENCE CAPABILITY CHECK
+    # ========================================================
+
+    restaurant_experiences = []
+
+
+    for post in restaurant_experience_candidates:
+
+        advert = (
+            post.restaurant_advert
+        )
+
+
+        if not advert:
+
+            continue
+
+
+        # ====================================================
+        # SYNCHRONIZE SUBSCRIPTION
+        # ====================================================
+
+        sync_restaurant_subscription(
+            advert
+        )
+
+
+        # ====================================================
+        # CUSTOMER EXPERIENCE CAPABILITY
+        # ====================================================
+
+        if not advert.can_receive_customer_experiences:
+
+            continue
+
+
+        # ====================================================
+        # ADD TO PUBLIC FEED
+        # ====================================================
+
+        restaurant_experiences.append(
+            post
+        )
+
+
+        # ====================================================
+        # HOME FEED LIMIT
+        # ====================================================
+
+        if (
+            len(
+                restaurant_experiences
+            )
+            >= 20
+        ):
+
+            break
 
 
     # ========================================================
@@ -13469,7 +13789,9 @@ def home():
     if restaurant_experiences:
 
         post_ids = [
+
             post.id
+
             for post
             in restaurant_experiences
         ]
@@ -13491,7 +13813,8 @@ def home():
 
                 .filter(
                     RestaurantExperienceLove.anonymous_session_id
-                    == anonymous_session_id
+                    ==
+                    anonymous_session_id
                 )
 
                 .all()
@@ -13506,40 +13829,44 @@ def home():
     return render_template(
         "event.html",
 
-        featured_events=
-            featured_events,
+        featured_events=(
+            featured_events
+        ),
 
-        events=
-            normal_events,
+        events=(
+            normal_events
+        ),
 
-        event=
-            None,
+        event=None,
 
-        reels=
-            reels,
+        reels=(
+            reels
+        ),
 
-        restaurant_reels=
-            restaurant_reels,
+        restaurant_reels=(
+            restaurant_reels
+        ),
 
-        # NEW
-        restaurant_experiences=
-            restaurant_experiences,
+        restaurant_experiences=(
+            restaurant_experiences
+        ),
 
-        # NEW
-        loved_experience_post_ids=
-            loved_experience_post_ids,
+        loved_experience_post_ids=(
+            loved_experience_post_ids
+        ),
 
-        firebase_config=
-            FIREBASE_WEB_CONFIG,
+        firebase_config=(
+            FIREBASE_WEB_CONFIG
+        ),
 
-        firebase_vapid_key=
-            FIREBASE_VAPID_KEY,
+        firebase_vapid_key=(
+            FIREBASE_VAPID_KEY
+        ),
 
-        firebase_push_configured=
-            firebase_web_push_configured(),
+        firebase_push_configured=(
+            firebase_web_push_configured()
+        ),
     )
-
-
 # ============================================================
 # RESTAURANT GALLERY
 # ============================================================
