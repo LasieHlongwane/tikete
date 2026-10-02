@@ -97,6 +97,7 @@ from models import (
     RestaurantGalleryImage,
     RestaurantRatingQRCode,
     RestaurantAnalyticsEvent,
+    RestaurantSubscriptionPayment,
    
 )
 
