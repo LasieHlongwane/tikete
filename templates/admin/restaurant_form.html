@@ -13,9 +13,9 @@
 
 <title>
     {% if advert %}
-        Edit Restaurant Advert
+        Edit Restaurant
     {% else %}
-        Create Restaurant Advert
+        Create Restaurant
     {% endif %}
     | Kalxa
 </title>
@@ -27,25 +27,64 @@
         box-sizing: border-box;
     }
 
+
     :root {
-        --page-bg: #e1e3e6;
-        --surface: #ffffff;
-        --surface-soft: #f5f6f7;
-        --surface-dark: #17191d;
-        --text: #17191d;
-        --text-soft: #626871;
-        --muted: #8a9098;
-        --border: #d8dbe0;
-        --border-soft: #e8eaed;
-        --green: #276a45;
-        --green-soft: #edf8f1;
-        --red: #a13d3d;
-        --red-soft: #fff0f0;
-        --blue: #31588e;
-        --blue-soft: #edf3fb;
+
+        --page-bg:
+            #e1e3e6;
+
+        --surface:
+            #ffffff;
+
+        --surface-soft:
+            #f5f6f7;
+
+        --surface-dark:
+            #17191d;
+
+        --text:
+            #17191d;
+
+        --text-soft:
+            #626871;
+
+        --muted:
+            #8a9098;
+
+        --border:
+            #d8dbe0;
+
+        --border-soft:
+            #e8eaed;
+
+        --green:
+            #276a45;
+
+        --green-soft:
+            #edf8f1;
+
+        --red:
+            #a13d3d;
+
+        --red-soft:
+            #fff0f0;
+
+        --blue:
+            #31588e;
+
+        --blue-soft:
+            #edf3fb;
+
+        --amber:
+            #8a6418;
+
+        --amber-soft:
+            #fff8e8;
     }
 
+
     body {
+
         margin: 0;
 
         background:
@@ -69,14 +108,18 @@
             antialiased;
     }
 
+
     button,
     input,
     textarea,
     select {
+
         font: inherit;
     }
 
+
     .page {
+
         width:
             min(
                 100% - 28px,
@@ -90,21 +133,33 @@
             26px 0 80px;
     }
 
+
     .back {
-        display: inline-flex;
 
-        margin-bottom: 16px;
+        display:
+            inline-flex;
 
-        color: #555b64;
+        margin-bottom:
+            16px;
 
-        font-size: 11px;
-        font-weight: 850;
+        color:
+            #555b64;
 
-        text-decoration: none;
+        font-size:
+            11px;
+
+        font-weight:
+            850;
+
+        text-decoration:
+            none;
     }
 
+
     .card {
-        overflow: hidden;
+
+        overflow:
+            hidden;
 
         background:
             var(--surface);
@@ -112,7 +167,8 @@
         border:
             1px solid var(--border);
 
-        border-radius: 22px;
+        border-radius:
+            22px;
 
         box-shadow:
             0 18px 45px
@@ -124,7 +180,9 @@
             );
     }
 
+
     .card-header {
+
         padding:
             26px 26px 22px;
 
@@ -135,24 +193,35 @@
                 #24282e 100%
             );
 
-        color: #ffffff;
+        color:
+            #ffffff;
     }
 
+
     .eyebrow {
+
         margin:
             0 0 7px;
 
-        color: #aeb4bc;
+        color:
+            #aeb4bc;
 
-        font-size: 9px;
-        font-weight: 950;
+        font-size:
+            9px;
 
-        letter-spacing: .16em;
+        font-weight:
+            950;
 
-        text-transform: uppercase;
+        letter-spacing:
+            .16em;
+
+        text-transform:
+            uppercase;
     }
 
+
     h1 {
+
         margin: 0;
 
         font-size:
@@ -162,32 +231,63 @@
                 39px
             );
 
-        line-height: 1;
+        line-height:
+            1;
 
-        letter-spacing: -.04em;
+        letter-spacing:
+            -.04em;
     }
 
+
     .intro {
-        max-width: 620px;
+
+        max-width:
+            620px;
 
         margin:
             10px 0 0;
 
-        color: #bcc1c8;
+        color:
+            #bcc1c8;
 
-        font-size: 12px;
+        font-size:
+            12px;
 
-        line-height: 1.6;
+        line-height:
+            1.6;
     }
+
 
     .card-body {
-        padding: 24px;
+
+        padding:
+            24px;
     }
 
-    .subscription-note {
-        margin-bottom: 20px;
 
-        padding: 13px 14px;
+    /* =====================================================
+       RESTAURANT PLAN
+    ===================================================== */
+
+    .plan-note {
+
+        display:
+            flex;
+
+        align-items:
+            flex-start;
+
+        justify-content:
+            space-between;
+
+        gap:
+            14px;
+
+        margin-bottom:
+            20px;
+
+        padding:
+            14px;
 
         background:
             var(--green-soft);
@@ -198,69 +298,163 @@
         border:
             1px solid #c8e5d3;
 
-        border-radius: 12px;
-
-        font-size: 11px;
-
-        line-height: 1.55;
+        border-radius:
+            12px;
     }
+
+
+    .plan-note-copy {
+
+        min-width: 0;
+    }
+
+
+    .plan-note-title {
+
+        display:
+            block;
+
+        margin-bottom:
+            3px;
+
+        font-size:
+            11px;
+
+        font-weight:
+            950;
+    }
+
+
+    .plan-note-text {
+
+        font-size:
+            10px;
+
+        line-height:
+            1.5;
+    }
+
+
+    .plan-badge {
+
+        flex:
+            0 0 auto;
+
+        padding:
+            6px 9px;
+
+        background:
+            #ffffff;
+
+        color:
+            var(--green);
+
+        border:
+            1px solid #c8e5d3;
+
+        border-radius:
+            999px;
+
+        font-size:
+            9px;
+
+        font-weight:
+            950;
+
+        white-space:
+            nowrap;
+    }
+
 
     form {
-        display: grid;
-        gap: 22px;
+
+        display:
+            grid;
+
+        gap:
+            22px;
     }
 
-    .section {
-        display: grid;
-        gap: 15px;
 
-        padding-top: 23px;
+    .section {
+
+        display:
+            grid;
+
+        gap:
+            15px;
+
+        padding-top:
+            23px;
 
         border-top:
             1px solid var(--border-soft);
     }
 
+
     .section:first-of-type {
+
         padding-top: 0;
+
         border-top: 0;
     }
 
+
     .section-heading {
-        display: flex;
 
-        align-items: flex-start;
-        justify-content: space-between;
+        display:
+            flex;
 
-        gap: 12px;
+        align-items:
+            flex-start;
+
+        justify-content:
+            space-between;
+
+        gap:
+            12px;
     }
 
+
     .section-heading-copy {
+
         min-width: 0;
     }
 
+
     .section-title {
+
         margin: 0;
 
         color:
             var(--text);
 
-        font-size: 14px;
-        font-weight: 950;
+        font-size:
+            14px;
+
+        font-weight:
+            950;
     }
 
+
     .section-subtitle {
+
         margin:
             4px 0 0;
 
         color:
             var(--muted);
 
-        font-size: 10px;
+        font-size:
+            10px;
 
-        line-height: 1.5;
+        line-height:
+            1.5;
     }
 
+
     .counter {
+
         flex:
             0 0 auto;
 
@@ -276,27 +470,42 @@
         border:
             1px solid #dde0e4;
 
-        border-radius: 999px;
+        border-radius:
+            999px;
 
-        font-size: 9px;
-        font-weight: 900;
+        font-size:
+            9px;
+
+        font-weight:
+            900;
     }
 
+
     label {
-        display: grid;
-        gap: 6px;
+
+        display:
+            grid;
+
+        gap:
+            6px;
 
         color:
             #2d3137;
 
-        font-size: 11px;
-        font-weight: 900;
+        font-size:
+            11px;
+
+        font-weight:
+            900;
     }
+
 
     input,
     textarea,
     select {
-        width: 100%;
+
+        width:
+            100%;
 
         padding:
             12px 13px;
@@ -310,40 +519,57 @@
         border:
             1px solid #d1d5da;
 
-        border-radius: 10px;
+        border-radius:
+            10px;
 
-        font-size: 13px;
+        font-size:
+            13px;
 
-        outline: none;
+        outline:
+            none;
 
         transition:
             border-color .15s ease,
             background .15s ease;
     }
 
+
     input:focus,
     textarea:focus,
     select:focus {
-        background: #ffffff;
+
+        background:
+            #ffffff;
 
         border-color:
             #565c65;
     }
 
+
     input[type="file"] {
-        padding: 10px;
+
+        padding:
+            10px;
 
         background:
             #ffffff;
     }
 
+
     textarea {
-        min-height: 120px;
-        resize: vertical;
+
+        min-height:
+            120px;
+
+        resize:
+            vertical;
     }
 
+
     .two-column {
-        display: grid;
+
+        display:
+            grid;
 
         grid-template-columns:
             repeat(
@@ -354,20 +580,29 @@
                 )
             );
 
-        gap: 12px;
+        gap:
+            12px;
     }
 
+
     .help {
+
         color:
             var(--muted);
 
-        font-size: 9px;
-        font-weight: 600;
+        font-size:
+            9px;
 
-        line-height: 1.5;
+        font-weight:
+            600;
+
+        line-height:
+            1.5;
     }
 
+
     .schedule-preview {
+
         padding:
             12px 13px;
 
@@ -377,18 +612,24 @@
         border:
             1px solid #e0e2e5;
 
-        border-radius: 11px;
+        border-radius:
+            11px;
 
         color:
             #4e555f;
 
-        font-size: 10px;
+        font-size:
+            10px;
 
-        line-height: 1.5;
+        line-height:
+            1.5;
     }
 
+
     .current-poster {
-        overflow: hidden;
+
+        overflow:
+            hidden;
 
         width:
             min(
@@ -396,35 +637,104 @@
                 260px
             );
 
-        background: #eceef0;
+        background:
+            #eceef0;
 
         border:
             1px solid #dde0e4;
 
-        border-radius: 14px;
+        border-radius:
+            14px;
     }
+
 
     .current-poster img {
-        display: block;
 
-        width: 100%;
+        display:
+            block;
 
-        aspect-ratio: 4 / 5;
+        width:
+            100%;
 
-        object-fit: cover;
+        aspect-ratio:
+            4 / 5;
+
+        object-fit:
+            cover;
     }
+
+
+    /* =====================================================
+       LOCKED FEATURE
+    ===================================================== */
+
+    .feature-locked {
+
+        padding:
+            15px;
+
+        background:
+            var(--amber-soft);
+
+        border:
+            1px solid #ead8a8;
+
+        border-radius:
+            13px;
+    }
+
+
+    .feature-locked-title {
+
+        display:
+            block;
+
+        margin-bottom:
+            5px;
+
+        color:
+            var(--amber);
+
+        font-size:
+            11px;
+
+        font-weight:
+            950;
+    }
+
+
+    .feature-locked-text {
+
+        margin: 0;
+
+        color:
+            #72591f;
+
+        font-size:
+            10px;
+
+        line-height:
+            1.55;
+    }
+
 
     /* =====================================================
        GALLERY
     ===================================================== */
 
     .gallery-summary {
-        display: flex;
 
-        align-items: center;
-        justify-content: space-between;
+        display:
+            flex;
 
-        gap: 12px;
+        align-items:
+            center;
+
+        justify-content:
+            space-between;
+
+        gap:
+            12px;
 
         padding:
             12px 13px;
@@ -435,40 +745,58 @@
         border:
             1px solid var(--border-soft);
 
-        border-radius: 11px;
+        border-radius:
+            11px;
     }
+
 
     .gallery-summary strong {
-        display: block;
 
-        font-size: 11px;
+        display:
+            block;
+
+        font-size:
+            11px;
     }
 
-    .gallery-summary span {
-        display: block;
 
-        margin-top: 2px;
+    .gallery-summary span {
+
+        display:
+            block;
+
+        margin-top:
+            2px;
 
         color:
             var(--muted);
 
-        font-size: 9px;
+        font-size:
+            9px;
     }
 
+
     .gallery-count {
+
         flex:
             0 0 auto;
 
         color:
             var(--blue);
 
-        font-size: 11px;
-        font-weight: 950;
+        font-size:
+            11px;
+
+        font-weight:
+            950;
     }
+
 
     .existing-gallery,
     .gallery-preview {
-        display: grid;
+
+        display:
+            grid;
 
         grid-template-columns:
             repeat(
@@ -479,17 +807,35 @@
                 )
             );
 
-        gap: 8px;
+        gap:
+            8px;
     }
 
-    .gallery-image-card {
-        position: relative;
 
-        overflow: hidden;
+    .gallery-image-wrapper {
+
+        display:
+            grid;
+
+        gap:
+            6px;
+
+        min-width: 0;
+    }
+
+
+    .gallery-image-card {
+
+        position:
+            relative;
+
+        overflow:
+            hidden;
 
         min-width: 0;
 
-        aspect-ratio: 1 / 1;
+        aspect-ratio:
+            1 / 1;
 
         background:
             #eceef0;
@@ -497,31 +843,52 @@
         border:
             1px solid #dce0e4;
 
-        border-radius: 11px;
+        border-radius:
+            11px;
     }
+
 
     .gallery-image-card img {
-        display: block;
 
-        width: 100%;
-        height: 100%;
+        display:
+            block;
 
-        object-fit: cover;
+        width:
+            100%;
+
+        height:
+            100%;
+
+        object-fit:
+            cover;
     }
 
+
     .gallery-order {
-        position: absolute;
 
-        top: 6px;
-        left: 6px;
+        position:
+            absolute;
 
-        display: inline-flex;
+        top:
+            6px;
 
-        align-items: center;
-        justify-content: center;
+        left:
+            6px;
 
-        min-width: 24px;
-        height: 24px;
+        display:
+            inline-flex;
+
+        align-items:
+            center;
+
+        justify-content:
+            center;
+
+        min-width:
+            24px;
+
+        height:
+            24px;
 
         padding:
             0 6px;
@@ -537,14 +904,82 @@
         color:
             #ffffff;
 
-        border-radius: 999px;
+        border-radius:
+            999px;
 
-        font-size: 8px;
-        font-weight: 950;
+        font-size:
+            8px;
+
+        font-weight:
+            950;
     }
 
+
+    /* =====================================================
+       GALLERY DELETE FORM
+    ===================================================== */
+
+    .gallery-delete-form {
+
+        display:
+            block;
+
+        margin: 0;
+    }
+
+
+    .gallery-delete-button {
+
+        width:
+            100%;
+
+        min-height:
+            30px;
+
+        padding:
+            6px 8px;
+
+        background:
+            var(--red-soft);
+
+        color:
+            var(--red);
+
+        border:
+            1px solid #eccaca;
+
+        border-radius:
+            8px;
+
+        font-size:
+            8px;
+
+        font-weight:
+            950;
+
+        cursor:
+            pointer;
+
+        transition:
+            background .15s ease,
+            border-color .15s ease;
+    }
+
+
+    .gallery-delete-button:hover {
+
+        background:
+            #ffe5e5;
+
+        border-color:
+            #dfb3b3;
+    }
+
+
     .gallery-upload-box {
-        padding: 15px;
+
+        padding:
+            15px;
 
         background:
             #fafbfc;
@@ -552,15 +987,21 @@
         border:
             1px dashed #bfc5cc;
 
-        border-radius: 13px;
+        border-radius:
+            13px;
     }
 
+
     .gallery-upload-box label {
+
         margin: 0;
     }
 
+
     .gallery-warning {
-        display: none;
+
+        display:
+            none;
 
         padding:
             10px 12px;
@@ -574,20 +1015,31 @@
         border:
             1px solid #eccaca;
 
-        border-radius: 9px;
+        border-radius:
+            9px;
 
-        font-size: 9px;
-        font-weight: 800;
+        font-size:
+            9px;
 
-        line-height: 1.45;
+        font-weight:
+            800;
+
+        line-height:
+            1.45;
     }
+
 
     .gallery-warning.show {
-        display: block;
+
+        display:
+            block;
     }
 
+
     .gallery-preview-title {
-        display: none;
+
+        display:
+            none;
 
         margin:
             2px 0 0;
@@ -595,30 +1047,47 @@
         color:
             #5d636c;
 
-        font-size: 9px;
-        font-weight: 900;
+        font-size:
+            9px;
 
-        text-transform: uppercase;
+        font-weight:
+            900;
 
-        letter-spacing: .09em;
+        text-transform:
+            uppercase;
+
+        letter-spacing:
+            .09em;
     }
+
 
     .gallery-preview-title.show {
-        display: block;
+
+        display:
+            block;
     }
 
+
     .preview-new {
+
         border-color:
             #cbd8e9;
     }
 
+
     .preview-new::after {
-        content: "NEW";
 
-        position: absolute;
+        content:
+            "NEW";
 
-        right: 5px;
-        bottom: 5px;
+        position:
+            absolute;
+
+        right:
+            5px;
+
+        bottom:
+            5px;
 
         padding:
             3px 5px;
@@ -631,27 +1100,41 @@
                 .90
             );
 
-        color: #ffffff;
+        color:
+            #ffffff;
 
-        border-radius: 999px;
+        border-radius:
+            999px;
 
-        font-size: 7px;
-        font-weight: 950;
+        font-size:
+            7px;
+
+        font-weight:
+            950;
     }
+
 
     /* =====================================================
        SUBMIT
     ===================================================== */
 
     .submit-area {
-        display: grid;
-        gap: 8px;
 
-        padding-top: 2px;
+        display:
+            grid;
+
+        gap:
+            8px;
+
+        padding-top:
+            2px;
     }
 
+
     .button {
-        min-height: 50px;
+
+        min-height:
+            50px;
 
         background:
             linear-gradient(
@@ -666,27 +1149,42 @@
         border:
             1px solid #17191d;
 
-        border-radius: 11px;
+        border-radius:
+            11px;
 
-        font-size: 12px;
-        font-weight: 950;
+        font-size:
+            12px;
 
-        cursor: pointer;
+        font-weight:
+            950;
+
+        cursor:
+            pointer;
     }
+
 
     .button:disabled {
-        opacity: .55;
-        cursor: not-allowed;
+
+        opacity:
+            .55;
+
+        cursor:
+            not-allowed;
     }
 
+
     .submit-help {
+
         color:
             var(--muted);
 
-        font-size: 9px;
+        font-size:
+            9px;
 
-        text-align: center;
+        text-align:
+            center;
     }
+
 
     @media (
         max-width: 680px
@@ -694,6 +1192,7 @@
 
         .existing-gallery,
         .gallery-preview {
+
             grid-template-columns:
                 repeat(
                     3,
@@ -706,37 +1205,48 @@
 
     }
 
+
     @media (
         max-width: 560px
     ) {
 
         .page {
+
             width:
                 min(
                     100% - 18px,
                     820px
                 );
 
-            padding-top: 14px;
+            padding-top:
+                14px;
         }
 
+
         .card-header {
+
             padding:
                 21px 17px;
         }
 
+
         .card-body {
+
             padding:
                 19px 16px;
         }
 
+
         .two-column {
+
             grid-template-columns:
                 1fr;
         }
 
+
         .existing-gallery,
         .gallery-preview {
+
             grid-template-columns:
                 repeat(
                     2,
@@ -747,6 +1257,13 @@
                 );
         }
 
+
+        .plan-note {
+
+            flex-direction:
+                column;
+        }
+
     }
 
 </style>
@@ -754,7 +1271,9 @@
 
 </head>
 
+
 <body>
+
 
 <div class="page">
 
@@ -775,6 +1294,7 @@
     class="back"
 >
     ←
+
     {% if advert %}
         Manage Restaurant
     {% else %}
@@ -786,7 +1306,12 @@
 <section class="card">
 
 
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
     <div class="card-header">
+
 
         <p class="eyebrow">
             RESTAURANT CONTROL CENTRE
@@ -809,17 +1334,18 @@
             {% if advert %}
 
                 Update your restaurant profile,
-                campaign schedule, poster and gallery.
+                campaign schedule, poster and
+                available restaurant features.
 
             {% else %}
 
-                Create your restaurant campaign,
-                upload your poster and showcase
-                your venue with up to five gallery photos.
+                Create your restaurant profile,
+                campaign schedule and main poster.
 
             {% endif %}
 
         </p>
+
 
     </div>
 
@@ -827,23 +1353,75 @@
     <div class="card-body">
 
 
-        {% if organizer.subscription_expires_at %}
+        <!-- =====================================
+             RESTAURANT PLAN
+        ====================================== -->
 
-            <div class="subscription-note">
+        {% if advert %}
 
-                ✅ Your subscription is active until
+            <div class="plan-note">
 
-                <strong>
-                    {{ organizer.subscription_expires_at.strftime('%d %B %Y') }}
-                </strong>.
 
-                Your campaign cannot run beyond
-                this date.
+                <div class="plan-note-copy">
+
+                    <span class="plan-note-title">
+                        Restaurant Plan
+                    </span>
+
+
+                    <div class="plan-note-text">
+
+                        Your restaurant is currently using the
+
+                        <strong>
+                            {{ restaurant_plan_name }}
+                        </strong>
+
+                        plan.
+
+                        {% if restaurant_plan == 'free' %}
+
+                            Basic profile, campaign and Reel
+                            features remain available.
+
+                        {% elif restaurant_plan == 'standard' %}
+
+                            Gallery, operational hours and
+                            customer experiences are available.
+
+                        {% elif restaurant_plan == 'premium' %}
+
+                            All restaurant features including
+                            Stories and analytics are available.
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <span class="plan-badge">
+
+                    {{ restaurant_plan_name }}
+
+                    {% if restaurant_plan_price %}
+                        · R{{ restaurant_plan_price }}
+                    {% else %}
+                        · R0
+                    {% endif %}
+
+                </span>
+
 
             </div>
 
         {% endif %}
 
+
+        <!-- =====================================
+             MAIN RESTAURANT FORM
+        ====================================== -->
 
         <form
             method="POST"
@@ -861,11 +1439,13 @@
 
                 <div class="section-heading">
 
+
                     <div class="section-heading-copy">
 
                         <p class="section-title">
                             📅 Campaign Schedule
                         </p>
+
 
                         <p class="section-subtitle">
                             Control when this restaurant campaign
@@ -873,6 +1453,7 @@
                         </p>
 
                     </div>
+
 
                 </div>
 
@@ -883,6 +1464,7 @@
                     <label>
 
                         Start Date
+
 
                         <input
                             id="start-date"
@@ -904,10 +1486,6 @@
                                 min="{{ today_iso }}"
                             {% endif %}
 
-                            {% if subscription_end_iso %}
-                                max="{{ subscription_end_iso }}"
-                            {% endif %}
-
                             required
                         >
 
@@ -926,14 +1504,17 @@
 
                         Campaign Duration
 
+
                         <select
                             id="duration-choice"
                             name="duration_choice"
                             required
                         >
 
+
                             <option
                                 value="7"
+
                                 {% if selected_duration == '7' %}
                                     selected
                                 {% endif %}
@@ -941,8 +1522,10 @@
                                 7 Days
                             </option>
 
+
                             <option
                                 value="14"
+
                                 {% if selected_duration == '14' %}
                                     selected
                                 {% endif %}
@@ -950,8 +1533,10 @@
                                 14 Days
                             </option>
 
+
                             <option
                                 value="30"
+
                                 {% if selected_duration == '30' %}
                                     selected
                                 {% endif %}
@@ -959,14 +1544,17 @@
                                 30 Days
                             </option>
 
+
                             <option
                                 value="custom"
+
                                 {% if selected_duration == 'custom' %}
                                     selected
                                 {% endif %}
                             >
                                 Custom End Date
                             </option>
+
 
                         </select>
 
@@ -981,6 +1569,7 @@
                 >
 
                     Custom End Date
+
 
                     <input
                         id="custom-end-date"
@@ -997,10 +1586,6 @@
                                 )
                             )
                         }}"
-
-                        {% if subscription_end_iso %}
-                            max="{{ subscription_end_iso }}"
-                        {% endif %}
                     >
 
                 </label>
@@ -1026,11 +1611,13 @@
 
                 <div class="section-heading">
 
+
                     <div class="section-heading-copy">
 
                         <p class="section-title">
                             🍔 Business Details
                         </p>
+
 
                         <p class="section-subtitle">
                             Tell customers what makes
@@ -1039,12 +1626,14 @@
 
                     </div>
 
+
                 </div>
 
 
                 <label>
 
                     Business Name
+
 
                     <input
                         type="text"
@@ -1060,6 +1649,7 @@
                         }}"
 
                         required
+
                         maxlength="180"
 
                         placeholder="e.g. Mpho's Grill"
@@ -1071,6 +1661,7 @@
                 <label>
 
                     Promotion Headline
+
 
                     <input
                         type="text"
@@ -1095,6 +1686,7 @@
 
                     Description
 
+
                     <textarea
                         name="description"
                         placeholder="Tell customers about the food, atmosphere, service or what makes this place special."
@@ -1102,6 +1694,7 @@
                         'description',
                         advert.description if advert else ''
                     ) }}</textarea>
+
 
                     <span class="help">
                         This appears as the restaurant story
@@ -1123,17 +1716,21 @@
 
                 <div class="section-heading">
 
+
                     <div class="section-heading-copy">
 
                         <p class="section-title">
                             🖼 Campaign Poster
                         </p>
 
+
                         <p class="section-subtitle">
                             Your main promotional image.
+                            Available on every restaurant plan.
                         </p>
 
                     </div>
+
 
                 </div>
 
@@ -1160,15 +1757,22 @@
                         Restaurant Poster
                     {% endif %}
 
+
                     <input
                         type="file"
                         name="poster"
-                        accept="image/jpeg,image/png,image/webp"
+
+                        accept="
+                            image/jpeg,
+                            image/png,
+                            image/webp
+                        "
 
                         {% if not advert %}
                             required
                         {% endif %}
                     >
+
 
                     <span class="help">
 
@@ -1191,7 +1795,7 @@
                  RESTAURANT GALLERY
             ========================================== -->
 
-            <div class="section">
+            {% if advert %}
 
 
                 {% set existing_gallery_count =
@@ -1206,190 +1810,382 @@
                 %}
 
 
-                <div class="section-heading">
-
-                    <div class="section-heading-copy">
-
-                        <p class="section-title">
-                            ✨ Restaurant Gallery
-                        </p>
-
-                        <p class="section-subtitle">
-                            Show the food, interior,
-                            atmosphere and experience.
-                        </p>
-
-                    </div>
+                <div class="section">
 
 
-                    <span
-                        class="counter"
-                        id="gallery-counter"
-                        data-existing-count="{{ existing_gallery_count }}"
-                    >
-                        {{ existing_gallery_count }} / 5
-                    </span>
-
-                </div>
+                    <div class="section-heading">
 
 
-                <div class="gallery-summary">
+                        <div class="section-heading-copy">
 
-                    <div>
-
-                        <strong>
-                            Build a visual restaurant profile
-                        </strong>
-
-                        <span>
-
-                            {% if existing_gallery_count > 0 %}
-
-                                {{ existing_gallery_count }}
-                                photo{% if existing_gallery_count != 1 %}s{% endif %}
-                                currently saved.
-
-                            {% else %}
-
-                                No gallery photos added yet.
-
-                            {% endif %}
-
-                        </span>
-
-                    </div>
+                            <p class="section-title">
+                                ✨ Restaurant Gallery
+                            </p>
 
 
-                    <div class="gallery-count">
+                            <p class="section-subtitle">
+                                Show the food, interior,
+                                atmosphere and experience.
+                            </p>
 
-                        {% if remaining_gallery_slots > 0 %}
+                        </div>
 
-                            {{ remaining_gallery_slots }}
-                            slot{% if remaining_gallery_slots != 1 %}s{% endif %}
-                            left
 
-                        {% else %}
+                        {% if can_use_gallery %}
 
-                            Gallery full
+                            <span
+                                class="counter"
+                                id="gallery-counter"
+                                data-existing-count="{{ existing_gallery_count }}"
+                            >
+                                {{ existing_gallery_count }} / 5
+                            </span>
 
                         {% endif %}
 
+
                     </div>
 
-                </div>
+
+                    <!-- =====================================
+                         GALLERY AVAILABLE
+                    ====================================== -->
+
+                    {% if can_use_gallery %}
 
 
-                {% if advert and advert.gallery_images %}
+                        <div class="gallery-summary">
 
-                    <div
-                        class="existing-gallery"
-                        aria-label="Existing restaurant gallery"
-                    >
 
-                        {% for image in advert.gallery_images %}
+                            <div>
 
-                            <div class="gallery-image-card">
+                                <strong>
+                                    Build a visual restaurant profile
+                                </strong>
 
-                                <img
-                                    src="{{ image.image_url }}"
-                                    alt="{{ advert.business_name }} gallery image {{ loop.index }}"
-                                    loading="lazy"
-                                >
 
-                                <span class="gallery-order">
-                                    {{ loop.index }}
+                                <span>
+
+                                    {% if existing_gallery_count > 0 %}
+
+                                        {{ existing_gallery_count }}
+
+                                        photo{% if existing_gallery_count != 1 %}s{% endif %}
+
+                                        currently saved.
+
+                                    {% else %}
+
+                                        No gallery photos added yet.
+
+                                    {% endif %}
+
                                 </span>
 
                             </div>
 
-                        {% endfor %}
 
-                    </div>
+                            <div class="gallery-count">
 
-                {% endif %}
+                                {% if remaining_gallery_slots > 0 %}
 
-
-                {% if remaining_gallery_slots > 0 %}
-
-                    <div class="gallery-upload-box">
-
-                        <label for="gallery-images">
-
-                            Add Gallery Photos
-
-                            <input
-                                type="file"
-                                id="gallery-images"
-                                name="gallery_images"
-                                accept="image/jpeg,image/png,image/webp"
-                                multiple
-                            >
-
-                            <span class="help">
-
-                                You can add up to
-
-                                <strong>
                                     {{ remaining_gallery_slots }}
-                                </strong>
 
-                                more photo{% if remaining_gallery_slots != 1 %}s{% endif %}.
+                                    slot{% if remaining_gallery_slots != 1 %}s{% endif %}
 
-                                Maximum gallery size:
-                                5 photos.
+                                    left
 
-                                JPG, PNG or WebP.
-                                Maximum 8 MB per photo.
+                                {% else %}
 
-                            </span>
+                                    Gallery full
 
-                        </label>
+                                {% endif %}
 
-                    </div>
+                            </div>
 
-
-                {% else %}
-
-                    <div class="gallery-upload-box">
-
-                        <strong>
-                            Gallery full
-                        </strong>
-
-                        <div class="help">
-
-                            This restaurant already has
-                            the maximum of 5 gallery photos.
 
                         </div>
 
+
+                        <!-- =================================
+                             EXISTING GALLERY
+                        ================================== -->
+
+                        {% if advert.gallery_images %}
+
+
+                            <div
+                                class="existing-gallery"
+                                aria-label="Existing restaurant gallery"
+                            >
+
+
+                                {% for image in advert.gallery_images %}
+
+
+                                    <div class="gallery-image-wrapper">
+
+
+                                        <div class="gallery-image-card">
+
+
+                                            <img
+                                                src="{{ image.image_url }}"
+                                                alt="{{ advert.business_name }} gallery image {{ loop.index }}"
+                                                loading="lazy"
+                                            >
+
+
+                                            <span class="gallery-order">
+                                                {{ loop.index }}
+                                            </span>
+
+
+                                        </div>
+
+
+                                        <!-- =================
+                                             DELETE IMAGE
+                                        ================== -->
+
+                                        <button
+                                            type="button"
+                                            class="gallery-delete-button"
+                                            data-delete-url="{{ url_for(
+                                                'admin_delete_restaurant_gallery_image',
+                                                advert_id=advert.id,
+                                                image_id=image.id
+                                            ) }}"
+                                            data-image-number="{{ loop.index }}"
+                                        >
+                                            Delete
+                                        </button>
+
+
+                                    </div>
+
+
+                                {% endfor %}
+
+
+                            </div>
+
+
+                        {% endif %}
+
+
+                        <!-- =================================
+                             GALLERY UPLOAD
+                        ================================== -->
+
+                        {% if remaining_gallery_slots > 0 %}
+
+
+                            <div class="gallery-upload-box">
+
+
+                                <label for="gallery-images">
+
+                                    Add Gallery Photos
+
+
+                                    <input
+                                        type="file"
+                                        id="gallery-images"
+                                        name="gallery_images"
+
+                                        accept="
+                                            image/jpeg,
+                                            image/png,
+                                            image/webp
+                                        "
+
+                                        multiple
+                                    >
+
+
+                                    <span class="help">
+
+                                        You can add up to
+
+                                        <strong>
+                                            {{ remaining_gallery_slots }}
+                                        </strong>
+
+                                        more
+                                        photo{% if remaining_gallery_slots != 1 %}s{% endif %}.
+
+                                        Maximum gallery size:
+                                        5 photos.
+
+                                        JPG, PNG or WebP.
+
+                                        Maximum 8 MB per photo.
+
+                                    </span>
+
+
+                                </label>
+
+
+                            </div>
+
+
+                        {% else %}
+
+
+                            <div class="gallery-upload-box">
+
+                                <strong>
+                                    Gallery full
+                                </strong>
+
+
+                                <div class="help">
+
+                                    This restaurant already has
+                                    the maximum of 5 gallery photos.
+
+                                    Delete an existing photo if
+                                    you want to replace it.
+
+                                </div>
+
+                            </div>
+
+
+                        {% endif %}
+
+
+                        <div
+                            id="gallery-warning"
+                            class="gallery-warning"
+                            role="alert"
+                        ></div>
+
+
+                        <p
+                            id="gallery-preview-title"
+                            class="gallery-preview-title"
+                        >
+                            New photos to upload
+                        </p>
+
+
+                        <div
+                            id="gallery-preview"
+                            class="gallery-preview"
+                        ></div>
+
+
+                    <!-- =====================================
+                         GALLERY LOCKED
+                    ====================================== -->
+
+                    {% else %}
+
+
+                        <div class="feature-locked">
+
+
+                            <span class="feature-locked-title">
+                                🔒 Gallery unavailable on Free
+                            </span>
+
+
+                            <p class="feature-locked-text">
+
+                                Restaurant galleries are available
+                                on the Standard and Premium plans.
+
+                                {% if existing_gallery_count > 0 %}
+
+                                    Your
+
+                                    <strong>
+                                        {{ existing_gallery_count }}
+                                    </strong>
+
+                                    existing gallery
+                                    photo{% if existing_gallery_count != 1 %}s{% endif %}
+
+                                    remain safely stored and can
+                                    become available again when
+                                    this restaurant upgrades.
+
+                                {% endif %}
+
+                            </p>
+
+
+                        </div>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+            {% else %}
+
+
+                <!-- =========================================
+                     NEW RESTAURANT / FREE PLAN
+                ========================================== -->
+
+                <div class="section">
+
+
+                    <div class="section-heading">
+
+
+                        <div class="section-heading-copy">
+
+                            <p class="section-title">
+                                ✨ Restaurant Gallery
+                            </p>
+
+
+                            <p class="section-subtitle">
+                                Gallery photos are a paid
+                                restaurant feature.
+                            </p>
+
+                        </div>
+
+
                     </div>
 
-                {% endif %}
+
+                    <div class="feature-locked">
 
 
-                <div
-                    id="gallery-warning"
-                    class="gallery-warning"
-                    role="alert"
-                ></div>
+                        <span class="feature-locked-title">
+                            🔒 Standard / Premium feature
+                        </span>
 
 
-                <p
-                    id="gallery-preview-title"
-                    class="gallery-preview-title"
-                >
-                    New photos to upload
-                </p>
+                        <p class="feature-locked-text">
+
+                            New restaurants start on the Free
+                            plan.
+
+                            After creating the restaurant,
+                            upgrading to Standard or Premium
+                            unlocks a gallery of up to five
+                            photos.
+
+                        </p>
 
 
-                <div
-                    id="gallery-preview"
-                    class="gallery-preview"
-                ></div>
+                    </div>
 
 
-            </div>
+                </div>
+
+
+            {% endif %}
 
 
             <!-- =========================================
@@ -1401,11 +2197,13 @@
 
                 <div class="section-heading">
 
+
                     <div class="section-heading-copy">
 
                         <p class="section-title">
                             📍 Location
                         </p>
+
 
                         <p class="section-subtitle">
                             Help customers find your restaurant.
@@ -1413,12 +2211,14 @@
 
                     </div>
 
+
                 </div>
 
 
                 <label>
 
                     Area
+
 
                     <input
                         type="text"
@@ -1443,6 +2243,7 @@
 
                     Address
 
+
                     <input
                         type="text"
                         name="address"
@@ -1466,6 +2267,7 @@
 
                     Directions Link
 
+
                     <input
                         type="url"
                         name="directions_url"
@@ -1480,9 +2282,11 @@
                         placeholder="Google Maps directions link"
                     >
 
+
                     <span class="help">
                         Paste the restaurant's Google Maps location link.
                     </span>
+
 
                 </label>
 
@@ -1499,17 +2303,21 @@
 
                 <div class="section-heading">
 
+
                     <div class="section-heading-copy">
 
                         <p class="section-title">
                             ☎ Customer Contact
                         </p>
 
+
                         <p class="section-subtitle">
-                            Give customers a direct way to contact you.
+                            Give customers a direct way
+                            to contact you.
                         </p>
 
                     </div>
+
 
                 </div>
 
@@ -1520,6 +2328,7 @@
                     <label>
 
                         WhatsApp Number
+
 
                         <input
                             type="tel"
@@ -1543,6 +2352,7 @@
                     <label>
 
                         Phone Number
+
 
                         <input
                             type="tel"
@@ -1575,6 +2385,7 @@
 
             <div class="submit-area">
 
+
                 <button
                     type="submit"
                     class="button"
@@ -1599,12 +2410,13 @@
 
                     {% else %}
 
-                        Your restaurant will be created
-                        using the campaign schedule above.
+                        Your restaurant starts on the Free
+                        restaurant plan.
 
                     {% endif %}
 
                 </div>
+
 
             </div>
 
@@ -1612,16 +2424,51 @@
         </form>
 
 
+        <!-- =========================================
+             DELETE GALLERY IMAGE FORM
+        ========================================== -->
+        <!--
+            IMPORTANT:
+
+            This form intentionally lives OUTSIDE the main
+            multipart restaurant form.
+
+            HTML does not support nested forms.
+
+            JavaScript changes this form's action when the
+            owner clicks a gallery Delete button.
+        -->
+
+        {% if
+            advert
+            and
+            can_use_gallery
+        %}
+
+            <form
+                method="POST"
+                id="gallery-delete-form"
+                class="gallery-delete-form"
+                hidden
+            >
+            </form>
+
+        {% endif %}
+
+
     </div>
+
 
 </section>
 
 
 </div>
 
+
 <script>
 
 (function () {
+
 
     /* =====================================================
        CAMPAIGN SCHEDULE
@@ -1632,20 +2479,24 @@
             "duration-choice"
         );
 
+
     const startDate =
         document.getElementById(
             "start-date"
         );
+
 
     const customWrapper =
         document.getElementById(
             "custom-end-wrapper"
         );
 
+
     const customEndDate =
         document.getElementById(
             "custom-end-date"
         );
+
 
     const schedulePreview =
         document.getElementById(
@@ -1653,42 +2504,67 @@
         );
 
 
-    function parseDate(value) {
+    function parseDate(
+        value
+    ) {
 
         if (!value) {
             return null;
         }
 
+
         const parts =
             value.split("-");
 
-        if (parts.length !== 3) {
+
+        if (
+            parts.length !== 3
+        ) {
             return null;
         }
 
+
         return new Date(
             Date.UTC(
-                Number(parts[0]),
-                Number(parts[1]) - 1,
-                Number(parts[2])
+                Number(
+                    parts[0]
+                ),
+
+                Number(
+                    parts[1]
+                ) - 1,
+
+                Number(
+                    parts[2]
+                )
             )
         );
     }
 
 
-    function formatDate(date) {
+    function formatDate(
+        date
+    ) {
 
         if (!date) {
             return "";
         }
 
+
         return date.toLocaleDateString(
             undefined,
             {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                timeZone: "UTC"
+                day:
+                    "numeric",
+
+                month:
+                    "short",
+
+                year:
+                    "numeric",
+
+                timeZone:
+                    "UTC"
             }
         );
     }
@@ -1696,8 +2572,24 @@
 
     function updateSchedule() {
 
+        if (
+            !durationChoice
+            ||
+            !startDate
+            ||
+            !customWrapper
+            ||
+            !customEndDate
+            ||
+            !schedulePreview
+        ) {
+            return;
+        }
+
+
         const choice =
             durationChoice.value;
+
 
         const start =
             parseDate(
@@ -1724,7 +2616,9 @@
         }
 
 
-        if (choice === "custom") {
+        if (
+            choice === "custom"
+        ) {
 
             const end =
                 parseDate(
@@ -1743,16 +2637,23 @@
 
             schedulePreview.textContent =
                 "Campaign: "
-                + formatDate(start)
+                + formatDate(
+                    start
+                )
                 + " → "
-                + formatDate(end);
+                + formatDate(
+                    end
+                );
+
 
             return;
         }
 
 
         const days =
-            Number(choice);
+            Number(
+                choice
+            );
 
 
         if (!days) {
@@ -1767,43 +2668,60 @@
         const finalDay =
             new Date(
                 start.getTime()
-                + (
+                +
+                (
                     (days - 1)
-                    * 86400000
+                    *
+                    86400000
                 )
             );
 
 
         schedulePreview.textContent =
             "Campaign: "
-            + formatDate(start)
+            + formatDate(
+                start
+            )
             + " → "
-            + formatDate(finalDay)
+            + formatDate(
+                finalDay
+            )
             + " ("
             + days
             + " days)";
+
     }
 
 
-    durationChoice.addEventListener(
-        "change",
-        updateSchedule
-    );
+    if (
+        durationChoice
+        &&
+        startDate
+        &&
+        customEndDate
+    ) {
+
+        durationChoice.addEventListener(
+            "change",
+            updateSchedule
+        );
 
 
-    startDate.addEventListener(
-        "change",
-        updateSchedule
-    );
+        startDate.addEventListener(
+            "change",
+            updateSchedule
+        );
 
 
-    customEndDate.addEventListener(
-        "change",
-        updateSchedule
-    );
+        customEndDate.addEventListener(
+            "change",
+            updateSchedule
+        );
 
 
-    updateSchedule();
+        updateSchedule();
+
+    }
 
 
     /* =====================================================
@@ -1815,30 +2733,36 @@
             "gallery-images"
         );
 
+
     const galleryCounter =
         document.getElementById(
             "gallery-counter"
         );
+
 
     const galleryPreview =
         document.getElementById(
             "gallery-preview"
         );
 
+
     const galleryPreviewTitle =
         document.getElementById(
             "gallery-preview-title"
         );
+
 
     const galleryWarning =
         document.getElementById(
             "gallery-warning"
         );
 
+
     const restaurantForm =
         document.getElementById(
             "restaurant-form"
         );
+
 
     const submitButton =
         document.getElementById(
@@ -1855,32 +2779,60 @@
             : 0;
 
 
-    const maxGalleryImages = 5;
+    const maxGalleryImages =
+        5;
+
 
     const maxGalleryFileBytes =
         8 * 1024 * 1024;
 
 
-    let gallerySelectionValid = true;
+    let gallerySelectionValid =
+        true;
 
 
     function clearGalleryPreview() {
 
-        galleryPreview.innerHTML = "";
+        if (
+            galleryPreview
+        ) {
 
-        galleryPreviewTitle.classList.remove(
-            "show"
-        );
+            galleryPreview.innerHTML =
+                "";
+
+        }
+
+
+        if (
+            galleryPreviewTitle
+        ) {
+
+            galleryPreviewTitle.classList.remove(
+                "show"
+            );
+
+        }
+
     }
 
 
     function hideGalleryWarning() {
 
-        galleryWarning.textContent = "";
+        if (
+            !galleryWarning
+        ) {
+            return;
+        }
+
+
+        galleryWarning.textContent =
+            "";
+
 
         galleryWarning.classList.remove(
             "show"
         );
+
     }
 
 
@@ -1888,12 +2840,21 @@
         message
     ) {
 
+        if (
+            !galleryWarning
+        ) {
+            return;
+        }
+
+
         galleryWarning.textContent =
             message;
+
 
         galleryWarning.classList.add(
             "show"
         );
+
     }
 
 
@@ -1901,37 +2862,24 @@
         selectedCount
     ) {
 
-        if (!galleryCounter) {
+        if (
+            !galleryCounter
+        ) {
             return;
         }
 
+
         const total =
             existingGalleryCount
-            + selectedCount;
+            +
+            selectedCount;
+
 
         galleryCounter.textContent =
             total
             + " / "
             + maxGalleryImages;
-    }
 
-
-    function resetGallerySelection() {
-
-        if (galleryInput) {
-            galleryInput.value = "";
-        }
-
-        gallerySelectionValid = true;
-
-        clearGalleryPreview();
-
-        hideGalleryWarning();
-
-        updateGalleryCounter(0);
-
-        submitButton.disabled =
-            false;
     }
 
 
@@ -1941,7 +2889,8 @@
 
         const remainingSlots =
             maxGalleryImages
-            - existingGalleryCount;
+            -
+            existingGalleryCount;
 
 
         if (
@@ -1961,6 +2910,7 @@
                 )
                 + "."
             );
+
         }
 
 
@@ -1971,7 +2921,10 @@
         ];
 
 
-        for (const file of files) {
+        for (
+            const file
+            of files
+        ) {
 
             if (
                 !allowedTypes.includes(
@@ -1984,6 +2937,7 @@
                     + " is not a supported image. "
                     + "Use JPG, PNG or WebP."
                 );
+
             }
 
 
@@ -1997,12 +2951,14 @@
                     file.name
                     + " is larger than 8 MB."
                 );
+
             }
 
         }
 
 
         return null;
+
     }
 
 
@@ -2013,7 +2969,13 @@
         clearGalleryPreview();
 
 
-        if (!files.length) {
+        if (
+            !files.length
+            ||
+            !galleryPreview
+            ||
+            !galleryPreviewTitle
+        ) {
             return;
         }
 
@@ -2047,10 +3009,13 @@
 
                 image.alt =
                     "New gallery photo "
-                    + (
+                    +
+                    (
                         existingGalleryCount
-                        + index
-                        \+ 1
+                        +
+                        index
+                        +
+                        1
                     );
 
 
@@ -2071,9 +3036,11 @@
                         URL.revokeObjectURL(
                             objectUrl
                         );
+
                     },
                     {
-                        once: true
+                        once:
+                            true
                     }
                 );
 
@@ -2090,8 +3057,10 @@
 
                 number.textContent =
                     existingGalleryCount
-                    + index
-                    \+ 1;
+                    +
+                    index
+                    +
+                    1;
 
 
                 card.appendChild(
@@ -2110,16 +3079,20 @@
 
             }
         );
+
     }
 
 
-    if (galleryInput) {
+    if (
+        galleryInput
+    ) {
 
         galleryInput.addEventListener(
             "change",
             function () {
 
                 hideGalleryWarning();
+
 
                 clearGalleryPreview();
 
@@ -2137,7 +3110,9 @@
                     );
 
 
-                if (validationError) {
+                if (
+                    validationError
+                ) {
 
                     gallerySelectionValid =
                         false;
@@ -2148,11 +3123,19 @@
                     );
 
 
-                    updateGalleryCounter(0);
+                    updateGalleryCounter(
+                        0
+                    );
 
 
-                    submitButton.disabled =
-                        true;
+                    if (
+                        submitButton
+                    ) {
+
+                        submitButton.disabled =
+                            true;
+
+                    }
 
 
                     return;
@@ -2163,8 +3146,14 @@
                     true;
 
 
-                submitButton.disabled =
-                    false;
+                if (
+                    submitButton
+                ) {
+
+                    submitButton.disabled =
+                        false;
+
+                }
 
 
                 updateGalleryCounter(
@@ -2182,33 +3171,137 @@
     }
 
 
-    restaurantForm.addEventListener(
-        "submit",
-        function (
-            event
-        ) {
+    if (
+        restaurantForm
+    ) {
 
-            if (
-                !gallerySelectionValid
+        restaurantForm.addEventListener(
+            "submit",
+            function (
+                event
             ) {
 
-                event.preventDefault();
+                if (
+                    !gallerySelectionValid
+                ) {
+
+                    event.preventDefault();
 
 
-                showGalleryWarning(
-                    "Please correct the gallery photo selection before saving."
-                );
+                    showGalleryWarning(
+                        "Please correct the gallery photo selection before saving."
+                    );
+
+                }
 
             }
+        );
+
+    }
+
+
+    /* =====================================================
+       DELETE EXISTING GALLERY IMAGE
+    ===================================================== */
+    /*
+        IMPORTANT:
+
+        The delete form is outside the main restaurant form.
+
+        This avoids invalid nested HTML forms.
+
+        Clicking Delete:
+            1. asks for confirmation
+            2. places the correct route into form.action
+            3. POSTs to the Flask delete route
+
+        Server-side authorization remains authoritative.
+    */
+
+    const galleryDeleteForm =
+        document.getElementById(
+            "gallery-delete-form"
+        );
+
+
+    const galleryDeleteButtons =
+        document.querySelectorAll(
+            ".gallery-delete-button"
+        );
+
+
+    galleryDeleteButtons.forEach(
+        function (
+            button
+        ) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    if (
+                        !galleryDeleteForm
+                    ) {
+                        return;
+                    }
+
+
+                    const deleteUrl =
+                        button.dataset.deleteUrl;
+
+
+                    const imageNumber =
+                        button.dataset.imageNumber;
+
+
+                    if (
+                        !deleteUrl
+                    ) {
+                        return;
+                    }
+
+
+                    const confirmed =
+                        window.confirm(
+                            "Delete gallery photo "
+                            + imageNumber
+                            + "? This cannot be undone."
+                        );
+
+
+                    if (
+                        !confirmed
+                    ) {
+                        return;
+                    }
+
+
+                    button.disabled =
+                        true;
+
+
+                    button.textContent =
+                        "Deleting...";
+
+
+                    galleryDeleteForm.action =
+                        deleteUrl;
+
+
+                    galleryDeleteForm.submit();
+
+                }
+            );
 
         }
     );
+
 
 })();
 
 </script>
 
+
 </body>
 
 </html>
-
