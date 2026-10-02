@@ -15347,6 +15347,415 @@ def restaurant_can_receive_experience_posts(
     # ========================================================
 
     return True
+
+
+
+def get_taggable_restaurants():
+
+    # ========================================================
+    # CURRENT TIME
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # PAID PLAN GRACE CUTOFF
+    # ========================================================
+    #
+    # Restaurant customer experiences are available to:
+    #
+    #     STANDARD
+    #     PREMIUM
+    #
+    # while the subscription is:
+    #
+    #     active
+    #
+    # OR
+    #
+    #     within the configured 5-day grace period.
+    #
+    #
+    # Example:
+    #
+    #     subscription_expires_at = 1 October
+    #
+    #     grace ends             = 6 October
+    #
+    #
+    # SQL equivalent:
+    #
+    #     subscription_expires_at
+    #         + 5 days
+    #         > now
+    #
+    # Rearranged:
+    #
+    #     subscription_expires_at
+    #         > now - 5 days
+    #
+    #
+    # IMPORTANT:
+    #
+    # Free restaurants do NOT have an expiry date and are
+    # deliberately excluded from this query.
+    # ========================================================
+
+    grace_cutoff = (
+        now
+        - timedelta(
+            days=(
+                RESTAURANT_SUBSCRIPTION_GRACE_DAYS
+            )
+        )
+    )
+
+
+    # ========================================================
+    # DATABASE QUERY
+    # ========================================================
+    #
+    # We perform the strongest filtering possible directly
+    # in PostgreSQL.
+    #
+    # This prevents Free/inactive/expired restaurants from
+    # being unnecessarily loaded into the public restaurant
+    # selection list.
+    # ========================================================
+
+    restaurants = (
+        RestaurantAdvert.query
+
+        .join(
+            Organizer,
+
+            RestaurantAdvert.organizer_id
+            ==
+            Organizer.id,
+        )
+
+
+        # ====================================================
+        # RESTAURANT ACTIVE
+        # ====================================================
+        #
+        # Paused/deactivated restaurants cannot receive
+        # customer experiences regardless of plan.
+        # ====================================================
+
+        .filter(
+            RestaurantAdvert.active.is_(
+                True
+            )
+        )
+
+
+        # ====================================================
+        # RESTAURANT SUBSCRIPTION STATUS
+        # ====================================================
+        #
+        # The RestaurantAdvert subscription is the source of
+        # truth.
+        #
+        # Do NOT use:
+        #
+        #     Organizer.is_subscription_active
+        #
+        # That belongs to the legacy Event/Organizer SaaS
+        # subscription system.
+        # ====================================================
+
+        .filter(
+            RestaurantAdvert.subscription_status
+            == "active"
+        )
+
+
+        # ====================================================
+        # CUSTOMER EXPERIENCE PLANS
+        # ====================================================
+        #
+        # FREE
+        # ----------------------------------------------------
+        #
+        # Public profile               YES
+        # Contact/details              YES
+        # Main poster                  YES
+        # Campaign                     YES
+        # Reel / Discovery             YES
+        #
+        # Customer experiences         NO
+        # Select Restaurant dropdown   NO
+        #
+        #
+        # STANDARD
+        # ----------------------------------------------------
+        #
+        # Customer experiences         YES
+        # Select Restaurant dropdown   YES
+        #
+        #
+        # PREMIUM
+        # ----------------------------------------------------
+        #
+        # Customer experiences         YES
+        # Select Restaurant dropdown   YES
+        #
+        #
+        # Therefore Free is intentionally absent from this
+        # list.
+        # ====================================================
+
+        .filter(
+            RestaurantAdvert.subscription_tier.in_(
+                [
+                    RESTAURANT_PLAN_STANDARD,
+                    RESTAURANT_PLAN_PREMIUM,
+                ]
+            )
+        )
+
+
+        # ====================================================
+        # PAID EXPIRY REQUIRED
+        # ====================================================
+        #
+        # Standard and Premium are paid subscriptions and
+        # therefore must have a subscription expiry date.
+        #
+        # Free restaurants normally have:
+        #
+        #     subscription_expires_at = None
+        #
+        # but Free has already been excluded above.
+        # ====================================================
+
+        .filter(
+            RestaurantAdvert
+            .subscription_expires_at
+            .isnot(
+                None
+            )
+        )
+
+
+        # ====================================================
+        # ACTIVE OR WITHIN 5-DAY GRACE
+        # ====================================================
+        #
+        # Example:
+        #
+        # Paid subscription:
+        #
+        #     expires 1 October
+        #
+        # Grace:
+        #
+        #     1 October -> 6 October
+        #
+        # Restaurant remains taggable during that period.
+        #
+        # Once grace expires, it disappears from this query.
+        #
+        # The normal restaurant subscription synchronization
+        # can then permanently convert the RestaurantAdvert
+        # back to the Free tier.
+        # ====================================================
+
+        .filter(
+            RestaurantAdvert.subscription_expires_at
+            > grace_cutoff
+        )
+
+
+        # ====================================================
+        # CAMPAIGN START
+        # ====================================================
+        #
+        # Restaurant campaign must already have started.
+        #
+        # No start date means immediately available.
+        # ====================================================
+
+        .filter(
+            or_(
+                RestaurantAdvert.starts_at.is_(
+                    None
+                ),
+
+                RestaurantAdvert.starts_at
+                <= now,
+            )
+        )
+
+
+        # ====================================================
+        # CAMPAIGN END
+        # ====================================================
+        #
+        # Restaurant campaign must not have ended.
+        #
+        # No end date means no campaign-end restriction.
+        # ====================================================
+
+        .filter(
+            or_(
+                RestaurantAdvert.ends_at.is_(
+                    None
+                ),
+
+                RestaurantAdvert.ends_at
+                > now,
+            )
+        )
+
+
+        # ====================================================
+        # ORGANIZER ACTIVE
+        # ====================================================
+        #
+        # Restaurant owner account itself must still be
+        # active.
+        # ====================================================
+
+        .filter(
+            Organizer.active.is_(
+                True
+            )
+        )
+
+
+        # ====================================================
+        # RESTAURANT ACCOUNT TYPE
+        # ========================================================
+        #
+        # Only restaurant Organizer accounts are eligible.
+        #
+        # Again, we deliberately do NOT check the legacy
+        # Organizer subscription.
+        # ====================================================
+
+        .filter(
+            Organizer.account_type
+            == "restaurant"
+        )
+
+
+        # ====================================================
+        # DISPLAY ORDER
+        # ====================================================
+        #
+        # Customer selector:
+        #
+        #     Restaurant Name
+        #     Area
+        # ====================================================
+
+        .order_by(
+            RestaurantAdvert
+            .business_name
+            .asc(),
+
+            RestaurantAdvert
+            .area
+            .asc(),
+        )
+
+
+        # ====================================================
+        # EXECUTE
+        # ====================================================
+
+        .all()
+    )
+
+
+    # ========================================================
+    # FINAL CAPABILITY CHECK
+    # ========================================================
+    #
+    # The SQL query above is the fast database-level filter.
+    #
+    # This second check is intentional.
+    #
+    # It ensures the final list also obeys the centralized
+    # RestaurantAdvert capability system:
+    #
+    #     advert.can_receive_customer_experiences
+    #
+    # Therefore if we change the restaurant plan capability
+    # configuration later, this function still respects it.
+    #
+    #
+    # Expected:
+    #
+    # FREE
+    #     -> False
+    #
+    # STANDARD ACTIVE
+    #     -> True
+    #
+    # STANDARD GRACE
+    #     -> True
+    #
+    # PREMIUM ACTIVE
+    #     -> True
+    #
+    # PREMIUM GRACE
+    #     -> True
+    #
+    # EXPIRED BEYOND GRACE
+    #     -> False
+    # ========================================================
+
+    taggable_restaurants = []
+
+
+    for advert in restaurants:
+
+        # ====================================================
+        # SYNCHRONIZE BEFORE FINAL CHECK
+        # ====================================================
+        #
+        # Usually the SQL grace cutoff has already excluded an
+        # expired restaurant.
+        #
+        # Synchronizing here keeps RestaurantAdvert state
+        # consistent whenever this restaurant reaches the
+        # final capability check.
+        # ====================================================
+
+        sync_restaurant_subscription(
+            advert
+        )
+
+
+        # ====================================================
+        # CUSTOMER EXPERIENCE CAPABILITY
+        # ====================================================
+
+        if not advert.can_receive_customer_experiences:
+
+            continue
+
+
+        # ====================================================
+        # ADD TO PUBLIC SELECTOR
+        # ====================================================
+
+        taggable_restaurants.append(
+            advert
+        )
+
+
+    # ========================================================
+    # RETURN
+    # ========================================================
+
+    return taggable_restaurants
 # ============================================================
 # ADMIN - MANAGE RESTAURANT
 # ============================================================
@@ -19043,175 +19452,7 @@ def get_restaurant_experience_session_id():
     return anonymous_session_id
 
 
-def get_taggable_restaurants():
 
-    now = (
-        datetime.utcnow()
-    )
-
-
-    # ========================================================
-    # PAID PLAN GRACE CUTOFF
-    # ========================================================
-    #
-    # A paid subscription remains eligible while:
-    #
-    #     subscription_expires_at
-    #         + 5 days
-    #         > now
-    #
-    # Rearranged for SQL:
-    #
-    #     subscription_expires_at
-    #         > now - 5 days
-    # ========================================================
-
-    grace_cutoff = (
-        now
-        - timedelta(
-            days=RESTAURANT_SUBSCRIPTION_GRACE_DAYS
-        )
-    )
-
-
-    restaurants = (
-        RestaurantAdvert.query
-
-        .join(
-            Organizer,
-
-            RestaurantAdvert.organizer_id
-            ==
-            Organizer.id,
-        )
-
-        # ====================================================
-        # RESTAURANT ACTIVE
-        # ====================================================
-
-        .filter(
-            RestaurantAdvert.active.is_(
-                True
-            )
-        )
-
-        # ====================================================
-        # RESTAURANT PLAN STATUS
-        # ====================================================
-
-        .filter(
-            RestaurantAdvert.subscription_status
-            == "active"
-        )
-
-        # ====================================================
-        # STANDARD / PREMIUM ONLY
-        # ====================================================
-
-        .filter(
-            RestaurantAdvert.subscription_tier.in_(
-                [
-                    RESTAURANT_PLAN_STANDARD,
-                    RESTAURANT_PLAN_PREMIUM,
-                ]
-            )
-        )
-
-        # ====================================================
-        # PAID EXPIRY REQUIRED
-        # ====================================================
-
-        .filter(
-            RestaurantAdvert
-            .subscription_expires_at
-            .isnot(
-                None
-            )
-        )
-
-        # ====================================================
-        # ACTIVE OR WITHIN 5-DAY GRACE
-        # ====================================================
-
-        .filter(
-            RestaurantAdvert.subscription_expires_at
-            > grace_cutoff
-        )
-
-        # ====================================================
-        # CAMPAIGN START
-        # ====================================================
-
-        .filter(
-            or_(
-                RestaurantAdvert.starts_at.is_(
-                    None
-                ),
-
-                RestaurantAdvert.starts_at
-                <= now,
-            )
-        )
-
-        # ====================================================
-        # CAMPAIGN END
-        # ====================================================
-
-        .filter(
-            or_(
-                RestaurantAdvert.ends_at.is_(
-                    None
-                ),
-
-                RestaurantAdvert.ends_at
-                > now,
-            )
-        )
-
-        # ====================================================
-        # ORGANIZER ACCOUNT
-        # ====================================================
-        #
-        # No Organizer SaaS subscription requirement.
-        # ====================================================
-
-        .filter(
-            Organizer.active.is_(
-                True
-            )
-        )
-
-        .filter(
-            Organizer.account_type
-            == "restaurant"
-        )
-
-        # ====================================================
-        # DISPLAY ORDER
-        # ====================================================
-
-        .order_by(
-            RestaurantAdvert.business_name.asc(),
-            RestaurantAdvert.area.asc(),
-        )
-
-        .all()
-    )
-
-
-    # ========================================================
-    # FINAL CAPABILITY CHECK
-    # ========================================================
-
-    return [
-
-        advert
-
-        for advert
-        in restaurants
-
-        if advert.can_receive_customer_experiences
-    ]
 
 # ============================================================
 # RESTAURANT TAGGING ELIGIBILITY
