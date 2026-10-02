@@ -156,6 +156,24 @@ EVENT_REEL_ALLOWED_EXTENSIONS = {
     "webm",
     "m4v",
 }
+
+
+
+RESTAURANT_EXPERIENCE_IMAGE_EXTENSIONS = {
+    "jpg",
+    "jpeg",
+    "png",
+    "webp",
+}
+
+
+RESTAURANT_EXPERIENCE_VIDEO_EXTENSIONS = {
+    "mp4",
+    "mov",
+    "m4v",
+    "webm",
+}
+
 # ============================================================
 # KALXA EVENT BOOST
 # ============================================================
@@ -20076,6 +20094,11 @@ def admin_resume_restaurant(
 # ORGANIZER - RESTAURANT REEL
 # ============================================================
 
+
+# ============================================================
+# RESTAURANT REEL
+# ============================================================
+
 @app.route(
     "/admin/restaurants/<int:advert_id>/reel",
     methods=[
@@ -20088,7 +20111,7 @@ def admin_restaurant_reel(
 ):
 
     # ========================================================
-    # ORGANIZER AUTH
+    # ORGANIZER AUTHENTICATION
     # ========================================================
 
     auth = (
@@ -20101,7 +20124,15 @@ def admin_restaurant_reel(
 
 
     # ========================================================
-    # ACTIVE RESTAURANT SUBSCRIPTION REQUIRED
+    # RESTAURANT ACCOUNT ACCESS
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # This must NOT require the legacy Organizer/Event SaaS
+    # subscription.
+    #
+    # Free restaurants are allowed to use Reels.
     # ========================================================
 
     subscription_auth = (
@@ -20118,32 +20149,125 @@ def admin_restaurant_reel(
     )
 
 
+    if not organizer:
+
+        flash(
+            "Organizer account could not be found.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
     # ========================================================
-    # OWNERSHIP
+    # ORGANIZER ACTIVE
+    # ========================================================
+
+    if not organizer.active:
+
+        flash(
+            "Your organizer account is inactive.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(403)
+
+
+    # ========================================================
+    # RESTAURANT + OWNERSHIP
     # ========================================================
 
     advert = (
         RestaurantAdvert.query
-        .filter_by(
-            id=
-                advert_id,
 
-            organizer_id=
-                organizer.id,
+        .filter_by(
+            id=advert_id,
+            organizer_id=organizer.id,
         )
+
         .first_or_404()
     )
 
 
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # Free:
+    #     Reel available.
+    #
+    # Standard:
+    #     Reel available.
+    #
+    # Premium:
+    #     Reel available.
+    #
+    # Paid grace expired:
+    #     restaurant may be downgraded to Free,
+    #     but Reel remains available because Free has Reel.
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # REEL CAPABILITY
+    # ========================================================
+    #
+    # This is the RestaurantAdvert capability boundary.
+    #
+    # Do NOT use:
+    #
+    #     organizer.is_subscription_active
+    #
+    # Do NOT use:
+    #
+    #     organizer.subscription_expires_at
+    # ========================================================
+
+    if not advert.can_use_reel:
+
+        abort(403)
+
+
+    # ========================================================
+    # EXISTING REEL
+    # ========================================================
+
     reel = (
         RestaurantReel.query
-        .filter_by(
-            advert_id=
-                advert.id,
 
-            organizer_id=
-                organizer.id,
+        .filter_by(
+            advert_id=advert.id,
+            organizer_id=organizer.id,
         )
+
         .first()
     )
 
@@ -20153,6 +20277,26 @@ def admin_restaurant_reel(
     # ========================================================
 
     if request.method == "POST":
+
+        # ====================================================
+        # RE-SYNC BEFORE MUTATION
+        # ====================================================
+        #
+        # The form may have been open for some time.
+        #
+        # Always verify the current RestaurantAdvert
+        # capability again before accepting the upload.
+        # ====================================================
+
+        sync_restaurant_subscription(
+            advert
+        )
+
+
+        if not advert.can_use_reel:
+
+            abort(403)
+
 
         # ====================================================
         # CLOUDINARY
@@ -20172,8 +20316,9 @@ def admin_restaurant_reel(
                 url_for(
                     "admin_restaurant_reel",
 
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
@@ -20191,7 +20336,8 @@ def admin_restaurant_reel(
 
         if (
             not video
-            or not video.filename
+            or
+            not video.filename
         ):
 
             flash(
@@ -20203,11 +20349,16 @@ def admin_restaurant_reel(
                 url_for(
                     "admin_restaurant_reel",
 
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
+
+        # ====================================================
+        # VIDEO TYPE
+        # ====================================================
 
         if not allowed_event_reel_filename(
             video.filename
@@ -20225,8 +20376,9 @@ def admin_restaurant_reel(
                 url_for(
                     "admin_restaurant_reel",
 
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
@@ -20246,12 +20398,15 @@ def admin_restaurant_reel(
         )
 
 
-        video.stream.seek(0)
+        video.stream.seek(
+            0
+        )
 
 
         if (
             file_size
-            > EVENT_REEL_MAX_FILE_BYTES
+            >
+            EVENT_REEL_MAX_FILE_BYTES
         ):
 
             flash(
@@ -20266,13 +20421,20 @@ def admin_restaurant_reel(
                 url_for(
                     "admin_restaurant_reel",
 
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
 
+        # ====================================================
+        # CLOUDINARY TRACKING
+        # ====================================================
+
         uploaded_public_id = None
+
+        old_public_id = None
 
 
         try:
@@ -20285,8 +20447,7 @@ def admin_restaurant_reel(
                 cloudinary.uploader.upload(
                     video,
 
-                    resource_type=
-                        "video",
+                    resource_type="video",
 
                     folder=(
                         "kalxa/"
@@ -20295,14 +20456,11 @@ def admin_restaurant_reel(
                         "reels"
                     ),
 
-                    use_filename=
-                        True,
+                    use_filename=True,
 
-                    unique_filename=
-                        True,
+                    unique_filename=True,
 
-                    overwrite=
-                        False,
+                    overwrite=False,
                 )
             )
 
@@ -20334,7 +20492,8 @@ def admin_restaurant_reel(
 
             if (
                 not uploaded_public_id
-                or not secure_url
+                or
+                not secure_url
             ):
 
                 raise RuntimeError(
@@ -20344,6 +20503,10 @@ def admin_restaurant_reel(
                     )
                 )
 
+
+            # =================================================
+            # VALID DURATION
+            # =================================================
 
             if (
                 duration_seconds
@@ -20364,15 +20527,19 @@ def admin_restaurant_reel(
 
             if (
                 duration_seconds
-                > EVENT_REEL_MAX_DURATION_SECONDS
+                >
+                EVENT_REEL_MAX_DURATION_SECONDS
             ):
 
-                delete_cloudinary_reel(
-                    uploaded_public_id
-                )
+                try:
 
+                    delete_cloudinary_reel(
+                        uploaded_public_id
+                    )
 
-                uploaded_public_id = None
+                finally:
+
+                    uploaded_public_id = None
 
 
                 flash(
@@ -20388,8 +20555,9 @@ def admin_restaurant_reel(
                     url_for(
                         "admin_restaurant_reel",
 
-                        advert_id=
-                            advert.id,
+                        advert_id=(
+                            advert.id
+                        ),
                     )
                 )
 
@@ -20402,31 +20570,32 @@ def admin_restaurant_reel(
                 cloudinary.CloudinaryVideo(
                     uploaded_public_id
                 )
+
                 .build_url(
-                    resource_type=
-                        "video",
+                    resource_type="video",
 
-                    format=
-                        "jpg",
+                    format="jpg",
 
-                    start_offset=
-                        "1",
+                    start_offset="1",
 
-                    width=
-                        720,
+                    width=720,
 
-                    crop=
-                        "limit",
+                    crop="limit",
 
-                    secure=
-                        True,
+                    secure=True,
                 )
             )
 
 
+            # =================================================
+            # EXISTING CLOUDINARY VIDEO
+            # =================================================
+
             old_public_id = (
                 reel.cloudinary_public_id
+
                 if reel
+
                 else None
             )
 
@@ -20439,41 +20608,50 @@ def admin_restaurant_reel(
 
                 reel = (
                     RestaurantReel(
-                        advert_id=
-                            advert.id,
 
-                        organizer_id=
-                            organizer.id,
+                        advert_id=(
+                            advert.id
+                        ),
 
-                        cloudinary_public_id=
-                            uploaded_public_id,
+                        organizer_id=(
+                            organizer.id
+                        ),
 
-                        video_url=
-                            secure_url,
+                        cloudinary_public_id=(
+                            uploaded_public_id
+                        ),
 
-                        thumbnail_url=
-                            thumbnail_url,
+                        video_url=(
+                            secure_url
+                        ),
 
-                        duration_seconds=
-                            duration_seconds,
+                        thumbnail_url=(
+                            thumbnail_url
+                        ),
 
-                        width=
+                        duration_seconds=(
+                            duration_seconds
+                        ),
+
+                        width=(
                             upload_result.get(
                                 "width"
-                            ),
+                            )
+                        ),
 
-                        height=
+                        height=(
                             upload_result.get(
                                 "height"
-                            ),
+                            )
+                        ),
 
-                        file_bytes=
+                        file_bytes=(
                             upload_result.get(
                                 "bytes"
-                            ),
+                            )
+                        ),
 
-                        active=
-                            True,
+                        active=True,
                     )
                 )
 
@@ -20484,7 +20662,7 @@ def admin_restaurant_reel(
 
 
             # =================================================
-            # REPLACE REEL
+            # REPLACE EXISTING REEL
             # =================================================
 
             else:
@@ -20533,16 +20711,25 @@ def admin_restaurant_reel(
                 reel.active = True
 
 
+            # =================================================
+            # SAVE
+            # =================================================
+
             db.session.commit()
 
 
             # =================================================
             # REMOVE OLD CLOUDINARY VIDEO
+            # ========================================================
+            #
+            # Only remove the previous Reel after the new
+            # database state has committed successfully.
             # =================================================
 
             if (
                 old_public_id
-                and old_public_id
+                and
+                old_public_id
                 != uploaded_public_id
             ):
 
@@ -20551,7 +20738,6 @@ def admin_restaurant_reel(
                     delete_cloudinary_reel(
                         old_public_id
                     )
-
 
                 except Exception:
 
@@ -20563,6 +20749,10 @@ def admin_restaurant_reel(
                         )
                     )
 
+
+            # =================================================
+            # SUCCESS
+            # =================================================
 
             flash(
                 (
@@ -20577,16 +20767,25 @@ def admin_restaurant_reel(
                 url_for(
                     "admin_restaurant_reel",
 
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
 
         except Exception as error:
 
+            # =================================================
+            # DATABASE ROLLBACK
+            # =================================================
+
             db.session.rollback()
 
+
+            # =================================================
+            # CLEAN NEW CLOUDINARY VIDEO
+            # =================================================
 
             if uploaded_public_id:
 
@@ -20595,7 +20794,6 @@ def admin_restaurant_reel(
                     delete_cloudinary_reel(
                         uploaded_public_id
                     )
-
 
                 except Exception:
 
@@ -20607,6 +20805,10 @@ def admin_restaurant_reel(
                         )
                     )
 
+
+            # =================================================
+            # LOG ERROR
+            # =================================================
 
             current_app.logger.exception(
                 (
@@ -20622,6 +20824,10 @@ def admin_restaurant_reel(
             )
 
 
+            # =================================================
+            # USER MESSAGE
+            # =================================================
+
             flash(
                 (
                     "Kalxa could not upload this "
@@ -20636,8 +20842,9 @@ def admin_restaurant_reel(
                 url_for(
                     "admin_restaurant_reel",
 
-                    advert_id=
-                        advert.id,
+                    advert_id=(
+                        advert.id
+                    ),
                 )
             )
 
@@ -20649,17 +20856,34 @@ def admin_restaurant_reel(
     return render_template(
         "admin/restaurant_reel.html",
 
-        organizer=
-            organizer,
+        organizer=(
+            organizer
+        ),
 
-        advert=
-            advert,
+        advert=(
+            advert
+        ),
 
-        reel=
-            reel,
+        reel=(
+            reel
+        ),
+
+        # ====================================================
+        # RESTAURANT PLAN INFORMATION
+        # ====================================================
+
+        restaurant_plan=(
+            advert.normalized_subscription_tier
+        ),
+
+        restaurant_plan_name=(
+            advert.subscription_plan_name
+        ),
+
+        can_use_reel=(
+            advert.can_use_reel
+        ),
     )
-
-
 
 # ============================================================
 # RESTAURANT EXPERIENCE POSTS
@@ -20677,21 +20901,6 @@ def admin_restaurant_reel(
 # Images use the same 8 MB limit as restaurant posters.
 # Videos use the same 80 MB / 30 second limits as event reels.
 # ============================================================
-
-RESTAURANT_EXPERIENCE_IMAGE_EXTENSIONS = {
-    "jpg",
-    "jpeg",
-    "png",
-    "webp",
-}
-
-
-RESTAURANT_EXPERIENCE_VIDEO_EXTENSIONS = {
-    "mp4",
-    "mov",
-    "m4v",
-    "webm",
-}
 
 
 # ============================================================
