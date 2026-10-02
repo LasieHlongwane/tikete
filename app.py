@@ -15120,7 +15120,233 @@ def admin_create_restaurant():
         )
     )
 
+def restaurant_can_receive_experience_posts(
+    advert,
+):
 
+    # ========================================================
+    # RESTAURANT REQUIRED
+    # ========================================================
+
+    if not advert:
+
+        return False
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # This keeps the RestaurantAdvert subscription state
+    # current before checking customer-experience access.
+    #
+    # STANDARD / PREMIUM:
+    #
+    #     Active
+    #         -> paid features available
+    #
+    #     Expired <= 5 days
+    #         -> grace period
+    #         -> paid features remain available
+    #
+    #     Expired > 5 days
+    #         -> automatically downgraded to Free
+    #
+    # FREE:
+    #
+    #     Remains active indefinitely, but does NOT have the
+    #     customer_experiences capability.
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+    #
+    # A paused/deactivated restaurant cannot receive customer
+    # experience submissions regardless of plan.
+    # ========================================================
+
+    if not advert.active:
+
+        return False
+
+
+    # ========================================================
+    # ORGANIZER
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        return False
+
+
+    # ========================================================
+    # ORGANIZER ACTIVE
+    # ========================================================
+
+    if not organizer.active:
+
+        return False
+
+
+    # ========================================================
+    # RESTAURANT ACCOUNT TYPE
+    # ========================================================
+    #
+    # Customer restaurant experiences belong only to Kalxa
+    # restaurant accounts.
+    #
+    # IMPORTANT:
+    #
+    # Do NOT check:
+    #
+    #     organizer.is_subscription_active
+    #
+    # That belongs to the legacy Organizer/Event SaaS
+    # subscription system.
+    # ========================================================
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        return False
+
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE PLAN CAPABILITY
+    # ========================================================
+    #
+    # FREE
+    # --------------------------------------------------------
+    #
+    # Profile                     YES
+    # Campaign                    YES
+    # Reel / Discovery            YES
+    #
+    # Customer experiences        NO
+    #
+    #
+    # STANDARD
+    # --------------------------------------------------------
+    #
+    # Customer experiences        YES
+    #
+    #
+    # PREMIUM
+    # --------------------------------------------------------
+    #
+    # Customer experiences        YES
+    #
+    #
+    # STANDARD / PREMIUM GRACE
+    # --------------------------------------------------------
+    #
+    # Customer experiences remain available during the
+    # configured 5-day grace period.
+    #
+    #
+    # AFTER GRACE
+    # --------------------------------------------------------
+    #
+    # sync_restaurant_subscription() converts the restaurant
+    # back to Free.
+    #
+    # advert.can_receive_customer_experiences then becomes
+    # False automatically.
+    # ========================================================
+
+    if not advert.can_receive_customer_experiences:
+
+        return False
+
+
+    # ========================================================
+    # CAMPAIGN WINDOW
+    # ========================================================
+    #
+    # Customer experiences are only accepted while the public
+    # restaurant campaign/profile is currently available.
+    #
+    # This check is independent of operational hours.
+    #
+    # A restaurant does NOT need its operational hours to be
+    # currently open in order for this helper to return True.
+    #
+    # Therefore:
+    #
+    #     opening_hours != experience eligibility
+    #
+    # This is especially important because operational hours
+    # are a Standard/Premium display feature rather than the
+    # restaurant campaign lifecycle itself.
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # CAMPAIGN NOT STARTED
+    # ========================================================
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        return False
+
+
+    # ========================================================
+    # CAMPAIGN ENDED
+    # ========================================================
+
+    if (
+        advert.ends_at
+        and
+        advert.ends_at <= now
+    ):
+
+        return False
+
+
+    # ========================================================
+    # ELIGIBLE
+    # ========================================================
+    #
+    # At this point:
+    #
+    #     restaurant exists
+    #     restaurant is active
+    #     organizer exists
+    #     organizer is active
+    #     organizer is a restaurant account
+    #     restaurant has customer-experience capability
+    #     campaign has started
+    #     campaign has not ended
+    #
+    # Therefore customer experience submission is allowed.
+    # ========================================================
+
+    return True
 # ============================================================
 # ADMIN - MANAGE RESTAURANT
 # ============================================================
@@ -18862,124 +19088,6 @@ def get_taggable_restaurants():
     # ========================================================
 
 
-def restaurant_can_receive_experience_posts(
-    advert,
-):
-
-    # ========================================================
-    # RESTAURANT REQUIRED
-    # ========================================================
-
-    if not advert:
-
-        return False
-
-
-    # ========================================================
-    # SYNCHRONIZE PLAN
-    # ========================================================
-
-    sync_restaurant_subscription(
-        advert
-    )
-
-
-    # ========================================================
-    # RESTAURANT ACTIVE
-    # ========================================================
-
-    if not advert.active:
-
-        return False
-
-
-    # ========================================================
-    # ORGANIZER
-    # ========================================================
-
-    organizer = (
-        advert.organizer
-    )
-
-
-    if not organizer:
-
-        return False
-
-
-    if not organizer.active:
-
-        return False
-
-
-    if (
-        getattr(
-            organizer,
-            "account_type",
-            None,
-        )
-        != "restaurant"
-    ):
-
-        return False
-
-
-    # ========================================================
-    # CUSTOMER EXPERIENCE FEATURE
-    # ========================================================
-    #
-    # Free:
-    #     False
-    #
-    # Standard/Premium active:
-    #     True
-    #
-    # Standard/Premium grace period:
-    #     True
-    #
-    # After grace:
-    #     sync_restaurant_subscription()
-    #     converts plan to Free
-    #     therefore this becomes False.
-    # ========================================================
-
-    if not advert.can_receive_customer_experiences:
-
-        return False
-
-
-    # ========================================================
-    # CAMPAIGN WINDOW
-    # ========================================================
-
-    now = (
-        datetime.utcnow()
-    )
-
-
-    if (
-        advert.starts_at
-        and
-        advert.starts_at > now
-    ):
-
-        return False
-
-
-    if (
-        advert.ends_at
-        and
-        advert.ends_at <= now
-    ):
-
-        return False
-
-
-    # ========================================================
-    # ELIGIBLE
-    # ========================================================
-
-    return True
 # ============================================================
 # ORGANIZER - DELETE RESTAURANT REEL
 # ============================================================
