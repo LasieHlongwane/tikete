@@ -20725,7 +20725,6 @@ def event_page(
 # If the restaurant upgrades again, the existing content can
 # become available again.
 # ============================================================
-
 @app.route(
     "/restaurant/<int:advert_id>"
 )
@@ -20735,6 +20734,13 @@ def restaurant_page(
 
     # ========================================================
     # RESTAURANT
+    # ========================================================
+    #
+    # The RestaurantAdvert itself remains available on every
+    # restaurant plan, including Free.
+    #
+    # Restaurant plan permissions determine which additional
+    # features are exposed on the public profile.
     # ========================================================
 
     advert = (
@@ -20753,17 +20759,21 @@ def restaurant_page(
     # SYNCHRONIZE RESTAURANT SUBSCRIPTION
     # ========================================================
     #
-    # Standard / Premium:
+    # FREE
+    #     -> always active
+    #     -> profile/campaign/reel available
     #
-    # Active
+    # STANDARD / PREMIUM ACTIVE
     #     -> paid features available
     #
-    # Expired <= 5 days
+    # STANDARD / PREMIUM EXPIRED <= 5 DAYS
     #     -> grace period
     #     -> paid features remain available
     #
-    # Expired > 5 days
+    # STANDARD / PREMIUM EXPIRED > 5 DAYS
     #     -> automatically converted to Free
+    #     -> paid content remains stored
+    #     -> paid content is no longer exposed
     # ========================================================
 
     sync_restaurant_subscription(
@@ -20782,12 +20792,14 @@ def restaurant_page(
     #
     # IMPORTANT:
     #
-    # Restaurant visibility no longer depends on:
+    # Public restaurant visibility does NOT depend on:
     #
     #     organizer.is_subscription_active
     #
-    # Otherwise Free restaurants would disappear when the
-    # legacy Organizer SaaS subscription expires.
+    # That property belongs to the legacy Organizer/Event SaaS
+    # subscription system.
+    #
+    # A Free restaurant must remain publicly accessible.
     # ========================================================
 
     organizer = (
@@ -20820,14 +20832,31 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT PROFILE PERMISSION
     # ========================================================
+    #
+    # FREE       -> YES
+    # STANDARD   -> YES
+    # PREMIUM    -> YES
+    # ========================================================
 
-    if not advert.can_use_profile:
+    can_use_profile = (
+        advert.can_use_profile
+    )
+
+
+    if not can_use_profile:
 
         abort(404)
 
 
     # ========================================================
     # CAMPAIGN DATE SAFETY
+    # ========================================================
+    #
+    # Campaign visibility is separate from operational hours.
+    #
+    # A Free restaurant is allowed to publish and display its
+    # restaurant campaign even though regular operational
+    # hours are unavailable on Free.
     # ========================================================
 
     if (
@@ -20851,6 +20880,39 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT PLAN PERMISSIONS
     # ========================================================
+    #
+    # These values are calculated once and then used
+    # throughout the route.
+    #
+    # FREE:
+    #
+    #     profile                 YES
+    #     reel / campaign         YES
+    #     gallery                 NO
+    #     opening hours           NO
+    #     customer experiences    NO
+    #     stories                 NO
+    #     analytics dashboard     NO
+    #
+    # STANDARD:
+    #
+    #     profile                 YES
+    #     reel / campaign         YES
+    #     gallery                 YES
+    #     opening hours           YES
+    #     customer experiences    YES
+    #     stories                 NO
+    #     analytics dashboard     NO
+    #
+    # PREMIUM:
+    #
+    #     all restaurant features
+    # ========================================================
+
+    can_use_reel = (
+        advert.can_use_reel
+    )
+
 
     can_use_gallery = (
         advert.can_use_gallery
@@ -20882,17 +20944,28 @@ def restaurant_page(
     # ========================================================
 
     restaurant_subscription_in_grace = (
-        advert.is_restaurant_subscription_in_grace_period
+        advert
+        .is_restaurant_subscription_in_grace_period
     )
 
 
     restaurant_subscription_grace_ends_at = (
-        advert.restaurant_subscription_grace_ends_at
+        advert
+        .restaurant_subscription_grace_ends_at
     )
 
 
     # ========================================================
     # STORIES ATTRIBUTION
+    # ========================================================
+    #
+    # Attribution tracking may still be captured when somebody
+    # reaches the restaurant from another Kalxa surface.
+    #
+    # This does NOT grant Stories access.
+    # Stories access remains controlled by:
+    #
+    #     can_use_stories
     # ========================================================
 
     restaurant_attribution = (
@@ -20912,7 +20985,19 @@ def restaurant_page(
 
 
     # ========================================================
-    # RESTAURANT VIEW
+    # RESTAURANT VIEW ANALYTICS EVENT
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # We may still collect platform-level restaurant view
+    # events for Kalxa internally.
+    #
+    # can_view_analytics controls whether the restaurant owner
+    # can access the restaurant analytics product/dashboard.
+    #
+    # It does not need to stop Kalxa from collecting basic
+    # platform telemetry.
     # ========================================================
 
     record_restaurant_analytics_event(
@@ -20940,6 +21025,19 @@ def restaurant_page(
 
     # ========================================================
     # CUSTOMER EXPERIENCES
+    # ========================================================
+    #
+    # FREE:
+    #
+    #     Do NOT load customer experience posts.
+    #
+    # STANDARD / PREMIUM:
+    #
+    #     Load approved customer experience posts.
+    #
+    # This is stronger than merely hiding the HTML section.
+    # Free profiles do not even receive the experience records
+    # in the Jinja template context.
     # ========================================================
 
     experience_posts = []
@@ -20969,22 +21067,15 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT RATING SUMMARY
     # ========================================================
-
-    restaurant_ratings = [
-
-        post.rating
-
-        for post
-        in experience_posts
-
-        if post.rating is not None
-    ]
-
+    #
+    # Ratings come from customer experience posts.
+    #
+    # Therefore Free restaurants must not expose a rating
+    # summary from stored paid-plan experience data.
+    # ========================================================
 
     restaurant_rating_count = (
-        len(
-            restaurant_ratings
-        )
+        0
     )
 
 
@@ -20993,19 +21084,42 @@ def restaurant_page(
     )
 
 
-    if restaurant_rating_count > 0:
+    if can_receive_customer_experiences:
 
-        restaurant_average_rating = (
-            sum(
+        restaurant_ratings = [
+
+            post.rating
+
+            for post
+            in experience_posts
+
+            if post.rating is not None
+        ]
+
+
+        restaurant_rating_count = (
+            len(
                 restaurant_ratings
             )
-            /
-            restaurant_rating_count
         )
+
+
+        if restaurant_rating_count > 0:
+
+            restaurant_average_rating = (
+                sum(
+                    restaurant_ratings
+                )
+                /
+                restaurant_rating_count
+            )
 
 
     # ========================================================
     # CUSTOMER EXPERIENCE LOVES
+    # ========================================================
+    #
+    # No experience engagement data is loaded for Free.
     # ========================================================
 
     loved_experience_post_ids = (
@@ -21058,6 +21172,13 @@ def restaurant_page(
 
     # ========================================================
     # CONTACT LINKS
+    # ========================================================
+    #
+    # Contact details belong to the basic restaurant profile.
+    #
+    # FREE       -> YES
+    # STANDARD   -> YES
+    # PREMIUM    -> YES
     # ========================================================
 
     raw_whatsapp_url = (
@@ -21123,6 +21244,23 @@ def restaurant_page(
     # ========================================================
     # RESTAURANT HOURS
     # ========================================================
+    #
+    # FREE:
+    #
+    #     restaurant_hours_payload = None
+    #
+    # STANDARD / PREMIUM:
+    #
+    #     operational hours are loaded.
+    #
+    # IMPORTANT:
+    #
+    # Existing hours are NOT deleted when a restaurant falls
+    # back to Free. They simply stop being exposed.
+    #
+    # If the restaurant upgrades again, the stored hours can
+    # become available again.
+    # ========================================================
 
     restaurant_hours_payload = (
         None
@@ -21161,11 +21299,17 @@ def restaurant_page(
     # RESTAURANT MANAGEMENT PERMISSION
     # ========================================================
     #
-    # Free restaurant owners must still be able to manage
-    # their basic restaurant profile.
+    # Free restaurant owners must still be able to manage:
     #
-    # Therefore ownership does NOT depend on the legacy
-    # Organizer paid subscription.
+    #     profile
+    #     contact information
+    #     restaurant campaign
+    #     main poster
+    #     reel/discovery
+    #
+    # Ownership therefore does NOT depend on:
+    #
+    #     organizer.is_subscription_active
     # ========================================================
 
     can_manage_restaurant = (
@@ -21198,6 +21342,11 @@ def restaurant_page(
     # ========================================================
     # HOURS MANAGEMENT
     # ========================================================
+    #
+    # FREE       -> NO
+    # STANDARD   -> YES
+    # PREMIUM    -> YES
+    # ========================================================
 
     can_manage_restaurant_hours = (
         can_manage_restaurant
@@ -21209,6 +21358,13 @@ def restaurant_page(
     # ========================================================
     # RATING QR MANAGEMENT
     # ========================================================
+    #
+    # Rating QR exists to collect customer experiences.
+    #
+    # FREE       -> NO
+    # STANDARD   -> YES
+    # PREMIUM    -> YES
+    # ========================================================
 
     can_manage_restaurant_rating_qr = (
         can_manage_restaurant
@@ -21219,6 +21375,13 @@ def restaurant_page(
 
     # ========================================================
     # RESTAURANT RATING QR
+    # ========================================================
+    #
+    # Do not even load the QR record for a Free restaurant.
+    #
+    # This allows an expired paid restaurant's QR record to
+    # remain safely stored without exposing it while the
+    # restaurant is on Free.
     # ========================================================
 
     restaurant_rating_qr = (
@@ -21324,6 +21487,11 @@ def restaurant_page(
 
         advert=advert,
 
+
+        # ====================================================
+        # RESTAURANT PLAN
+        # ====================================================
+
         restaurant_plan=(
             advert.normalized_subscription_tier
         ),
@@ -21342,6 +21510,19 @@ def restaurant_page(
 
         restaurant_subscription_grace_ends_at=(
             restaurant_subscription_grace_ends_at
+        ),
+
+
+        # ====================================================
+        # FEATURE CAPABILITIES
+        # ====================================================
+
+        can_use_profile=(
+            can_use_profile
+        ),
+
+        can_use_reel=(
+            can_use_reel
         ),
 
         can_use_gallery=(
@@ -21364,6 +21545,11 @@ def restaurant_page(
             can_view_analytics
         ),
 
+
+        # ====================================================
+        # CONTACT
+        # ====================================================
+
         whatsapp_url=(
             whatsapp_url
         ),
@@ -21375,6 +21561,11 @@ def restaurant_page(
         directions_url=(
             directions_url
         ),
+
+
+        # ====================================================
+        # HOURS
+        # ====================================================
 
         restaurant_hours_payload=(
             restaurant_hours_payload
@@ -21400,6 +21591,11 @@ def restaurant_page(
             else ""
         ),
 
+
+        # ====================================================
+        # CUSTOMER EXPERIENCES
+        # ====================================================
+
         experience_posts=(
             experience_posts
         ),
@@ -21415,6 +21611,11 @@ def restaurant_page(
         restaurant_rating_count=(
             restaurant_rating_count
         ),
+
+
+        # ====================================================
+        # RATING QR
+        # ====================================================
 
         can_manage_restaurant_rating_qr=(
             can_manage_restaurant_rating_qr
@@ -21440,6 +21641,11 @@ def restaurant_page(
             else ""
         ),
 
+
+        # ====================================================
+        # ATTRIBUTION
+        # ====================================================
+
         attribution_source=(
             attribution_source
         ),
@@ -21456,6 +21662,7 @@ def restaurant_page(
             source_session_id
         ),
     )
+
 # ============================================================
 # STAGE 6 - WHATSAPP CONVERSION
 # ============================================================
