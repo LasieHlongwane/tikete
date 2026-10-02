@@ -13901,6 +13901,273 @@ def featured_listing_image(
     return response
 
 
+
+@app.route(
+    "/r/<string:public_code>"
+)
+def restaurant_rating_qr_page(
+    public_code,
+):
+
+    # ========================================================
+    # FIND ACTIVE RATING QR
+    # ========================================================
+    #
+    # The QR record may continue to exist even if the
+    # restaurant later downgrades to Free.
+    #
+    # We deliberately do NOT delete old QR records when a
+    # restaurant subscription changes.
+    #
+    # Access is controlled below using the current restaurant
+    # subscription capability.
+    # ========================================================
+
+    restaurant_qr = (
+        RestaurantRatingQRCode.query
+
+        .filter_by(
+            public_code=public_code,
+            active=True,
+        )
+
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # RESTAURANT
+    # ========================================================
+
+    advert = (
+        restaurant_qr.restaurant_advert
+    )
+
+
+    if not advert:
+
+        abort(404)
+
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # STANDARD / PREMIUM ACTIVE
+    #     -> customer experiences available
+    #
+    # STANDARD / PREMIUM EXPIRED <= 5 DAYS
+    #     -> grace period
+    #     -> customer experiences remain available
+    #
+    # STANDARD / PREMIUM EXPIRED > 5 DAYS
+    #     -> automatically downgraded to Free
+    #
+    # FREE
+    #     -> Rating QR cannot be used to submit experiences
+    # ========================================================
+
+    sync_restaurant_subscription(
+        advert
+    )
+
+
+    # ========================================================
+    # RESTAURANT ACTIVE
+    # ========================================================
+
+    if not advert.active:
+
+        abort(404)
+
+
+    # ========================================================
+    # ORGANIZER / ACCOUNT SAFETY
+    # ========================================================
+    #
+    # IMPORTANT:
+    #
+    # Do NOT use:
+    #
+    #     organizer.is_subscription_active
+    #
+    # That belongs to the legacy Organizer/Event SaaS
+    # subscription.
+    #
+    # Restaurant Rating QR access is controlled by the
+    # RestaurantAdvert subscription.
+    # ========================================================
+
+    organizer = (
+        advert.organizer
+    )
+
+
+    if not organizer:
+
+        abort(404)
+
+
+    if not organizer.active:
+
+        abort(404)
+
+
+    if (
+        getattr(
+            organizer,
+            "account_type",
+            None,
+        )
+        != "restaurant"
+    ):
+
+        abort(404)
+
+
+    # ========================================================
+    # CUSTOMER EXPERIENCE CAPABILITY
+    # ========================================================
+    #
+    # FREE
+    # --------------------------------------------------------
+    #
+    # Public profile               YES
+    # Campaign                     YES
+    # Reel / Discovery             YES
+    #
+    # Customer experiences         NO
+    # Rating QR                    NO
+    #
+    #
+    # STANDARD
+    # --------------------------------------------------------
+    #
+    # Active                       YES
+    # 5-day grace                  YES
+    #
+    #
+    # PREMIUM
+    # --------------------------------------------------------
+    #
+    # Active                       YES
+    # 5-day grace                  YES
+    #
+    #
+    # AFTER GRACE
+    # --------------------------------------------------------
+    #
+    # sync_restaurant_subscription() converts the restaurant
+    # to Free.
+    #
+    # This capability then becomes False.
+    # ========================================================
+
+    if not advert.can_receive_customer_experiences:
+
+        abort(404)
+
+
+    # ========================================================
+    # CAMPAIGN DATE SAFETY
+    # ========================================================
+    #
+    # Customer experience QR access is available only while
+    # the restaurant campaign/profile is currently available.
+    #
+    # Operational hours are NOT checked here.
+    # ========================================================
+
+    now = (
+        datetime.utcnow()
+    )
+
+
+    # ========================================================
+    # CAMPAIGN NOT STARTED
+    # ========================================================
+
+    if (
+        advert.starts_at
+        and
+        advert.starts_at > now
+    ):
+
+        abort(404)
+
+
+    # ========================================================
+    # CAMPAIGN ENDED
+    # ========================================================
+
+    if (
+        advert.ends_at
+        and
+        advert.ends_at <= now
+    ):
+
+        abort(404)
+
+
+    # ========================================================
+    # FINAL EXPERIENCE ELIGIBILITY CHECK
+    # ========================================================
+    #
+    # Keep the QR route aligned with the same centralized
+    # eligibility helper used by:
+    #
+    #     /experiences/new
+    #
+    # and:
+    #
+    #     get_taggable_restaurants()
+    #
+    # This gives us one consistent rule across the platform.
+    # ========================================================
+
+    if not restaurant_can_receive_experience_posts(
+        advert
+    ):
+
+        abort(404)
+
+
+    # ========================================================
+    # SEND CUSTOMER TO EXPERIENCE FORM
+    # ========================================================
+    #
+    # The restaurant ID is passed to:
+    #
+    #     /experiences/new?restaurant_id=<id>
+    #
+    # create_restaurant_experience() performs another
+    # server-side eligibility check before displaying the
+    # preselected restaurant.
+    #
+    # It then checks the restaurant again during POST.
+    #
+    # Therefore the security chain is:
+    #
+    #     QR scan
+    #         ↓
+    #     Rating QR eligibility
+    #         ↓
+    #     Experience GET eligibility
+    #         ↓
+    #     Experience POST eligibility
+    #         ↓
+    #     Final eligibility before DB/Cloudinary write
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "create_restaurant_experience",
+
+            restaurant_id=(
+                advert.id
+            ),
+        )
+    )
 # ============================================================
 # ADMIN - RESTAURANTS
 # ============================================================
@@ -22468,119 +22735,7 @@ def restaurant_experience_thank_you():
 # PUBLIC RESTAURANT RATING QR
 # ============================================================
 
-@app.route(
-    "/r/<string:public_code>"
-)
-def restaurant_rating_qr_page(
-    public_code,
-):
 
-    # ========================================================
-    # FIND ACTIVE QR
-    # ========================================================
-
-    restaurant_qr = (
-        RestaurantRatingQRCode.query
-
-        .filter_by(
-            public_code=
-                public_code,
-
-            active=
-                True,
-        )
-
-        .first_or_404()
-    )
-
-
-    # ========================================================
-    # RESTAURANT
-    # ========================================================
-
-    advert = (
-        restaurant_qr.restaurant_advert
-    )
-
-
-    if not advert:
-
-        abort(404)
-
-
-    # ========================================================
-    # RESTAURANT ACTIVE SAFETY
-    # ========================================================
-
-    if not advert.active:
-
-        abort(404)
-
-
-    # ========================================================
-    # SUBSCRIPTION SAFETY
-    # ========================================================
-
-    organizer = (
-        advert.organizer
-    )
-
-
-    if (
-        not organizer
-        or
-        not organizer.is_subscription_active
-    ):
-
-        abort(404)
-
-
-    # ========================================================
-    # CAMPAIGN DATE SAFETY
-    # ========================================================
-
-    now = (
-        datetime.utcnow()
-    )
-
-
-    if (
-        advert.starts_at
-        and
-        advert.starts_at > now
-    ):
-
-        abort(404)
-
-
-    if (
-        advert.ends_at
-        and
-        advert.ends_at <= now
-    ):
-
-        abort(404)
-
-
-    # ========================================================
-    # SEND CUSTOMER TO EXISTING EXPERIENCE FORM
-    # ========================================================
-    #
-    # Your restaurant_experience_form.html already reads:
-    #
-    # request.args.get("restaurant_id")
-    #
-    # Therefore the restaurant scanned through the QR is
-    # automatically selected in the existing form.
-    # ========================================================
-
-    return redirect(
-        url_for(
-            "create_restaurant_experience",
-            restaurant_id=
-                advert.id,
-        )
-    )
 # ============================================================
 # RESTAURANT RATING QR HELPERS
 # ============================================================
