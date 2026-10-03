@@ -25175,10 +25175,20 @@ def internal_restaurant_analytics():
 
         /api/internal/restaurant-analytics
             ?story_ids=1,2,3
+            &start_at=2026-09-26T00:00:00+00:00
+            &end_at=2026-10-03T00:00:00+00:00
 
     Required header:
 
         X-Kalxa-Internal-Key: <secret>
+
+    Optional query parameters:
+
+        start_at
+        end_at
+
+    When start_at and end_at are omitted, the endpoint
+    returns all-time analytics.
 
     The endpoint intentionally returns aggregate data only.
     """
@@ -25225,6 +25235,168 @@ def internal_restaurant_analytics():
 
 
     # ========================================================
+    # ANALYTICS DATE RANGE
+    # ========================================================
+    #
+    # Kalxa Stories sends UTC ISO-8601 values:
+    #
+    #     start_at=2026-09-26T00:00:00+00:00
+    #     end_at=2026-10-03T00:00:00+00:00
+    #
+    # Both are optional.
+    #
+    # If neither is supplied, analytics remain all-time.
+    # ========================================================
+
+    start_at_raw = (
+        request.args
+        .get(
+            "start_at",
+            "",
+        )
+        .strip()
+    )
+
+    end_at_raw = (
+        request.args
+        .get(
+            "end_at",
+            "",
+        )
+        .strip()
+    )
+
+
+    start_at = None
+    end_at = None
+
+
+    # --------------------------------------------------------
+    # PARSE START DATE
+    # --------------------------------------------------------
+
+    if start_at_raw:
+
+        try:
+
+            normalized_start_at = (
+                start_at_raw
+                .replace(
+                    "Z",
+                    "+00:00",
+                )
+            )
+
+            start_at = (
+                datetime.fromisoformat(
+                    normalized_start_at
+                )
+            )
+
+            if start_at.tzinfo is None:
+
+                start_at = (
+                    start_at.replace(
+                        tzinfo=timezone.utc
+                    )
+                )
+
+            else:
+
+                start_at = (
+                    start_at.astimezone(
+                        timezone.utc
+                    )
+                )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            return jsonify(
+                {
+                    "ok": False,
+                    "error":
+                        "invalid_start_at",
+                }
+            ), 400
+
+
+    # --------------------------------------------------------
+    # PARSE END DATE
+    # --------------------------------------------------------
+
+    if end_at_raw:
+
+        try:
+
+            normalized_end_at = (
+                end_at_raw
+                .replace(
+                    "Z",
+                    "+00:00",
+                )
+            )
+
+            end_at = (
+                datetime.fromisoformat(
+                    normalized_end_at
+                )
+            )
+
+            if end_at.tzinfo is None:
+
+                end_at = (
+                    end_at.replace(
+                        tzinfo=timezone.utc
+                    )
+                )
+
+            else:
+
+                end_at = (
+                    end_at.astimezone(
+                        timezone.utc
+                    )
+                )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            return jsonify(
+                {
+                    "ok": False,
+                    "error":
+                        "invalid_end_at",
+                }
+            ), 400
+
+
+    # --------------------------------------------------------
+    # VALIDATE RANGE
+    # --------------------------------------------------------
+
+    if (
+        start_at is not None
+        and
+        end_at is not None
+        and
+        start_at >= end_at
+    ):
+
+        return jsonify(
+            {
+                "ok": False,
+                "error":
+                    "invalid_date_range",
+            }
+        ), 400
+
+
+    # ========================================================
     # SUPPORTED CONVERSION EVENTS
     # ========================================================
 
@@ -25238,7 +25410,75 @@ def internal_restaurant_analytics():
 
 
     # ========================================================
-    # QUERY
+    # BASE ANALYTICS FILTERS
+    # ========================================================
+    #
+    # These filters are shared by:
+    #
+    # 1. event-count analytics
+    # 2. unique-session analytics
+    #
+    # This is important because both queries must represent
+    # exactly the same selected dashboard period.
+    # ========================================================
+
+    analytics_filters = [
+        (
+            RestaurantAnalyticsEvent.source
+            == "kalxa_stories"
+        ),
+
+        (
+            RestaurantAnalyticsEvent
+            .source_article_id
+            .in_(
+                story_ids
+            )
+        ),
+    ]
+
+
+    # --------------------------------------------------------
+    # START DATE
+    # --------------------------------------------------------
+
+    if start_at is not None:
+
+        analytics_filters.append(
+            (
+                RestaurantAnalyticsEvent
+                .created_at
+                >= start_at
+            )
+        )
+
+
+    # --------------------------------------------------------
+    # END DATE
+    # --------------------------------------------------------
+    #
+    # We use < rather than <= so date windows can be treated
+    # as half-open intervals:
+    #
+    #     start_at <= event < end_at
+    #
+    # This prevents boundary events from being counted twice
+    # if adjacent reporting periods are used later.
+    # --------------------------------------------------------
+
+    if end_at is not None:
+
+        analytics_filters.append(
+            (
+                RestaurantAnalyticsEvent
+                .created_at
+                < end_at
+            )
+        )
+
+
+    # ========================================================
+    # EVENT COUNT QUERY
     # ========================================================
     #
     # Only events carrying verified Kalxa Stories attribution
@@ -25284,14 +25524,7 @@ def internal_restaurant_analytics():
         )
 
         .filter(
-            RestaurantAnalyticsEvent.source
-            == "kalxa_stories",
-
-            RestaurantAnalyticsEvent
-            .source_article_id
-            .in_(
-                story_ids
-            ),
+            *analytics_filters,
 
             RestaurantAnalyticsEvent
             .event_type
@@ -25323,6 +25556,11 @@ def internal_restaurant_analytics():
     # session.
     #
     # We count it here but never expose the IDs themselves.
+    #
+    # IMPORTANT:
+    #
+    # The same date filters used by the event-count query are
+    # also applied here.
     # ========================================================
 
     unique_rows = (
@@ -25352,14 +25590,7 @@ def internal_restaurant_analytics():
         )
 
         .filter(
-            RestaurantAnalyticsEvent.source
-            == "kalxa_stories",
-
-            RestaurantAnalyticsEvent
-            .source_article_id
-            .in_(
-                story_ids
-            ),
+            *analytics_filters,
 
             RestaurantAnalyticsEvent
             .source_session_id
@@ -25675,6 +25906,15 @@ def internal_restaurant_analytics():
                     for restaurant
                     in restaurants
                 ),
+
+            "unique_sessions":
+                sum(
+                    restaurant[
+                        "unique_sessions"
+                    ]
+                    for restaurant
+                    in restaurants
+                ),
         }
 
 
@@ -25704,18 +25944,26 @@ def internal_restaurant_analytics():
             "source":
                 "kalxa_stories",
 
+            "period": {
+                "start_at":
+                    (
+                        start_at.isoformat()
+                        if start_at
+                        else None
+                    ),
+
+                "end_at":
+                    (
+                        end_at.isoformat()
+                        if end_at
+                        else None
+                    ),
+            },
+
             "stories":
                 response_stories,
         }
     ), 200
-
-# ============================================================
-# PUBLIC - POST RESTAURANT EXPERIENCE
-# ============================================================
-# ============================================================
-# PUBLIC - POST RESTAURANT EXPERIENCE
-# ============================================================
-
 
 
 # ============================================================
