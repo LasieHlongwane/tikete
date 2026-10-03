@@ -2264,6 +2264,67 @@ content="Kalxa"
         font-size: .53rem;
         font-weight: 900;
     }
+    
+    /* =====================================================
+   EVENT REEL VIEW COUNT
+===================================================== */
+
+.vibe-view-count {
+    position: absolute;
+
+    top: 58px;
+    right: 11px;
+
+    z-index: 5;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+
+    min-height: 27px;
+
+    padding:
+        4px 8px;
+
+    background:
+        rgba(
+            17,
+            24,
+            39,
+            .72
+        );
+
+    color: #ffffff;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            .18
+        );
+
+    border-radius: 999px;
+
+    font-size: .55rem;
+    line-height: 1;
+
+    font-weight: 900;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+
+    backdrop-filter:
+        blur(6px);
+
+    -webkit-backdrop-filter:
+        blur(6px);
+}
 
     .vibe-sound-toggle,
     .food-vibe-sound-toggle {
@@ -2432,6 +2493,75 @@ content="Kalxa"
     .food-modal-feed::-webkit-scrollbar {
         display: none;
     }
+    
+    /* =====================================================
+   EVENT REEL MODAL VIEW COUNT
+===================================================== */
+
+.vibe-modal-view-count {
+    position: absolute;
+
+    top:
+        max(
+            66px,
+            calc(
+                env(safe-area-inset-top)
+                + 54px
+            )
+        );
+
+    right: 12px;
+
+    z-index: 5;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    min-height: 30px;
+
+    padding:
+        5px 9px;
+
+    background:
+        rgba(
+            17,
+            24,
+            39,
+            .72
+        );
+
+    color: #ffffff;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            .20
+        );
+
+    border-radius: 999px;
+
+    font-size: .62rem;
+    line-height: 1;
+
+    font-weight: 900;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+
+    backdrop-filter:
+        blur(8px);
+
+    -webkit-backdrop-filter:
+        blur(8px);
+}
 
     .vibe-modal-slide,
     .food-modal-slide {
@@ -4743,150 +4873,188 @@ content="Kalxa"
 >
 
 
-    <!-- =====================================
-         EVENT REELS
-    ====================================== -->
+<!-- =====================================
+     EVENT REELS
+====================================== -->
 
-    {% if reels %}
+{% if reels %}
 
-        <section class="vibe-section">
+    <section class="vibe-section">
 
-            <div class="vibe-heading">
+        <div class="vibe-heading">
 
-                <div>
+            <div>
 
-                    <span class="vibe-kicker">
-                        EVENTS
-                    </span>
-
-                </div>
-
-
-                <span class="vibe-heading-note">
-                    Tap · then swipe ↑
+                <span class="vibe-kicker">
+                    EVENTS
                 </span>
 
             </div>
 
 
-            <div class="vibe-rail">
+            <span class="vibe-heading-note">
+                Tap · then swipe ↑
+            </span>
 
-                {% for reel in reels %}
+        </div>
 
-                    {% if reel.event %}
 
-                        <article
-                            class="vibe-card"
-                            data-vibe-reel
-                            data-reel-id="{{ reel.id }}"
-                            data-reel-index="{{ loop.index0 }}"
+        <div class="vibe-rail">
+
+            {% for reel in reels %}
+
+                {% if reel.event %}
+
+                    <article
+                        class="vibe-card"
+                        data-vibe-reel
+                        data-reel-id="{{ reel.id }}"
+                        data-reel-index="{{ loop.index0 }}"
+                        data-reel-view-count="{{
+                            reel_view_counts.get(
+                                reel.id,
+                                0
+                            )
+                            if reel_view_counts is defined
+                            else 0
+                        }}"
+                    >
+
+                        <video
+                            class="vibe-card-video"
+                            playsinline
+                            muted
+                            loop
+                            preload="metadata"
+                            controlslist="nodownload noremoteplayback"
+                            disablepictureinpicture
+                            oncontextmenu="return false;"
+                            {% if reel.thumbnail_url %}
+                                poster="{{ reel.thumbnail_url }}"
+                            {% endif %}
                         >
 
-                            <video
-                                class="vibe-card-video"
-                                playsinline
-                                muted
-                                loop
-                                preload="metadata"
-                                controlslist="nodownload noremoteplayback"
-                                disablepictureinpicture
-                                oncontextmenu="return false;"
-                                {% if reel.thumbnail_url %}
-                                    poster="{{ reel.thumbnail_url }}"
-                                {% endif %}
+                            <source
+                                src="{{ reel.video_url }}"
                             >
 
-                                <source
-                                    src="{{ reel.video_url }}"
-                                >
-
-                            </video>
+                        </video>
 
 
-                            {% if reel.duration_seconds %}
+                        <!-- =============================
+                             PUBLIC VIEW COUNT
+                        ============================== -->
 
-                                <span class="vibe-duration">
+                        <span
+                            class="vibe-view-count"
+                            data-reel-view-display
+                            aria-label="{{
+                                reel_view_counts.get(
+                                    reel.id,
+                                    0
+                                )
+                                if reel_view_counts is defined
+                                else 0
+                            }} views"
+                        >
+                            👁
+                            <span data-reel-view-number>
+                                {{
+                                    reel_view_counts.get(
+                                        reel.id,
+                                        0
+                                    )
+                                    if reel_view_counts is defined
+                                    else 0
+                                }}
+                            </span>
+                        </span>
+
+
+                        {% if reel.duration_seconds %}
+
+                            <span class="vibe-duration">
+
+                                {{
+                                    '%.0f'|format(
+                                        reel.duration_seconds
+                                    )
+                                }}s
+
+                            </span>
+
+                        {% endif %}
+
+
+                        <button
+                            type="button"
+                            class="vibe-sound-toggle"
+                            aria-label="Turn sound on"
+                        >
+                            🔇
+                        </button>
+
+
+                        <div class="vibe-card-copy">
+
+                            <strong>
+                                {{ reel.event.title }}
+                            </strong>
+
+
+                            <small>
+
+                                {% if
+                                    reel.event.event_date
+                                %}
 
                                     {{
-                                        '%.0f'|format(
-                                            reel.duration_seconds
+                                        reel.event.event_date.strftime(
+                                            '%d %b'
                                         )
-                                    }}s
+                                    }}
 
-                                </span>
-
-                            {% endif %}
+                                {% endif %}
 
 
-                            <button
-                                type="button"
-                                class="vibe-sound-toggle"
-                                aria-label="Turn sound on"
-                            >
-                                🔇
-                            </button>
-
-
-                            <div class="vibe-card-copy">
-
-                                <strong>
-                                    {{ reel.event.title }}
-                                </strong>
-
-
-                                <small>
+                                {% if reel.event.venue %}
 
                                     {% if
                                         reel.event.event_date
                                     %}
-
-                                        {{
-                                            reel.event.event_date.strftime(
-                                                '%d %b'
-                                            )
-                                        }}
-
+                                        ·
                                     {% endif %}
 
+                                    {{ reel.event.venue }}
 
-                                    {% if reel.event.venue %}
+                                {% endif %}
 
-                                        {% if
-                                            reel.event.event_date
-                                        %}
-                                            ·
-                                        {% endif %}
-
-                                        {{ reel.event.venue }}
-
-                                    {% endif %}
-
-                                </small>
+                            </small>
 
 
-                                <a
-                                    href="{{ url_for(
-                                        'event_page',
-                                        event_id=reel.event.id
-                                    ) }}"
-                                    class="vibe-card-event-link"
-                                >
-                                    View event →
-                                </a>
+                            <a
+                                href="{{ url_for(
+                                    'event_page',
+                                    event_id=reel.event.id
+                                ) }}"
+                                class="vibe-card-event-link"
+                            >
+                                View event →
+                            </a>
 
-                            </div>
+                        </div>
 
-                        </article>
+                    </article>
 
-                    {% endif %}
+                {% endif %}
 
-                {% endfor %}
+            {% endfor %}
 
-            </div>
+        </div>
 
-        </section>
+    </section>
 
-    {% endif %}
+{% endif %}
 
 
     <!-- =====================================
@@ -6849,7 +7017,13 @@ or event.image_url
 
 <!-- =====================================================
      EVENT REEL MODAL
-====================================================== -->{% if
+====================================================== -->
+
+<!-- =====================================================
+     EVENT REEL MODAL
+====================================================== -->
+
+{% if
 not event
 and reels
 %}
@@ -6858,7 +7032,9 @@ and reels
     class="vibe-modal"
     id="vibe-modal"
     aria-hidden="true"
-><button
+>
+
+<button
     type="button"
     class="vibe-modal-close"
     id="vibe-modal-close"
@@ -6882,6 +7058,14 @@ and reels
                 data-modal-reel
                 data-reel-id="{{ reel.id }}"
                 data-reel-index="{{ loop.index0 }}"
+                data-reel-view-count="{{
+                    reel_view_counts.get(
+                        reel.id,
+                        0
+                    )
+                    if reel_view_counts is defined
+                    else 0
+                }}"
             >
 
                 <video
@@ -6900,6 +7084,36 @@ and reels
                     >
 
                 </video>
+
+
+                <!-- =============================
+                     PUBLIC VIEW COUNT
+                ============================== -->
+
+                <span
+                    class="vibe-modal-view-count"
+                    data-reel-view-display
+                    aria-label="{{
+                        reel_view_counts.get(
+                            reel.id,
+                            0
+                        )
+                        if reel_view_counts is defined
+                        else 0
+                    }} views"
+                >
+                    👁
+                    <span data-reel-view-number>
+                        {{
+                            reel_view_counts.get(
+                                reel.id,
+                                0
+                            )
+                            if reel_view_counts is defined
+                            else 0
+                        }}
+                    </span>
+                </span>
 
 
                 <button
@@ -6970,8 +7184,9 @@ and reels
 
 </div>
 
-</div>{% endif %}
+</div>
 
+{% endif %}
 <!-- =====================================================
      RESTAURANT REEL MODAL
 ====================================================== -->{% if
@@ -10806,7 +11021,13 @@ document
 
 </script><!-- =====================================================
      EVENT REELS
-====================================================== --><script>
+====================================================== -->
+
+<!-- =====================================================
+     EVENT REELS
+====================================================== -->
+
+<script>
 
 (() => {
 
@@ -10866,6 +11087,494 @@ document
         null;
 
 
+    /*
+     * Tracks which reel view_event events have already
+     * been sent during this page lifecycle.
+     *
+     * The database unique constraint remains the final
+     * protection against duplicate analytics.
+     */
+    const trackedViews =
+        new Set();
+
+
+    /* =================================================
+       ANALYTICS SESSION
+    ================================================= */
+
+    function createAnalyticsSessionId() {
+
+        if (
+            window.crypto
+            &&
+            typeof window.crypto.randomUUID
+            === "function"
+        ) {
+
+            return window.crypto.randomUUID();
+
+        }
+
+
+        return (
+            "kalxa-"
+            +
+            Date.now().toString(36)
+            +
+            "-"
+            +
+            Math.random()
+                .toString(36)
+                .slice(2)
+            +
+            "-"
+            +
+            Math.random()
+                .toString(36)
+                .slice(2)
+        );
+
+    }
+
+
+    function getAnalyticsSessionId() {
+
+        const storageKey =
+            "kalxa_reel_analytics_session_id";
+
+
+        let sessionId =
+            localStorage.getItem(
+                storageKey
+            );
+
+
+        if (!sessionId) {
+
+            sessionId =
+                createAnalyticsSessionId();
+
+
+            localStorage.setItem(
+                storageKey,
+                sessionId
+            );
+
+        }
+
+
+        /*
+         * Backend currently allows a maximum of
+         * 80 characters.
+         */
+        return sessionId.slice(
+            0,
+            80
+        );
+
+    }
+
+
+    const analyticsSessionId =
+        getAnalyticsSessionId();
+
+
+    /* =================================================
+       VIEW COUNT FORMATTING
+    ================================================= */
+
+    function formatViewCount(
+        value
+    ) {
+
+        const count =
+            Number(
+                value
+            )
+            || 0;
+
+
+        if (
+            count >= 1000000
+        ) {
+
+            const millions =
+                count / 1000000;
+
+
+            return (
+                (
+                    millions >= 10
+                        ? millions.toFixed(0)
+                        : millions.toFixed(1)
+                )
+                .replace(
+                    ".0",
+                    ""
+                )
+                +
+                "M"
+            );
+
+        }
+
+
+        if (
+            count >= 1000
+        ) {
+
+            const thousands =
+                count / 1000;
+
+
+            return (
+                (
+                    thousands >= 10
+                        ? thousands.toFixed(0)
+                        : thousands.toFixed(1)
+                )
+                .replace(
+                    ".0",
+                    ""
+                )
+                +
+                "K"
+            );
+
+        }
+
+
+        return String(
+            Math.max(
+                0,
+                Math.round(
+                    count
+                )
+            )
+        );
+
+    }
+
+
+    /* =================================================
+       SYNCHRONIZE ALL VIEW COUNTERS FOR A REEL
+    ================================================= */
+
+    function updateReelViewDisplays(
+        reelId,
+        count
+    ) {
+
+        const numericCount =
+            Math.max(
+                0,
+                Number(
+                    count
+                )
+                || 0
+            );
+
+
+        const formatted =
+            formatViewCount(
+                numericCount
+            );
+
+
+        document
+            .querySelectorAll(
+                `[data-reel-id="${reelId}"]`
+            )
+            .forEach(
+                (element) => {
+
+                    element.dataset.reelViewCount =
+                        String(
+                            numericCount
+                        );
+
+
+                    const number =
+                        element.querySelector(
+                            "[data-reel-view-number]"
+                        );
+
+
+                    if (number) {
+
+                        number.textContent =
+                            formatted;
+
+                    }
+
+
+                    const display =
+                        element.querySelector(
+                            "[data-reel-view-display]"
+                        );
+
+
+                    if (display) {
+
+                        display.setAttribute(
+                            "aria-label",
+                            `${numericCount} view${
+                                numericCount === 1
+                                    ? ""
+                                    : "s"
+                            }`
+                        );
+
+                    }
+
+                }
+            );
+
+    }
+
+
+    /*
+     * Format initial server-rendered values.
+     */
+    cards.forEach(
+        (card) => {
+
+            updateReelViewDisplays(
+                card.dataset.reelId,
+                card.dataset.reelViewCount
+            );
+
+        }
+    );
+
+
+    /* =================================================
+       ANALYTICS REQUEST
+    ================================================= */
+
+    async function trackReelEvent(
+        reelId,
+        eventType
+    ) {
+
+        const numericReelId =
+            Number(
+                reelId
+            );
+
+
+        if (
+            !Number.isInteger(
+                numericReelId
+            )
+            ||
+            numericReelId <= 0
+        ) {
+
+            return false;
+
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/analytics/reels/track",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            "Accept":
+                                "application/json",
+                        },
+
+                        body:
+                            JSON.stringify(
+                                {
+                                    reel_id:
+                                        numericReelId,
+
+                                    event_type:
+                                        eventType,
+
+                                    session_id:
+                                        analyticsSessionId,
+                                }
+                            ),
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                console.warn(
+                    "[Kalxa Reel Analytics]",
+                    eventType,
+                    numericReelId,
+                    response.status
+                );
+
+
+                return false;
+
+            }
+
+
+            return true;
+
+
+        } catch (error) {
+
+            console.warn(
+                "[Kalxa Reel Analytics]",
+                eventType,
+                numericReelId,
+                error
+            );
+
+
+            return false;
+
+        }
+
+    }
+
+
+    /* =================================================
+       RECORD PUBLIC VIEW
+    ================================================= */
+
+    async function recordReelView(
+        reelId
+    ) {
+
+        const numericReelId =
+            Number(
+                reelId
+            );
+
+
+        if (
+            !Number.isInteger(
+                numericReelId
+            )
+            ||
+            numericReelId <= 0
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            trackedViews.has(
+                numericReelId
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        trackedViews.add(
+            numericReelId
+        );
+
+
+        /*
+         * Remember this browser/session has already
+         * viewed this reel.
+         *
+         * This matches the backend's anonymous-session
+         * deduplication.
+         */
+        const storageKey =
+            (
+                "kalxa_reel_viewed_"
+                +
+                analyticsSessionId
+                +
+                "_"
+                +
+                numericReelId
+            );
+
+
+        const alreadyViewed =
+            localStorage.getItem(
+                storageKey
+            )
+            === "true";
+
+
+        const success =
+            await trackReelEvent(
+                numericReelId,
+                "view_event"
+            );
+
+
+        if (!success) {
+
+            trackedViews.delete(
+                numericReelId
+            );
+
+
+            return;
+
+        }
+
+
+        /*
+         * Only increase the visible number locally when
+         * this browser has not already counted this reel.
+         *
+         * The database remains authoritative.
+         */
+        if (!alreadyViewed) {
+
+            const source =
+                document.querySelector(
+                    `[data-reel-id="${numericReelId}"]`
+                );
+
+
+            const currentCount =
+                Number(
+                    source?.dataset
+                        ?.reelViewCount
+                )
+                || 0;
+
+
+            updateReelViewDisplays(
+                numericReelId,
+                currentCount + 1
+            );
+
+
+            localStorage.setItem(
+                storageKey,
+                "true"
+            );
+
+        }
+
+    }
+
+
+    /* =================================================
+       PAUSE INLINE REELS
+    ================================================= */
+
     function pauseInline() {
 
         inlineVideos.forEach(
@@ -10883,6 +11592,10 @@ document
     }
 
 
+    /* =================================================
+       PLAY INLINE REEL
+    ================================================= */
+
     function playInline(
         video
     ) {
@@ -10894,7 +11607,9 @@ document
                 "open"
             )
         ) {
+
             return;
+
         }
 
 
@@ -10923,12 +11638,36 @@ document
 
         video
             .play()
+            .then(
+                () => {
+
+                    const card =
+                        video.closest(
+                            "[data-vibe-reel]"
+                        );
+
+
+                    if (card) {
+
+                        trackReelEvent(
+                            card.dataset.reelId,
+                            "play"
+                        );
+
+                    }
+
+                }
+            )
             .catch(
                 () => {}
             );
 
     }
 
+
+    /* =================================================
+       ACTIVATE FULLSCREEN REEL
+    ================================================= */
 
     function activateSlide(
         slide
@@ -10970,10 +11709,29 @@ document
             slide;
 
 
+        /*
+         * A view is counted when the reel becomes the
+         * active fullscreen reel.
+         */
+        recordReelView(
+            slide.dataset.reelId
+        );
+
+
         if (video) {
 
             video
                 .play()
+                .then(
+                    () => {
+
+                        trackReelEvent(
+                            slide.dataset.reelId,
+                            "play"
+                        );
+
+                    }
+                )
                 .catch(
                     () => {
 
@@ -10983,6 +11741,16 @@ document
 
                         video
                             .play()
+                            .then(
+                                () => {
+
+                                    trackReelEvent(
+                                        slide.dataset.reelId,
+                                        "play"
+                                    );
+
+                                }
+                            )
                             .catch(
                                 () => {}
                             );
@@ -10995,6 +11763,10 @@ document
     }
 
 
+    /* =================================================
+       OPEN FULLSCREEN REEL FEED
+    ================================================= */
+
     function openModal(
         card
     ) {
@@ -11004,7 +11776,9 @@ document
             ||
             !feed
         ) {
+
             return;
+
         }
 
 
@@ -11030,6 +11804,12 @@ document
 
 
         pauseInline();
+
+
+        trackReelEvent(
+            card.dataset.reelId,
+            "open"
+        );
 
 
         modal.classList.add(
@@ -11061,6 +11841,10 @@ document
 
     }
 
+
+    /* =================================================
+       CLOSE FULLSCREEN REEL FEED
+    ================================================= */
 
     function closeModal() {
 
@@ -11113,6 +11897,10 @@ document
     }
 
 
+    /* =================================================
+       INLINE CARD INTERACTION
+    ================================================= */
+
     cards.forEach(
         (card) => {
 
@@ -11139,6 +11927,7 @@ document
                 (event) => {
 
                     event.preventDefault();
+
                     event.stopPropagation();
 
 
@@ -11163,7 +11952,9 @@ document
                             ".vibe-card-event-link"
                         )
                     ) {
+
                         return;
+
                     }
 
 
@@ -11180,6 +11971,7 @@ document
                 (event) => {
 
                     event.preventDefault();
+
                     event.stopPropagation();
 
 
@@ -11223,6 +12015,10 @@ document
     );
 
 
+    /* =================================================
+       FULLSCREEN VIDEO INTERACTION
+    ================================================= */
+
     slides.forEach(
         (slide) => {
 
@@ -11236,6 +12032,14 @@ document
                 slide.querySelector(
                     ".vibe-modal-slide-sound"
                 );
+
+
+            let halfTracked =
+                false;
+
+
+            let completedTracked =
+                false;
 
 
             video?.addEventListener(
@@ -11261,11 +12065,87 @@ document
             );
 
 
+            video?.addEventListener(
+                "play",
+                () => {
+
+                    trackReelEvent(
+                        slide.dataset.reelId,
+                        "play"
+                    );
+
+                }
+            );
+
+
+            video?.addEventListener(
+                "timeupdate",
+                () => {
+
+                    if (
+                        !video.duration
+                        ||
+                        !Number.isFinite(
+                            video.duration
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const progress =
+                        video.currentTime
+                        /
+                        video.duration;
+
+
+                    if (
+                        progress >= .5
+                        &&
+                        !halfTracked
+                    ) {
+
+                        halfTracked =
+                            true;
+
+
+                        trackReelEvent(
+                            slide.dataset.reelId,
+                            "half_watched"
+                        );
+
+                    }
+
+
+                    if (
+                        progress >= .95
+                        &&
+                        !completedTracked
+                    ) {
+
+                        completedTracked =
+                            true;
+
+
+                        trackReelEvent(
+                            slide.dataset.reelId,
+                            "completed"
+                        );
+
+                    }
+
+                }
+            );
+
+
             sound?.addEventListener(
                 "click",
                 (event) => {
 
                     event.preventDefault();
+
                     event.stopPropagation();
 
 
@@ -11301,6 +12181,10 @@ document
     );
 
 
+    /* =================================================
+       FULLSCREEN SWIPE OBSERVER
+    ================================================= */
+
     if (
         feed
         &&
@@ -11316,7 +12200,9 @@ document
                             "open"
                         )
                     ) {
+
                         return;
+
                     }
 
 
@@ -11337,7 +12223,8 @@ document
                     if (
                         visible[0]
                         &&
-                        visible[0].intersectionRatio >= .70
+                        visible[0].intersectionRatio
+                        >= .70
                         &&
                         visible[0].target
                         !== activeSlide
@@ -11374,6 +12261,14 @@ document
     }
 
 
+    /* =================================================
+       INLINE IMPRESSION / AUTOPLAY OBSERVER
+    ================================================= */
+
+    const impressionTracked =
+        new Set();
+
+
     const inlineObserver =
         new IntersectionObserver(
             (entries) => {
@@ -11383,8 +12278,54 @@ document
                         "open"
                     )
                 ) {
+
                     return;
+
                 }
+
+
+                entries.forEach(
+                    (entry) => {
+
+                        if (
+                            !entry.isIntersecting
+                            ||
+                            entry.intersectionRatio < .65
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        const card =
+                            entry.target.closest(
+                                "[data-vibe-reel]"
+                            );
+
+
+                        if (
+                            card
+                            &&
+                            !impressionTracked.has(
+                                card.dataset.reelId
+                            )
+                        ) {
+
+                            impressionTracked.add(
+                                card.dataset.reelId
+                            );
+
+
+                            trackReelEvent(
+                                card.dataset.reelId,
+                                "impression"
+                            );
+
+                        }
+
+                    }
+                );
 
 
                 const visible =
@@ -11433,6 +12374,10 @@ document
     );
 
 
+    /* =================================================
+       CLOSE
+    ================================================= */
+
     closeButton?.addEventListener(
         "click",
         closeModal
@@ -11460,7 +12405,9 @@ document
 
 })();
 
-</script><!-- =====================================================
+</script>
+
+<!-- =====================================================
      RESTAURANT REELS
 ====================================================== --><script>
 
