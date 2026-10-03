@@ -13526,31 +13526,81 @@ def home():
 
 
     # ========================================================
-    # RESTAURANT REELS
+    # EVENT REEL PUBLIC VIEW COUNTS
     # ========================================================
     #
-    # EAT AROUND YOU
+    # A public reel "view" is currently defined as a unique
+    # PLAY analytics event.
     #
-    # IMPORTANT:
+    # EventReelAnalytics already has this database constraint:
     #
-    # Restaurant Reels are available on:
+    #     reel_id
+    #     anonymous_session_id
+    #     event_type
     #
-    #     FREE        YES
-    #     STANDARD    YES
-    #     PREMIUM     YES
+    # Therefore one anonymous session can only generate one
+    # "play" event for a particular reel.
     #
-    # Therefore this query must NOT use:
-    #
-    #     Organizer.subscription_status
-    #
-    # or:
-    #
-    #     Organizer.subscription_expires_at
-    #
-    # Those belong to the legacy Organizer/Event SaaS
-    # subscription.
-    #
-    # Restaurant Reel access belongs to RestaurantAdvert.
+    # We calculate all visible reel counts in ONE query rather
+    # than running one query for every reel.
+    # ========================================================
+
+    reel_view_counts = {}
+
+
+    if reels:
+
+        reel_ids = [
+
+            reel.id
+
+            for reel
+            in reels
+        ]
+
+
+        reel_view_rows = (
+            db.session.query(
+                EventReelAnalytics.reel_id,
+                db.func.count(
+                    EventReelAnalytics.id
+                ),
+            )
+
+            .filter(
+                EventReelAnalytics.reel_id.in_(
+                    reel_ids
+                ),
+
+                EventReelAnalytics.event_type
+                == "play",
+            )
+
+            .group_by(
+                EventReelAnalytics.reel_id
+            )
+
+            .all()
+        )
+
+
+        reel_view_counts = {
+
+            reel_id: int(
+                view_count
+                or 0
+            )
+
+            for (
+                reel_id,
+                view_count,
+            )
+            in reel_view_rows
+        }
+
+
+    # ========================================================
+    # RESTAURANT REELS
     # ========================================================
 
     restaurant_reels = (
@@ -14008,6 +14058,14 @@ def home():
             reels
         ),
 
+        # ====================================================
+        # EVENT REEL VIEW COUNTS
+        # ====================================================
+
+        reel_view_counts=(
+            reel_view_counts
+        ),
+
         restaurant_reels=(
             restaurant_reels
         ),
@@ -14030,6 +14088,96 @@ def home():
 
         firebase_push_configured=(
             firebase_web_push_configured()
+        ),
+    )
+
+
+@app.route(
+    "/event/<int:event_id>"
+)
+def event_page(
+    event_id,
+):
+
+    # ========================================================
+    # FIND PUBLIC EVENT
+    # ========================================================
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            active=True,
+            status="published",
+            organizer_deleted=False,
+        )
+        .first_or_404()
+    )
+
+
+    # ========================================================
+    # EVENT REEL VIEW COUNT
+    # ========================================================
+    #
+    # event.html is also used for the individual event page.
+    #
+    # Pass the same reel_view_counts structure used by the
+    # homepage so the template can safely use:
+    #
+    #     reel_view_counts.get(reel.id, 0)
+    #
+    # regardless of whether it is rendering the homepage or
+    # an individual event.
+    # ========================================================
+
+    reel_view_counts = {}
+
+
+    if (
+        event.reel
+        and event.reel.active
+    ):
+
+        view_count = (
+            db.session.query(
+                db.func.count(
+                    EventReelAnalytics.id
+                )
+            )
+
+            .filter(
+                EventReelAnalytics.reel_id
+                == event.reel.id,
+
+                EventReelAnalytics.event_type
+                == "play",
+            )
+
+            .scalar()
+            or 0
+        )
+
+
+        reel_view_counts[
+            event.reel.id
+        ] = int(
+            view_count
+        )
+
+
+    # ========================================================
+    # RENDER EVENT
+    # ========================================================
+
+    return render_template(
+        "event.html",
+
+        event=event,
+
+        events=None,
+
+        reel_view_counts=(
+            reel_view_counts
         ),
     )
 # ============================================================
@@ -23373,30 +23521,7 @@ def admin_logout():
 # EVENT PAGE
 # ============================================================
 
-@app.route(
-    "/event/<int:event_id>"
-)
-def event_page(
-    event_id,
-):
 
-    event = (
-        TicketEvent.query
-        .filter_by(
-            id=event_id,
-            active=True,
-            status="published",
-            organizer_deleted=False,
-        )
-        .first_or_404()
-    )
-
-
-    return render_template(
-        "event.html",
-        event=event,
-        events=None,
-    )
 
 # ============================================================
 # PUBLIC RESTAURANT PAGE
