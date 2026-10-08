@@ -20,6 +20,12 @@ import urllib.request
 import requests
 import smtplib
 import qrcode
+from services.yoco_service import (
+    yoco_is_configured,
+    create_organizer_subscription_checkout,
+    create_restaurant_subscription_checkout,
+    YocoError,
+)
 from email.message import EmailMessage
 from datetime import datetime, timedelta, date, timezone
 from decimal import Decimal, InvalidOperation, ROUND_UP
@@ -29877,31 +29883,54 @@ def admin_subscription():
 # ORGANIZER - PAY SUBSCRIPTION WITH PAYSTACK
 # ============================================================
 
+# ============================================================
+# YOCO — ORGANIZER SUBSCRIPTION CHECKOUT
+# ============================================================
+#
+# PAYMENT FLOW
+# ------------------------------------------------------------
+# Organizer selects subscription
+#       ↓
+# Validate organizer account
+#       ↓
+# Create/reuse pending payment
+#       ↓
+# Create Yoco checkout
+#       ↓
+# Store checkout ID and URL
+#       ↓
+# Redirect organizer to Yoco
+#
+# IMPORTANT:
+# Subscription is NOT activated here.
+# Activation happens after verified payment in Stage 1D.
+# ============================================================
+
+
 @app.route(
     "/admin/subscription/request",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
 def admin_request_subscription_payment():
 
-    auth = (
-        require_ticketing_organizer()
-    )
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
 
+    auth = require_ticketing_organizer()
 
     if auth:
-
         return auth
 
+    organizer = get_current_organizer()
 
-    organizer = (
-        get_current_organizer()
-    )
-
+    if not organizer:
+        return redirect(
+            url_for("organizer_login")
+        )
 
     # ========================================================
-    # ACCOUNT-SPECIFIC SUBSCRIPTION PRICE
+    # ACCOUNT TYPE
     # ========================================================
 
     account_type = (
@@ -29911,76 +29940,81 @@ def admin_request_subscription_payment():
             None,
         )
         or "event"
-    )
+    ).strip().lower()
 
+    # ========================================================
+    # SUBSCRIPTION PRICE
+    # ========================================================
 
-    if (
-        account_type
-        == "restaurant"
-    ):
+    if account_type == "restaurant":
 
-        subscription_price = (
-            KALXA_RESTAURANT_SUBSCRIPTION_PRICE
+        subscription_price = Decimal(
+            str(
+                KALXA_RESTAURANT_SUBSCRIPTION_PRICE
+            )
         )
 
     else:
 
-        subscription_price = (
-            KALXA_SUBSCRIPTION_PRICE
+        subscription_price = Decimal(
+            str(
+                KALXA_SUBSCRIPTION_PRICE
+            )
         )
 
-
     # ========================================================
-    # SUSPENSION CHECK
+    # ACCOUNT SUSPENSION
+    # ========================================================
+    #
+    # Do not use organizer.is_suspended here because it also
+    # considers an inactive subscription suspended.
+    #
+    # New organizers must be able to pay for their first
+    # subscription.
     # ========================================================
 
-    if organizer.is_suspended:
+    if organizer.subscription_status == "suspended":
 
         flash(
             (
-                "Your organizer account is suspended. "
-                "Contact Kalxa before renewing."
+                "Your Kalxa account is suspended. "
+                "Contact support for assistance."
             ),
             "error",
         )
 
         return redirect(
-            url_for(
-                "admin_subscription"
-            )
+            url_for("admin_subscription")
         )
 
-
     # ========================================================
-    # PAYSTACK CONFIGURATION
+    # YOCO CONFIGURATION
     # ========================================================
 
-    if not paystack_is_configured():
+    if not yoco_is_configured():
 
         flash(
-            "Paystack is not configured on Kalxa yet.",
+            (
+                "Yoco payments are not configured "
+                "on Kalxa yet."
+            ),
             "error",
         )
 
         return redirect(
-            url_for(
-                "admin_subscription"
-            )
+            url_for("admin_subscription")
         )
 
-
     # ========================================================
-    # EXISTING PENDING PAYMENT
+    # FIND EXISTING PENDING PAYMENT
     # ========================================================
 
     payment = (
         SubscriptionPayment.query
         .filter_by(
-            organizer_id=
-                organizer.id,
-
-            payment_status=
-                "pending",
+            organizer_id=organizer.id,
+            payment_status="pending",
+            payment_method="yoco",
         )
         .order_by(
             SubscriptionPayment.created_at.desc()
@@ -29988,315 +30022,146 @@ def admin_request_subscription_payment():
         .first()
     )
 
-
     # ========================================================
-    # IMPORTANT:
-    #
-    # If an old pending payment exists with a different price,
-    # do not reuse it.
-    #
-    # Example:
-    #
-    # Restaurant previously had a pending R199 payment,
-    # but restaurant pricing is now R219.
-    #
-    # That old checkout must not be reused.
+    # CANCEL OUTDATED PENDING PAYMENT
     # ========================================================
 
-    if (
-        payment
-        and
-        Decimal(
-            str(
-                payment.amount
-            )
-        )
-        !=
-        Decimal(
-            str(
-                subscription_price
-            )
-        )
-    ):
+    if payment:
 
-        payment.payment_status = (
-            "cancelled"
+        existing_amount = Decimal(
+            str(payment.amount)
         )
 
+        if existing_amount != subscription_price:
 
-        try:
+            payment.payment_status = "cancelled"
 
             db.session.commit()
 
-
-        except Exception as error:
-
-            db.session.rollback()
-
-            current_app.logger.exception(
-                (
-                    "[Subscription Paystack] "
-                    "Failed to cancel outdated pending payment "
-                    "organizer_id=%s payment_id=%s error=%s"
-                ),
-                organizer.id,
-                payment.id,
-                error,
-            )
-
-
-            flash(
-                (
-                    "Unable to update your subscription payment. "
-                    "Please try again."
-                ),
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_subscription"
-                )
-            )
-
-
-        payment = None
-
+            payment = None
 
     # ========================================================
-    # REUSE VALID PENDING PAYSTACK CHECKOUT
+    # REUSE EXISTING YOCO CHECKOUT
+    # ========================================================
+    #
+    # This reuses a checkout URL already stored for a pending
+    # payment. Checkout expiry validation will be added in
+    # Stage 1D/reconciliation.
     # ========================================================
 
     if (
         payment
-        and payment.paystack_authorization_url
+        and payment.yoco_checkout_url
     ):
 
         return redirect(
-            payment.paystack_authorization_url
+            payment.yoco_checkout_url
         )
 
-
     # ========================================================
-    # CREATE SUBSCRIPTION PAYMENT
+    # CREATE NEW SUBSCRIPTION PAYMENT
     # ========================================================
 
     if not payment:
 
         payment = SubscriptionPayment(
 
-            organizer_id=
-                organizer.id,
+            organizer_id=organizer.id,
 
-            plan_name=
-                KALXA_SUBSCRIPTION_PLAN_NAME,
+            plan_name=KALXA_SUBSCRIPTION_PLAN_NAME,
 
-            amount=
-                subscription_price,
+            amount=subscription_price,
 
-            period_days=
-                KALXA_SUBSCRIPTION_PERIOD_DAYS,
+            period_days=KALXA_SUBSCRIPTION_PERIOD_DAYS,
 
-            payment_reference=
-                generate_subscription_payment_reference(),
+            payment_reference=(
+                generate_subscription_payment_reference()
+            ),
 
-            payment_method=
-                "paystack",
+            payment_method="yoco",
 
-            payment_status=
-                "pending",
+            payment_status="pending",
         )
-
 
         try:
 
-            db.session.add(
-                payment
-            )
+            db.session.add(payment)
 
             db.session.commit()
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
 
             current_app.logger.exception(
                 (
-                    "[Subscription Paystack] "
-                    "Failed to create payment record "
-                    "organizer_id=%s error=%s"
+                    "[Yoco] Failed to create organizer "
+                    "subscription payment organizer_id=%s"
                 ),
                 organizer.id,
-                error,
             )
 
             flash(
                 (
-                    "Unable to start subscription payment. "
-                    "Please try again."
+                    "Could not prepare your subscription "
+                    "payment. Please try again."
                 ),
                 "error",
             )
 
             return redirect(
-                url_for(
-                    "admin_subscription"
-                )
+                url_for("admin_subscription")
             )
 
-
     # ========================================================
-    # PAYSTACK CALLBACK
+    # REDIRECT URLS
     # ========================================================
 
-    callback_url = url_for(
-        "paystack_subscription_callback",
-        _external=
-            True,
-        _scheme=
-            "https",
+    success_url = url_for(
+        "yoco_subscription_return",
+        reference=payment.payment_reference,
+        _external=True,
+        _scheme="https",
     )
 
+    cancel_url = url_for(
+        "admin_subscription",
+        _external=True,
+        _scheme="https",
+    )
 
     # ========================================================
-    # PAYSTACK PAYLOAD
-    # ========================================================
-
-    payload = {
-
-        "email":
-            organizer.email,
-
-        "amount":
-            str(
-                int(
-                    (
-                        Decimal(
-                            str(
-                                payment.amount
-                            )
-                        )
-                        * 100
-                    )
-                    .quantize(
-                        Decimal("1"),
-                        rounding=
-                            ROUND_UP,
-                    )
-                )
-            ),
-
-        "currency":
-            "ZAR",
-
-        "reference":
-            payment.payment_reference,
-
-        "callback_url":
-            callback_url,
-
-        # Use Kalxa's main Paystack merchant account.
-        # No organizer subaccount is supplied here.
-
-        "channels": [
-            "eft",
-            "capitec_pay",
-        ],
-
-        "metadata":
-            json.dumps(
-                {
-
-                    "payment_type":
-                        "kalxa_subscription",
-
-                    "subscription_payment_id":
-                        payment.id,
-
-                    "organizer_id":
-                        organizer.id,
-
-                    "account_type":
-                        account_type,
-
-                    "plan_name":
-                        payment.plan_name,
-
-                    "period_days":
-                        payment.period_days,
-
-                    "subscription_amount":
-                        str(
-                            payment.amount
-                        ),
-                }
-            ),
-    }
-
-
-    # ========================================================
-    # INITIALIZE PAYSTACK CHECKOUT
+    # CREATE YOCO CHECKOUT
     # ========================================================
 
     try:
 
-        result = (
-            paystack_api_request(
-                "POST",
-                "/transaction/initialize",
-                payload,
-            )
+        checkout = create_organizer_subscription_checkout(
+            payment=payment,
+            organizer=organizer,
+            success_url=success_url,
+            cancel_url=cancel_url,
         )
 
-
-        data = (
-            result.get(
-                "data"
-            )
-            or {}
+        payment.yoco_checkout_id = (
+            checkout["checkout_id"]
         )
 
-
-        authorization_url = (
-            data.get(
-                "authorization_url"
-            )
+        payment.yoco_checkout_url = (
+            checkout["checkout_url"]
         )
 
-
-        if not authorization_url:
-
-            raise RuntimeError(
-                "Paystack did not return a subscription checkout URL."
-            )
-
-
-        payment.paystack_access_code = (
-            data.get(
-                "access_code"
-            )
-            or None
-        )
-
-
-        payment.paystack_authorization_url = (
-            authorization_url
-        )
-
+        payment.yoco_payment_status = "pending"
 
         db.session.commit()
 
-
-    except Exception as error:
+    except YocoError as error:
 
         db.session.rollback()
 
-        current_app.logger.exception(
+        current_app.logger.warning(
             (
-                "[Subscription Paystack] "
-                "Checkout initialization failed "
+                "[Yoco] Organizer checkout failed "
                 "organizer_id=%s payment_id=%s error=%s"
             ),
             organizer.id,
@@ -30306,38 +30171,69 @@ def admin_request_subscription_payment():
 
         flash(
             (
-                "Secure Paystack checkout could not be started. "
+                "Unable to start Yoco checkout. "
                 "Please try again."
             ),
             "error",
         )
 
         return redirect(
-            url_for(
-                "admin_subscription"
-            )
+            url_for("admin_subscription")
         )
 
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Yoco] Unexpected organizer "
+                "checkout error organizer_id=%s"
+            ),
+            organizer.id,
+        )
+
+        flash(
+            (
+                "Something went wrong while starting "
+                "your subscription payment."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_subscription")
+        )
 
     # ========================================================
-    # REDIRECT TO PAYSTACK
+    # REDIRECT TO YOCO
     # ========================================================
 
     return redirect(
-        authorization_url
+        checkout["checkout_url"]
     )
-    
-    
-    
 # ============================================================
 # RESTAURANT SUBSCRIPTION CHECKOUT
 # ============================================================
 
+# ============================================================
+# YOCO — RESTAURANT SUBSCRIPTION CHECKOUT
+# ============================================================
+#
+# Supported:
+#
+# Standard — R219
+# Premium  — R299
+#
+# Free plans do not require payment.
+#
+# Subscription activation occurs only after verified payment.
+# ============================================================
+
+
 @app.route(
     "/admin/restaurants/<int:advert_id>/subscription/checkout/<plan_tier>",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
 def admin_restaurant_subscription_checkout(
     advert_id,
@@ -30348,32 +30244,20 @@ def admin_restaurant_subscription_checkout(
     # AUTHENTICATION
     # ========================================================
 
-    auth = (
-        require_ticketing_organizer()
-    )
-
+    auth = require_ticketing_organizer()
 
     if auth:
-
         return auth
 
-
-    organizer = (
-        get_current_organizer()
-    )
-
+    organizer = get_current_organizer()
 
     if not organizer:
-
         return redirect(
-            url_for(
-                "organizer_login"
-            )
+            url_for("organizer_login")
         )
 
-
     # ========================================================
-    # RESTAURANT ACCOUNT ONLY
+    # ACCOUNT TYPE
     # ========================================================
 
     account_type = (
@@ -30383,13 +30267,14 @@ def admin_restaurant_subscription_checkout(
             None,
         )
         or "event"
-    )
-
+    ).strip().lower()
 
     if account_type != "restaurant":
-
         abort(403)
 
+    # ========================================================
+    # ORGANIZER ACCOUNT STATUS
+    # ========================================================
 
     if not organizer.active:
 
@@ -30399,14 +30284,22 @@ def admin_restaurant_subscription_checkout(
         )
 
         return redirect(
-            url_for(
-                "admin_dashboard"
-            )
+            url_for("admin_dashboard")
         )
 
+    if organizer.subscription_status == "suspended":
+
+        flash(
+            "Your Kalxa account is suspended.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
 
     # ========================================================
-    # RESTAURANT
+    # LOAD RESTAURANT
     # ========================================================
 
     advert = (
@@ -30418,28 +30311,16 @@ def admin_restaurant_subscription_checkout(
         .first_or_404()
     )
 
-
     # ========================================================
-    # SYNCHRONIZE EXISTING PLAN
+    # SYNC EXPIRED SUBSCRIPTION
     # ========================================================
 
     sync_restaurant_subscription(
         advert
     )
 
-
     # ========================================================
-    # VALIDATE REQUESTED PLAN
-    # ========================================================
-    #
-    # Never accept the price from HTML.
-    #
-    # The browser only supplies:
-    #
-    #     standard
-    #     premium
-    #
-    # Price comes from server-side constants.
+    # VALIDATE PLAN
     # ========================================================
 
     requested_plan = (
@@ -30447,45 +30328,32 @@ def admin_restaurant_subscription_checkout(
         or ""
     ).strip().lower()
 
-
     if requested_plan not in RESTAURANT_PAYABLE_PLANS:
-
         abort(400)
 
+    plan_config = RESTAURANT_PAYABLE_PLANS[
+        requested_plan
+    ]
 
-    plan_config = (
-        RESTAURANT_PAYABLE_PLANS[
-            requested_plan
-        ]
-    )
+    plan_name = plan_config["name"]
 
-
-    plan_name = (
-        plan_config[
-            "name"
-        ]
-    )
-
-
-    plan_price = (
-        Decimal(
-            str(
-                plan_config[
-                    "price"
-                ]
-            )
+    plan_price = Decimal(
+        str(
+            plan_config["price"]
         )
     )
 
-
     # ========================================================
-    # PAYSTACK CONFIGURATION
+    # YOCO CONFIGURATION
     # ========================================================
 
-    if not paystack_is_configured():
+    if not yoco_is_configured():
 
         flash(
-            "Paystack is not configured on Kalxa yet.",
+            (
+                "Yoco payments are not configured "
+                "on Kalxa yet."
+            ),
             "error",
         )
 
@@ -30495,7 +30363,6 @@ def admin_restaurant_subscription_checkout(
                 advert_id=advert.id,
             )
         )
-
 
     # ========================================================
     # FIND EXISTING PENDING PAYMENT
@@ -30508,6 +30375,7 @@ def admin_restaurant_subscription_checkout(
             organizer_id=organizer.id,
             plan_tier=requested_plan,
             payment_status="pending",
+            payment_method="yoco",
         )
         .order_by(
             RestaurantSubscriptionPayment.created_at.desc()
@@ -30515,164 +30383,96 @@ def admin_restaurant_subscription_checkout(
         .first()
     )
 
-
     # ========================================================
-    # CANCEL OUTDATED PENDING PAYMENT
+    # CANCEL OUTDATED PAYMENT
     # ========================================================
 
     if payment:
 
-        existing_amount = (
-            Decimal(
-                str(
-                    payment.amount
-                )
-            )
+        existing_amount = Decimal(
+            str(payment.amount)
         )
-
 
         if existing_amount != plan_price:
 
-            payment.payment_status = (
-                "cancelled"
-            )
+            payment.payment_status = "cancelled"
 
-
-            try:
-
-                db.session.commit()
-
-
-            except Exception as error:
-
-                db.session.rollback()
-
-                current_app.logger.exception(
-                    (
-                        "[Restaurant Subscription] "
-                        "Unable to cancel outdated checkout "
-                        "restaurant_id=%s "
-                        "payment_id=%s "
-                        "error=%s"
-                    ),
-                    advert.id,
-                    payment.id,
-                    error,
-                )
-
-
-                flash(
-                    (
-                        "Unable to update your restaurant "
-                        "subscription checkout."
-                    ),
-                    "error",
-                )
-
-
-                return redirect(
-                    url_for(
-                        "admin_manage_restaurant",
-                        advert_id=advert.id,
-                    )
-                )
-
+            db.session.commit()
 
             payment = None
 
-
     # ========================================================
-    # REUSE EXISTING PAYSTACK CHECKOUT
+    # REUSE PENDING CHECKOUT
     # ========================================================
 
     if (
         payment
-        and
-        payment.paystack_authorization_url
+        and payment.yoco_checkout_url
     ):
 
         return redirect(
-            payment.paystack_authorization_url
+            payment.yoco_checkout_url
         )
 
-
     # ========================================================
-    # CREATE PAYMENT RECORD
+    # CREATE RESTAURANT SUBSCRIPTION PAYMENT
     # ========================================================
 
     if not payment:
 
-        payment = (
-            RestaurantSubscriptionPayment(
+        payment = RestaurantSubscriptionPayment(
 
-                restaurant_advert_id=
-                    advert.id,
+            restaurant_advert_id=advert.id,
 
-                organizer_id=
-                    organizer.id,
+            organizer_id=organizer.id,
 
-                plan_tier=
-                    requested_plan,
+            plan_tier=requested_plan,
 
-                plan_name=
-                    plan_name,
+            plan_name=plan_name,
 
-                amount=
-                    plan_price,
+            amount=plan_price,
 
-                currency=
-                    "ZAR",
+            currency="ZAR",
 
-                period_days=
-                    RESTAURANT_SUBSCRIPTION_PERIOD_DAYS,
+            period_days=(
+                RESTAURANT_SUBSCRIPTION_PERIOD_DAYS
+            ),
 
-                payment_reference=
-                    generate_restaurant_subscription_payment_reference(),
+            payment_reference=(
+                generate_restaurant_subscription_payment_reference()
+            ),
 
-                payment_method=
-                    "paystack",
+            payment_method="yoco",
 
-                payment_status=
-                    "pending",
-            )
+            payment_status="pending",
         )
-
 
         try:
 
-            db.session.add(
-                payment
-            )
+            db.session.add(payment)
 
             db.session.commit()
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
 
             current_app.logger.exception(
                 (
-                    "[Restaurant Subscription] "
-                    "Unable to create payment "
-                    "restaurant_id=%s "
-                    "plan=%s "
-                    "error=%s"
+                    "[Yoco] Failed to create restaurant "
+                    "payment advert_id=%s organizer_id=%s"
                 ),
                 advert.id,
-                requested_plan,
-                error,
+                organizer.id,
             )
-
 
             flash(
                 (
-                    "Unable to start restaurant "
+                    "Could not prepare your restaurant "
                     "subscription payment."
                 ),
                 "error",
             )
-
 
             return redirect(
                 url_for(
@@ -30681,21 +30481,16 @@ def admin_restaurant_subscription_checkout(
                 )
             )
 
-
     # ========================================================
-    # CALLBACK
+    # REDIRECT URLS
     # ========================================================
 
-    callback_url = url_for(
-        "paystack_restaurant_subscription_callback",
+    success_url = url_for(
+        "yoco_restaurant_subscription_return",
+        reference=payment.payment_reference,
         _external=True,
         _scheme="https",
     )
-
-
-    # ========================================================
-    # CANCEL URL
-    # ========================================================
 
     cancel_url = url_for(
         "admin_manage_restaurant",
@@ -30704,180 +30499,53 @@ def admin_restaurant_subscription_checkout(
         _scheme="https",
     )
 
-
     # ========================================================
-    # PAYSTACK AMOUNT
-    # ========================================================
-
-    amount_cents = int(
-        (
-            plan_price
-            * 100
-        )
-        .quantize(
-            Decimal("1"),
-            rounding=ROUND_UP,
-        )
-    )
-
-
-    # ========================================================
-    # PAYSTACK PAYLOAD
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # There is NO restaurant subaccount here.
-    #
-    # Restaurant subscriptions are payments from the
-    # restaurant TO Kalxa.
-    # ========================================================
-
-    payload = {
-
-        "email":
-            organizer.email,
-
-        "amount":
-            str(
-                amount_cents
-            ),
-
-        "currency":
-            "ZAR",
-
-        "reference":
-            payment.payment_reference,
-
-        "callback_url":
-            callback_url,
-
-        "channels": [
-            "eft",
-            "capitec_pay",
-        ],
-
-        "metadata":
-            json.dumps(
-                {
-
-                    "payment_type":
-                        "restaurant_subscription",
-
-                    "restaurant_subscription_payment_id":
-                        payment.id,
-
-                    "restaurant_advert_id":
-                        advert.id,
-
-                    "organizer_id":
-                        organizer.id,
-
-                    "restaurant_plan":
-                        requested_plan,
-
-                    "plan_name":
-                        plan_name,
-
-                    "amount":
-                        str(
-                            plan_price
-                        ),
-
-                    "period_days":
-                        RESTAURANT_SUBSCRIPTION_PERIOD_DAYS,
-
-                    "cancel_action":
-                        cancel_url,
-                }
-            ),
-    }
-
-
-    # ========================================================
-    # INITIALIZE PAYSTACK
+    # CREATE YOCO CHECKOUT
     # ========================================================
 
     try:
 
-        result = (
-            paystack_api_request(
-                "POST",
-                "/transaction/initialize",
-                payload,
-            )
+        checkout = create_restaurant_subscription_checkout(
+            payment=payment,
+            advert=advert,
+            organizer=organizer,
+            success_url=success_url,
+            cancel_url=cancel_url,
         )
 
-
-        data = (
-            result.get(
-                "data"
-            )
-            or {}
+        payment.yoco_checkout_id = (
+            checkout["checkout_id"]
         )
 
-
-        authorization_url = (
-            data.get(
-                "authorization_url"
-            )
+        payment.yoco_checkout_url = (
+            checkout["checkout_url"]
         )
 
-
-        if not authorization_url:
-
-            raise RuntimeError(
-                (
-                    "Paystack did not return "
-                    "a checkout URL."
-                )
-            )
-
-
-        payment.paystack_access_code = (
-            data.get(
-                "access_code"
-            )
-            or None
-        )
-
-
-        payment.paystack_authorization_url = (
-            authorization_url
-        )
-
+        payment.yoco_payment_status = "pending"
 
         db.session.commit()
 
-
-    except Exception as error:
+    except YocoError as error:
 
         db.session.rollback()
 
-        current_app.logger.exception(
+        current_app.logger.warning(
             (
-                "[Restaurant Subscription] "
-                "Paystack initialization failed "
-                "restaurant_id=%s "
-                "payment_id=%s "
-                "plan=%s "
-                "error=%s"
+                "[Yoco] Restaurant checkout failed "
+                "advert_id=%s payment_id=%s error=%s"
             ),
             advert.id,
             payment.id,
-            requested_plan,
             error,
         )
 
-
         flash(
             (
-                "Secure Paystack checkout could not "
-                "be started. Please try again."
+                "Unable to start Yoco checkout. "
+                "Please try again."
             ),
             "error",
         )
-
 
         return redirect(
             url_for(
@@ -30886,15 +30554,176 @@ def admin_restaurant_subscription_checkout(
             )
         )
 
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Yoco] Unexpected restaurant "
+                "checkout error advert_id=%s"
+            ),
+            advert.id,
+        )
+
+        flash(
+            (
+                "Something went wrong while starting "
+                "your restaurant payment."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "admin_manage_restaurant",
+                advert_id=advert.id,
+            )
+        )
 
     # ========================================================
-    # REDIRECT TO PAYSTACK
+    # REDIRECT TO YOCO
     # ========================================================
 
     return redirect(
-        authorization_url
-    )  
+        checkout["checkout_url"]
+    )
     
+    
+ 
+# ============================================================
+# YOCO — ORGANIZER SUBSCRIPTION RETURN
+# ============================================================
+
+@app.route(
+    "/payments/yoco/subscription/return",
+    methods=["GET"],
+)
+def yoco_subscription_return():
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if not organizer:
+        return redirect(
+            url_for("organizer_login")
+        )
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+    if not reference:
+        abort(400)
+
+    payment = (
+        SubscriptionPayment.query
+        .filter_by(
+            payment_reference=reference,
+            organizer_id=organizer.id,
+            payment_method="yoco",
+        )
+        .first_or_404()
+    )
+
+    if payment.payment_status == "paid":
+
+        flash(
+            "Your Kalxa subscription is active.",
+            "success",
+        )
+
+    else:
+
+        flash(
+            (
+                "Your payment is being confirmed. "
+                "Please refresh your subscription page shortly."
+            ),
+            "info",
+        )
+
+    return redirect(
+        url_for("admin_subscription")
+    )
+    
+# ============================================================
+# YOCO — RESTAURANT SUBSCRIPTION RETURN
+# ============================================================
+
+@app.route(
+    "/payments/yoco/restaurant-subscription/return",
+    methods=["GET"],
+)
+def yoco_restaurant_subscription_return():
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if not organizer:
+        return redirect(
+            url_for("organizer_login")
+        )
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+    if not reference:
+        abort(400)
+
+    payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            payment_reference=reference,
+            organizer_id=organizer.id,
+            payment_method="yoco",
+        )
+        .first_or_404()
+    )
+
+    if payment.payment_status == "paid":
+
+        flash(
+            (
+                f"{payment.plan_name} payment confirmed. "
+                "Your restaurant subscription is active."
+            ),
+            "success",
+        )
+
+    else:
+
+        flash(
+            (
+                "Your restaurant payment is being verified. "
+                "Your plan will activate after confirmation."
+            ),
+            "info",
+        )
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+            advert_id=payment.restaurant_advert_id,
+        )
+    )
 # ============================================================
 # RESTAURANT SUBSCRIPTION PAYSTACK CALLBACK
 # ============================================================
