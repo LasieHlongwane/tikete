@@ -634,6 +634,35 @@ class SubscriptionPayment(db.Model):
         index=True,
     )
 
+    
+# ========================================================
+# YOCO PAYMENT INTEGRATION
+# ========================================================
+
+    yoco_checkout_id = db.Column(
+        db.String(150),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    yoco_checkout_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    yoco_payment_id = db.Column(
+        db.String(150),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    yoco_payment_status = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
+    )
 
     # ========================================================
     # CONFIRMATION / SUBSCRIPTION PERIOD
@@ -950,6 +979,36 @@ class RestaurantSubscriptionPayment(db.Model):
         nullable=False,
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
+    )
+
+
+    # ========================================================
+# YOCO RESTAURANT SUBSCRIPTION PAYMENTS
+# ========================================================
+
+    yoco_checkout_id = db.Column(
+        db.String(150),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    yoco_checkout_url = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    yoco_payment_id = db.Column(
+        db.String(150),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    yoco_payment_status = db.Column(
+        db.String(30),
+        nullable=True,
+        index=True,
     )
 
 
