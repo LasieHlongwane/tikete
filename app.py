@@ -21226,53 +21226,42 @@ def admin_resume_restaurant(
 # STAGE 1D - YOCO SUBSCRIPTION WEBHOOK
 # ============================================================
 
-@app.route(
-    "/webhooks/yoco",
-    methods=["POST"],
-)
+@app.route("/webhooks/yoco", methods=["POST"])
 def yoco_webhook():
+    raw_body = request.get_data(cache=False)
 
-    # ========================================================
-    # RAW REQUEST BODY
-    # ========================================================
-
-    raw_body = request.get_data(
-        cache=False
+    current_app.logger.info(
+        "[Yoco] Webhook request received."
     )
 
-    # ========================================================
-    # VERIFY YOCO SIGNATURE
-    # ========================================================
-
     try:
-
         event = verify_yoco_webhook(
             raw_body,
             request.headers,
         )
 
-    except YocoWebhookError:
-
+    except YocoWebhookError as exc:
         current_app.logger.warning(
-            "[Yoco] Invalid webhook signature or payload."
+            "[Yoco] Webhook verification failed: %s",
+            str(exc),
         )
-
         return jsonify({
             "error": "Invalid webhook"
         }), 400
 
-    # ========================================================
-    # PROCESS SUBSCRIPTION PAYMENT
-    # ========================================================
+    event_type = event.get("type", "unknown")
+
+    current_app.logger.info(
+        "[Yoco] Verified webhook event type: %s",
+        event_type,
+    )
 
     try:
-
         result = process_yoco_subscription_payment(
             event
         )
 
     except Exception:
-
         db.session.rollback()
 
         current_app.logger.exception(
@@ -21283,14 +21272,14 @@ def yoco_webhook():
             "error": "Processing failed"
         }), 500
 
-    # ========================================================
-    # VALIDATION RESULTS
-    # ========================================================
+    current_app.logger.info(
+        "[Yoco] Webhook processing result: %s",
+        result,
+    )
 
     if result in ("invalid", "unmatched"):
-
         current_app.logger.warning(
-            "[Yoco] Subscription payment rejected: %s",
+            "[Yoco] Payment event rejected: %s",
             result,
         )
 
@@ -21298,14 +21287,12 @@ def yoco_webhook():
             "result": result
         }), 422
 
-    # ========================================================
-    # SUCCESS / DUPLICATE / IGNORED
-    # ========================================================
-
     return jsonify({
         "received": True,
         "result": result,
     }), 200
+
+
 
 # ============================================================
 # RESTAURANT REEL
