@@ -1302,6 +1302,158 @@ def process_yoco_subscription_payment(event):
 
 
 
+def reconcile_yoco_restaurant_subscription(payment_id):
+    """
+    Recover an existing restaurant subscription payment
+    by retrieving its checkout directly from Yoco.
+
+    Only call this from trusted server-side code.
+
+    Returns:
+        activated
+        already_processed
+        pending
+        invalid
+    """
+
+    payment = db.session.get(
+        RestaurantSubscriptionPayment,
+        payment_id,
+    )
+
+    if payment is None:
+        return "invalid"
+
+    if payment.payment_method != "yoco":
+        return "invalid"
+
+    if payment.payment_status == "paid":
+        return "already_processed"
+
+    if payment.payment_status != "pending":
+        return "invalid"
+
+    checkout_id = payment.yoco_checkout_id
+
+    if not checkout_id:
+        return "invalid"
+
+    # Fetch payment details from Yoco directly.
+    checkout = get_yoco_checkout(checkout_id)
+
+    if checkout.get("id") != checkout_id:
+        return "invalid"
+
+    if checkout.get("status") != "completed":
+        return "pending"
+
+    if checkout.get("currency") != "ZAR":
+        return "invalid"
+
+    if checkout.get("processingMode") != "test":
+        # This recovery is intentionally test-only.
+        return "invalid"
+
+    amount_cents = checkout.get("amount")
+
+    if (
+        isinstance(amount_cents, bool)
+        or not isinstance(amount_cents, int)
+        or amount_cents != _yoco_amount_in_cents(
+            payment.amount
+        )
+    ):
+        return "invalid"
+
+    yoco_payment_id = str(
+        checkout.get("paymentId") or ""
+    ).strip()
+
+    if not yoco_payment_id:
+        return "invalid"
+
+    metadata = checkout.get("metadata")
+
+    if not isinstance(metadata, dict):
+        return "invalid"
+
+    if metadata.get("payment_type") != "restaurant_subscription":
+        return "invalid"
+
+    def same_id(value, expected):
+        return (
+            not isinstance(value, bool)
+            and str(value) == str(expected)
+        )
+
+    if not same_id(
+        metadata.get("restaurant_subscription_payment_id"),
+        payment.id,
+    ):
+        return "invalid"
+
+    if not same_id(
+        metadata.get("restaurant_advert_id"),
+        payment.restaurant_advert_id,
+    ):
+        return "invalid"
+
+    if not same_id(
+        metadata.get("organizer_id"),
+        payment.organizer_id,
+    ):
+        return "invalid"
+
+    if metadata.get("plan_tier") != payment.plan_tier:
+        return "invalid"
+
+    if metadata.get(
+        "kalxa_payment_reference"
+    ) != payment.payment_reference:
+        return "invalid"
+
+    if not same_id(
+        metadata.get("period_days"),
+        payment.period_days,
+    ):
+        return "invalid"
+
+    # Reuse the existing activation processor.
+    #
+    # IMPORTANT:
+    # This event is constructed only after the server
+    # has fetched and validated Yoco's authenticated
+    # checkout response. Never accept this structure
+    # from a browser or unverified HTTP request.
+
+    verified_event = {
+        "type": "payment.succeeded",
+        "payload": {
+            "id": yoco_payment_id,
+            "checkoutId": checkout_id,
+            "status": "succeeded",
+            "currency": "ZAR",
+            "amount": amount_cents,
+            "metadata": metadata,
+        },
+    }
+
+    result = process_yoco_subscription_payment(
+        verified_event
+    )
+
+    if result == "activated":
+        updated = db.session.get(
+            RestaurantSubscriptionPayment,
+            payment_id,
+        )
+
+        if updated is not None:
+            updated.confirmed_by = "yoco_reconciliation"
+            db.session.commit()
+
+    return result
+
 
 def allowed_event_reel_filename(filename):
 
@@ -24997,6 +25149,106 @@ def restaurant_page(
         source_session_id=(
             source_session_id
         ),
+    )
+
+
+
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/subscription/reconcile/<int:payment_id>",
+    methods=["POST"],
+)
+def admin_reconcile_yoco_restaurant_subscription(
+    advert_id,
+    payment_id,
+):
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if organizer is None:
+        return redirect(
+            url_for("organizer_login")
+        )
+
+    payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            id=payment_id,
+            restaurant_advert_id=advert_id,
+            organizer_id=organizer.id,
+            payment_method="yoco",
+        )
+        .first_or_404()
+    )
+
+    try:
+        result = reconcile_yoco_restaurant_subscription(
+            payment.id
+        )
+
+    except YocoAPIError:
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Yoco] Restaurant reconciliation API error."
+        )
+
+        flash(
+            "Could not verify the payment with Yoco. "
+            "Please try again later.",
+            "error",
+        )
+
+    except Exception:
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Yoco] Restaurant reconciliation failed."
+        )
+
+        flash(
+            "Payment verification failed. "
+            "Please contact support.",
+            "error",
+        )
+
+    else:
+        if result == "activated":
+            flash(
+                "Your Premium subscription payment "
+                "has been verified and activated.",
+                "success",
+            )
+
+        elif result == "already_processed":
+            flash(
+                "This subscription payment was "
+                "already processed.",
+                "info",
+            )
+
+        elif result == "pending":
+            flash(
+                "Yoco has not completed this checkout yet.",
+                "info",
+            )
+
+        else:
+            flash(
+                "The payment could not be verified. "
+                "Please contact support.",
+                "error",
+            )
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+            advert_id=advert_id,
+        )
     )
 
 # ============================================================
