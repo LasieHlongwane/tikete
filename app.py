@@ -21223,6 +21223,91 @@ def admin_resume_restaurant(
 
 
 # ============================================================
+# STAGE 1D - YOCO SUBSCRIPTION WEBHOOK
+# ============================================================
+
+@app.route(
+    "/webhooks/yoco",
+    methods=["POST"],
+)
+def yoco_webhook():
+
+    # ========================================================
+    # RAW REQUEST BODY
+    # ========================================================
+
+    raw_body = request.get_data(
+        cache=False
+    )
+
+    # ========================================================
+    # VERIFY YOCO SIGNATURE
+    # ========================================================
+
+    try:
+
+        event = verify_yoco_webhook(
+            raw_body,
+            request.headers,
+        )
+
+    except YocoWebhookError:
+
+        current_app.logger.warning(
+            "[Yoco] Invalid webhook signature or payload."
+        )
+
+        return jsonify({
+            "error": "Invalid webhook"
+        }), 400
+
+    # ========================================================
+    # PROCESS SUBSCRIPTION PAYMENT
+    # ========================================================
+
+    try:
+
+        result = process_yoco_subscription_payment(
+            event
+        )
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Yoco] Subscription webhook processing failed."
+        )
+
+        return jsonify({
+            "error": "Processing failed"
+        }), 500
+
+    # ========================================================
+    # VALIDATION RESULTS
+    # ========================================================
+
+    if result in ("invalid", "unmatched"):
+
+        current_app.logger.warning(
+            "[Yoco] Subscription payment rejected: %s",
+            result,
+        )
+
+        return jsonify({
+            "result": result
+        }), 422
+
+    # ========================================================
+    # SUCCESS / DUPLICATE / IGNORED
+    # ========================================================
+
+    return jsonify({
+        "received": True,
+        "result": result,
+    }), 200
+
+# ============================================================
 # RESTAURANT REEL
 # ============================================================
 
@@ -22129,57 +22214,6 @@ def get_restaurant_experience_session_id():
     return anonymous_session_id
 
 
-
-@app.route("/webhooks/yoco", methods=["POST"])
-def yoco_webhook():
-
-    raw_body = request.get_data(cache=False)
-
-    try:
-        event = verify_yoco_webhook(
-            raw_body,
-            request.headers,
-        )
-
-    except YocoWebhookError:
-        app.logger.warning(
-            "Rejected Yoco webhook: signature or payload invalid."
-        )
-        return jsonify({"error": "Invalid webhook"}), 400
-
-    event_type = event.get("type")
-
-    if event_type != "payment.succeeded":
-        return jsonify({"received": True}), 200
-
-    try:
-        result = process_yoco_subscription_payment(event)
-
-    except Exception:
-        db.session.rollback()
-
-        app.logger.exception(
-            "Yoco subscription webhook processing failed."
-        )
-
-        return jsonify({"error": "Processing failed"}), 500
-
-    if result == "unmatched":
-        app.logger.warning(
-            "Verified Yoco payment could not be matched."
-        )
-        return jsonify({"error": "Unmatched payment"}), 422
-
-    if result == "invalid":
-        app.logger.error(
-            "Yoco payment failed subscription validation."
-        )
-        return jsonify({"error": "Payment mismatch"}), 422
-
-    return jsonify({
-        "received": True,
-        "result": result,
-    }), 200
 
 
 # ============================================================
