@@ -1169,17 +1169,17 @@ def verify_and_activate_yoco_subscription(
     initial = db.session.get(model, payment_id)
 
     if initial is None:
-        return "unmatched"
+      return "unmatched"
 
     if initial.payment_method != "yoco":
-        return "invalid"
+      return "invalid"
 
     checkout_id = initial.yoco_checkout_id
+    initial_owner_id = initial.organizer_id
 
     if not checkout_id:
-        return "invalid"
+      return "invalid"
 
-    # End the read transaction before the external API call.
     db.session.rollback()
 
     # --------------------------------------------------------
@@ -1211,8 +1211,6 @@ def verify_and_activate_yoco_subscription(
         #
         # Restaurant subscriptions share an organizer lock,
         # even when payments belong to different restaurants.
-
-        initial_owner_id = initial.organizer_id
 
         organizer = (
             db.session.query(Organizer)
