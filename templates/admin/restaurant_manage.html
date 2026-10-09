@@ -3,2308 +3,1159 @@
 
 <head>
 
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <meta
-        name="theme-color"
-        content="#111827"
-    >
-
-    <title>
-        Manage {{ advert.business_name }} | Kalxa
-    </title>
-
-
-    <style>
-
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-        :root {
-
-            --page:
-                #f6f7f9;
-
-            --surface:
-                #ffffff;
-
-            --surface-soft:
-                #f8fafc;
-
-            --text:
-                #111827;
-
-            --text-soft:
-                #64748b;
-
-            --border:
-                #e5e7eb;
-
-            --border-strong:
-                #d1d5db;
-
-            --black:
-                #111827;
-
-            --sidebar:
-                #111318;
-
-            --sidebar-soft:
-                #1c1f26;
-
-            --sidebar-border:
-                #2b2f37;
-
-            --green-bg:
-                #dcfce7;
-
-            --green:
-                #166534;
-
-            --amber-bg:
-                #fef3c7;
-
-            --amber:
-                #92400e;
-
-            --orange-bg:
-                #fff7ed;
-
-            --orange:
-                #9a3412;
-
-            --orange-border:
-                #fed7aa;
-
-            --red-bg:
-                #fee2e2;
-
-            --red:
-                #991b1b;
-
-            --blue-bg:
-                #eff6ff;
-
-            --blue:
-                #1d4ed8;
-
-            --blue-border:
-                #bfdbfe;
-
-            --purple-bg:
-                #f5f3ff;
-
-            --purple:
-                #6d28d9;
-
-            --purple-border:
-                #ddd6fe;
-
-            --sidebar-width:
-                250px;
-        }
-
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-
-        body {
-
-            margin: 0;
-
-            background:
-                var(--page);
-
-            color:
-                var(--text);
-
-            font-family:
-                Inter,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-        }
-
-
-        a,
-        button {
-            -webkit-tap-highlight-color:
-                transparent;
-        }
-
-
-        button {
-            font: inherit;
-        }
-
-
-        /* =====================================================
-           ADMIN SHELL
-        ===================================================== */
-
-        .admin-shell {
-
-            min-height:
-                100vh;
-        }
-
-
-        /* =====================================================
-           SIDEBAR
-        ===================================================== */
-
-        .sidebar {
-
-            position:
-                fixed;
-
-            top: 0;
-            left: 0;
-            bottom: 0;
-
-            z-index:
-                1000;
-
-            display:
-                flex;
-
-            flex-direction:
-                column;
-
-            width:
-                var(--sidebar-width);
-
-            padding:
-                22px 15px 16px;
-
-            background:
-                var(--sidebar);
-
-            color:
-                #ffffff;
-
-            border-right:
-                1px solid var(--sidebar-border);
-
-            overflow-y:
-                auto;
-        }
-
-
-        .sidebar-brand {
-
-            padding:
-                4px 8px 19px;
-
-            border-bottom:
-                1px solid var(--sidebar-border);
-        }
-
-
-        .sidebar-brand-mark {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-width:
-                48px;
-
-            height:
-                29px;
-
-            padding:
-                0 10px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111318;
-
-            border-radius:
-                8px;
-
-            font-size:
-                13px;
-
-            font-weight:
-                1000;
-
-            letter-spacing:
-                -.03em;
-        }
-
-
-        .sidebar-brand-title {
-
-            margin:
-                12px 0 0;
-
-            font-size:
-                13px;
-
-            font-weight:
-                950;
-        }
-
-
-        .sidebar-brand-subtitle {
-
-            margin:
-                4px 0 0;
-
-            color:
-                #8f96a3;
-
-            font-size:
-                9px;
-
-            line-height:
-                1.45;
-        }
-
-
-        /* =====================================================
-           SIDEBAR RESTAURANT
-        ===================================================== */
-
-        .sidebar-restaurant {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                10px;
-
-            margin-top:
-                15px;
-
-            padding:
-                10px;
-
-            background:
-                var(--sidebar-soft);
-
-            border:
-                1px solid var(--sidebar-border);
-
-            border-radius:
-                12px;
-        }
-
-
-        .sidebar-restaurant-image {
-
-            flex:
-                0 0 auto;
-
-            overflow:
-                hidden;
-
-            width:
-                42px;
-
-            height:
-                42px;
-
-            background:
-                #292d34;
-
-            border-radius:
-                9px;
-        }
-
-
-        .sidebar-restaurant-image img {
-
-            display:
-                block;
-
-            width:
-                100%;
-
-            height:
-                100%;
-
-            object-fit:
-                cover;
-        }
-
-
-        .sidebar-restaurant-placeholder {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                100%;
-
-            height:
-                100%;
-
-            color:
-                #9299a5;
-
-            font-size:
-                16px;
-        }
-
-
-        .sidebar-restaurant-copy {
-
-            min-width: 0;
-        }
-
-
-        .sidebar-restaurant-name {
-
-            overflow:
-                hidden;
-
-            margin: 0;
-
-            color:
-                #ffffff;
-
-            font-size:
-                10px;
-
-            font-weight:
-                900;
-
-            text-overflow:
-                ellipsis;
-
-            white-space:
-                nowrap;
-        }
-
-
-        .sidebar-plan {
-
-            margin:
-                3px 0 0;
-
-            color:
-                #9299a5;
-
-            font-size:
-                8px;
-
-            font-weight:
-                800;
-
-            text-transform:
-                uppercase;
-
-            letter-spacing:
-                .08em;
-        }
-
-
-        /* =====================================================
-           SIDEBAR NAVIGATION
-        ===================================================== */
-
-        .sidebar-nav {
-
-            display:
-                grid;
-
-            gap:
-                4px;
-
-            margin-top:
-                20px;
-        }
-
-
-        .sidebar-label {
-
-            margin:
-                0 8px 7px;
-
-            color:
-                #6f7682;
-
-            font-size:
-                8px;
-
-            font-weight:
-                950;
-
-            letter-spacing:
-                .14em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .sidebar-link {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            gap:
-                10px;
-
-            min-height:
-                42px;
-
-            padding:
-                9px 10px;
-
-            color:
-                #b9bec7;
-
-            border:
-                1px solid transparent;
-
-            border-radius:
-                9px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                850;
-
-            text-decoration:
-                none;
-
-            transition:
-                background .15s ease,
-                color .15s ease,
-                border-color .15s ease;
-        }
-
-
-        .sidebar-link:hover {
-
-            background:
-                var(--sidebar-soft);
-
-            color:
-                #ffffff;
-
-            border-color:
-                var(--sidebar-border);
-        }
-
-
-        .sidebar-link-active {
-
-            background:
-                #ffffff;
-
-            color:
-                #111318;
-        }
-
-
-        .sidebar-link-active:hover {
-
-            background:
-                #ffffff;
-
-            color:
-                #111318;
-        }
-
-
-        .sidebar-icon {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            flex:
-                0 0 auto;
-
-            width:
-                21px;
-
-            font-size:
-                13px;
-        }
-
-
-        .sidebar-spacer {
-            flex: 1;
-        }
-
-
-        /* =====================================================
-           SIDEBAR BOTTOM
-        ===================================================== */
-
-        .sidebar-bottom {
-
-            display:
-                grid;
-
-            gap:
-                7px;
-
-            margin-top:
-                24px;
-
-            padding-top:
-                15px;
-
-            border-top:
-                1px solid var(--sidebar-border);
-        }
-
-
-        .sidebar-return {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                40px;
-
-            padding:
-                8px 10px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111318;
-
-            border:
-                1px solid #ffffff;
-
-            border-radius:
-                9px;
-
-            font-size:
-                9px;
-
-            font-weight:
-                950;
-
-            text-decoration:
-                none;
-
-            text-align:
-                center;
-        }
-
-
-        .sidebar-logout {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                100%;
-
-            min-height:
-                40px;
-
-            padding:
-                8px 10px;
-
-            background:
-                transparent;
-
-            color:
-                #fca5a5;
-
-            border:
-                1px solid #543033;
-
-            border-radius:
-                9px;
-
-            font-size:
-                9px;
-
-            font-weight:
-                950;
-
-            text-decoration:
-                none;
-
-            cursor:
-                pointer;
-        }
-
-
-        /* =====================================================
-           MAIN CONTENT
-        ===================================================== */
-
-        .main {
-
-            min-height:
-                100vh;
-
-            margin-left:
-                var(--sidebar-width);
-        }
-
-
-        .page {
-
-            width:
-                min(
-                    100% - 40px,
-                    980px
-                );
-
-            margin:
-                0 auto;
-
-            padding:
-                28px 0 70px;
-        }
-
-
-        /* =====================================================
-           MOBILE TOPBAR
-        ===================================================== */
-
-        .mobile-topbar {
-
-            display:
-                none;
-        }
-
-
-        .mobile-menu-button {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                40px;
-
-            height:
-                40px;
-
-            padding: 0;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                9px;
-
-            font-size:
-                18px;
-
-            cursor:
-                pointer;
-        }
-
-
-        .mobile-brand {
-
-            font-size:
-                11px;
-
-            font-weight:
-                950;
-        }
-
-
-        .sidebar-overlay {
-
-            display:
-                none;
-        }
-
-
-        /* =====================================================
-           BACK
-        ===================================================== */
-
-        .back {
-
-            display:
-                inline-flex;
-
-            margin-bottom:
-                18px;
-
-            color:
-                var(--text-soft);
-
-            font-size:
-                12px;
-
-            font-weight:
-                800;
-
-            text-decoration:
-                none;
-        }
-
-
-        /* =====================================================
-           HERO
-        ===================================================== */
-
-        .hero {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                180px 1fr;
-
-            gap:
-                20px;
-
-            padding:
-                20px;
-
-            background:
-                var(--surface);
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                20px;
-        }
-
-
-        .poster {
-
-            overflow:
-                hidden;
-
-            aspect-ratio:
-                4 / 5;
-
-            background:
-                #e5e7eb;
-
-            border-radius:
-                14px;
-        }
-
-
-        .poster img {
-
-            width:
-                100%;
-
-            height:
-                100%;
-
-            object-fit:
-                cover;
-        }
-
-
-        .poster-placeholder {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                100%;
-
-            height:
-                100%;
-
-            color:
-                #94a3b8;
-
-            font-size:
-                12px;
-
-            font-weight:
-                800;
-
-            text-align:
-                center;
-        }
-
-
-        .eyebrow {
-
-            margin:
-                0 0 7px;
-
-            color:
-                var(--text-soft);
-
-            font-size:
-                10px;
-
-            font-weight:
-                900;
-
-            letter-spacing:
-                .12em;
-        }
-
-
-        h1 {
-
-            margin:
-                0;
-
-            font-size:
-                clamp(
-                    26px,
-                    6vw,
-                    38px
-                );
-
-            letter-spacing:
-                -.04em;
-        }
-
-
-        .headline {
-
-            margin:
-                7px 0 0;
-
-            color:
-                var(--text-soft);
-
-            font-size:
-                13px;
-        }
-
-
-        /* =====================================================
-           STATUS
-        ===================================================== */
-
-        .status {
-
-            display:
-                inline-flex;
-
-            align-items:
-                center;
-
-            margin-top:
-                12px;
-
-            padding:
-                6px 9px;
-
-            border-radius:
-                999px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                950;
-        }
-
-
-        .status-live {
-
-            background:
-                var(--green-bg);
-
-            color:
-                var(--green);
-        }
-
-
-        .status-scheduled {
-
-            background:
-                var(--amber-bg);
-
-            color:
-                var(--amber);
-        }
-
-
-        .status-expired {
-
-            background:
-                var(--red-bg);
-
-            color:
-                var(--red);
-        }
-
-
-        .status-paused {
-
-            background:
-                #f3f4f6;
-
-            color:
-                #4b5563;
-        }
-
-
-        /* =====================================================
-           CAMPAIGN METRICS
-        ===================================================== */
-
-        .metrics {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    3,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap:
-                12px;
-
-            margin-top:
-                16px;
-        }
-
-
-        .metric {
-
-            padding:
-                13px;
-
-            background:
-                var(--surface-soft);
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                12px;
-        }
-
-
-        .metric-label {
-
-            color:
-                var(--text-soft);
-
-            font-size:
-                9px;
-
-            font-weight:
-                900;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .metric-value {
-
-            display:
-                block;
-
-            margin-top:
-                5px;
-
-            color:
-                var(--text);
-
-            font-size:
-                13px;
-
-            font-weight:
-                900;
-        }
-
-
-        /* =====================================================
-           SUBSCRIPTION PANEL
-        ===================================================== */
-
-        .subscription-panel {
-
-            scroll-margin-top:
-                24px;
-
-            margin-top:
-                16px;
-
-            padding:
-                20px;
-
-            background:
-                var(--surface);
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                18px;
-        }
-
-
-        .subscription-top {
-
-            display:
-                flex;
-
-            align-items:
-                flex-start;
-
-            justify-content:
-                space-between;
-
-            gap:
-                16px;
-        }
-
-
-        .subscription-eyebrow {
-
-            margin:
-                0 0 6px;
-
-            color:
-                var(--text-soft);
-
-            font-size:
-                9px;
-
-            font-weight:
-                950;
-
-            letter-spacing:
-                .12em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .subscription-title {
-
-            margin:
-                0;
-
-            font-size:
-                21px;
-
-            letter-spacing:
-                -.03em;
-        }
-
-
-        .subscription-price {
-
-            flex:
-                0 0 auto;
-
-            font-size:
-                19px;
-
-            font-weight:
-                950;
-
-            text-align:
-                right;
-        }
-
-
-        .subscription-price small {
-
-            display:
-                block;
-
-            margin-top:
-                2px;
-
-            color:
-                var(--text-soft);
-
-            font-size:
-                9px;
-
-            font-weight:
-                800;
-        }
-
-
-        .plan-badge {
-
-            display:
-                inline-flex;
-
-            margin-top:
-                10px;
-
-            padding:
-                6px 9px;
-
-            border-radius:
-                999px;
-
-            font-size:
-                9px;
-
-            font-weight:
-                950;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .plan-free {
-
-            background:
-                #f3f4f6;
-
-            color:
-                #374151;
-        }
-
-
-        .plan-standard {
-
-            background:
-                var(--blue-bg);
-
-            color:
-                var(--blue);
-        }
-
-
-        .plan-premium {
-
-            background:
-                #111827;
-
-            color:
-                #ffffff;
-        }
-
-
-        /* =====================================================
-           STANDARD -> PREMIUM UPGRADE
-        ===================================================== */
-
-        .premium-upgrade {
-
-            margin-top:
-                16px;
-
-            padding:
-                17px;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #111827,
-                    #252c3a
-                );
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111827;
-
-            border-radius:
-                14px;
-        }
-
-
-        .premium-upgrade-label {
-
-            margin:
-                0 0 5px;
-
-            color:
-                #a5b4fc;
-
-            font-size:
-                8px;
-
-            font-weight:
-                950;
-
-            letter-spacing:
-                .13em;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .premium-upgrade h3 {
-
-            margin:
-                0;
-
-            font-size:
-                17px;
-
-            letter-spacing:
-                -.025em;
-        }
-
-
-        .premium-upgrade-copy {
-
-            margin:
-                7px 0 0;
-
-            color:
-                #cbd5e1;
-
-            font-size:
-                10px;
-
-            line-height:
-                1.55;
-        }
-
-
-        .premium-benefits {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap:
-                7px;
-
-            margin-top:
-                14px;
-        }
-
-
-        .premium-benefit {
-
-            padding:
-                9px 10px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .07
-                );
-
-            border:
-                1px solid rgba(
-                    255,
-                    255,
-                    255,
-                    .10
-                );
-
-            border-radius:
-                9px;
-
-            color:
-                #f8fafc;
-
-            font-size:
-                9px;
-
-            font-weight:
-                800;
-
-            line-height:
-                1.4;
-        }
-
-
-        .premium-upgrade-action {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                100%;
-
-            min-height:
-                44px;
-
-            margin-top:
-                14px;
-
-            padding:
-                9px 12px;
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                0;
-
-            border-radius:
-                10px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                950;
-
-            cursor:
-                pointer;
-        }
-
-
-        /* =====================================================
-           GRACE PERIOD
-        ===================================================== */
-
-        .grace-warning {
-
-            margin-top:
-                16px;
-
-            padding:
-                15px;
-
-            background:
-                var(--orange-bg);
-
-            color:
-                var(--orange);
-
-            border:
-                1px solid var(--orange-border);
-
-            border-radius:
-                12px;
-
-            font-size:
-                12px;
-
-            line-height:
-                1.55;
-        }
-
-
-        .grace-warning strong {
-
-            display:
-                block;
-
-            margin-bottom:
-                4px;
-
-            font-size:
-                13px;
-        }
-
-
-        .grace-deadline {
-
-            display:
-                block;
-
-            margin-top:
-                8px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                850;
-        }
-
-
-        /* =====================================================
-           INFORMATION
-        ===================================================== */
-
-        .free-info {
-
-            margin-top:
-                16px;
-
-            padding:
-                14px;
-
-            background:
-                #f8fafc;
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                12px;
-
-            color:
-                #475569;
-
-            font-size:
-                11px;
-
-            line-height:
-                1.55;
-        }
-
-
-        .payment-info {
-
-            margin-top:
-                16px;
-
-            padding:
-                14px;
-
-            background:
-                var(--blue-bg);
-
-            border:
-                1px solid var(--blue-border);
-
-            border-radius:
-                12px;
-
-            color:
-                #1e40af;
-
-            font-size:
-                11px;
-
-            line-height:
-                1.55;
-        }
-
-
-        /* =====================================================
-           PLAN CARDS
-        ===================================================== */
-
-        .plans-title {
-
-            margin:
-                22px 0 10px;
-
-            font-size:
-                12px;
-
-            font-weight:
-                950;
-        }
-
-
-        .plan-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap:
-                12px;
-        }
-
-
-        .plan-card {
-
-            position:
-                relative;
-
-            padding:
-                16px;
-
-            background:
-                #ffffff;
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                14px;
-        }
-
-
-        .plan-card-current {
-
-            border:
-                2px solid #111827;
-        }
-
-
-        .plan-card-premium {
-
-            background:
-                #111827;
-
-            color:
-                #ffffff;
-
-            border-color:
-                #111827;
-        }
-
-
-        .plan-card-premium.plan-card-current {
-
-            box-shadow:
-                0 0 0 3px
-                rgba(
-                    17,
-                    24,
-                    39,
-                    .12
-                );
-        }
-
-
-        .current-label {
-
-            display:
-                inline-flex;
-
-            margin-bottom:
-                10px;
-
-            padding:
-                5px 8px;
-
-            background:
-                #dcfce7;
-
-            color:
-                #166534;
-
-            border-radius:
-                999px;
-
-            font-size:
-                8px;
-
-            font-weight:
-                950;
-
-            text-transform:
-                uppercase;
-        }
-
-
-        .plan-card h3 {
-
-            margin:
-                0;
-
-            font-size:
-                16px;
-        }
-
-
-        .plan-card-price {
-
-            margin-top:
-                5px;
-
-            font-size:
-                20px;
-
-            font-weight:
-                950;
-        }
-
-
-        .plan-card-price span {
-
-            font-size:
-                9px;
-
-            font-weight:
-                750;
-
-            opacity:
-                .7;
-        }
-
-
-        .plan-features {
-
-            display:
-                grid;
-
-            gap:
-                7px;
-
-            margin:
-                14px 0 0;
-
-            padding:
-                0;
-
-            list-style:
-                none;
-
-            font-size:
-                10px;
-
-            line-height:
-                1.4;
-        }
-
-
-        .plan-feature-muted {
-            opacity: .55;
-        }
-
-
-        .plan-card form {
-            width: 100%;
-        }
-
-
-        .plan-action {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            width:
-                100%;
-
-            min-height:
-                42px;
-
-            margin-top:
-                16px;
-
-            padding:
-                9px 12px;
-
-            border: 0;
-
-            border-radius:
-                10px;
-
-            font:
-                inherit;
-
-            font-size:
-                10px;
-
-            font-weight:
-                950;
-
-            cursor:
-                pointer;
-
-            text-align:
-                center;
-        }
-
-
-        .plan-action-dark {
-
-            background:
-                #111827;
-
-            color:
-                #ffffff;
-        }
-
-
-        .plan-action-light {
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-        }
-
-
-        .plan-action-disabled {
-
-            background:
-                #e5e7eb;
-
-            color:
-                #64748b;
-
-            cursor:
-                not-allowed;
-        }
-
-
-        .plan-card-premium
-        .plan-action-disabled {
-
-            background:
-                #374151;
-
-            color:
-                #cbd5e1;
-        }
-
-
-        /* =====================================================
-           FEATURE ACCESS
-        ===================================================== */
-
-        .feature-grid {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap:
-                8px;
-
-            margin-top:
-                14px;
-        }
-
-
-        .feature {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                space-between;
-
-            gap:
-                8px;
-
-            padding:
-                10px 11px;
-
-            background:
-                var(--surface-soft);
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                10px;
-
-            font-size:
-                10px;
-
-            font-weight:
-                800;
-        }
-
-
-        .feature-enabled {
-
-            color:
-                #166534;
-
-            font-weight:
-                950;
-        }
-
-
-        .feature-disabled {
-
-            color:
-                #94a3b8;
-
-            font-weight:
-                950;
-        }
-
-
-        /* =====================================================
-           SECTIONS
-        ===================================================== */
-
-        .sections {
-
-            display:
-                grid;
-
-            gap:
-                14px;
-
-            margin-top:
-                16px;
-        }
-
-
-        .section {
-
-            padding:
-                18px;
-
-            background:
-                var(--surface);
-
-            border:
-                1px solid var(--border);
-
-            border-radius:
-                16px;
-        }
-
-
-        .section h2 {
-
-            margin:
-                0 0 12px;
-
-            font-size:
-                14px;
-        }
-
-
-        .detail {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                130px 1fr;
-
-            gap:
-                7px 12px;
-
-            font-size:
-                12px;
-        }
-
-
-        .detail-label {
-            color: var(--text-soft);
-        }
-
-
-        .detail-value {
-
-            font-weight:
-                750;
-
-            word-break:
-                break-word;
-        }
-
-
-        /* =====================================================
-           ACTIONS
-        ===================================================== */
-
-        .actions {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(
-                        0,
-                        1fr
-                    )
-                );
-
-            gap:
-                9px;
-
-            margin-top:
-                16px;
-        }
-
-
-        .action,
-        .actions button {
-
-            display:
-                flex;
-
-            align-items:
-                center;
-
-            justify-content:
-                center;
-
-            min-height:
-                44px;
-
-            padding:
-                9px 12px;
-
-            border-radius:
-                10px;
-
-            font:
-                inherit;
-
-            font-size:
-                11px;
-
-            font-weight:
-                900;
-
-            text-decoration:
-                none;
-
-            cursor:
-                pointer;
-        }
-
-
-        .action-primary {
-
-            background:
-                #111827;
-
-            color:
-                #ffffff;
-
-            border:
-                1px solid #111827;
-        }
-
-
-        .action-secondary {
-
-            background:
-                #ffffff;
-
-            color:
-                #111827;
-
-            border:
-                1px solid var(--border-strong);
-        }
-
-
-        .action-warning {
-
-            background:
-                var(--orange-bg);
-
-            color:
-                var(--orange);
-
-            border:
-                1px solid var(--orange-border);
-        }
-
-
-        form {
-            margin: 0;
-        }
-
-
-        /* =====================================================
-           MOBILE
-        ===================================================== */
-
-        @media (
-            max-width: 820px
-        ) {
-
-            .sidebar {
-
-                transform:
-                    translateX(-100%);
-
-                transition:
-                    transform .22s ease;
-            }
-
-
-            body.sidebar-open
-            .sidebar {
-
-                transform:
-                    translateX(0);
-            }
-
-
-            .sidebar-overlay {
-
-                position:
-                    fixed;
-
-                inset: 0;
-
-                z-index:
-                    900;
-
-                background:
-                    rgba(
-                        15,
-                        23,
-                        42,
-                        .55
-                    );
-            }
-
-
-            body.sidebar-open
-            .sidebar-overlay {
-
-                display:
-                    block;
-            }
-
-
-            .main {
-                margin-left: 0;
-            }
-
-
-            .mobile-topbar {
-
-                position:
-                    sticky;
-
-                top: 0;
-
-                z-index:
-                    800;
-
-                display:
-                    flex;
-
-                align-items:
-                    center;
-
-                gap:
-                    11px;
-
-                min-height:
-                    60px;
-
-                padding:
-                    10px 14px;
-
-                background:
-                    rgba(
-                        246,
-                        247,
-                        249,
-                        .95
-                    );
-
-                border-bottom:
-                    1px solid var(--border);
-
-                backdrop-filter:
-                    blur(10px);
-            }
-
-
-            .page {
-
-                width:
-                    min(
-                        100% - 24px,
-                        980px
-                    );
-
-                padding-top:
-                    18px;
-            }
-
-        }
-
-
-        @media (
-            max-width: 640px
-        ) {
-
-            .hero {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .poster {
-
-                max-width:
-                    260px;
-            }
-
-
-            .metrics {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .subscription-top {
-
-                flex-direction:
-                    column;
-            }
-
-
-            .subscription-price {
-                text-align: left;
-            }
-
-
-            .plan-grid {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .feature-grid {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .premium-benefits {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .actions {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-
-            .detail {
-
-                grid-template-columns:
-                    1fr;
-            }
-
-        }
-
-    </style>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+
+<meta
+    name="theme-color"
+    content="#111827"
+>
+
+<title>
+    Manage {{ advert.business_name }} | Kalxa
+</title>
+
+<style>
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --page: #f6f7f9;
+    --surface: #ffffff;
+    --surface-soft: #f8fafc;
+    --text: #111827;
+    --text-soft: #64748b;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --black: #111827;
+    --sidebar: #111318;
+    --sidebar-soft: #1c1f26;
+    --sidebar-border: #2b2f37;
+    --green-bg: #dcfce7;
+    --green: #166534;
+    --amber-bg: #fef3c7;
+    --amber: #92400e;
+    --orange-bg: #fff7ed;
+    --orange: #9a3412;
+    --orange-border: #fed7aa;
+    --red-bg: #fee2e2;
+    --red: #991b1b;
+    --blue-bg: #eff6ff;
+    --blue: #1d4ed8;
+    --blue-border: #bfdbfe;
+    --purple-bg: #f5f3ff;
+    --purple: #6d28d9;
+    --purple-border: #ddd6fe;
+    --sidebar-width: 250px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text);
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+a,
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    font: inherit;
+}
+
+/* =====================================================
+   ADMIN SHELL
+===================================================== */
+
+.admin-shell {
+    min-height: 100vh;
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-width);
+    padding: 22px 15px 16px;
+    background: var(--sidebar);
+    color: #ffffff;
+    border-right: 1px solid var(--sidebar-border);
+    overflow-y: auto;
+}
+
+.sidebar-brand {
+    padding: 4px 8px 19px;
+    border-bottom: 1px solid var(--sidebar-border);
+}
+
+.sidebar-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 29px;
+    padding: 0 10px;
+    background: #ffffff;
+    color: #111318;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 1000;
+    letter-spacing: -.03em;
+}
+
+.sidebar-brand-title {
+    margin: 12px 0 0;
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.sidebar-brand-subtitle {
+    margin: 4px 0 0;
+    color: #8f96a3;
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+/* =====================================================
+   SIDEBAR RESTAURANT
+===================================================== */
+
+.sidebar-restaurant {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 10px;
+    background: var(--sidebar-soft);
+    border: 1px solid var(--sidebar-border);
+    border-radius: 12px;
+}
+
+.sidebar-restaurant-image {
+    flex: 0 0 auto;
+    overflow: hidden;
+    width: 42px;
+    height: 42px;
+    background: #292d34;
+    border-radius: 9px;
+}
+
+.sidebar-restaurant-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-restaurant-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #9299a5;
+    font-size: 16px;
+}
+
+.sidebar-restaurant-copy {
+    min-width: 0;
+}
+
+.sidebar-restaurant-name {
+    overflow: hidden;
+    margin: 0;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-plan {
+    margin: 3px 0 0;
+    color: #9299a5;
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* =====================================================
+   SIDEBAR NAVIGATION
+===================================================== */
+
+.sidebar-nav {
+    display: grid;
+    gap: 4px;
+    margin-top: 20px;
+}
+
+.sidebar-label {
+    margin: 0 8px 7px;
+    color: #6f7682;
+    font-size: 8px;
+    font-weight: 950;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 9px 10px;
+    color: #b9bec7;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 850;
+    text-decoration: none;
+    transition:
+        background .15s ease,
+        color .15s ease,
+        border-color .15s ease;
+}
+
+.sidebar-link:hover {
+    background: var(--sidebar-soft);
+    color: #ffffff;
+    border-color: var(--sidebar-border);
+}
+
+.sidebar-link-active {
+    background: #ffffff;
+    color: #111318;
+}
+
+.sidebar-link-active:hover {
+    background: #ffffff;
+    color: #111318;
+}
+
+.sidebar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 21px;
+    font-size: 13px;
+}
+
+.sidebar-spacer {
+    flex: 1;
+}
+
+/* =====================================================
+   SIDEBAR BOTTOM
+===================================================== */
+
+.sidebar-bottom {
+    display: grid;
+    gap: 7px;
+    margin-top: 24px;
+    padding-top: 15px;
+    border-top: 1px solid var(--sidebar-border);
+}
+
+.sidebar-return {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 10px;
+    background: #ffffff;
+    color: #111318;
+    border: 1px solid #ffffff;
+    border-radius: 9px;
+    font-size: 9px;
+    font-weight: 950;
+    text-decoration: none;
+    text-align: center;
+}
+
+.sidebar-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    background: transparent;
+    color: #fca5a5;
+    border: 1px solid #543033;
+    border-radius: 9px;
+    font-size: 9px;
+    font-weight: 950;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.main {
+    min-height: 100vh;
+    margin-left: var(--sidebar-width);
+}
+
+.page {
+    width: min(100% - 40px, 980px);
+    margin: 0 auto;
+    padding: 28px 0 70px;
+}
+
+/* =====================================================
+   MOBILE TOPBAR
+===================================================== */
+
+.mobile-topbar {
+    display: none;
+}
+
+.mobile-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.mobile-brand {
+    font-size: 11px;
+    font-weight: 950;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+/* =====================================================
+   BACK
+===================================================== */
+
+.back {
+    display: inline-flex;
+    margin-bottom: 18px;
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+
+.poster {
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    background: #e5e7eb;
+    border-radius: 14px;
+}
+
+.poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.poster-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.eyebrow {
+    margin: 0 0 7px;
+    color: var(--text-soft);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(26px, 6vw, 38px);
+    letter-spacing: -.04em;
+}
+
+.headline {
+    margin: 7px 0 0;
+    color: var(--text-soft);
+    font-size: 13px;
+}
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 12px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 950;
+}
+
+.status-live {
+    background: var(--green-bg);
+    color: var(--green);
+}
+
+.status-scheduled {
+    background: var(--amber-bg);
+    color: var(--amber);
+}
+
+.status-expired {
+    background: var(--red-bg);
+    color: var(--red);
+}
+
+.status-paused {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+/* =====================================================
+   CAMPAIGN METRICS
+===================================================== */
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.metric {
+    padding: 13px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.metric-label {
+    color: var(--text-soft);
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.metric-value {
+    display: block;
+    margin-top: 5px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+/* =====================================================
+   SUBSCRIPTION PANEL
+===================================================== */
+
+.subscription-panel {
+    scroll-margin-top: 24px;
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+}
+
+.subscription-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.subscription-eyebrow {
+    margin: 0 0 6px;
+    color: var(--text-soft);
+    font-size: 9px;
+    font-weight: 950;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.subscription-title {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -.03em;
+}
+
+.subscription-price {
+    flex: 0 0 auto;
+    font-size: 19px;
+    font-weight: 950;
+    text-align: right;
+}
+
+.subscription-price small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-soft);
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.plan-badge {
+    display: inline-flex;
+    margin-top: 10px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.plan-free {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.plan-standard {
+    background: var(--blue-bg);
+    color: var(--blue);
+}
+
+.plan-premium {
+    background: #111827;
+    color: #ffffff;
+}
+
+/* =====================================================
+   STANDARD TO PREMIUM UPGRADE
+===================================================== */
+
+.premium-upgrade {
+    margin-top: 16px;
+    padding: 17px;
+    background: linear-gradient(135deg, #111827, #252c3a);
+    color: #ffffff;
+    border: 1px solid #111827;
+    border-radius: 14px;
+}
+
+.premium-upgrade-label {
+    margin: 0 0 5px;
+    color: #a5b4fc;
+    font-size: 8px;
+    font-weight: 950;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.premium-upgrade h3 {
+    margin: 0;
+    font-size: 17px;
+    letter-spacing: -.025em;
+}
+
+.premium-upgrade-copy {
+    margin: 7px 0 0;
+    color: #cbd5e1;
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.premium-benefits {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 14px;
+}
+
+.premium-benefit {
+    padding: 9px 10px;
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 9px;
+    color: #f8fafc;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.premium-upgrade-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 14px;
+    padding: 9px 12px;
+    background: #ffffff;
+    color: #111827;
+    border: 0;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 950;
+    cursor: pointer;
+}
+
+/* =====================================================
+   GRACE PERIOD
+===================================================== */
+
+.grace-warning {
+    margin-top: 16px;
+    padding: 15px;
+    background: var(--orange-bg);
+    color: var(--orange);
+    border: 1px solid var(--orange-border);
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.grace-warning strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.grace-deadline {
+    display: block;
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 850;
+}
+
+/* =====================================================
+   INFORMATION
+===================================================== */
+
+.free-info {
+    margin-top: 16px;
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: #475569;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.payment-info {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--blue-bg);
+    border: 1px solid var(--blue-border);
+    border-radius: 12px;
+    color: #1e40af;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+/* =====================================================
+   YOCO PAYMENT STYLING
+===================================================== */
+
+.yoco-payment-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 950;
+}
+
+.yoco-secure-icon {
+    font-size: 14px;
+}
+
+.yoco-payment-description {
+    margin-top: 8px;
+    line-height: 1.65;
+}
+
+.yoco-payment-note {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--blue-border);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.yoco-button-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.yoco-button-icon {
+    font-size: 12px;
+}
+
+.yoco-checkout-form button:disabled {
+    cursor: wait;
+    opacity: .7;
+}
+
+.yoco-checkout-form.is-submitting button {
+    pointer-events: none;
+}
+
+.yoco-loading-spinner {
+    display: none;
+    width: 13px;
+    height: 13px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: yoco-spin .7s linear infinite;
+}
+
+.yoco-checkout-form.is-submitting
+.yoco-loading-spinner {
+    display: inline-block;
+}
+
+@keyframes yoco-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =====================================================
+   FLASH MESSAGES
+===================================================== */
+
+.flash-messages {
+    display: grid;
+    gap: 9px;
+    margin-bottom: 16px;
+}
+
+.flash-message {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1.5;
+}
+
+.flash-success {
+    background: var(--green-bg);
+    border-color: #bbf7d0;
+    color: var(--green);
+}
+
+.flash-error {
+    background: var(--red-bg);
+    border-color: #fecaca;
+    color: var(--red);
+}
+
+.flash-info {
+    background: var(--blue-bg);
+    border-color: var(--blue-border);
+    color: var(--blue);
+}
+
+/* =====================================================
+   PLAN CARDS
+===================================================== */
+
+.plans-title {
+    margin: 22px 0 10px;
+    font-size: 12px;
+    font-weight: 950;
+}
+
+.plan-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.plan-card {
+    position: relative;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.plan-card-current {
+    border: 2px solid #111827;
+}
+
+.plan-card-premium {
+    background: #111827;
+    color: #ffffff;
+    border-color: #111827;
+}
+
+.plan-card-premium.plan-card-current {
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, .12);
+}
+
+.current-label {
+    display: inline-flex;
+    margin-bottom: 10px;
+    padding: 5px 8px;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 999px;
+    font-size: 8px;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.plan-card h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.plan-card-price {
+    margin-top: 5px;
+    font-size: 20px;
+    font-weight: 950;
+}
+
+.plan-card-price span {
+    font-size: 9px;
+    font-weight: 750;
+    opacity: .7;
+}
+
+.plan-features {
+    display: grid;
+    gap: 7px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.plan-feature-muted {
+    opacity: .55;
+}
+
+.plan-card form {
+    width: 100%;
+}
+
+.plan-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 42px;
+    margin-top: 16px;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 950;
+    cursor: pointer;
+    text-align: center;
+}
+
+.plan-action-dark {
+    background: #111827;
+    color: #ffffff;
+}
+
+.plan-action-light {
+    background: #ffffff;
+    color: #111827;
+}
+
+.plan-action-disabled {
+    background: #e5e7eb;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.plan-card-premium .plan-action-disabled {
+    background: #374151;
+    color: #cbd5e1;
+}
+
+/* =====================================================
+   FEATURE ACCESS
+===================================================== */
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 11px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.feature-enabled {
+    color: #166534;
+    font-weight: 950;
+}
+
+.feature-disabled {
+    color: #94a3b8;
+    font-weight: 950;
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.sections {
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.section {
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.section h2 {
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.detail {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 7px 12px;
+    font-size: 12px;
+}
+
+.detail-label {
+    color: var(--text-soft);
+}
+
+.detail-value {
+    font-weight: 750;
+    word-break: break-word;
+}
+
+/* =====================================================
+   ACTIONS
+===================================================== */
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 16px;
+}
+
+.action,
+.actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.action-primary {
+    background: #111827;
+    color: #ffffff;
+    border: 1px solid #111827;
+}
+
+.action-secondary {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid var(--border-strong);
+}
+
+.action-warning {
+    background: var(--orange-bg);
+    color: var(--orange);
+    border: 1px solid var(--orange-border);
+}
+
+form {
+    margin: 0;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 820px) {
+
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+    }
+
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 900;
+        background: rgba(15, 23, 42, .55);
+    }
+
+    body.sidebar-open .sidebar-overlay {
+        display: block;
+    }
+
+    .main {
+        margin-left: 0;
+    }
+
+    .mobile-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 800;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-height: 60px;
+        padding: 10px 14px;
+        background: rgba(246, 247, 249, .95);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+    }
+
+    .page {
+        width: min(100% - 24px, 980px);
+        padding-top: 18px;
+    }
+}
+
+@media (max-width: 640px) {
+
+    .hero {
+        grid-template-columns: 1fr;
+    }
+
+    .poster {
+        max-width: 260px;
+    }
+
+    .metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .subscription-top {
+        flex-direction: column;
+    }
+
+    .subscription-price {
+        text-align: left;
+    }
+
+    .plan-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .premium-benefits {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        grid-template-columns: 1fr;
+    }
+
+    .detail {
+        grid-template-columns: 1fr;
+    }
+}
+
+</style>
 
 </head>
 
-
 <body>
 
-
 <div class="admin-shell">
-
 
     <!-- =====================================================
          SIDEBAR
@@ -2314,11 +1165,6 @@
         class="sidebar"
         id="restaurant-sidebar"
     >
-
-
-        <!-- =================================================
-             BRAND
-        ================================================== -->
 
         <div class="sidebar-brand">
 
@@ -2337,13 +1183,9 @@
 
         </div>
 
-
-        <!-- =================================================
-             RESTAURANT
-        ================================================== -->
+        <!-- RESTAURANT IDENTITY -->
 
         <div class="sidebar-restaurant">
-
 
             <div class="sidebar-restaurant-image">
 
@@ -2364,7 +1206,6 @@
 
             </div>
 
-
             <div class="sidebar-restaurant-copy">
 
                 <p class="sidebar-restaurant-name">
@@ -2377,31 +1218,22 @@
 
             </div>
 
-
         </div>
 
-
-        <!-- =================================================
-             NAVIGATION
-        ================================================== -->
+        <!-- NAVIGATION -->
 
         <nav class="sidebar-nav">
-
 
             <p class="sidebar-label">
                 Restaurant
             </p>
-
 
             <a
                 href="{{ url_for(
                     'admin_manage_restaurant',
                     advert_id=advert.id
                 ) }}"
-                class="
-                    sidebar-link
-                    sidebar-link-active
-                "
+                class="sidebar-link sidebar-link-active"
             >
                 <span class="sidebar-icon">
                     ▦
@@ -2409,7 +1241,6 @@
 
                 Overview
             </a>
-
 
             <a
                 href="{{ url_for(
@@ -2424,7 +1255,6 @@
 
                 Edit Restaurant
             </a>
-
 
             {% if can_use_reel %}
 
@@ -2444,7 +1274,6 @@
 
             {% endif %}
 
-
             {% if can_use_opening_hours %}
 
                 <a
@@ -2463,7 +1292,6 @@
 
             {% endif %}
 
-
             <a
                 href="{{ url_for(
                     'restaurant_page',
@@ -2480,14 +1308,12 @@
                 Public Restaurant
             </a>
 
-
             <p
                 class="sidebar-label"
                 style="margin-top:15px;"
             >
                 Account
             </p>
-
 
             <a
                 href="#restaurant-subscription"
@@ -2500,14 +1326,7 @@
                 Manage Subscription
             </a>
 
-
             {% if can_view_analytics %}
-
-                <!--
-                    We will replace this with the real
-                    restaurant analytics route when we audit
-                    the Premium analytics page.
-                -->
 
                 <a
                     href="#restaurant-features"
@@ -2522,23 +1341,11 @@
 
             {% endif %}
 
-
         </nav>
-
 
         <div class="sidebar-spacer"></div>
 
-
-        <!-- =================================================
-             BOTTOM NAVIGATION
-        ================================================== -->
-
         <div class="sidebar-bottom">
-
-
-            <!-- =============================================
-                 BACK TO KALXA TICKETING
-            ============================================== -->
 
             <a
                 href="{{ url_for('home') }}"
@@ -2547,54 +1354,29 @@
                 ← Back to Kalxa Ticketing
             </a>
 
-
-            <!-- =============================================
-                 LOGOUT
-            ============================================== -->
-            <!--
-                This assumes your existing organizer logout
-                endpoint is named organizer_logout.
-
-                If your Flask function uses another name,
-                change ONLY the endpoint below.
-            -->
-
             <a
-                href="{{ url_for(
-                    'organizer_logout'
-                ) }}"
+                href="{{ url_for('organizer_logout') }}"
                 class="sidebar-logout"
             >
                 Log out
             </a>
 
-
         </div>
-
 
     </aside>
 
-
-    <!-- =====================================================
-         MOBILE OVERLAY
-    ====================================================== -->
+    <!-- MOBILE OVERLAY -->
 
     <div
         class="sidebar-overlay"
         id="sidebar-overlay"
     ></div>
 
-
     <!-- =====================================================
          MAIN CONTENT
     ====================================================== -->
 
     <main class="main">
-
-
-        <!-- =================================================
-             MOBILE TOPBAR
-        ================================================== -->
 
         <div class="mobile-topbar">
 
@@ -2609,37 +1391,65 @@
                 ☰
             </button>
 
-
             <div class="mobile-brand">
                 Restaurant Control Centre
             </div>
 
         </div>
 
-
         <div class="page">
 
+            <!-- FLASH MESSAGES -->
 
-            <!-- =================================================
-                 BACK
-            ================================================== -->
+            {% with messages = get_flashed_messages(
+                with_categories=true
+            ) %}
+
+                {% if messages %}
+
+                    <div
+                        class="flash-messages"
+                        role="status"
+                        aria-live="polite"
+                    >
+
+                        {% for category, message in messages %}
+
+                            <div
+                                class="flash-message
+                                {% if category == 'success' %}
+                                    flash-success
+                                {% elif category == 'error' %}
+                                    flash-error
+                                {% else %}
+                                    flash-info
+                                {% endif %}"
+                            >
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+            <!-- BACK -->
 
             <a
-                href="{{ url_for(
-                    'admin_restaurants'
-                ) }}"
+                href="{{ url_for('admin_restaurants') }}"
                 class="back"
             >
                 ← Restaurant Control Centre
             </a>
-
 
             <!-- =================================================
                  HERO
             ================================================== -->
 
             <section class="hero">
-
 
                 <div class="poster">
 
@@ -2660,19 +1470,15 @@
 
                 </div>
 
-
                 <div>
-
 
                     <p class="eyebrow">
                         RESTAURANT CAMPAIGN
                     </p>
 
-
                     <h1>
                         {{ advert.business_name }}
                     </h1>
-
 
                     {% if advert.headline %}
 
@@ -2682,10 +1488,7 @@
 
                     {% endif %}
 
-
-                    <!-- =====================================
-                         CAMPAIGN STATUS
-                    ====================================== -->
+                    <!-- CAMPAIGN STATUS -->
 
                     {% if advert.campaign_status == "live" %}
 
@@ -2713,13 +1516,9 @@
 
                     {% endif %}
 
-
-                    <!-- =====================================
-                         CAMPAIGN METRICS
-                    ====================================== -->
+                    <!-- CAMPAIGN METRICS -->
 
                     <div class="metrics">
-
 
                         <div class="metric">
 
@@ -2745,7 +1544,6 @@
 
                         </div>
 
-
                         <div class="metric">
 
                             <span class="metric-label">
@@ -2770,7 +1568,6 @@
 
                         </div>
 
-
                         <div class="metric">
 
                             <span class="metric-label">
@@ -2794,15 +1591,11 @@
 
                         </div>
 
-
                     </div>
-
 
                 </div>
 
-
             </section>
-
 
             <!-- =================================================
                  RESTAURANT SUBSCRIPTION
@@ -2813,9 +1606,7 @@
                 id="restaurant-subscription"
             >
 
-
                 <div class="subscription-top">
-
 
                     <div>
 
@@ -2823,11 +1614,9 @@
                             Restaurant Plan
                         </p>
 
-
                         <h2 class="subscription-title">
                             {{ restaurant_plan_name }}
                         </h2>
-
 
                         {% if is_free_plan %}
 
@@ -2851,7 +1640,6 @@
 
                     </div>
 
-
                     <div class="subscription-price">
 
                         R{{ restaurant_plan_price }}
@@ -2872,13 +1660,11 @@
 
                     </div>
 
-
                 </div>
 
-
-                <!-- =========================================
-                     STANDARD -> PREMIUM MESSAGE
-                ========================================== -->
+                <!-- =================================================
+                     STANDARD TO PREMIUM UPGRADE
+                ================================================== -->
 
                 {% if
                     is_standard_plan
@@ -2888,16 +1674,13 @@
 
                     <div class="premium-upgrade">
 
-
                         <p class="premium-upgrade-label">
                             Get more from Kalxa
                         </p>
 
-
                         <h3>
                             Upgrade to Premium for better features
                         </h3>
-
 
                         <p class="premium-upgrade-copy">
 
@@ -2912,45 +1695,39 @@
 
                         </p>
 
-
                         <div class="premium-benefits">
-
 
                             <div class="premium-benefit">
                                 ✓ Everything in Standard
                             </div>
 
-
                             <div class="premium-benefit">
                                 ✓ Kalxa Stories exposure
                             </div>
-
 
                             <div class="premium-benefit">
                                 ✓ Restaurant analytics
                             </div>
 
-
                             <div class="premium-benefit">
                                 ✓ Customer engagement insights
                             </div>
-
 
                             <div class="premium-benefit">
                                 ✓ Restaurant view visibility
                             </div>
 
-
                             <div class="premium-benefit">
                                 ✓ Contact & directions activity
                             </div>
 
-
                         </div>
 
+                        <!-- YOCO PREMIUM UPGRADE -->
 
                         <form
                             method="POST"
+                            class="yoco-checkout-form"
                             action="{{ url_for(
                                 'admin_restaurant_subscription_checkout',
                                 advert_id=advert.id,
@@ -2958,25 +1735,43 @@
                             ) }}"
                         >
 
+                            {% if csrf_token is defined %}
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+                            {% endif %}
+
                             <button
                                 type="submit"
                                 class="premium-upgrade-action"
                             >
-                                Upgrade to Premium —
-                                R{{ premium_plan_price }}/month
+
+                                <span class="yoco-loading-spinner"></span>
+
+                                <span class="yoco-button-content">
+
+                                    <span class="yoco-button-icon">
+                                        🔒
+                                    </span>
+
+                                    Upgrade with Yoco —
+                                    R{{ premium_plan_price }}/month
+
+                                </span>
+
                             </button>
 
                         </form>
-
 
                     </div>
 
                 {% endif %}
 
-
-                <!-- =========================================
+                <!-- =================================================
                      GRACE PERIOD WARNING
-                ========================================== -->
+                ================================================== -->
 
                 {% if restaurant_subscription_in_grace %}
 
@@ -2986,7 +1781,6 @@
                             ⚠ {{ restaurant_plan_name }}
                             subscription expired
                         </strong>
-
 
                         {% if restaurant_subscription_grace_days_remaining == 1 %}
 
@@ -3015,7 +1809,6 @@
 
                         {% endif %}
 
-
                         {% if restaurant_subscription_grace_ends_at %}
 
                             <span class="grace-deadline">
@@ -3030,7 +1823,6 @@
 
                         {% endif %}
 
-
                         <br>
 
                         Your {{ restaurant_plan_name }} features
@@ -3040,10 +1832,9 @@
 
                 {% endif %}
 
-
-                <!-- =========================================
+                <!-- =================================================
                      FREE PLAN INFORMATION
-                ========================================== -->
+                ================================================== -->
 
                 {% if is_free_plan %}
 
@@ -3067,10 +1858,9 @@
 
                 {% endif %}
 
-
-                <!-- =========================================
-                     PAID EXPIRY
-                ========================================== -->
+                <!-- =================================================
+                     PAID SUBSCRIPTION EXPIRY
+                ================================================== -->
 
                 {% if
                     not is_free_plan
@@ -3098,16 +1888,14 @@
 
                 {% endif %}
 
-
-                <!-- =========================================
+                <!-- =================================================
                      FEATURE ACCESS
-                ========================================== -->
+                ================================================== -->
 
                 <div
                     class="feature-grid"
                     id="restaurant-features"
                 >
-
 
                     <div class="feature">
 
@@ -3118,7 +1906,6 @@
                         </span>
 
                     </div>
-
 
                     <div class="feature">
 
@@ -3140,7 +1927,6 @@
 
                     </div>
 
-
                     <div class="feature">
 
                         Gallery photos
@@ -3160,7 +1946,6 @@
                         {% endif %}
 
                     </div>
-
 
                     <div class="feature">
 
@@ -3182,7 +1967,6 @@
 
                     </div>
 
-
                     <div class="feature">
 
                         Customer experiences
@@ -3202,7 +1986,6 @@
                         {% endif %}
 
                     </div>
-
 
                     <div class="feature">
 
@@ -3224,7 +2007,6 @@
 
                     </div>
 
-
                     <div class="feature">
 
                         Restaurant analytics
@@ -3245,25 +2027,21 @@
 
                     </div>
 
-
                 </div>
 
-
-                <!-- =========================================
-                     PLAN OPTIONS
-                ========================================== -->
+                <!-- =================================================
+                     RESTAURANT PLANS
+                ================================================== -->
 
                 <h3 class="plans-title">
                     Restaurant Plans
                 </h3>
 
-
                 <div class="plan-grid">
 
-
-                    <!-- =====================================
-                         STANDARD
-                    ====================================== -->
+                    <!-- =========================================
+                         STANDARD PLAN
+                    ========================================== -->
 
                     <article
                         class="
@@ -3274,7 +2052,6 @@
                             {% endif %}
                         "
                     >
-
 
                         {% if is_standard_plan %}
 
@@ -3294,11 +2071,9 @@
 
                         {% endif %}
 
-
                         <h3>
                             Standard
                         </h3>
-
 
                         <div class="plan-card-price">
 
@@ -3309,7 +2084,6 @@
                             </span>
 
                         </div>
-
 
                         <ul class="plan-features">
 
@@ -3347,20 +2121,31 @@
 
                         </ul>
 
+                        <!-- STANDARD CURRENT PLAN -->
 
                         {% if is_standard_plan %}
 
-
                             {% if restaurant_subscription_in_grace %}
+
+                                <!-- YOCO STANDARD RENEWAL -->
 
                                 <form
                                     method="POST"
+                                    class="yoco-checkout-form"
                                     action="{{ url_for(
                                         'admin_restaurant_subscription_checkout',
                                         advert_id=advert.id,
                                         plan_tier='standard'
                                     ) }}"
                                 >
+
+                                    {% if csrf_token is defined %}
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token() }}"
+                                        >
+                                    {% endif %}
 
                                     <button
                                         type="submit"
@@ -3369,12 +2154,19 @@
                                             plan-action-dark
                                         "
                                     >
-                                        Renew Standard —
-                                        R{{ standard_plan_price }}
+
+                                        <span class="yoco-loading-spinner"></span>
+
+                                        <span class="yoco-button-content">
+
+                                            🔒 Renew with Yoco —
+                                            R{{ standard_plan_price }}
+
+                                        </span>
+
                                     </button>
 
                                 </form>
-
 
                             {% else %}
 
@@ -3391,18 +2183,27 @@
 
                             {% endif %}
 
-
                         {% elif is_free_plan %}
 
+                            <!-- YOCO STANDARD UPGRADE -->
 
                             <form
                                 method="POST"
+                                class="yoco-checkout-form"
                                 action="{{ url_for(
                                     'admin_restaurant_subscription_checkout',
                                     advert_id=advert.id,
                                     plan_tier='standard'
                                 ) }}"
                             >
+
+                                {% if csrf_token is defined %}
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="{{ csrf_token() }}"
+                                    >
+                                {% endif %}
 
                                 <button
                                     type="submit"
@@ -3411,15 +2212,21 @@
                                         plan-action-dark
                                     "
                                 >
-                                    Upgrade to Standard —
-                                    R{{ standard_plan_price }}
+
+                                    <span class="yoco-loading-spinner"></span>
+
+                                    <span class="yoco-button-content">
+
+                                        🔒 Pay with Yoco —
+                                        R{{ standard_plan_price }}
+
+                                    </span>
+
                                 </button>
 
                             </form>
 
-
                         {% else %}
-
 
                             <button
                                 type="button"
@@ -3433,16 +2240,13 @@
                                 R{{ standard_plan_price }}
                             </button>
 
-
                         {% endif %}
-
 
                     </article>
 
-
-                    <!-- =====================================
-                         PREMIUM
-                    ====================================== -->
+                    <!-- =========================================
+                         PREMIUM PLAN
+                    ========================================== -->
 
                     <article
                         class="
@@ -3454,7 +2258,6 @@
                             {% endif %}
                         "
                     >
-
 
                         {% if is_premium_plan %}
 
@@ -3474,11 +2277,9 @@
 
                         {% endif %}
 
-
                         <h3>
                             Premium
                         </h3>
-
 
                         <div class="plan-card-price">
 
@@ -3489,7 +2290,6 @@
                             </span>
 
                         </div>
-
 
                         <ul class="plan-features">
 
@@ -3527,20 +2327,29 @@
 
                         </ul>
 
-
                         {% if is_premium_plan %}
-
 
                             {% if restaurant_subscription_in_grace %}
 
+                                <!-- YOCO PREMIUM RENEWAL -->
+
                                 <form
                                     method="POST"
+                                    class="yoco-checkout-form"
                                     action="{{ url_for(
                                         'admin_restaurant_subscription_checkout',
                                         advert_id=advert.id,
                                         plan_tier='premium'
                                     ) }}"
                                 >
+
+                                    {% if csrf_token is defined %}
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token() }}"
+                                        >
+                                    {% endif %}
 
                                     <button
                                         type="submit"
@@ -3549,12 +2358,19 @@
                                             plan-action-light
                                         "
                                     >
-                                        Renew Premium —
-                                        R{{ premium_plan_price }}
+
+                                        <span class="yoco-loading-spinner"></span>
+
+                                        <span class="yoco-button-content">
+
+                                            🔒 Renew with Yoco —
+                                            R{{ premium_plan_price }}
+
+                                        </span>
+
                                     </button>
 
                                 </form>
-
 
                             {% else %}
 
@@ -3566,11 +2382,8 @@
                                     "
                                     disabled
                                     style="
-                                        cursor:
-                                            not-allowed;
-
-                                        opacity:
-                                            .75;
+                                        cursor: not-allowed;
+                                        opacity: .75;
                                     "
                                 >
                                     Current Premium Plan
@@ -3578,18 +2391,27 @@
 
                             {% endif %}
 
-
                         {% else %}
 
+                            <!-- YOCO PREMIUM UPGRADE -->
 
                             <form
                                 method="POST"
+                                class="yoco-checkout-form"
                                 action="{{ url_for(
                                     'admin_restaurant_subscription_checkout',
                                     advert_id=advert.id,
                                     plan_tier='premium'
                                 ) }}"
                             >
+
+                                {% if csrf_token is defined %}
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="{{ csrf_token() }}"
+                                    >
+                                {% endif %}
 
                                 <button
                                     type="submit"
@@ -3598,57 +2420,112 @@
                                         plan-action-light
                                     "
                                 >
-                                    Upgrade to Premium —
-                                    R{{ premium_plan_price }}
+
+                                    <span class="yoco-loading-spinner"></span>
+
+                                    <span class="yoco-button-content">
+
+                                        🔒 Pay with Yoco —
+                                        R{{ premium_plan_price }}
+
+                                    </span>
+
                                 </button>
 
                             </form>
 
-
                         {% endif %}
-
 
                     </article>
 
-
                 </div>
 
-
-                <!-- =========================================
-                     PAYMENT INFORMATION
-                ========================================== -->
+                <!-- =================================================
+                     YOCO PAYMENT INFORMATION
+                ================================================== -->
 
                 <div class="payment-info">
 
-                    <strong>
-                        🔒 Secure payment
-                    </strong>
+                    <div class="yoco-payment-label">
 
-                    <br><br>
+                        <span class="yoco-secure-icon">
+                            🔒
+                        </span>
 
-                    Standard and Premium payments are
-                    processed securely through Paystack.
+                        Secure payments powered by Yoco
 
-                    Your restaurant plan changes only after
-                    Kalxa verifies that the payment was
-                    successful.
+                    </div>
 
+                    <div class="yoco-payment-description">
 
-                    {% if restaurant_subscription_in_grace %}
+                        Standard and Premium subscription
+                        payments are processed securely
+                        through Yoco.
+
+                        When you select a paid plan,
+                        Kalxa redirects you to Yoco's
+                        secure checkout page to complete
+                        your payment.
+
+                    </div>
+
+                    <div class="yoco-payment-note">
+
+                        <strong>
+                            Payment verification
+                        </strong>
+
+                        <br>
+
+                        Your restaurant subscription will
+                        only be activated or renewed after
+                        Kalxa successfully verifies
+                        your payment.
+
+                        Returning from Yoco does not
+                        automatically mean the payment
+                        has been confirmed.
 
                         <br><br>
 
-                        Renew before the grace period ends
-                        to keep uninterrupted access to your
-                        paid restaurant features.
+                        <strong>
+                            Billing
+                        </strong>
+
+                        <br>
+
+                        Each successful checkout purchases
+                        one subscription period.
+
+                        Payments do not automatically
+                        renew unless a recurring billing
+                        arrangement is introduced and
+                        explicitly authorised.
+
+                    </div>
+
+                    {% if restaurant_subscription_in_grace %}
+
+                        <div class="yoco-payment-note">
+
+                            <strong>
+                                Grace period reminder
+                            </strong>
+
+                            <br>
+
+                            Renew before your grace
+                            period ends to maintain
+                            uninterrupted access to
+                            your paid restaurant features.
+
+                        </div>
 
                     {% endif %}
 
                 </div>
 
-
             </section>
-
 
             <!-- =================================================
                  RESTAURANT INFORMATION
@@ -3656,10 +2533,7 @@
 
             <div class="sections">
 
-
-                <!-- =========================================
-                     CAMPAIGN DETAILS
-                ========================================== -->
+                <!-- CAMPAIGN DETAILS -->
 
                 <section class="section">
 
@@ -3667,9 +2541,7 @@
                         Campaign Details
                     </h2>
 
-
                     <div class="detail">
-
 
                         <div class="detail-label">
                             Business
@@ -3679,7 +2551,6 @@
                             {{ advert.business_name }}
                         </div>
 
-
                         <div class="detail-label">
                             Headline
                         </div>
@@ -3687,7 +2558,6 @@
                         <div class="detail-value">
                             {{ advert.headline or "—" }}
                         </div>
-
 
                         <div class="detail-label">
                             Area
@@ -3697,7 +2567,6 @@
                             {{ advert.area or "—" }}
                         </div>
 
-
                         <div class="detail-label">
                             Address
                         </div>
@@ -3706,15 +2575,11 @@
                             {{ advert.address or "—" }}
                         </div>
 
-
                     </div>
 
                 </section>
 
-
-                <!-- =========================================
-                     CUSTOMER CONTACT
-                ========================================== -->
+                <!-- CUSTOMER CONTACT -->
 
                 <section class="section">
 
@@ -3722,9 +2587,7 @@
                         Customer Contact
                     </h2>
 
-
                     <div class="detail">
-
 
                         <div class="detail-label">
                             WhatsApp
@@ -3734,7 +2597,6 @@
                             {{ advert.whatsapp_number or "—" }}
                         </div>
 
-
                         <div class="detail-label">
                             Phone
                         </div>
@@ -3742,7 +2604,6 @@
                         <div class="detail-value">
                             {{ advert.phone_number or "—" }}
                         </div>
-
 
                         <div class="detail-label">
                             Directions
@@ -3762,15 +2623,11 @@
 
                         </div>
 
-
                     </div>
 
                 </section>
 
-
-                <!-- =========================================
-                     RESTAURANT REEL
-                ========================================== -->
+                <!-- RESTAURANT REEL -->
 
                 <section class="section">
 
@@ -3778,14 +2635,11 @@
                         Restaurant Reel
                     </h2>
 
-
                     <div class="detail">
-
 
                         <div class="detail-label">
                             Status
                         </div>
-
 
                         <div class="detail-value">
 
@@ -3805,11 +2659,9 @@
 
                         </div>
 
-
                         <div class="detail-label">
                             Plan access
                         </div>
-
 
                         <div class="detail-value">
 
@@ -3825,15 +2677,11 @@
 
                         </div>
 
-
                     </div>
 
                 </section>
 
-
-                <!-- =========================================
-                     PAID FEATURES
-                ========================================== -->
+                <!-- PAID FEATURES -->
 
                 {% if not is_free_plan %}
 
@@ -3843,9 +2691,7 @@
                             Paid Restaurant Features
                         </h2>
 
-
                         <div class="detail">
-
 
                             <div class="detail-label">
                                 Gallery
@@ -3861,7 +2707,6 @@
 
                             </div>
 
-
                             <div class="detail-label">
                                 Hours
                             </div>
@@ -3875,7 +2720,6 @@
                                 {% endif %}
 
                             </div>
-
 
                             <div class="detail-label">
                                 Experiences
@@ -3891,7 +2735,6 @@
 
                             </div>
 
-
                             <div class="detail-label">
                                 Stories
                             </div>
@@ -3905,7 +2748,6 @@
                                 {% endif %}
 
                             </div>
-
 
                             <div class="detail-label">
                                 Analytics
@@ -3921,16 +2763,13 @@
 
                             </div>
 
-
                         </div>
 
                     </section>
 
                 {% endif %}
 
-
             </div>
-
 
             <!-- =================================================
                  RESTAURANT ACTIONS
@@ -3938,20 +2777,15 @@
 
             <div class="actions">
 
-
                 <a
                     href="{{ url_for(
                         'admin_edit_restaurant',
                         advert_id=advert.id
                     ) }}"
-                    class="
-                        action
-                        action-primary
-                    "
+                    class="action action-primary"
                 >
                     ✏️ Edit Restaurant
                 </a>
-
 
                 {% if can_use_reel %}
 
@@ -3960,22 +2794,24 @@
                             'admin_restaurant_reel',
                             advert_id=advert.id
                         ) }}"
-                        class="
-                            action
-                            action-primary
-                        "
+                        class="action action-primary"
                     >
+
                         🎬
 
                         {% if advert.reel %}
+
                             Manage Reel
+
                         {% else %}
+
                             Upload Reel
+
                         {% endif %}
+
                     </a>
 
                 {% endif %}
-
 
                 <a
                     href="{{ url_for(
@@ -3984,14 +2820,10 @@
                     ) }}"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="
-                        action
-                        action-secondary
-                    "
+                    class="action action-secondary"
                 >
                     View Public Page →
                 </a>
-
 
                 {% if advert.active %}
 
@@ -4003,12 +2835,17 @@
                         ) }}"
                     >
 
+                        {% if csrf_token is defined %}
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+                        {% endif %}
+
                         <button
                             type="submit"
-                            class="
-                                action
-                                action-warning
-                            "
+                            class="action action-warning"
                             style="width:100%;"
                         >
                             ⏸ Pause Advert
@@ -4016,9 +2853,7 @@
 
                     </form>
 
-
                 {% else %}
-
 
                     <form
                         method="POST"
@@ -4028,12 +2863,17 @@
                         ) }}"
                     >
 
+                        {% if csrf_token is defined %}
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+                        {% endif %}
+
                         <button
                             type="submit"
-                            class="
-                                action
-                                action-primary
-                            "
+                            class="action action-primary"
                             style="width:100%;"
                         >
                             ▶ Resume Advert
@@ -4041,26 +2881,19 @@
 
                     </form>
 
-
                 {% endif %}
-
 
             </div>
 
-
         </div>
-
 
     </main>
 
-
 </div>
-
 
 <script>
 
 (function () {
-
 
     /* =====================================================
        MOBILE SIDEBAR
@@ -4071,18 +2904,15 @@
             "mobile-menu-button"
         );
 
-
     const overlay =
         document.getElementById(
             "sidebar-overlay"
         );
 
-
     const sidebarLinks =
         document.querySelectorAll(
             ".sidebar-link"
         );
-
 
     function openSidebar() {
 
@@ -4090,10 +2920,7 @@
             "sidebar-open"
         );
 
-
-        if (
-            menuButton
-        ) {
+        if (menuButton) {
 
             menuButton.setAttribute(
                 "aria-expanded",
@@ -4104,17 +2931,13 @@
 
     }
 
-
     function closeSidebar() {
 
         document.body.classList.remove(
             "sidebar-open"
         );
 
-
-        if (
-            menuButton
-        ) {
+        if (menuButton) {
 
             menuButton.setAttribute(
                 "aria-expanded",
@@ -4125,10 +2948,7 @@
 
     }
 
-
-    if (
-        menuButton
-    ) {
+    if (menuButton) {
 
         menuButton.addEventListener(
             "click",
@@ -4153,10 +2973,7 @@
 
     }
 
-
-    if (
-        overlay
-    ) {
+    if (overlay) {
 
         overlay.addEventListener(
             "click",
@@ -4165,19 +2982,15 @@
 
     }
 
-
     sidebarLinks.forEach(
-        function (
-            link
-        ) {
+        function (link) {
 
             link.addEventListener(
                 "click",
                 function () {
 
                     if (
-                        window.innerWidth
-                        <= 820
+                        window.innerWidth <= 820
                     ) {
 
                         closeSidebar();
@@ -4190,16 +3003,11 @@
         }
     );
 
-
     document.addEventListener(
         "keydown",
-        function (
-            event
-        ) {
+        function (event) {
 
-            if (
-                event.key === "Escape"
-            ) {
+            if (event.key === "Escape") {
 
                 closeSidebar();
 
@@ -4208,12 +3016,110 @@
         }
     );
 
+    /* =====================================================
+       YOCO CHECKOUT BUTTON PROTECTION
+    ===================================================== */
+
+    const yocoForms =
+        document.querySelectorAll(
+            ".yoco-checkout-form"
+        );
+
+    yocoForms.forEach(
+        function (form) {
+
+            form.addEventListener(
+                "submit",
+                function (event) {
+
+                    if (
+                        form.dataset.submitting === "true"
+                    ) {
+
+                        event.preventDefault();
+
+                        return;
+
+                    }
+
+                    form.dataset.submitting = "true";
+
+                    form.classList.add(
+                        "is-submitting"
+                    );
+
+                    const button =
+                        form.querySelector(
+                            'button[type="submit"]'
+                        );
+
+                    if (button) {
+
+                        button.setAttribute(
+                            "aria-disabled",
+                            "true"
+                        );
+
+                        const content =
+                            button.querySelector(
+                                ".yoco-button-content"
+                            );
+
+                        if (content) {
+
+                            content.textContent =
+                                "Connecting to Yoco...";
+
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+    /*
+       Restore buttons when the page is restored from
+       the browser back-forward cache.
+    */
+
+    window.addEventListener(
+        "pageshow",
+        function () {
+
+            yocoForms.forEach(
+                function (form) {
+
+                    form.dataset.submitting = "false";
+
+                    form.classList.remove(
+                        "is-submitting"
+                    );
+
+                    const button =
+                        form.querySelector(
+                            'button[type="submit"]'
+                        );
+
+                    if (button) {
+
+                        button.removeAttribute(
+                            "aria-disabled"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
 
 })();
 
 </script>
 
-
 </body>
-
 </html>
