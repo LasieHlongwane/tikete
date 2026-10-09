@@ -23493,44 +23493,6 @@ def organizer_login():
 
 
 
-@app.route("/webhooks/yoco", methods=["POST"])
-def yoco_webhook():
-
-    raw_body = request.get_data(cache=False)
-
-    try:
-        event = verify_yoco_webhook(
-            raw_body,
-            request.headers,
-        )
-    except YocoWebhookError:
-        current_app.logger.warning(
-            "[Yoco] Webhook verification rejected"
-        )
-        return jsonify({"error": "Invalid webhook"}), 400
-
-    try:
-        result = process_yoco_subscription_payment(event)
-
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Yoco] Webhook processing error"
-        )
-        return jsonify({"error": "Processing failed"}), 500
-
-    if result in ("unmatched", "invalid"):
-        current_app.logger.warning(
-            "[Yoco] Payment not activated: %s",
-            result,
-        )
-        return jsonify({"result": result}), 422
-
-    return jsonify({
-        "received": True,
-        "result": result,
-    }), 200
-
 # ============================================================
 # ORGANIZER - FORGOT PASSWORD
 # ============================================================
