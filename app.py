@@ -45,6 +45,13 @@ from firebase_admin import (
 )
 
 from dotenv import load_dotenv
+
+
+from services.yoco_webhook import (
+    verify_yoco_webhook,
+    YocoWebhookError,
+)
+
 from uuid import uuid4
 from flask import (
     Flask,
@@ -21824,6 +21831,57 @@ def get_restaurant_experience_session_id():
     return anonymous_session_id
 
 
+
+@app.route("/webhooks/yoco", methods=["POST"])
+def yoco_webhook():
+
+    raw_body = request.get_data(cache=False)
+
+    try:
+        event = verify_yoco_webhook(
+            raw_body,
+            request.headers,
+        )
+
+    except YocoWebhookError:
+        app.logger.warning(
+            "Rejected Yoco webhook: signature or payload invalid."
+        )
+        return jsonify({"error": "Invalid webhook"}), 400
+
+    event_type = event.get("type")
+
+    if event_type != "payment.succeeded":
+        return jsonify({"received": True}), 200
+
+    try:
+        result = process_yoco_subscription_payment(event)
+
+    except Exception:
+        db.session.rollback()
+
+        app.logger.exception(
+            "Yoco subscription webhook processing failed."
+        )
+
+        return jsonify({"error": "Processing failed"}), 500
+
+    if result == "unmatched":
+        app.logger.warning(
+            "Verified Yoco payment could not be matched."
+        )
+        return jsonify({"error": "Unmatched payment"}), 422
+
+    if result == "invalid":
+        app.logger.error(
+            "Yoco payment failed subscription validation."
+        )
+        return jsonify({"error": "Payment mismatch"}), 422
+
+    return jsonify({
+        "received": True,
+        "result": result,
+    }), 200
 
 
 # ============================================================
