@@ -908,6 +908,304 @@ def cloudinary_reels_configured():
     )
 
 
+
+
+
+
+def _yoco_amount_in_cents(amount):
+    try:
+        value = Decimal(str(amount)) * 100
+        if value != value.to_integral_value():
+            return None
+        return int(value)
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+
+
+def _yoco_payment_used_elsewhere(payment_id, kind, row_id):
+    organizer_match = (
+        SubscriptionPayment.query
+        .filter_by(yoco_payment_id=payment_id)
+        .first()
+    )
+
+    restaurant_match = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(yoco_payment_id=payment_id)
+        .first()
+    )
+
+    if organizer_match and not (
+        kind == "organizer" and organizer_match.id == row_id
+    ):
+        return True
+
+    if restaurant_match and not (
+        kind == "restaurant" and restaurant_match.id == row_id
+    ):
+        return True
+
+    return False
+
+
+def process_yoco_subscription_payment(event):
+    """
+    Called only after signature verification.
+
+    Returns:
+      activated
+      already_processed
+      ignored
+      unmatched
+      invalid
+
+    Requires PostgreSQL for reliable row-level locking.
+    """
+
+    if not isinstance(event, dict):
+        return "invalid"
+
+    if event.get("type") != "payment.succeeded":
+        return "ignored"
+
+    # Yoco's checkout payment notification carries
+    # payment details in the event's payload/data object.
+    data = event.get("payload")
+
+    if data is None:
+        data = event.get("data")
+
+    if not isinstance(data, dict):
+        return "invalid"
+
+    checkout_id = str(
+        data.get("checkoutId") or ""
+    ).strip()
+
+    payment_id = str(
+        data.get("id") or ""
+    ).strip()
+
+    status = str(
+        data.get("status") or ""
+    ).strip().lower()
+
+    currency = str(
+        data.get("currency") or ""
+    ).strip().upper()
+
+    amount_cents = data.get("amount")
+
+    if not checkout_id or not payment_id:
+        return "invalid"
+
+    if status != "succeeded":
+        return "invalid"
+
+    if currency != "ZAR":
+        return "invalid"
+
+    if (
+        isinstance(amount_cents, bool)
+        or not isinstance(amount_cents, int)
+        or amount_cents <= 0
+    ):
+        return "invalid"
+
+    try:
+        # Prevent two webhook requests from activating
+        # subscriptions concurrently for the same checkout.
+        organizer_payment = (
+            SubscriptionPayment.query
+            .filter_by(
+                yoco_checkout_id=checkout_id,
+                payment_method="yoco",
+            )
+            .with_for_update()
+            .first()
+        )
+
+        restaurant_payment = (
+            RestaurantSubscriptionPayment.query
+            .filter_by(
+                yoco_checkout_id=checkout_id,
+                payment_method="yoco",
+            )
+            .with_for_update()
+            .first()
+        )
+
+        if organizer_payment and restaurant_payment:
+            db.session.rollback()
+            return "invalid"
+
+        if not organizer_payment and not restaurant_payment:
+            db.session.rollback()
+            return "unmatched"
+
+        kind = (
+            "organizer"
+            if organizer_payment
+            else "restaurant"
+        )
+
+        payment = organizer_payment or restaurant_payment
+
+        if _yoco_payment_used_elsewhere(
+            payment_id,
+            kind,
+            payment.id,
+        ):
+            db.session.rollback()
+            return "invalid"
+
+        if (
+            _yoco_amount_in_cents(payment.amount)
+            != amount_cents
+        ):
+            db.session.rollback()
+            return "invalid"
+
+        if (
+            kind == "restaurant"
+            and payment.currency.upper() != currency
+        ):
+            db.session.rollback()
+            return "invalid"
+
+        if payment.payment_status == "paid":
+            if payment.yoco_payment_id == payment_id:
+                db.session.rollback()
+                return "already_processed"
+
+            db.session.rollback()
+            return "invalid"
+
+        if payment.payment_status != "pending":
+            db.session.rollback()
+            return "invalid"
+
+        if payment.yoco_payment_id not in (None, payment_id):
+            db.session.rollback()
+            return "invalid"
+
+        now = datetime.utcnow()
+
+        if kind == "organizer":
+
+            organizer = (
+                Organizer.query
+                .filter_by(id=payment.organizer_id)
+                .with_for_update()
+                .first()
+            )
+
+            if not organizer:
+                db.session.rollback()
+                return "invalid"
+
+            if organizer.subscription_status == "suspended":
+                db.session.rollback()
+                return "invalid"
+
+            current_expiry = organizer.subscription_expires_at
+
+            start = (
+                current_expiry
+                if current_expiry and current_expiry > now
+                else now
+            )
+
+            end = start + timedelta(
+                days=payment.period_days
+            )
+
+            organizer.active = True
+            organizer.subscription_status = "active"
+            organizer.subscription_started_at = start
+            organizer.subscription_expires_at = end
+
+        else:
+
+            advert = (
+                RestaurantAdvert.query
+                .filter_by(
+                    id=payment.restaurant_advert_id,
+                    organizer_id=payment.organizer_id,
+                )
+                .with_for_update()
+                .first()
+            )
+
+            organizer = (
+                Organizer.query
+                .filter_by(id=payment.organizer_id)
+                .with_for_update()
+                .first()
+            )
+
+            if not advert or not organizer:
+                db.session.rollback()
+                return "invalid"
+
+            if (
+                not organizer.active
+                or organizer.subscription_status == "suspended"
+            ):
+                db.session.rollback()
+                return "invalid"
+
+            if payment.plan_tier not in RESTAURANT_PAYABLE_PLANS:
+                db.session.rollback()
+                return "invalid"
+
+            current_tier = (
+                advert.subscription_tier or "free"
+            ).lower()
+
+            current_expiry = advert.subscription_expires_at
+
+            same_active_tier = (
+                current_tier == payment.plan_tier
+                and current_expiry
+                and current_expiry > now
+            )
+
+            start = (
+                current_expiry
+                if same_active_tier
+                else now
+            )
+
+            end = start + timedelta(
+                days=payment.period_days
+            )
+
+            advert.subscription_tier = payment.plan_tier
+            advert.subscription_status = "active"
+            advert.subscription_started_at = start
+            advert.subscription_expires_at = end
+
+        payment.payment_status = "paid"
+        payment.payment_method = "yoco"
+        payment.yoco_payment_id = payment_id
+        payment.yoco_payment_status = "succeeded"
+        payment.payment_verified_at = now
+        payment.paid_at = now
+        payment.confirmed_at = now
+        payment.confirmed_by = "yoco_webhook"
+        payment.subscription_start = start
+        payment.subscription_end = end
+
+        db.session.commit()
+        return "activated"
+
+    except Exception:
+        db.session.rollback()
+        raise
+
+
+
 def allowed_event_reel_filename(filename):
 
     if (
@@ -23160,6 +23458,44 @@ def organizer_login():
 
 
 
+
+@app.route("/webhooks/yoco", methods=["POST"])
+def yoco_webhook():
+
+    raw_body = request.get_data(cache=False)
+
+    try:
+        event = verify_yoco_webhook(
+            raw_body,
+            request.headers,
+        )
+    except YocoWebhookError:
+        current_app.logger.warning(
+            "[Yoco] Webhook verification rejected"
+        )
+        return jsonify({"error": "Invalid webhook"}), 400
+
+    try:
+        result = process_yoco_subscription_payment(event)
+
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "[Yoco] Webhook processing error"
+        )
+        return jsonify({"error": "Processing failed"}), 500
+
+    if result in ("unmatched", "invalid"):
+        current_app.logger.warning(
+            "[Yoco] Payment not activated: %s",
+            result,
+        )
+        return jsonify({"result": result}), 422
+
+    return jsonify({
+        "received": True,
+        "result": result,
+    }), 200
 
 # ============================================================
 # ORGANIZER - FORGOT PASSWORD
