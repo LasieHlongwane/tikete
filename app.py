@@ -948,34 +948,46 @@ def _yoco_payment_used_elsewhere(payment_id, kind, row_id):
     return False
 
 
+
 def process_yoco_subscription_payment(event):
     """
-    Called only after signature verification.
+    Process a verified Yoco subscription payment.
 
     Returns:
-      activated
-      already_processed
-      ignored
-      unmatched
-      invalid
+        activated
+        already_processed
+        ignored
+        unmatched
+        invalid
 
-    Requires PostgreSQL for reliable row-level locking.
+    IMPORTANT:
+        Only call after verifying the webhook signature.
+        Uses PostgreSQL row-level locking.
     """
 
     if not isinstance(event, dict):
         return "invalid"
 
-    if event.get("type") != "payment.succeeded":
+    event_type = str(
+        event.get("type") or ""
+    ).strip()
+
+    if event_type != "payment.succeeded":
+        current_app.logger.info(
+            "[Yoco] Ignored event type: %s",
+            event_type,
+        )
         return "ignored"
 
-    # Yoco's checkout payment notification carries
-    # payment details in the event's payload/data object.
     data = event.get("payload")
 
     if data is None:
         data = event.get("data")
 
     if not isinstance(data, dict):
+        current_app.logger.warning(
+            "[Yoco] Missing payment data object."
+        )
         return "invalid"
 
     checkout_id = str(
@@ -996,13 +1008,35 @@ def process_yoco_subscription_payment(event):
 
     amount_cents = data.get("amount")
 
-    if not checkout_id or not payment_id:
+    metadata = data.get("metadata") or {}
+
+    if not isinstance(metadata, dict):
+        return "invalid"
+
+    if not checkout_id:
+        current_app.logger.warning(
+            "[Yoco] Event missing checkout ID."
+        )
+        return "invalid"
+
+    if not payment_id:
+        current_app.logger.warning(
+            "[Yoco] Event missing payment ID."
+        )
         return "invalid"
 
     if status != "succeeded":
+        current_app.logger.warning(
+            "[Yoco] Unexpected success-event status: %s",
+            status,
+        )
         return "invalid"
 
     if currency != "ZAR":
+        current_app.logger.warning(
+            "[Yoco] Unexpected currency: %s",
+            currency,
+        )
         return "invalid"
 
     if (
@@ -1010,11 +1044,12 @@ def process_yoco_subscription_payment(event):
         or not isinstance(amount_cents, int)
         or amount_cents <= 0
     ):
+        current_app.logger.warning(
+            "[Yoco] Invalid payment amount."
+        )
         return "invalid"
 
     try:
-        # Prevent two webhook requests from activating
-        # subscriptions concurrently for the same checkout.
         organizer_payment = (
             SubscriptionPayment.query
             .filter_by(
@@ -1037,19 +1072,29 @@ def process_yoco_subscription_payment(event):
 
         if organizer_payment and restaurant_payment:
             db.session.rollback()
+            current_app.logger.error(
+                "[Yoco] Checkout matched two payment records."
+            )
             return "invalid"
 
         if not organizer_payment and not restaurant_payment:
             db.session.rollback()
+            current_app.logger.warning(
+                "[Yoco] No subscription payment matches checkout."
+            )
             return "unmatched"
 
         kind = (
             "organizer"
-            if organizer_payment
+            if organizer_payment is not None
             else "restaurant"
         )
 
-        payment = organizer_payment or restaurant_payment
+        payment = (
+            organizer_payment
+            if organizer_payment is not None
+            else restaurant_payment
+        )
 
         if _yoco_payment_used_elsewhere(
             payment_id,
@@ -1057,20 +1102,42 @@ def process_yoco_subscription_payment(event):
             payment.id,
         ):
             db.session.rollback()
+            current_app.logger.warning(
+                "[Yoco] Payment ID already used elsewhere."
+            )
             return "invalid"
 
-        if (
-            _yoco_amount_in_cents(payment.amount)
-            != amount_cents
-        ):
+        expected_amount = _yoco_amount_in_cents(
+            payment.amount
+        )
+
+        if expected_amount != amount_cents:
             db.session.rollback()
+            current_app.logger.warning(
+                "[Yoco] Payment amount mismatch."
+            )
             return "invalid"
 
+        if kind == "restaurant":
+            if (
+                str(payment.currency or "").upper()
+                != currency
+            ):
+                db.session.rollback()
+                return "invalid"
+
+        reference = metadata.get(
+            "kalxa_payment_reference"
+        )
+
         if (
-            kind == "restaurant"
-            and payment.currency.upper() != currency
+            reference is not None
+            and str(reference) != payment.payment_reference
         ):
             db.session.rollback()
+            current_app.logger.warning(
+                "[Yoco] Payment reference mismatch."
+            )
             return "invalid"
 
         if payment.payment_status == "paid":
@@ -1085,8 +1152,22 @@ def process_yoco_subscription_payment(event):
             db.session.rollback()
             return "invalid"
 
-        if payment.yoco_payment_id not in (None, payment_id):
+        if payment.yoco_payment_id not in (
+            None,
+            payment_id,
+        ):
             db.session.rollback()
+            return "invalid"
+
+        if (
+            not isinstance(payment.period_days, int)
+            or isinstance(payment.period_days, bool)
+            or payment.period_days <= 0
+        ):
+            db.session.rollback()
+            current_app.logger.warning(
+                "[Yoco] Invalid subscription duration."
+            )
             return "invalid"
 
         now = datetime.utcnow()
@@ -1095,12 +1176,14 @@ def process_yoco_subscription_payment(event):
 
             organizer = (
                 Organizer.query
-                .filter_by(id=payment.organizer_id)
+                .filter_by(
+                    id=payment.organizer_id
+                )
                 .with_for_update()
                 .first()
             )
 
-            if not organizer:
+            if organizer is None:
                 db.session.rollback()
                 return "invalid"
 
@@ -1108,7 +1191,9 @@ def process_yoco_subscription_payment(event):
                 db.session.rollback()
                 return "invalid"
 
-            current_expiry = organizer.subscription_expires_at
+            current_expiry = (
+                organizer.subscription_expires_at
+            )
 
             start = (
                 current_expiry
@@ -1139,12 +1224,14 @@ def process_yoco_subscription_payment(event):
 
             organizer = (
                 Organizer.query
-                .filter_by(id=payment.organizer_id)
+                .filter_by(
+                    id=payment.organizer_id
+                )
                 .with_for_update()
                 .first()
             )
 
-            if not advert or not organizer:
+            if advert is None or organizer is None:
                 db.session.rollback()
                 return "invalid"
 
@@ -1159,15 +1246,17 @@ def process_yoco_subscription_payment(event):
                 db.session.rollback()
                 return "invalid"
 
-            current_tier = (
+            current_tier = str(
                 advert.subscription_tier or "free"
             ).lower()
 
-            current_expiry = advert.subscription_expires_at
+            current_expiry = (
+                advert.subscription_expires_at
+            )
 
             same_active_tier = (
                 current_tier == payment.plan_tier
-                and current_expiry
+                and current_expiry is not None
                 and current_expiry > now
             )
 
@@ -1198,11 +1287,19 @@ def process_yoco_subscription_payment(event):
         payment.subscription_end = end
 
         db.session.commit()
+
+        current_app.logger.info(
+            "[Yoco] Activated %s subscription for payment record %s.",
+            kind,
+            payment.id,
+        )
+
         return "activated"
 
     except Exception:
         db.session.rollback()
         raise
+
 
 
 
