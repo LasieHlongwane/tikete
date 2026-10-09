@@ -19,2569 +19,2407 @@
     Restaurant Control Centre | Kalxa
 </title>
 
-
 <style>
 
-    /* =====================================================
-       GLOBAL
-    ===================================================== */
+/* =====================================================
+   GLOBAL
+===================================================== */
 
-    * {
-        box-sizing: border-box;
-    }
+* {
+    box-sizing: border-box;
+}
 
+:root {
 
-    :root {
+    --page-bg: #e5e7eb;
+    --surface: #ffffff;
+    --surface-soft: #f7f8fa;
+    --surface-muted: #eceef1;
 
-        --page-bg: #e5e7eb;
-        --surface: #ffffff;
-        --surface-soft: #f7f8fa;
-        --surface-muted: #eceef1;
+    --text: #17191d;
+    --text-soft: #5f6670;
+    --muted: #858b94;
 
-        --text: #17191d;
-        --text-soft: #5f6670;
-        --muted: #858b94;
+    --border: #dfe2e6;
+    --border-soft: #eceef1;
 
-        --border: #dfe2e6;
-        --border-soft: #eceef1;
+    --black: #0b0c0e;
+    --charcoal: #202328;
+    --charcoal-soft: #30343a;
 
-        --black: #0b0c0e;
-        --charcoal: #202328;
-        --charcoal-soft: #30343a;
+    --green: #226943;
+    --green-bg: #e9f7ef;
 
-        --green: #226943;
-        --green-bg: #e9f7ef;
+    --orange: #9a5a15;
+    --orange-bg: #fff3df;
 
-        --orange: #9a5a15;
-        --orange-bg: #fff3df;
+    --red: #9c3737;
+    --red-bg: #fbeaea;
 
-        --red: #9c3737;
-        --red-bg: #fbeaea;
+    --blue: #234d8f;
+    --blue-bg: #eaf0fa;
 
-        --blue: #234d8f;
-        --blue-bg: #eaf0fa;
+    --gold: #8b6a13;
+    --gold-bg: #fff8df;
 
-        --purple: #5b3ea8;
-        --purple-bg: #f0ebff;
+    --shadow:
+        0 18px 45px rgba(15, 23, 42, .08);
 
-        --gold: #8b6a13;
-        --gold-bg: #fff8df;
+    --shadow-soft:
+        0 8px 24px rgba(15, 23, 42, .055);
+}
 
-        --shadow:
-            0 18px 45px
-            rgba(15, 23, 42, .08);
+html {
+    scroll-behavior: smooth;
+}
 
-        --shadow-soft:
-            0 8px 24px
-            rgba(15, 23, 42, .055);
-    }
+body {
 
+    margin: 0;
 
-    html {
-        scroll-behavior: smooth;
-    }
+    background:
+        linear-gradient(
+            180deg,
+            #e9eaec 0%,
+            #d8dade 100%
+        );
 
+    color: var(--text);
 
-    body {
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
 
-        margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
 
-        background:
-            linear-gradient(
-                180deg,
-                #e9eaec 0%,
-                #d8dade 100%
-            );
+a {
+    color: inherit;
+}
 
-        color: var(--text);
+button,
+input {
+    font: inherit;
+}
 
-        font-family:
-            Inter,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            Roboto,
-            Helvetica,
-            Arial,
-            sans-serif;
+button {
+    cursor: pointer;
+}
 
-        -webkit-font-smoothing: antialiased;
-        text-rendering: optimizeLegibility;
-    }
+button:disabled {
+    cursor: not-allowed;
+    opacity: .65;
+}
 
+form {
+    margin: 0;
+}
 
-    a {
-        color: inherit;
-    }
+/* =====================================================
+   APP SHELL
+===================================================== */
 
+.app-shell {
 
-    button,
-    input {
-        font: inherit;
-    }
+    width: min(100% - 28px, 1440px);
 
+    margin: 0 auto;
 
-    button {
-        cursor: pointer;
-    }
+    padding: 18px 0 80px;
+}
 
+/* =====================================================
+   TOP NAV
+===================================================== */
 
-    form {
-        margin: 0;
-    }
+.top-nav {
 
+    display: flex;
 
-    /* =====================================================
-       APP SHELL
-    ===================================================== */
+    align-items: center;
+    justify-content: space-between;
 
-    .app-shell {
+    gap: 18px;
 
-        width:
-            min(
-                100% - 28px,
-                1440px
-            );
+    margin-bottom: 18px;
 
-        margin: 0 auto;
+    padding: 14px 18px;
 
-        padding:
-            18px 0
-            80px;
-    }
+    background:
+        linear-gradient(
+            135deg,
+            #090a0c,
+            #1c1f24
+        );
 
+    border: 1px solid #34383f;
 
-    /* =====================================================
-       TOP NAV
-    ===================================================== */
+    border-radius: 17px;
 
-    .top-nav {
+    box-shadow:
+        0 14px 35px rgba(0, 0, 0, .18);
+}
 
-        display: flex;
+.brand {
 
-        align-items: center;
-        justify-content: space-between;
+    display: flex;
 
-        gap: 18px;
+    align-items: center;
 
-        margin-bottom: 18px;
+    gap: 10px;
 
-        padding:
-            14px 18px;
+    color: #ffffff;
 
-        background:
-            linear-gradient(
-                135deg,
-                #090a0c,
-                #1c1f24
-            );
+    text-decoration: none;
+}
 
-        border:
-            1px solid #34383f;
+.brand-mark {
 
-        border-radius: 17px;
+    display: flex;
 
-        box-shadow:
-            0 14px 35px
-            rgba(0, 0, 0, .18);
-    }
+    align-items: center;
+    justify-content: center;
 
+    width: 32px;
+    height: 32px;
 
-    .brand {
+    background: #ffffff;
 
-        display: flex;
+    color: #111318;
 
-        align-items: center;
+    border-radius: 9px;
 
-        gap: 10px;
+    font-size: 12px;
+    font-weight: 950;
+}
 
-        color: #ffffff;
+.brand-copy strong {
 
-        text-decoration: none;
-    }
+    display: block;
 
+    font-size: 11px;
+    font-weight: 950;
 
-    .brand-mark {
+    letter-spacing: .08em;
+}
 
-        display: flex;
+.brand-copy span {
 
-        align-items: center;
-        justify-content: center;
+    display: block;
 
-        width: 32px;
-        height: 32px;
+    margin-top: 2px;
 
-        background: #ffffff;
+    color: #8f969f;
 
-        color: #111318;
+    font-size: 7px;
 
-        border-radius: 9px;
+    letter-spacing: .08em;
 
-        font-size: 12px;
-        font-weight: 950;
-    }
+    text-transform: uppercase;
+}
 
+.top-nav-actions {
 
-    .brand-copy strong {
+    display: flex;
 
-        display: block;
+    align-items: center;
 
-        font-size: 11px;
-        font-weight: 950;
+    gap: 8px;
+}
 
-        letter-spacing: .08em;
-    }
+.top-nav-link {
 
+    display: inline-flex;
 
-    .brand-copy span {
+    align-items: center;
+    justify-content: center;
 
-        display: block;
+    min-height: 34px;
 
-        margin-top: 2px;
+    padding: 6px 10px;
 
-        color: #8f969f;
+    color: #bfc4cb;
 
-        font-size: 7px;
+    border-radius: 8px;
 
-        letter-spacing: .08em;
+    font-size: 8px;
+    font-weight: 900;
 
-        text-transform: uppercase;
-    }
+    text-decoration: none;
+}
 
+.top-nav-link:hover {
 
-    .top-nav-actions {
+    background: rgba(255,255,255,.07);
 
-        display: flex;
+    color: #ffffff;
+}
 
-        align-items: center;
+.top-nav-logout {
+    border: 1px solid rgba(255,255,255,.12);
+}
 
-        gap: 8px;
-    }
+/* =====================================================
+   MAIN LAYOUT
+===================================================== */
 
+.control-layout {
 
-    .top-nav-link {
+    display: grid;
 
-        display: inline-flex;
+    grid-template-columns:
+        270px
+        minmax(0, 1fr);
 
-        align-items: center;
-        justify-content: center;
+    gap: 18px;
 
-        min-height: 34px;
+    align-items: start;
+}
 
-        padding:
-            6px 10px;
+.main-content {
+    min-width: 0;
+}
 
-        color: #bfc4cb;
+/* =====================================================
+   SIDEBAR
+===================================================== */
 
-        border-radius: 8px;
+.sidebar {
 
-        font-size: 8px;
-        font-weight: 900;
+    position: sticky;
 
-        text-decoration: none;
-    }
+    top: 18px;
 
+    max-height: calc(100vh - 36px);
 
-    .top-nav-link:hover {
+    overflow-y: auto;
+    overflow-x: hidden;
 
-        background:
-            rgba(255,255,255,.07);
+    background:
+        linear-gradient(
+            180deg,
+            #141619 0%,
+            #202328 100%
+        );
 
-        color: #ffffff;
-    }
+    color: #ffffff;
 
+    border: 1px solid #33373d;
 
-    .top-nav-logout {
+    border-radius: 20px;
 
-        border:
-            1px solid
-            rgba(255,255,255,.12);
-    }
+    box-shadow:
+        0 18px 42px rgba(15,23,42,.16);
 
+    scrollbar-width: thin;
+    scrollbar-color: #454a51 transparent;
+}
 
-    /* =====================================================
-       MAIN LAYOUT
-    ===================================================== */
+.sidebar-header {
+
+    padding: 22px 18px 18px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.07);
+}
+
+.sidebar-brand {
+
+    margin: 0 0 13px;
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 950;
+
+    letter-spacing: .15em;
+}
+
+.sidebar-title {
+
+    margin: 0;
+
+    color: #f5f6f7;
+
+    font-size: 18px;
+    font-weight: 950;
+
+    letter-spacing: -.03em;
+}
+
+.sidebar-description {
+
+    margin: 7px 0 0;
+
+    color: #8f969f;
+
+    font-size: 8px;
+
+    line-height: 1.55;
+}
+
+.sidebar-section {
+
+    padding: 15px 11px 5px;
+}
+
+.sidebar-section-title {
+
+    margin: 0 8px 7px;
+
+    color: #707780;
+
+    font-size: 7px;
+    font-weight: 950;
+
+    letter-spacing: .14em;
+
+    text-transform: uppercase;
+}
+
+.sidebar-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-height: 40px;
+
+    margin-bottom: 4px;
+
+    padding: 8px 10px;
+
+    color: #c3c8cf;
+
+    border: 1px solid transparent;
+
+    border-radius: 10px;
+
+    font-size: 9px;
+    font-weight: 850;
+
+    text-decoration: none;
+}
+
+.sidebar-link:hover {
+
+    background: rgba(255,255,255,.065);
+
+    color: #ffffff;
+}
+
+.sidebar-link.active {
+
+    background:
+        linear-gradient(
+            135deg,
+            #f4f5f6,
+            #dfe2e5
+        );
+
+    color: #17191d;
+
+    border-color: #d1d4d8;
+}
+
+.sidebar-icon {
+
+    width: 20px;
+
+    flex: 0 0 auto;
+
+    text-align: center;
+
+    font-size: 12px;
+}
+
+/* =====================================================
+   RESTAURANT SIDEBAR CARDS
+===================================================== */
+
+.restaurant-nav-list {
+
+    display: grid;
+
+    gap: 9px;
+
+    padding: 4px 11px 14px;
+}
+
+.restaurant-nav-card {
+
+    overflow: hidden;
+
+    background: rgba(255,255,255,.045);
+
+    border: 1px solid rgba(255,255,255,.075);
+
+    border-radius: 13px;
+}
+
+.restaurant-nav-header {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 11px 11px 9px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.06);
+}
+
+.restaurant-nav-thumb {
+
+    width: 37px;
+    height: 37px;
+
+    flex: 0 0 auto;
+
+    overflow: hidden;
+
+    background: #30343a;
+
+    border-radius: 9px;
+}
+
+.restaurant-nav-thumb img {
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.restaurant-nav-copy {
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+.restaurant-nav-name {
+
+    display: block;
+
+    overflow: hidden;
+
+    color: #f3f4f5;
+
+    font-size: 9px;
+    font-weight: 950;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.restaurant-nav-meta {
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 5px;
+
+    margin-top: 4px;
+}
+
+.restaurant-nav-area {
+
+    color: #858d97;
+
+    font-size: 6px;
+}
+
+/* =====================================================
+   PLAN BADGES
+===================================================== */
+
+.plan-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 20px;
+
+    padding: 3px 6px;
+
+    border-radius: 999px;
+
+    font-size: 6px;
+    font-weight: 950;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+.plan-free {
+
+    background: rgba(255,255,255,.08);
+
+    color: #c5cad0;
+}
+
+.plan-standard {
+
+    background: rgba(93,146,255,.16);
+
+    color: #9fc0ff;
+}
+
+.plan-premium {
+
+    background: rgba(230,205,126,.15);
+
+    color: #f1d985;
+}
+
+.restaurant-nav-links {
+
+    display: grid;
+
+    gap: 2px;
+
+    padding: 7px;
+}
+
+.restaurant-nav-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    min-height: 34px;
+
+    padding: 6px 8px;
+
+    color: #bcc2c9;
+
+    border-radius: 8px;
+
+    font-size: 7px;
+    font-weight: 850;
+
+    text-decoration: none;
+}
+
+.restaurant-nav-link:hover {
+
+    background: rgba(255,255,255,.07);
+
+    color: #ffffff;
+}
+
+.restaurant-nav-link span {
+
+    width: 17px;
+
+    text-align: center;
+
+    font-size: 9px;
+}
+
+.restaurant-nav-upgrade {
+
+    padding: 0 7px 8px;
+}
+
+.restaurant-upgrade-button {
+
+    width: 100%;
+
+    min-height: 37px;
+
+    padding: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5e8a8,
+            #d8b94d
+        );
+
+    color: #29220b;
+
+    border: 1px solid rgba(255,255,255,.15);
+
+    border-radius: 8px;
+
+    font-size: 8px;
+    font-weight: 950;
+}
+
+.restaurant-plan-link {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    min-height: 34px;
+
+    padding: 6px 8px;
+
+    background: rgba(255,255,255,.07);
+
+    color: #ffffff;
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    border-radius: 8px;
+
+    font-size: 7px;
+    font-weight: 950;
+
+    text-decoration: none;
+}
+
+.sidebar-account {
+
+    padding: 4px 11px 12px;
+}
+
+.sidebar-account-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    min-height: 38px;
+
+    margin-bottom: 4px;
+
+    padding: 7px 9px;
+
+    color: #bfc5cc;
+
+    border-radius: 9px;
+
+    font-size: 8px;
+    font-weight: 850;
+
+    text-decoration: none;
+}
+
+.sidebar-account-link:hover {
+
+    background: rgba(255,255,255,.065);
+
+    color: #ffffff;
+}
+
+.sidebar-account-link.logout {
+    color: #e2a3a3;
+}
+
+/* =====================================================
+   MOBILE NAV
+===================================================== */
+
+.mobile-management-nav {
+
+    display: none;
+
+    margin-bottom: 14px;
+
+    padding: 8px;
+
+    overflow-x: auto;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 13px;
+
+    box-shadow: var(--shadow-soft);
+
+    scrollbar-width: none;
+}
+
+.mobile-management-inner {
+
+    display: flex;
+
+    gap: 6px;
+
+    width: max-content;
+}
+
+.mobile-management-link {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 36px;
+
+    padding: 0 11px;
+
+    background: #f3f4f6;
+
+    color: #30343a;
+
+    border: 1px solid #dde0e4;
+
+    border-radius: 9px;
+
+    font-size: 8px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+}
+
+.mobile-management-link.primary {
+
+    background: #202328;
+
+    color: #ffffff;
+
+    border-color: #202328;
+}
+
+.mobile-management-link.logout {
+
+    background: var(--red-bg);
+
+    color: var(--red);
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero {
+
+    position: relative;
+
+    overflow: hidden;
+
+    display: flex;
+
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 22px;
+
+    margin-bottom: 18px;
+
+    padding: 30px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f7f8f9
+        );
+
+    border: 1px solid var(--border);
+
+    border-radius: 22px;
+
+    box-shadow: var(--shadow);
+}
+
+.hero-copy {
+
+    position: relative;
+
+    z-index: 1;
+
+    min-width: 0;
+}
+
+.eyebrow {
+
+    margin: 0 0 8px;
+
+    color: #737982;
+
+    font-size: 8px;
+    font-weight: 950;
+
+    letter-spacing: .17em;
+
+    text-transform: uppercase;
+}
+
+.hero h1 {
+
+    margin: 0;
+
+    color: #15171b;
+
+    font-size: clamp(31px, 5vw, 46px);
+
+    line-height: 1.05;
+
+    font-weight: 950;
+
+    letter-spacing: -.05em;
+}
+
+.subtitle {
+
+    max-width: 670px;
+
+    margin: 11px 0 0;
+
+    color: #666d76;
+
+    font-size: 12px;
+
+    line-height: 1.65;
+}
+
+.button {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 46px;
+
+    padding: 10px 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #15171b,
+            #2c3036
+        );
+
+    color: #ffffff;
+
+    border: 1px solid #202328;
+
+    border-radius: 11px;
+
+    font-size: 10px;
+    font-weight: 950;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+}
+
+/* =====================================================
+   FLASH
+===================================================== */
+
+.flash-stack {
+
+    display: grid;
+
+    gap: 8px;
+
+    margin-bottom: 16px;
+}
+
+.flash {
+
+    padding: 13px 15px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    font-size: 10px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.flash-success {
+
+    background: var(--green-bg);
+
+    color: var(--green);
+}
+
+.flash-error {
+
+    background: var(--red-bg);
+
+    color: var(--red);
+}
+
+/* =====================================================
+   PLAN OVERVIEW
+===================================================== */
+
+.plan-overview {
+
+    margin-bottom: 20px;
+
+    padding: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #17191d,
+            #292d33
+        );
+
+    color: #ffffff;
+
+    border: 1px solid #34383f;
+
+    border-radius: 17px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.plan-overview-top {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+}
+
+.plan-overview strong {
+
+    display: block;
+
+    font-size: 12px;
+    font-weight: 950;
+}
+
+.plan-overview p {
+
+    max-width: 760px;
+
+    margin: 5px 0 0;
+
+    color: #aeb4bc;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+}
+
+.plan-overview-link {
+
+    flex: 0 0 auto;
+
+    color: #ffffff;
+
+    font-size: 8px;
+    font-weight: 950;
+
+    text-decoration: none;
+}
+
+/* =====================================================
+   YOCO PAYMENT INFORMATION
+===================================================== */
+
+.payment-provider-card {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 22px;
+
+    padding: 17px 20px;
+
+    background: #ffffff;
+
+    border: 1px solid #dce2e8;
+
+    border-radius: 15px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.payment-provider-identity {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.payment-provider-icon {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    background: #e9f7ef;
+
+    color: #226943;
+
+    border-radius: 12px;
+
+    font-size: 20px;
+}
+
+.payment-provider-copy strong {
+
+    display: block;
+
+    color: #17191d;
+
+    font-size: 11px;
+    font-weight: 950;
+}
+
+.payment-provider-copy p {
+
+    margin: 5px 0 0;
+
+    color: #747b84;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+}
+
+.payment-provider-badge {
+
+    flex: 0 0 auto;
+
+    padding: 8px 11px;
+
+    background: #e9f7ef;
+
+    color: #226943;
+
+    border: 1px solid #c7e7d3;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+    font-weight: 950;
+}
+
+/* =====================================================
+   RESTAURANT SUBSCRIPTION PLANS
+===================================================== */
+
+.subscription-plans {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 13px;
+
+    margin-top: 15px;
+}
+
+.subscription-plan {
+
+    display: flex;
+
+    flex-direction: column;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 16px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.subscription-plan.featured {
+
+    border: 2px solid #d8b94d;
+
+    background:
+        linear-gradient(
+            180deg,
+            #fffdf3,
+            #ffffff 45%
+        );
+}
+
+.subscription-plan-name {
+
+    color: #17191d;
+
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.subscription-plan-price {
+
+    margin-top: 12px;
+
+    color: #17191d;
+
+    font-size: 28px;
+    font-weight: 950;
+}
+
+.subscription-plan-price small {
+
+    color: #777e87;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.subscription-plan-description {
+
+    margin: 9px 0 15px;
+
+    color: #707780;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+}
+
+.subscription-plan-features {
+
+    flex: 1;
+
+    margin: 0 0 18px;
+
+    padding-left: 17px;
+
+    color: #434a53;
+
+    font-size: 9px;
+
+    line-height: 2;
+}
+
+.subscription-plan-button {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    min-height: 41px;
+
+    padding: 10px 12px;
+
+    background: #202328;
+
+    color: #ffffff;
+
+    border: 1px solid #202328;
+
+    border-radius: 9px;
+
+    font-size: 9px;
+    font-weight: 950;
+
+    text-align: center;
+    text-decoration: none;
+}
+
+.subscription-plan-button.premium {
+
+    background: #d8b94d;
+
+    color: #29220b;
+
+    border-color: #c4a53b;
+}
+
+.subscription-plan-button.disabled {
+
+    background: #f0f1f3;
+
+    color: #777e87;
+
+    border-color: #e0e2e5;
+
+    cursor: default;
+}
+
+.subscription-plan-note {
+
+    margin-top: 9px;
+
+    color: #777e87;
+
+    font-size: 8px;
+
+    line-height: 1.5;
+
+    text-align: center;
+}
+
+/* =====================================================
+   METRICS
+===================================================== */
+
+.metrics {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0,1fr));
+
+    gap: 11px;
+
+    margin-bottom: 25px;
+}
+
+.metric {
+
+    padding: 16px;
+
+    background: rgba(255,255,255,.95);
+
+    border: 1px solid var(--border);
+
+    border-radius: 15px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.metric-label {
+
+    display: block;
+
+    color: #7b818a;
+
+    font-size: 7px;
+    font-weight: 950;
+
+    letter-spacing: .10em;
+
+    text-transform: uppercase;
+}
+
+.metric-value {
+
+    display: block;
+
+    margin-top: 6px;
+
+    color: #17191d;
+
+    font-size: 25px;
+    font-weight: 950;
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.section {
+    margin-top: 25px;
+}
+
+.section-header {
+
+    display: flex;
+
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 12px;
+}
+
+.section-header h2 {
+
+    margin: 0;
+
+    color: #17191d;
+
+    font-size: 18px;
+    font-weight: 950;
+
+    letter-spacing: -.025em;
+}
+
+.section-header p {
+
+    margin: 4px 0 0;
+
+    color: #737983;
+
+    font-size: 9px;
+
+    line-height: 1.5;
+}
+
+.section-count {
+
+    flex: 0 0 auto;
+
+    padding: 5px 9px;
+
+    background: #eef0f2;
+
+    color: #61666f;
+
+    border: 1px solid #dadddf;
+
+    border-radius: 999px;
+
+    font-size: 8px;
+    font-weight: 900;
+}
+
+/* =====================================================
+   TABLES
+===================================================== */
+
+.table-card {
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow: var(--shadow);
+}
+
+.table-scroll {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+
+    width: 100%;
+
+    min-width: 1080px;
+
+    border-collapse: collapse;
+}
+
+thead {
+
+    background:
+        linear-gradient(
+            135deg,
+            #202328,
+            #30343a
+        );
+
+    color: #d8dce1;
+}
+
+th {
+
+    padding: 13px 14px;
+
+    font-size: 7px;
+    font-weight: 950;
+
+    letter-spacing: .10em;
+
+    text-align: left;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+td {
+
+    padding: 14px;
+
+    border-bottom: 1px solid var(--border-soft);
+
+    color: #31353b;
+
+    font-size: 9px;
+
+    vertical-align: middle;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+tbody tr:hover {
+    background: #fafbfc;
+}
+
+.restaurant-cell {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 220px;
+}
+
+.restaurant-thumb {
+
+    width: 54px;
+    height: 54px;
+
+    flex: 0 0 auto;
+
+    overflow: hidden;
+
+    background: #e5e7eb;
+
+    border-radius: 10px;
+}
+
+.restaurant-thumb img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.restaurant-cell strong {
+
+    display: block;
+
+    color: #17191d;
+
+    font-size: 10px;
+    font-weight: 950;
+}
+
+.restaurant-cell span {
+
+    display: block;
+
+    margin-top: 2px;
+
+    color: #7a8089;
+
+    font-size: 8px;
+}
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+.status-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 25px;
+
+    padding: 0 8px;
+
+    border-radius: 999px;
+
+    font-size: 7px;
+    font-weight: 950;
+
+    white-space: nowrap;
+}
+
+.badge-live {
+
+    background: var(--green-bg);
+
+    color: var(--green);
+}
+
+.badge-scheduled {
+
+    background: var(--orange-bg);
+
+    color: var(--orange);
+}
+
+.badge-expired {
+
+    background: var(--red-bg);
+
+    color: var(--red);
+}
+
+.badge-paused {
+
+    background: #eceef1;
+
+    color: #626871;
+}
+
+.yes-badge {
+
+    color: var(--green);
+
+    font-weight: 950;
+}
+
+.no-badge {
+
+    color: #8a9098;
+
+    font-weight: 850;
+}
+
+/* =====================================================
+   TABLE ACTIONS
+===================================================== */
+
+.table-actions {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    min-width: 270px;
+}
+
+.table-action {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 32px;
+
+    padding: 6px 9px;
+
+    border: 0;
+
+    border-radius: 8px;
+
+    font-size: 8px;
+    font-weight: 900;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+}
+
+.table-action-primary {
+
+    background: #202328;
+
+    color: #ffffff;
+}
+
+.table-action-edit {
+
+    background: #ffffff;
+
+    color: #24282d;
+
+    border: 1px solid #cfd3d8;
+}
+
+.table-action-secondary {
+
+    background: #f3f4f6;
+
+    color: #25282d;
+
+    border: 1px solid #d7d9dd;
+}
+
+.table-action-hours {
+
+    background: var(--blue-bg);
+
+    color: var(--blue);
+
+    border: 1px solid #cddaf0;
+}
+
+.table-action-upgrade {
+
+    background:
+        linear-gradient(
+            135deg,
+            #17191d,
+            #353940
+        );
+
+    color: #ffffff;
+
+    border: 1px solid #17191d;
+}
+
+/* =====================================================
+   QR
+===================================================== */
+
+.qr-grid {
+
+    display: grid;
+
+    gap: 16px;
+}
+
+.qr-card {
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow: var(--shadow);
+}
+
+.qr-card-header {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    padding: 16px 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #17191d,
+            #2d3137
+        );
+
+    color: #ffffff;
+}
+
+.qr-card-header h3 {
+
+    margin: 0;
+
+    font-size: 14px;
+    font-weight: 950;
+}
+
+.qr-card-header p {
+
+    margin: 4px 0 0;
+
+    color: #aeb4bd;
+
+    font-size: 8px;
+}
+
+.qr-status {
+
+    padding: 5px 8px;
+
+    background: rgba(255,255,255,.08);
+
+    border-radius: 999px;
+
+    color: #cdd2d8;
+
+    font-size: 7px;
+    font-weight: 950;
+}
+
+.qr-status.active {
+    color: #a9e1bf;
+}
+
+.qr-card-body {
+
+    display: grid;
+
+    grid-template-columns:
+        220px
+        minmax(0,1fr);
+
+    gap: 22px;
+
+    padding: 21px;
+}
+
+.qr-preview {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #d9dce0;
+
+    border-radius: 14px;
+}
+
+.qr-preview img {
+
+    display: block;
+
+    width: 100%;
+    max-width: 190px;
+
+    height: auto;
+}
+
+.qr-details h4 {
+
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: 950;
+}
+
+.qr-eyebrow {
+
+    margin: 0 0 6px;
+
+    color: #767d86;
+
+    font-size: 7px;
+    font-weight: 950;
+
+    letter-spacing: .13em;
+
+    text-transform: uppercase;
+}
+
+.qr-description {
+
+    margin: 8px 0 16px;
+
+    color: #666d76;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+}
+
+.qr-info-box {
+
+    margin-top: 9px;
+
+    padding: 11px 12px;
+
+    background: #f5f6f7;
+
+    border: 1px solid #e0e3e6;
+
+    border-radius: 9px;
+}
+
+.qr-info-label {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #7b818a;
+
+    font-size: 6px;
+    font-weight: 950;
+
+    text-transform: uppercase;
+}
+
+.qr-url {
+
+    display: block;
+
+    overflow-wrap: anywhere;
+
+    color: #25282d;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.qr-code-value {
+
+    font-family: monospace;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.qr-actions {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 15px;
+}
+
+.qr-action {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+
+    padding: 7px 11px;
+
+    border-radius: 8px;
+
+    font-size: 8px;
+    font-weight: 950;
+
+    text-decoration: none;
+}
+
+.qr-action-primary {
+
+    background: #202328;
+
+    color: #ffffff;
+
+    border: 1px solid #202328;
+}
+
+.qr-action-secondary {
+
+    background: #ffffff;
+
+    color: #25282d;
+
+    border: 1px solid #ccd0d5;
+}
+
+.qr-action-download {
+
+    background: var(--green-bg);
+
+    color: var(--green);
+
+    border: 1px solid #c7e7d3;
+}
+
+.qr-generate {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 21px;
+}
+
+.qr-generate h4 {
+
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 950;
+}
+
+.qr-generate p {
+
+    max-width: 640px;
+
+    margin: 7px 0 0;
+
+    color: #707780;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+}
+
+.qr-generate-button {
+
+    flex: 0 0 auto;
+
+    min-height: 41px;
+
+    padding: 8px 13px;
+
+    background: #202328;
+
+    color: #ffffff;
+
+    border: 1px solid #202328;
+
+    border-radius: 9px;
+
+    font-size: 8px;
+    font-weight: 950;
+}
+
+.qr-message {
+
+    display: none;
+
+    margin-top: 10px;
+
+    padding: 9px 11px;
+
+    border-radius: 8px;
+
+    font-size: 8px;
+    font-weight: 850;
+}
+
+.qr-message.show {
+    display: block;
+}
+
+.qr-message.success {
+
+    background: var(--green-bg);
+
+    color: var(--green);
+}
+
+.qr-message.error {
+
+    background: var(--red-bg);
+
+    color: var(--red);
+}
+
+/* =====================================================
+   HOURS
+===================================================== */
+
+.hours-card {
+
+    overflow: hidden;
+
+    margin-bottom: 16px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.hours-card-header {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    padding: 16px 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8f9fa,
+            #eceef1
+        );
+
+    border-bottom: 1px solid var(--border);
+}
+
+.hours-card-header h3 {
+
+    margin: 0;
+
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.hours-card-header p {
+
+    margin: 3px 0 0;
+
+    color: #767d86;
+
+    font-size: 8px;
+}
+
+.hours-card-actions {
+
+    display: flex;
+
+    gap: 9px;
+}
+
+.hours-card-actions a {
+
+    font-size: 8px;
+    font-weight: 900;
+
+    text-decoration: none;
+}
+
+.hours-table {
+    min-width: 760px;
+}
+
+.hours-table thead {
+
+    background: #f4f5f6;
+
+    color: #69707a;
+}
+
+.hours-table th {
+    color: #69707a;
+}
+
+.hours-day {
+    font-weight: 950;
+}
+
+.time-input {
+
+    width: 125px;
+
+    min-height: 37px;
+
+    padding: 6px 8px;
+
+    background: #ffffff;
+
+    border: 1px solid #cfd2d6;
+
+    border-radius: 8px;
+
+    font-size: 9px;
+}
+
+.closed-label {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    font-size: 8px;
+    font-weight: 850;
+}
+
+.hours-footer {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    padding: 13px 18px;
+
+    background: #fafbfc;
+
+    border-top: 1px solid var(--border-soft);
+}
+
+.hours-footer-note {
+
+    color: #7a8089;
+
+    font-size: 8px;
+
+    line-height: 1.5;
+}
+
+.save-hours {
+
+    min-height: 39px;
+
+    padding: 8px 13px;
+
+    background: #202328;
+
+    color: #ffffff;
+
+    border: 1px solid #202328;
+
+    border-radius: 9px;
+
+    font-size: 8px;
+    font-weight: 950;
+}
+
+/* =====================================================
+   EMPTY
+===================================================== */
+
+.empty {
+
+    padding: 38px 24px;
+
+    background: rgba(255,255,255,.94);
+
+    border: 1px dashed #bfc4ca;
+
+    border-radius: 16px;
+
+    text-align: center;
+
+    color: #69707a;
+
+    font-size: 10px;
+
+    box-shadow: var(--shadow-soft);
+}
+
+.empty strong {
+
+    color: #2b2f35;
+
+    font-size: 13px;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1050px) {
 
     .control-layout {
 
-        display: grid;
-
         grid-template-columns:
-            270px
-            minmax(0, 1fr);
-
-        gap: 18px;
-
-        align-items: start;
+            230px
+            minmax(0,1fr);
     }
-
-
-    .main-content {
-        min-width: 0;
-    }
-
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
-
-    .sidebar {
-
-        position: sticky;
-
-        top: 18px;
-
-        max-height:
-            calc(
-                100vh - 36px
-            );
-
-        overflow-y: auto;
-        overflow-x: hidden;
-
-        background:
-            linear-gradient(
-                180deg,
-                #141619 0%,
-                #202328 100%
-            );
-
-        color: #ffffff;
-
-        border:
-            1px solid #33373d;
-
-        border-radius: 20px;
-
-        box-shadow:
-            0 18px 42px
-            rgba(15,23,42,.16);
-
-        scrollbar-width: thin;
-        scrollbar-color:
-            #454a51
-            transparent;
-    }
-
-
-    .sidebar::-webkit-scrollbar {
-        width: 5px;
-    }
-
-
-    .sidebar::-webkit-scrollbar-thumb {
-
-        background: #454a51;
-
-        border-radius: 999px;
-    }
-
-
-    /* =====================================================
-       SIDEBAR BRAND
-    ===================================================== */
-
-    .sidebar-header {
-
-        padding:
-            22px 18px
-            18px;
-
-        border-bottom:
-            1px solid
-            rgba(255,255,255,.07);
-    }
-
-
-    .sidebar-brand {
-
-        margin: 0 0 13px;
-
-        color: #ffffff;
-
-        font-size: 9px;
-        font-weight: 950;
-
-        letter-spacing: .15em;
-    }
-
-
-    .sidebar-title {
-
-        margin: 0;
-
-        color: #f5f6f7;
-
-        font-size: 18px;
-        font-weight: 950;
-
-        letter-spacing: -.03em;
-    }
-
-
-    .sidebar-description {
-
-        margin:
-            7px 0 0;
-
-        color: #8f969f;
-
-        font-size: 8px;
-
-        line-height: 1.55;
-    }
-
-
-    /* =====================================================
-       SIDEBAR SECTION
-    ===================================================== */
-
-    .sidebar-section {
-
-        padding:
-            15px 11px
-            5px;
-    }
-
-
-    .sidebar-section-title {
-
-        margin:
-            0 8px
-            7px;
-
-        color: #707780;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        letter-spacing: .14em;
-
-        text-transform: uppercase;
-    }
-
-
-    .sidebar-link {
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 9px;
-
-        min-height: 40px;
-
-        margin-bottom: 4px;
-
-        padding:
-            8px 10px;
-
-        color: #c3c8cf;
-
-        border:
-            1px solid transparent;
-
-        border-radius: 10px;
-
-        font-size: 9px;
-        font-weight: 850;
-
-        text-decoration: none;
-    }
-
-
-    .sidebar-link:hover {
-
-        background:
-            rgba(255,255,255,.065);
-
-        color: #ffffff;
-    }
-
-
-    .sidebar-link.active {
-
-        background:
-            linear-gradient(
-                135deg,
-                #f4f5f6,
-                #dfe2e5
-            );
-
-        color: #17191d;
-
-        border-color: #d1d4d8;
-    }
-
-
-    .sidebar-icon {
-
-        width: 20px;
-
-        flex: 0 0 auto;
-
-        text-align: center;
-
-        font-size: 12px;
-    }
-
-
-    /* =====================================================
-       SIDEBAR RESTAURANT BLOCKS
-    ===================================================== */
-
-    .restaurant-nav-list {
-
-        display: grid;
-
-        gap: 9px;
-
-        padding:
-            4px 11px
-            14px;
-    }
-
-
-    .restaurant-nav-card {
-
-        overflow: hidden;
-
-        background:
-            rgba(255,255,255,.045);
-
-        border:
-            1px solid
-            rgba(255,255,255,.075);
-
-        border-radius: 13px;
-    }
-
-
-    .restaurant-nav-header {
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 9px;
-
-        padding:
-            11px 11px
-            9px;
-
-        border-bottom:
-            1px solid
-            rgba(255,255,255,.06);
-    }
-
-
-    .restaurant-nav-thumb {
-
-        width: 37px;
-        height: 37px;
-
-        flex: 0 0 auto;
-
-        overflow: hidden;
-
-        background: #30343a;
-
-        border:
-            1px solid
-            rgba(255,255,255,.08);
-
-        border-radius: 9px;
-    }
-
-
-    .restaurant-nav-thumb img {
-
-        display: block;
-
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-    }
-
-
-    .restaurant-nav-copy {
-
-        min-width: 0;
-
-        flex: 1;
-    }
-
-
-    .restaurant-nav-name {
-
-        display: block;
-
-        overflow: hidden;
-
-        color: #f3f4f5;
-
-        font-size: 9px;
-        font-weight: 950;
-
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-
-    .restaurant-nav-meta {
-
-        display: flex;
-
-        align-items: center;
-
-        flex-wrap: wrap;
-
-        gap: 5px;
-
-        margin-top: 4px;
-    }
-
-
-    .restaurant-nav-area {
-
-        color: #858d97;
-
-        font-size: 6px;
-    }
-
-
-    /* =====================================================
-       PLAN BADGES
-    ===================================================== */
-
-    .plan-badge {
-
-        display: inline-flex;
-
-        align-items: center;
-
-        min-height: 20px;
-
-        padding:
-            3px 6px;
-
-        border-radius: 999px;
-
-        font-size: 6px;
-        font-weight: 950;
-
-        text-transform: uppercase;
-
-        white-space: nowrap;
-    }
-
-
-    .plan-free {
-
-        background:
-            rgba(255,255,255,.08);
-
-        color: #c5cad0;
-    }
-
-
-    .plan-standard {
-
-        background:
-            rgba(93,146,255,.16);
-
-        color: #9fc0ff;
-    }
-
-
-    .plan-premium {
-
-        background:
-            rgba(230,205,126,.15);
-
-        color: #f1d985;
-    }
-
-
-    /* =====================================================
-       RESTAURANT NAV LINKS
-    ===================================================== */
-
-    .restaurant-nav-links {
-
-        display: grid;
-
-        gap: 2px;
-
-        padding:
-            7px;
-    }
-
-
-    .restaurant-nav-link {
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 8px;
-
-        min-height: 34px;
-
-        padding:
-            6px 8px;
-
-        color: #bcc2c9;
-
-        border-radius: 8px;
-
-        font-size: 7px;
-        font-weight: 850;
-
-        text-decoration: none;
-    }
-
-
-    .restaurant-nav-link:hover {
-
-        background:
-            rgba(255,255,255,.07);
-
-        color: #ffffff;
-    }
-
-
-    .restaurant-nav-link span {
-
-        width: 17px;
-
-        text-align: center;
-
-        font-size: 9px;
-    }
-
-
-    .restaurant-nav-upgrade {
-
-        padding:
-            0 7px
-            8px;
-    }
-
-
-    .restaurant-upgrade-button {
-
-        width: 100%;
-
-        min-height: 34px;
-
-        padding:
-            6px 8px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #f5e8a8,
-                #d8b94d
-            );
-
-        color: #29220b;
-
-        border:
-            1px solid
-            rgba(255,255,255,.15);
-
-        border-radius: 8px;
-
-        font-size: 7px;
-        font-weight: 950;
-    }
-
-
-    .restaurant-plan-link {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: center;
-
-        width: 100%;
-
-        min-height: 34px;
-
-        padding:
-            6px 8px;
-
-        background:
-            rgba(255,255,255,.07);
-
-        color: #ffffff;
-
-        border:
-            1px solid
-            rgba(255,255,255,.08);
-
-        border-radius: 8px;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        text-decoration: none;
-    }
-
-
-    /* =====================================================
-       SIDEBAR ACCOUNT
-    ===================================================== */
-
-    .sidebar-account {
-
-        padding:
-            4px 11px
-            12px;
-    }
-
-
-    .sidebar-account-link {
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 8px;
-
-        min-height: 38px;
-
-        margin-bottom: 4px;
-
-        padding:
-            7px 9px;
-
-        color: #bfc5cc;
-
-        border-radius: 9px;
-
-        font-size: 8px;
-        font-weight: 850;
-
-        text-decoration: none;
-    }
-
-
-    .sidebar-account-link:hover {
-
-        background:
-            rgba(255,255,255,.065);
-
-        color: #ffffff;
-    }
-
-
-    .sidebar-account-link.logout {
-
-        color: #e2a3a3;
-    }
-
-
-    .sidebar-account-link.logout:hover {
-
-        background:
-            rgba(177,60,60,.12);
-
-        color: #ffffff;
-    }
-
-
-    /* =====================================================
-       MOBILE NAV
-    ===================================================== */
-
-    .mobile-management-nav {
-
-        display: none;
-
-        margin-bottom: 14px;
-
-        padding: 8px;
-
-        overflow-x: auto;
-
-        background: #ffffff;
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 13px;
-
-        box-shadow:
-            var(--shadow-soft);
-
-        scrollbar-width: none;
-    }
-
-
-    .mobile-management-nav::-webkit-scrollbar {
-        display: none;
-    }
-
-
-    .mobile-management-inner {
-
-        display: flex;
-
-        gap: 6px;
-
-        width: max-content;
-    }
-
-
-    .mobile-management-link {
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-height: 36px;
-
-        padding:
-            0 11px;
-
-        background: #f3f4f6;
-
-        color: #30343a;
-
-        border:
-            1px solid #dde0e4;
-
-        border-radius: 9px;
-
-        font-size: 8px;
-        font-weight: 900;
-
-        text-decoration: none;
-
-        white-space: nowrap;
-    }
-
-
-    .mobile-management-link.primary {
-
-        background: #202328;
-
-        color: #ffffff;
-
-        border-color: #202328;
-    }
-
-
-    .mobile-management-link.logout {
-
-        background: var(--red-bg);
-
-        color: var(--red);
-
-        border-color: #eccccc;
-    }
-
-
-    /* =====================================================
-       HERO
-    ===================================================== */
-
-    .hero {
-
-        position: relative;
-
-        overflow: hidden;
-
-        display: flex;
-
-        align-items: flex-end;
-        justify-content: space-between;
-
-        gap: 22px;
-
-        margin-bottom: 18px;
-
-        padding: 30px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #ffffff 0%,
-                #f7f8f9 100%
-            );
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 22px;
-
-        box-shadow:
-            var(--shadow);
-    }
-
-
-    .hero::after {
-
-        content: "";
-
-        position: absolute;
-
-        top: -80px;
-        right: -80px;
-
-        width: 220px;
-        height: 220px;
-
-        background:
-            radial-gradient(
-                circle,
-                rgba(17,24,39,.06),
-                transparent 68%
-            );
-
-        pointer-events: none;
-    }
-
-
-    .hero-copy {
-
-        position: relative;
-
-        z-index: 1;
-
-        min-width: 0;
-    }
-
-
-    .eyebrow {
-
-        margin:
-            0 0 8px;
-
-        color: #737982;
-
-        font-size: 8px;
-        font-weight: 950;
-
-        letter-spacing: .17em;
-
-        text-transform: uppercase;
-    }
-
-
-    .hero h1 {
-
-        margin: 0;
-
-        color: #15171b;
-
-        font-size:
-            clamp(
-                31px,
-                5vw,
-                46px
-            );
-
-        line-height: 1;
-
-        font-weight: 950;
-
-        letter-spacing: -.05em;
-    }
-
-
-    .subtitle {
-
-        max-width: 670px;
-
-        margin:
-            11px 0 0;
-
-        color: #666d76;
-
-        font-size: 12px;
-
-        line-height: 1.65;
-    }
-
-
-    .button {
-
-        position: relative;
-
-        z-index: 1;
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-height: 46px;
-
-        padding:
-            10px 16px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #15171b,
-                #2c3036
-            );
-
-        color: #ffffff;
-
-        border:
-            1px solid #202328;
-
-        border-radius: 11px;
-
-        font-size: 10px;
-        font-weight: 950;
-
-        text-decoration: none;
-
-        white-space: nowrap;
-    }
-
-
-    /* =====================================================
-       FLASH
-    ===================================================== */
-
-    .flash-stack {
-
-        display: grid;
-
-        gap: 8px;
-
-        margin-bottom: 16px;
-    }
-
-
-    .flash {
-
-        padding:
-            13px 15px;
-
-        background: #ffffff;
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 12px;
-
-        font-size: 10px;
-
-        box-shadow:
-            var(--shadow-soft);
-    }
-
-
-    .flash-success {
-
-        background: var(--green-bg);
-
-        color: var(--green);
-
-        border-color: #c7e7d3;
-    }
-
-
-    .flash-error {
-
-        background: var(--red-bg);
-
-        color: var(--red);
-
-        border-color: #eccccc;
-    }
-
-
-    /* =====================================================
-       PLAN OVERVIEW
-    ===================================================== */
-
-    .plan-overview {
-
-        margin-bottom: 20px;
-
-        padding:
-            18px 20px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #17191d,
-                #292d33
-            );
-
-        color: #ffffff;
-
-        border:
-            1px solid #34383f;
-
-        border-radius: 17px;
-
-        box-shadow:
-            var(--shadow-soft);
-    }
-
-
-    .plan-overview-top {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 16px;
-    }
-
-
-    .plan-overview strong {
-
-        display: block;
-
-        font-size: 12px;
-        font-weight: 950;
-    }
-
-
-    .plan-overview p {
-
-        max-width: 760px;
-
-        margin:
-            5px 0 0;
-
-        color: #aeb4bc;
-
-        font-size: 9px;
-
-        line-height: 1.55;
-    }
-
-
-    .plan-overview-link {
-
-        flex: 0 0 auto;
-
-        color: #ffffff;
-
-        font-size: 8px;
-        font-weight: 950;
-
-        text-decoration: none;
-    }
-
-
-    /* =====================================================
-       METRICS
-    ===================================================== */
 
     .metrics {
 
-        display: grid;
+        grid-template-columns:
+            repeat(3, minmax(0,1fr));
+    }
+}
+
+@media (max-width: 820px) {
+
+    .control-layout {
+        display: block;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .mobile-management-nav {
+        display: block;
+    }
+
+    .metrics {
 
         grid-template-columns:
-            repeat(
-                5,
-                minmax(0,1fr)
-            );
-
-        gap: 11px;
-
-        margin-bottom: 25px;
+            repeat(2, minmax(0,1fr));
     }
-
-
-    .metric {
-
-        padding: 16px;
-
-        background:
-            rgba(255,255,255,.95);
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 15px;
-
-        box-shadow:
-            var(--shadow-soft);
-    }
-
-
-    .metric-label {
-
-        display: block;
-
-        color: #7b818a;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        letter-spacing: .10em;
-
-        text-transform: uppercase;
-    }
-
-
-    .metric-value {
-
-        display: block;
-
-        margin-top: 6px;
-
-        color: #17191d;
-
-        font-size: 25px;
-        font-weight: 950;
-
-        line-height: 1;
-    }
-
-
-    /* =====================================================
-       SECTIONS
-    ===================================================== */
-
-    .section {
-        margin-top: 25px;
-    }
-
-
-    .section-header {
-
-        display: flex;
-
-        align-items: flex-end;
-        justify-content: space-between;
-
-        gap: 15px;
-
-        margin-bottom: 12px;
-    }
-
-
-    .section-header h2 {
-
-        margin: 0;
-
-        color: #17191d;
-
-        font-size: 18px;
-        font-weight: 950;
-
-        letter-spacing: -.025em;
-    }
-
-
-    .section-header p {
-
-        margin:
-            4px 0 0;
-
-        color: #737983;
-
-        font-size: 9px;
-
-        line-height: 1.5;
-    }
-
-
-    .section-count {
-
-        flex: 0 0 auto;
-
-        padding:
-            5px 9px;
-
-        background: #eef0f2;
-
-        color: #61666f;
-
-        border:
-            1px solid #dadddf;
-
-        border-radius: 999px;
-
-        font-size: 8px;
-        font-weight: 900;
-    }
-
-
-    /* =====================================================
-       TABLE
-    ===================================================== */
-
-    .table-card {
-
-        overflow: hidden;
-
-        background: #ffffff;
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 18px;
-
-        box-shadow:
-            var(--shadow);
-    }
-
-
-    .table-scroll {
-
-        width: 100%;
-
-        overflow-x: auto;
-
-        -webkit-overflow-scrolling: touch;
-    }
-
-
-    table {
-
-        width: 100%;
-
-        min-width: 1080px;
-
-        border-collapse: collapse;
-    }
-
-
-    thead {
-
-        background:
-            linear-gradient(
-                135deg,
-                #202328,
-                #30343a
-            );
-
-        color: #d8dce1;
-    }
-
-
-    th {
-
-        padding:
-            13px 14px;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        letter-spacing: .10em;
-
-        text-align: left;
-
-        text-transform: uppercase;
-
-        white-space: nowrap;
-    }
-
-
-    td {
-
-        padding: 14px;
-
-        border-bottom:
-            1px solid var(--border-soft);
-
-        color: #31353b;
-
-        font-size: 9px;
-
-        vertical-align: middle;
-    }
-
-
-    tbody tr:last-child td {
-        border-bottom: 0;
-    }
-
-
-    tbody tr:hover {
-        background: #fafbfc;
-    }
-
-
-    .restaurant-cell {
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 11px;
-
-        min-width: 220px;
-    }
-
-
-    .restaurant-thumb {
-
-        width: 54px;
-        height: 54px;
-
-        flex: 0 0 auto;
-
-        overflow: hidden;
-
-        background: #e5e7eb;
-
-        border:
-            1px solid #d8dade;
-
-        border-radius: 10px;
-    }
-
-
-    .restaurant-thumb img {
-
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-    }
-
-
-    .restaurant-cell strong {
-
-        display: block;
-
-        color: #17191d;
-
-        font-size: 10px;
-        font-weight: 950;
-    }
-
-
-    .restaurant-cell span {
-
-        display: block;
-
-        margin-top: 2px;
-
-        color: #7a8089;
-
-        font-size: 8px;
-    }
-
-
-    /* =====================================================
-       STATUS
-    ===================================================== */
-
-    .status-badge {
-
-        display: inline-flex;
-
-        align-items: center;
-
-        min-height: 25px;
-
-        padding:
-            0 8px;
-
-        border-radius: 999px;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        white-space: nowrap;
-    }
-
-
-    .badge-live {
-
-        background: var(--green-bg);
-
-        color: var(--green);
-    }
-
-
-    .badge-scheduled {
-
-        background: var(--orange-bg);
-
-        color: var(--orange);
-    }
-
-
-    .badge-expired {
-
-        background: var(--red-bg);
-
-        color: var(--red);
-    }
-
-
-    .badge-paused {
-
-        background: #eceef1;
-
-        color: #626871;
-    }
-
-
-    .yes-badge {
-
-        color: var(--green);
-
-        font-weight: 950;
-    }
-
-
-    .no-badge {
-
-        color: #8a9098;
-
-        font-weight: 850;
-    }
-
-
-    /* =====================================================
-       TABLE ACTIONS
-    ===================================================== */
-
-    .table-actions {
-
-        display: flex;
-
-        flex-wrap: wrap;
-
-        gap: 6px;
-
-        min-width: 270px;
-    }
-
-
-    .table-action {
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-height: 32px;
-
-        padding:
-            6px 9px;
-
-        border: 0;
-
-        border-radius: 8px;
-
-        font-size: 8px;
-        font-weight: 900;
-
-        text-decoration: none;
-
-        white-space: nowrap;
-    }
-
-
-    .table-action-primary {
-
-        background: #202328;
-
-        color: #ffffff;
-    }
-
-
-    .table-action-edit {
-
-        background: #ffffff;
-
-        color: #24282d;
-
-        border:
-            1px solid #cfd3d8;
-    }
-
-
-    .table-action-secondary {
-
-        background: #f3f4f6;
-
-        color: #25282d;
-
-        border:
-            1px solid #d7d9dd;
-    }
-
-
-    .table-action-hours {
-
-        background: var(--blue-bg);
-
-        color: var(--blue);
-
-        border:
-            1px solid #cddaf0;
-    }
-
-
-    .table-action-upgrade {
-
-        background:
-            linear-gradient(
-                135deg,
-                #17191d,
-                #353940
-            );
-
-        color: #ffffff;
-
-        border:
-            1px solid #17191d;
-    }
-
-
-    /* =====================================================
-       QR
-    ===================================================== */
-
-    .qr-grid {
-
-        display: grid;
-
-        gap: 16px;
-    }
-
-
-    .qr-card {
-
-        overflow: hidden;
-
-        background: #ffffff;
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 18px;
-
-        box-shadow:
-            var(--shadow);
-    }
-
-
-    .qr-card-header {
-
-        display: flex;
-
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 14px;
-
-        padding:
-            16px 18px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #17191d,
-                #2d3137
-            );
-
-        color: #ffffff;
-    }
-
-
-    .qr-card-header h3 {
-
-        margin: 0;
-
-        font-size: 14px;
-        font-weight: 950;
-    }
-
-
-    .qr-card-header p {
-
-        margin:
-            4px 0 0;
-
-        color: #aeb4bd;
-
-        font-size: 8px;
-    }
-
-
-    .qr-status {
-
-        padding:
-            5px 8px;
-
-        background:
-            rgba(255,255,255,.08);
-
-        border-radius: 999px;
-
-        color: #cdd2d8;
-
-        font-size: 7px;
-        font-weight: 950;
-    }
-
-
-    .qr-status.active {
-        color: #a9e1bf;
-    }
-
 
     .qr-card-body {
 
-        display: grid;
-
         grid-template-columns:
-            220px
-            minmax(0,1fr);
-
-        gap: 22px;
-
-        padding: 21px;
+            180px
+            1fr;
     }
 
+    .subscription-plans {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+
+    .app-shell {
+
+        width: min(100% - 18px, 1440px);
+
+        padding-top: 10px;
+    }
+
+    .top-nav {
+
+        padding: 11px 12px;
+
+        border-radius: 13px;
+    }
+
+    .brand-copy span {
+        display: none;
+    }
+
+    .top-nav-actions .top-nav-link:first-child {
+        display: none;
+    }
+
+    .hero {
+
+        align-items: stretch;
+
+        flex-direction: column;
+
+        padding: 21px;
+
+        border-radius: 18px;
+    }
+
+    .hero .button {
+        width: 100%;
+    }
+
+    .plan-overview-top {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .payment-provider-card {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .metrics {
+
+        grid-template-columns:
+            repeat(2, minmax(0,1fr));
+    }
+
+    .section-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .qr-card-header {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .qr-card-body {
+        grid-template-columns: 1fr;
+    }
 
     .qr-preview {
 
-        display: flex;
-
-        align-items: center;
-        justify-content: center;
-
-        padding: 14px;
-
-        background: #ffffff;
-
-        border:
-            1px solid #d9dce0;
-
-        border-radius: 14px;
-    }
-
-
-    .qr-preview img {
-
-        display: block;
-
         width: 100%;
-        max-width: 190px;
+        max-width: 250px;
 
-        height: auto;
+        margin: 0 auto;
     }
-
-
-    .qr-details h4 {
-
-        margin: 0;
-
-        font-size: 20px;
-        font-weight: 950;
-    }
-
-
-    .qr-eyebrow {
-
-        margin:
-            0 0 6px;
-
-        color: #767d86;
-
-        font-size: 7px;
-        font-weight: 950;
-
-        letter-spacing: .13em;
-
-        text-transform: uppercase;
-    }
-
-
-    .qr-description {
-
-        margin:
-            8px 0 16px;
-
-        color: #666d76;
-
-        font-size: 10px;
-
-        line-height: 1.6;
-    }
-
-
-    .qr-info-box {
-
-        margin-top: 9px;
-
-        padding:
-            11px 12px;
-
-        background: #f5f6f7;
-
-        border:
-            1px solid #e0e3e6;
-
-        border-radius: 9px;
-    }
-
-
-    .qr-info-label {
-
-        display: block;
-
-        margin-bottom: 4px;
-
-        color: #7b818a;
-
-        font-size: 6px;
-        font-weight: 950;
-
-        text-transform: uppercase;
-    }
-
-
-    .qr-url {
-
-        display: block;
-
-        overflow-wrap: anywhere;
-
-        color: #25282d;
-
-        font-size: 9px;
-        font-weight: 800;
-    }
-
-
-    .qr-code-value {
-
-        font-family: monospace;
-
-        font-size: 10px;
-        font-weight: 900;
-    }
-
-
-    .qr-actions {
-
-        display: flex;
-
-        flex-wrap: wrap;
-
-        gap: 7px;
-
-        margin-top: 15px;
-    }
-
-
-    .qr-action {
-
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        min-height: 38px;
-
-        padding:
-            7px 11px;
-
-        border-radius: 8px;
-
-        font-size: 8px;
-        font-weight: 950;
-
-        text-decoration: none;
-    }
-
-
-    button.qr-action {
-        cursor: pointer;
-    }
-
-
-    .qr-action-primary {
-
-        background: #202328;
-
-        color: #ffffff;
-
-        border:
-            1px solid #202328;
-    }
-
-
-    .qr-action-secondary {
-
-        background: #ffffff;
-
-        color: #25282d;
-
-        border:
-            1px solid #ccd0d5;
-    }
-
-
-    .qr-action-download {
-
-        background: var(--green-bg);
-
-        color: var(--green);
-
-        border:
-            1px solid #c7e7d3;
-    }
-
 
     .qr-generate {
 
-        display: flex;
+        align-items: stretch;
 
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 20px;
-
-        padding: 21px;
+        flex-direction: column;
     }
-
-
-    .qr-generate h4 {
-
-        margin: 0;
-
-        font-size: 16px;
-        font-weight: 950;
-    }
-
-
-    .qr-generate p {
-
-        max-width: 640px;
-
-        margin:
-            7px 0 0;
-
-        color: #707780;
-
-        font-size: 9px;
-
-        line-height: 1.6;
-    }
-
 
     .qr-generate-button {
-
-        flex: 0 0 auto;
-
-        min-height: 41px;
-
-        padding:
-            8px 13px;
-
-        background: #202328;
-
-        color: #ffffff;
-
-        border:
-            1px solid #202328;
-
-        border-radius: 9px;
-
-        font-size: 8px;
-        font-weight: 950;
+        width: 100%;
     }
 
+    .qr-actions {
 
-    .qr-message {
+        display: grid;
 
-        display: none;
-
-        margin-top: 10px;
-
-        padding:
-            9px 11px;
-
-        border-radius: 8px;
-
-        font-size: 8px;
-        font-weight: 850;
+        grid-template-columns: 1fr;
     }
 
-
-    .qr-message.show {
-        display: block;
+    .qr-action {
+        width: 100%;
     }
-
-
-    .qr-message.success {
-
-        background: var(--green-bg);
-
-        color: var(--green);
-    }
-
-
-    .qr-message.error {
-
-        background: var(--red-bg);
-
-        color: var(--red);
-    }
-
-
-    /* =====================================================
-       HOURS
-    ===================================================== */
-
-    .hours-card {
-
-        overflow: hidden;
-
-        margin-bottom: 16px;
-
-        background: #ffffff;
-
-        border:
-            1px solid var(--border);
-
-        border-radius: 18px;
-
-        box-shadow:
-            var(--shadow-soft);
-    }
-
 
     .hours-card-header {
 
-        display: flex;
+        align-items: flex-start;
 
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 14px;
-
-        padding:
-            16px 18px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #f8f9fa,
-                #eceef1
-            );
-
-        border-bottom:
-            1px solid var(--border);
+        flex-direction: column;
     }
-
-
-    .hours-card-header h3 {
-
-        margin: 0;
-
-        font-size: 13px;
-        font-weight: 950;
-    }
-
-
-    .hours-card-header p {
-
-        margin:
-            3px 0 0;
-
-        color: #767d86;
-
-        font-size: 8px;
-    }
-
-
-    .hours-card-actions {
-
-        display: flex;
-
-        gap: 9px;
-    }
-
-
-    .hours-card-actions a {
-
-        font-size: 8px;
-        font-weight: 900;
-
-        text-decoration: none;
-    }
-
-
-    .hours-table {
-        min-width: 760px;
-    }
-
-
-    .hours-table thead {
-
-        background: #f4f5f6;
-
-        color: #69707a;
-    }
-
-
-    .hours-table th {
-        color: #69707a;
-    }
-
-
-    .hours-day {
-        font-weight: 950;
-    }
-
-
-    .time-input {
-
-        width: 125px;
-
-        min-height: 37px;
-
-        padding:
-            6px 8px;
-
-        background: #ffffff;
-
-        border:
-            1px solid #cfd2d6;
-
-        border-radius: 8px;
-
-        font-size: 9px;
-    }
-
-
-    .closed-label {
-
-        display: inline-flex;
-
-        align-items: center;
-
-        gap: 6px;
-
-        font-size: 8px;
-        font-weight: 850;
-    }
-
 
     .hours-footer {
 
-        display: flex;
+        align-items: stretch;
 
-        align-items: center;
-        justify-content: space-between;
-
-        gap: 14px;
-
-        padding:
-            13px 18px;
-
-        background: #fafbfc;
-
-        border-top:
-            1px solid var(--border-soft);
+        flex-direction: column;
     }
-
-
-    .hours-footer-note {
-
-        color: #7a8089;
-
-        font-size: 8px;
-
-        line-height: 1.5;
-    }
-
 
     .save-hours {
-
-        min-height: 39px;
-
-        padding:
-            8px 13px;
-
-        background: #202328;
-
-        color: #ffffff;
-
-        border:
-            1px solid #202328;
-
-        border-radius: 9px;
-
-        font-size: 8px;
-        font-weight: 950;
+        width: 100%;
     }
-
-
-    /* =====================================================
-       EMPTY
-    ===================================================== */
-
-    .empty {
-
-        padding:
-            38px 24px;
-
-        background:
-            rgba(255,255,255,.94);
-
-        border:
-            1px dashed #bfc4ca;
-
-        border-radius: 16px;
-
-        text-align: center;
-
-        color: #69707a;
-
-        font-size: 10px;
-
-        box-shadow:
-            var(--shadow-soft);
-    }
-
-
-    .empty strong {
-
-        color: #2b2f35;
-
-        font-size: 13px;
-    }
-
-
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
-
-    @media (max-width: 1050px) {
-
-        .control-layout {
-
-            grid-template-columns:
-                230px
-                minmax(0,1fr);
-        }
-
-
-        .metrics {
-
-            grid-template-columns:
-                repeat(3, minmax(0,1fr));
-        }
-
-    }
-
-
-    @media (max-width: 820px) {
-
-        .control-layout {
-            display: block;
-        }
-
-
-        .sidebar {
-            display: none;
-        }
-
-
-        .mobile-management-nav {
-            display: block;
-        }
-
-
-        .metrics {
-
-            grid-template-columns:
-                repeat(2, minmax(0,1fr));
-        }
-
-
-        .qr-card-body {
-
-            grid-template-columns:
-                180px
-                1fr;
-        }
-
-    }
-
-
-    @media (max-width: 620px) {
-
-        .app-shell {
-
-            width:
-                min(
-                    100% - 18px,
-                    1440px
-                );
-
-            padding-top: 10px;
-        }
-
-
-        .top-nav {
-
-            padding:
-                11px 12px;
-
-            border-radius: 13px;
-        }
-
-
-        .brand-copy span {
-            display: none;
-        }
-
-
-        .top-nav-actions .top-nav-link:first-child {
-            display: none;
-        }
-
-
-        .hero {
-
-            align-items: stretch;
-
-            flex-direction: column;
-
-            padding: 21px;
-
-            border-radius: 18px;
-        }
-
-
-        .hero .button {
-            width: 100%;
-        }
-
-
-        .plan-overview-top {
-
-            align-items: flex-start;
-
-            flex-direction: column;
-        }
-
-
-        .metrics {
-
-            grid-template-columns:
-                repeat(2, minmax(0,1fr));
-        }
-
-
-        .section-header {
-
-            align-items: flex-start;
-
-            flex-direction: column;
-        }
-
-
-        .qr-card-header {
-
-            align-items: flex-start;
-
-            flex-direction: column;
-        }
-
-
-        .qr-card-body {
-            grid-template-columns: 1fr;
-        }
-
-
-        .qr-preview {
-
-            width: 100%;
-
-            max-width: 250px;
-
-            margin: 0 auto;
-        }
-
-
-        .qr-generate {
-
-            align-items: stretch;
-
-            flex-direction: column;
-        }
-
-
-        .qr-generate-button {
-            width: 100%;
-        }
-
-
-        .qr-actions {
-
-            display: grid;
-
-            grid-template-columns: 1fr;
-        }
-
-
-        .qr-action {
-            width: 100%;
-        }
-
-
-        .hours-card-header {
-
-            align-items: flex-start;
-
-            flex-direction: column;
-        }
-
-
-        .hours-footer {
-
-            align-items: stretch;
-
-            flex-direction: column;
-        }
-
-
-        .save-hours {
-            width: 100%;
-        }
-
-    }
+}
 
 </style>
 
 </head>
 
-
 <body>
 
-
 <div class="app-shell">
-
 
     <!-- =====================================================
          TOP NAV
     ====================================================== -->
 
     <header class="top-nav">
-
 
         <a
             href="{{ url_for('home') }}"
@@ -2592,12 +2430,9 @@
                 K
             </span>
 
-
             <span class="brand-copy">
 
-                <strong>
-                    KALXA
-                </strong>
+                <strong>KALXA</strong>
 
                 <span>
                     Restaurant Control Centre
@@ -2607,9 +2442,7 @@
 
         </a>
 
-
         <div class="top-nav-actions">
-
 
             <a
                 href="{{ url_for('home') }}"
@@ -2618,26 +2451,19 @@
                 ← Kalxa Ticketing
             </a>
 
-
             <a
                 href="{{ url_for('organizer_logout') }}"
-                class="
-                    top-nav-link
-                    top-nav-logout
-                "
+                class="top-nav-link top-nav-logout"
             >
                 Log out
             </a>
 
-
         </div>
-
 
     </header>
 
-
     <!-- =====================================================
-         MOBILE MANAGEMENT NAV
+         MOBILE NAV
     ====================================================== -->
 
     <nav
@@ -2647,17 +2473,12 @@
 
         <div class="mobile-management-inner">
 
-
             <a
                 href="#overview"
-                class="
-                    mobile-management-link
-                    primary
-                "
+                class="mobile-management-link primary"
             >
                 ▦ Overview
             </a>
-
 
             <a
                 href="{{ url_for('admin_create_restaurant') }}"
@@ -2666,7 +2487,6 @@
                 + Restaurant
             </a>
 
-
             <a
                 href="#restaurants"
                 class="mobile-management-link"
@@ -2674,6 +2494,12 @@
                 Restaurants
             </a>
 
+            <a
+                href="#restaurant-plans"
+                class="mobile-management-link"
+            >
+                Plans
+            </a>
 
             <a
                 href="#customer-rating-qr"
@@ -2682,7 +2508,6 @@
                 Rating QR
             </a>
 
-
             <a
                 href="#working-hours"
                 class="mobile-management-link"
@@ -2690,37 +2515,16 @@
                 Hours
             </a>
 
-
-            {% if adverts %}
-
-                <a
-                    href="{{ url_for(
-                        'admin_manage_restaurant',
-                        advert_id=adverts[0].id
-                    ) }}#restaurant-subscription"
-                    class="mobile-management-link"
-                >
-                    ◈ Subscription
-                </a>
-
-            {% endif %}
-
-
             <a
                 href="{{ url_for('organizer_logout') }}"
-                class="
-                    mobile-management-link
-                    logout
-                "
+                class="mobile-management-link logout"
             >
                 Log out
             </a>
 
-
         </div>
 
     </nav>
-
 
     <!-- =====================================================
          CONTROL LAYOUT
@@ -2728,138 +2532,106 @@
 
     <div class="control-layout">
 
-
         <!-- =================================================
              SIDEBAR
         ================================================== -->
 
         <aside class="sidebar">
 
-
-            <!-- =============================================
-                 BRAND / TITLE
-            ============================================== -->
-
             <div class="sidebar-header">
-
 
                 <p class="sidebar-brand">
                     KALXA
                 </p>
 
-
                 <h2 class="sidebar-title">
                     Restaurant Control Centre
                 </h2>
 
-
                 <p class="sidebar-description">
 
                     Manage your restaurant presence,
-                    campaign and Kalxa features.
+                    campaigns and Kalxa features.
 
                 </p>
 
-
             </div>
 
-
-            <!-- =============================================
-                 CONTROL CENTRE
-            ============================================== -->
-
             <div class="sidebar-section">
-
 
                 <p class="sidebar-section-title">
                     Control Centre
                 </p>
 
-
                 <a
                     href="#overview"
-                    class="
-                        sidebar-link
-                        active
-                    "
+                    class="sidebar-link active"
                 >
 
-                    <span class="sidebar-icon">
-                        ▦
-                    </span>
+                    <span class="sidebar-icon">▦</span>
 
                     Overview
 
                 </a>
 
-
                 <a
-                    href="{{ url_for(
-                        'admin_create_restaurant'
-                    ) }}"
+                    href="{{ url_for('admin_create_restaurant') }}"
                     class="sidebar-link"
                 >
 
-                    <span class="sidebar-icon">
-                        ＋
-                    </span>
+                    <span class="sidebar-icon">＋</span>
 
                     Create Restaurant
 
                 </a>
-
 
                 <a
                     href="#restaurants"
                     class="sidebar-link"
                 >
 
-                    <span class="sidebar-icon">
-                        ▤
-                    </span>
+                    <span class="sidebar-icon">▤</span>
 
                     Your Restaurants
 
                 </a>
 
+                <a
+                    href="#restaurant-plans"
+                    class="sidebar-link"
+                >
+
+                    <span class="sidebar-icon">◈</span>
+
+                    Restaurant Plans
+
+                </a>
 
             </div>
 
-
             <!-- =============================================
-                 MINE
+                 RESTAURANT NAVIGATION
             ============================================== -->
 
             {% if adverts %}
 
-
                 <div class="sidebar-section">
-
 
                     <p class="sidebar-section-title">
                         Mine
                     </p>
 
-
                 </div>
-
 
                 <div class="restaurant-nav-list">
 
-
                     {% for advert in adverts %}
-
 
                         <article class="restaurant-nav-card">
 
-
-                            <!-- RESTAURANT IDENTITY -->
-
                             <div class="restaurant-nav-header">
 
-
                                 <div class="restaurant-nav-thumb">
-
 
                                     {% if advert.poster_image_url %}
 
@@ -2871,52 +2643,35 @@
 
                                     {% endif %}
 
-
                                 </div>
 
-
                                 <div class="restaurant-nav-copy">
-
 
                                     <span class="restaurant-nav-name">
                                         {{ advert.business_name }}
                                     </span>
 
-
                                     <div class="restaurant-nav-meta">
-
 
                                         {% if advert.is_premium_plan %}
 
-                                            <span class="
-                                                plan-badge
-                                                plan-premium
-                                            ">
+                                            <span class="plan-badge plan-premium">
                                                 Premium Plan
                                             </span>
 
-
                                         {% elif advert.is_standard_plan %}
 
-                                            <span class="
-                                                plan-badge
-                                                plan-standard
-                                            ">
+                                            <span class="plan-badge plan-standard">
                                                 Standard Plan
                                             </span>
 
-
                                         {% else %}
 
-                                            <span class="
-                                                plan-badge
-                                                plan-free
-                                            ">
+                                            <span class="plan-badge plan-free">
                                                 Free Plan
                                             </span>
 
                                         {% endif %}
-
 
                                         {% if advert.area %}
 
@@ -2926,20 +2681,13 @@
 
                                         {% endif %}
 
-
                                     </div>
-
 
                                 </div>
 
-
                             </div>
 
-
-                            <!-- RESTAURANT LINKS -->
-
                             <div class="restaurant-nav-links">
-
 
                                 <a
                                     href="{{ url_for(
@@ -2950,11 +2698,9 @@
                                 >
 
                                     <span>▦</span>
-
                                     Overview
 
                                 </a>
-
 
                                 <a
                                     href="{{ url_for(
@@ -2965,11 +2711,9 @@
                                 >
 
                                     <span>✎</span>
-
                                     Edit Restaurant
 
                                 </a>
-
 
                                 <a
                                     href="{{ url_for(
@@ -2980,11 +2724,9 @@
                                 >
 
                                     <span>▶</span>
-
                                     Restaurant Reel
 
                                 </a>
-
 
                                 <a
                                     href="{{ url_for(
@@ -2997,11 +2739,9 @@
                                 >
 
                                     <span>↗</span>
-
                                     Public Restaurant
 
                                 </a>
-
 
                                 <a
                                     href="{{ url_for(
@@ -3012,24 +2752,19 @@
                                 >
 
                                     <span>◈</span>
-
                                     Manage Subscription
 
                                 </a>
 
-
                             </div>
 
-
                             <!-- =================================
-                                 STANDARD -> PREMIUM
+                                 YOCO PREMIUM UPGRADE
                             ================================== -->
 
                             {% if advert.is_standard_plan %}
 
-
                                 <div class="restaurant-nav-upgrade">
-
 
                                     <form
                                         method="POST"
@@ -3038,26 +2773,23 @@
                                             advert_id=advert.id,
                                             plan_tier='premium'
                                         ) }}"
+                                        data-payment-form
                                     >
 
                                         <button
                                             type="submit"
                                             class="restaurant-upgrade-button"
                                         >
-                                            ★ Upgrade to Premium · R299
+                                            ★ Premium · R299 via Yoco
                                         </button>
 
                                     </form>
 
-
                                 </div>
-
 
                             {% elif advert.is_free_plan %}
 
-
                                 <div class="restaurant-nav-upgrade">
-
 
                                     <a
                                         href="{{ url_for(
@@ -3069,24 +2801,17 @@
                                         Upgrade Restaurant Plan
                                     </a>
 
-
                                 </div>
-
 
                             {% endif %}
 
-
                         </article>
-
 
                     {% endfor %}
 
-
                 </div>
 
-
             {% endif %}
-
 
             <!-- =============================================
                  ACCOUNT
@@ -3094,17 +2819,13 @@
 
             <div class="sidebar-section">
 
-
                 <p class="sidebar-section-title">
                     Account
                 </p>
 
-
             </div>
 
-
             <div class="sidebar-account">
-
 
                 {% if adverts %}
 
@@ -3120,7 +2841,6 @@
 
                 {% endif %}
 
-
                 <a
                     href="{{ url_for('home') }}"
                     class="sidebar-account-link"
@@ -3128,30 +2848,22 @@
                     ← Back to Kalxa Ticketing
                 </a>
 
-
                 <a
                     href="{{ url_for('organizer_logout') }}"
-                    class="
-                        sidebar-account-link
-                        logout
-                    "
+                    class="sidebar-account-link logout"
                 >
                     ↪ Log out
                 </a>
 
-
             </div>
 
-
         </aside>
-
 
         <!-- =================================================
              MAIN CONTENT
         ================================================== -->
 
         <main class="main-content">
-
 
             <!-- =================================================
                  HERO
@@ -3162,79 +2874,62 @@
                 id="overview"
             >
 
-
                 <div class="hero-copy">
-
 
                     <p class="eyebrow">
                         KALXA RESTAURANT
                     </p>
 
-
                     <h1>
                         Restaurant Control Centre
                     </h1>
-
 
                     <p class="subtitle">
 
                         Manage your restaurant presence,
                         campaigns, Reels, customer experiences,
-                        opening hours and restaurant plans from
+                        opening hours and subscriptions from
                         one place.
 
                     </p>
 
-
                 </div>
 
-
                 <a
-                    href="{{ url_for(
-                        'admin_create_restaurant'
-                    ) }}"
+                    href="{{ url_for('admin_create_restaurant') }}"
                     class="button"
                 >
                     + Create Restaurant
                 </a>
 
-
             </section>
-
 
             <!-- =================================================
                  FLASH MESSAGES
             ================================================== -->
 
-            {% with messages =
-                get_flashed_messages(
-                    with_categories=true
-                )
-            %}
+            {% with messages = get_flashed_messages(
+                with_categories=true
+            ) %}
 
                 {% if messages %}
 
                     <div class="flash-stack">
 
-
                         {% for category, message in messages %}
 
                             <div
-                                class="
-                                    flash
-
-                                    {% if category == 'success' %}
-                                        flash-success
-                                    {% elif category == 'error' %}
-                                        flash-error
-                                    {% endif %}
-                                "
+                                class="flash
+                                {% if category == 'success' %}
+                                    flash-success
+                                {% elif category == 'error' %}
+                                    flash-error
+                                {% endif %}"
                             >
                                 {{ message }}
                             </div>
 
                         {% endfor %}
-
 
                     </div>
 
@@ -3242,24 +2937,19 @@
 
             {% endwith %}
 
-
             <!-- =================================================
-                 RESTAURANT PLAN OVERVIEW
+                 PLAN OVERVIEW
             ================================================== -->
 
             <div class="plan-overview">
 
-
                 <div class="plan-overview-top">
 
-
                     <div>
-
 
                         <strong>
                             Restaurant plans are managed individually
                         </strong>
-
 
                         <p>
 
@@ -3275,37 +2965,63 @@
 
                         </p>
 
-
                     </div>
 
-
-                    {% if adverts %}
-
-                        <a
-                            href="{{ url_for(
-                                'admin_manage_restaurant',
-                                advert_id=adverts[0].id
-                            ) }}#restaurant-subscription"
-                            class="plan-overview-link"
-                        >
-                            Manage plans →
-                        </a>
-
-                    {% endif %}
-
+                    <a
+                        href="#restaurant-plans"
+                        class="plan-overview-link"
+                    >
+                        View plans →
+                    </a>
 
                 </div>
 
-
             </div>
 
+            <!-- =================================================
+                 YOCO PAYMENT PROVIDER
+            ================================================== -->
+
+            <div class="payment-provider-card">
+
+                <div class="payment-provider-identity">
+
+                    <div class="payment-provider-icon">
+                        🔒
+                    </div>
+
+                    <div class="payment-provider-copy">
+
+                        <strong>
+                            Restaurant subscriptions powered by Yoco
+                        </strong>
+
+                        <p>
+
+                            Standard and Premium subscription
+                            payments are processed through
+                            Yoco's secure checkout.
+
+                            Your subscription becomes active
+                            after payment confirmation.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <span class="payment-provider-badge">
+                    YOCO CHECKOUT
+                </span>
+
+            </div>
 
             <!-- =================================================
                  METRICS
             ================================================== -->
 
             <div class="metrics">
-
 
                 <div class="metric">
 
@@ -3319,7 +3035,6 @@
 
                 </div>
 
-
                 <div class="metric">
 
                     <span class="metric-label">
@@ -3331,7 +3046,6 @@
                     </span>
 
                 </div>
-
 
                 <div class="metric">
 
@@ -3345,7 +3059,6 @@
 
                 </div>
 
-
                 <div class="metric">
 
                     <span class="metric-label">
@@ -3357,7 +3070,6 @@
                     </span>
 
                 </div>
-
 
                 <div class="metric">
 
@@ -3371,9 +3083,174 @@
 
                 </div>
 
-
             </div>
 
+            <!-- =================================================
+                 RESTAURANT SUBSCRIPTION PLANS
+            ================================================== -->
+
+            <section
+                class="section"
+                id="restaurant-plans"
+            >
+
+                <div class="section-header">
+
+                    <div>
+
+                        <h2>
+                            Restaurant Subscription Plans
+                        </h2>
+
+                        <p>
+
+                            Choose the right plan for your
+                            restaurant.
+
+                            Each restaurant has its own
+                            subscription.
+
+                        </p>
+
+                    </div>
+
+                    <span class="section-count">
+                        Free · Standard · Premium
+                    </span>
+
+                </div>
+
+                <div class="subscription-plans">
+
+                    <!-- FREE -->
+
+                    <article class="subscription-plan">
+
+                        <span class="subscription-plan-name">
+                            Free
+                        </span>
+
+                        <div class="subscription-plan-price">
+                            R0
+                            <small>/month</small>
+                        </div>
+
+                        <p class="subscription-plan-description">
+
+                            Start building your restaurant's
+                            presence on Kalxa.
+
+                        </p>
+
+                        <ul class="subscription-plan-features">
+
+                            <li>Restaurant profile</li>
+                            <li>Restaurant campaign</li>
+                            <li>Restaurant Reel</li>
+                            <li>Public restaurant page</li>
+                            <li>No payment required</li>
+
+                        </ul>
+
+                        <a
+                            href="{{ url_for('admin_create_restaurant') }}"
+                            class="subscription-plan-button"
+                        >
+                            Create Free Restaurant
+                        </a>
+
+                    </article>
+
+                    <!-- STANDARD -->
+
+                    <article class="subscription-plan">
+
+                        <span class="subscription-plan-name">
+                            Standard
+                        </span>
+
+                        <div class="subscription-plan-price">
+                            R219
+                            <small>/month</small>
+                        </div>
+
+                        <p class="subscription-plan-description">
+
+                            Give customers more ways to
+                            discover and engage with your
+                            restaurant.
+
+                        </p>
+
+                        <ul class="subscription-plan-features">
+
+                            <li>Everything in Free</li>
+                            <li>Restaurant photo gallery</li>
+                            <li>Working hours</li>
+                            <li>Customer experiences</li>
+                            <li>Customer Rating QR</li>
+
+                        </ul>
+
+                        <a
+                            href="#restaurants"
+                            class="subscription-plan-button"
+                        >
+                            Choose a Restaurant
+                        </a>
+
+                        <p class="subscription-plan-note">
+                            Select a restaurant to activate Standard.
+                        </p>
+
+                    </article>
+
+                    <!-- PREMIUM -->
+
+                    <article class="subscription-plan featured">
+
+                        <span class="subscription-plan-name">
+                            ★ Premium
+                        </span>
+
+                        <div class="subscription-plan-price">
+                            R299
+                            <small>/month</small>
+                        </div>
+
+                        <p class="subscription-plan-description">
+
+                            Increase your restaurant's
+                            visibility and understand
+                            customer engagement.
+
+                        </p>
+
+                        <ul class="subscription-plan-features">
+
+                            <li>Everything in Standard</li>
+                            <li>Kalxa Stories exposure</li>
+                            <li>Restaurant analytics</li>
+                            <li>Additional promotional visibility</li>
+
+                        </ul>
+
+                        <a
+                            href="#restaurants"
+                            class="subscription-plan-button premium"
+                        >
+                            Choose a Restaurant
+                        </a>
+
+                        <p class="subscription-plan-note">
+                            Payments are handled through Yoco.
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </section>
 
             <!-- =================================================
                  YOUR RESTAURANTS
@@ -3384,9 +3261,7 @@
                 id="restaurants"
             >
 
-
                 <div class="section-header">
-
 
                     <div>
 
@@ -3395,13 +3270,14 @@
                         </h2>
 
                         <p>
-                            Open the individual dashboard,
+
+                            Open individual dashboards,
                             edit restaurant information,
-                            manage Reels and control plans.
+                            manage Reels and subscriptions.
+
                         </p>
 
                     </div>
-
 
                     <span class="section-count">
 
@@ -3415,20 +3291,15 @@
 
                     </span>
 
-
                 </div>
 
-
                 {% if adverts %}
-
 
                     <div class="table-card">
 
                         <div class="table-scroll">
 
-
                             <table>
-
 
                                 <thead>
 
@@ -3448,15 +3319,11 @@
 
                                 </thead>
 
-
                                 <tbody>
-
 
                                     {% for advert in adverts %}
 
-
                                         <tr>
-
 
                                             <!-- RESTAURANT -->
 
@@ -3464,9 +3331,7 @@
 
                                                 <div class="restaurant-cell">
 
-
                                                     <div class="restaurant-thumb">
-
 
                                                         {% if advert.poster_image_url %}
 
@@ -3478,17 +3343,13 @@
 
                                                         {% endif %}
 
-
                                                     </div>
 
-
                                                     <div>
-
 
                                                         <strong>
                                                             {{ advert.business_name }}
                                                         </strong>
-
 
                                                         {% if advert.headline %}
 
@@ -3498,104 +3359,69 @@
 
                                                         {% endif %}
 
-
                                                     </div>
-
 
                                                 </div>
 
                                             </td>
 
-
                                             <!-- PLAN -->
 
                                             <td>
 
-
                                                 {% if advert.is_premium_plan %}
 
-                                                    <span class="
-                                                        plan-badge
-                                                        plan-premium
-                                                    ">
+                                                    <span class="plan-badge plan-premium">
                                                         Premium
                                                     </span>
 
-
                                                 {% elif advert.is_standard_plan %}
 
-                                                    <span class="
-                                                        plan-badge
-                                                        plan-standard
-                                                    ">
+                                                    <span class="plan-badge plan-standard">
                                                         Standard
                                                     </span>
 
-
                                                 {% else %}
 
-                                                    <span class="
-                                                        plan-badge
-                                                        plan-free
-                                                    ">
+                                                    <span class="plan-badge plan-free">
                                                         Free
                                                     </span>
 
                                                 {% endif %}
 
-
                                             </td>
-
 
                                             <!-- STATUS -->
 
                                             <td>
 
-
                                                 {% if advert.campaign_status == "live" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-live
-                                                    ">
+                                                    <span class="status-badge badge-live">
                                                         ● LIVE
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "scheduled" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-scheduled
-                                                    ">
+                                                    <span class="status-badge badge-scheduled">
                                                         ● SCHEDULED
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "expired" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-expired
-                                                    ">
+                                                    <span class="status-badge badge-expired">
                                                         ● EXPIRED
                                                     </span>
 
-
                                                 {% else %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-paused
-                                                    ">
+                                                    <span class="status-badge badge-paused">
                                                         ● PAUSED
                                                     </span>
 
                                                 {% endif %}
 
-
                                             </td>
-
 
                                             <!-- AREA -->
 
@@ -3603,17 +3429,13 @@
                                                 {{ advert.area or "—" }}
                                             </td>
 
-
                                             <!-- START -->
 
                                             <td>
 
-
                                                 {% if advert.campaign_start_date %}
 
-                                                    {{ advert.campaign_start_date.strftime(
-                                                        '%d %b %Y'
-                                                    ) }}
+                                                    {{ advert.campaign_start_date.strftime('%d %b %Y') }}
 
                                                 {% else %}
 
@@ -3621,20 +3443,15 @@
 
                                                 {% endif %}
 
-
                                             </td>
-
 
                                             <!-- END -->
 
                                             <td>
 
-
                                                 {% if advert.campaign_end_date %}
 
-                                                    {{ advert.campaign_end_date.strftime(
-                                                        '%d %b %Y'
-                                                    ) }}
+                                                    {{ advert.campaign_end_date.strftime('%d %b %Y') }}
 
                                                 {% else %}
 
@@ -3642,14 +3459,11 @@
 
                                                 {% endif %}
 
-
                                             </td>
-
 
                                             <!-- REEL -->
 
                                             <td>
-
 
                                                 {% if advert.reel %}
 
@@ -3665,14 +3479,11 @@
 
                                                 {% endif %}
 
-
                                             </td>
-
 
                                             <!-- REMAINING -->
 
                                             <td>
-
 
                                                 {% if advert.campaign_status == "live" %}
 
@@ -3688,16 +3499,13 @@
 
                                                     {% endif %}
 
-
                                                 {% elif advert.campaign_status == "scheduled" %}
 
                                                     Starts soon
 
-
                                                 {% elif advert.campaign_status == "expired" %}
 
                                                     Ended
-
 
                                                 {% else %}
 
@@ -3705,92 +3513,72 @@
 
                                                 {% endif %}
 
-
                                             </td>
-
 
                                             <!-- ACTIONS -->
 
                                             <td>
 
-
                                                 <div class="table-actions">
-
 
                                                     <a
                                                         href="{{ url_for(
                                                             'admin_manage_restaurant',
                                                             advert_id=advert.id
                                                         ) }}"
-                                                        class="
-                                                            table-action
-                                                            table-action-primary
-                                                        "
+                                                        class="table-action table-action-primary"
                                                     >
                                                         ▦ Overview
                                                     </a>
-
 
                                                     <a
                                                         href="{{ url_for(
                                                             'admin_edit_restaurant',
                                                             advert_id=advert.id
                                                         ) }}"
-                                                        class="
-                                                            table-action
-                                                            table-action-edit
-                                                        "
+                                                        class="table-action table-action-edit"
                                                     >
                                                         ✎ Edit
                                                     </a>
-
 
                                                     <a
                                                         href="{{ url_for(
                                                             'admin_restaurant_reel',
                                                             advert_id=advert.id
                                                         ) }}"
-                                                        class="
-                                                            table-action
-                                                            table-action-secondary
-                                                        "
+                                                        class="table-action table-action-secondary"
                                                     >
                                                         ▶ Reel
                                                     </a>
-
 
                                                     {% if advert.can_receive_customer_experiences %}
 
                                                         <a
                                                             href="#qr-{{ advert.id }}"
-                                                            class="
-                                                                table-action
-                                                                table-action-secondary
-                                                            "
+                                                            class="table-action table-action-secondary"
                                                         >
                                                             Rating QR
                                                         </a>
 
                                                     {% endif %}
 
-
                                                     {% if advert.can_use_opening_hours %}
 
                                                         <a
                                                             href="#hours-{{ advert.id }}"
-                                                            class="
-                                                                table-action
-                                                                table-action-hours
-                                                            "
+                                                            class="table-action table-action-hours"
                                                         >
                                                             Hours
                                                         </a>
 
                                                     {% endif %}
 
+                                                    <!-- =================================
+                                                         STANDARD TO PREMIUM
+                                                         YOCO CHECKOUT
+                                                    ================================== -->
 
                                                     {% if advert.is_standard_plan %}
-
 
                                                         <form
                                                             method="POST"
@@ -3799,40 +3587,43 @@
                                                                 advert_id=advert.id,
                                                                 plan_tier='premium'
                                                             ) }}"
+                                                            data-payment-form
                                                         >
 
                                                             <button
                                                                 type="submit"
-                                                                class="
-                                                                    table-action
-                                                                    table-action-upgrade
-                                                                "
+                                                                class="table-action table-action-upgrade"
                                                             >
-                                                                ★ Premium R299
+                                                                ★ Premium R299 · Yoco
                                                             </button>
 
                                                         </form>
 
-
                                                     {% elif advert.is_free_plan %}
-
 
                                                         <a
                                                             href="{{ url_for(
                                                                 'admin_manage_restaurant',
                                                                 advert_id=advert.id
                                                             ) }}#restaurant-subscription"
-                                                            class="
-                                                                table-action
-                                                                table-action-upgrade
-                                                            "
+                                                            class="table-action table-action-upgrade"
                                                         >
                                                             Upgrade Plan
                                                         </a>
 
+                                                    {% else %}
+
+                                                        <a
+                                                            href="{{ url_for(
+                                                                'admin_manage_restaurant',
+                                                                advert_id=advert.id
+                                                            ) }}#restaurant-subscription"
+                                                            class="table-action table-action-secondary"
+                                                        >
+                                                            Subscription
+                                                        </a>
 
                                                     {% endif %}
-
 
                                                     <a
                                                         href="{{ url_for(
@@ -3841,80 +3632,57 @@
                                                         ) }}"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        class="
-                                                            table-action
-                                                            table-action-secondary
-                                                        "
+                                                        class="table-action table-action-secondary"
                                                     >
                                                         ↗ Public
                                                     </a>
 
-
                                                 </div>
-
 
                                             </td>
 
-
                                         </tr>
-
 
                                     {% endfor %}
 
-
                                 </tbody>
 
-
                             </table>
-
 
                         </div>
 
                     </div>
 
-
                 {% else %}
 
-
                     <div class="empty">
-
 
                         <strong>
                             No restaurants yet.
                         </strong>
 
-
                         <br><br>
-
 
                         Create your first restaurant presence
                         on Kalxa.
 
-                        The Free restaurant plan does not require
-                        payment.
-
+                        The Free restaurant plan does not
+                        require payment.
 
                         <br><br>
 
-
                         <a
-                            href="{{ url_for(
-                                'admin_create_restaurant'
-                            ) }}"
+                            href="{{ url_for('admin_create_restaurant') }}"
                             class="button"
                         >
                             + Create First Restaurant
                         </a>
 
-
                     </div>
-
 
                 {% endif %}
 
-
             </section>
-
 
             <!-- =================================================
                  CUSTOMER RATING QR
@@ -3922,89 +3690,65 @@
 
             {% if adverts %}
 
-
                 <section
                     class="section"
                     id="customer-rating-qr"
                 >
 
-
                     <div class="section-header">
 
-
                         <div>
-
 
                             <h2>
                                 Customer Rating QR
                             </h2>
 
-
                             <p>
+
                                 Standard and Premium restaurants
                                 can create permanent customer
                                 experience QR codes.
+
                             </p>
 
-
                         </div>
-
 
                         <span class="section-count">
                             Standard + Premium
                         </span>
 
-
                     </div>
-
 
                     <div class="qr-grid">
 
-
                         {% for advert in adverts %}
-
 
                             {% if advert.can_receive_customer_experiences %}
 
-
-                                {% set qr_data =
-                                    restaurant_qr_data.get(
-                                        advert.id
-                                    )
-                                %}
-
+                                {% set qr_data = restaurant_qr_data.get(advert.id) %}
 
                                 <article
                                     class="qr-card"
                                     id="qr-{{ advert.id }}"
                                 >
 
-
                                     <div class="qr-card-header">
 
-
                                         <div>
-
 
                                             <h3>
                                                 {{ advert.business_name }}
                                             </h3>
 
-
                                             <p>
                                                 Customer Experience QR
                                             </p>
 
-
                                         </div>
-
 
                                         {% if qr_data and qr_data.exists %}
 
-                                            <span class="
-                                                qr-status
-                                                active
-                                            ">
+                                            <span class="qr-status active">
                                                 ● QR ACTIVE
                                             </span>
 
@@ -4016,18 +3760,13 @@
 
                                         {% endif %}
 
-
                                     </div>
-
 
                                     {% if qr_data and qr_data.exists %}
 
-
                                         <div class="qr-card-body">
 
-
                                             <div class="qr-preview">
-
 
                                                 <img
                                                     src="{{ qr_data.image_url }}"
@@ -4035,26 +3774,22 @@
                                                     loading="lazy"
                                                 >
 
-
                                             </div>
 
-
                                             <div class="qr-details">
-
 
                                                 <p class="qr-eyebrow">
                                                     CUSTOMER EXPERIENCE
                                                 </p>
 
-
                                                 <h4>
                                                     Scan. Rate. Share.
                                                 </h4>
 
-
                                                 <p class="qr-description">
 
                                                     Place this QR inside
+
                                                     <strong>
                                                         {{ advert.business_name }}
                                                     </strong>.
@@ -4065,120 +3800,89 @@
 
                                                 </p>
 
-
                                                 <div class="qr-info-box">
-
 
                                                     <span class="qr-info-label">
                                                         Permanent Rating Link
                                                     </span>
 
-
                                                     <span class="qr-url">
                                                         {{ qr_data.rating_url }}
                                                     </span>
 
-
                                                 </div>
 
-
                                                 <div class="qr-info-box">
-
 
                                                     <span class="qr-info-label">
                                                         QR Code
                                                     </span>
 
-
                                                     <span class="qr-code-value">
                                                         {{ qr_data.public_code }}
                                                     </span>
 
-
                                                 </div>
 
-
                                                 <div class="qr-actions">
-
 
                                                     <a
                                                         href="{{ qr_data.rating_url }}"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        class="
-                                                            qr-action
-                                                            qr-action-primary
-                                                        "
+                                                        class="qr-action qr-action-primary"
                                                     >
                                                         Open Rating Page
                                                     </a>
 
-
                                                     <a
                                                         href="{{ qr_data.download_url }}"
-                                                        class="
-                                                            qr-action
-                                                            qr-action-download
-                                                        "
+                                                        class="qr-action qr-action-download"
                                                     >
                                                         ↓ Download QR
                                                     </a>
 
-
                                                     <button
                                                         type="button"
-                                                        class="
-                                                            qr-action
-                                                            qr-action-secondary
-                                                        "
+                                                        class="qr-action qr-action-secondary"
                                                         data-copy-rating-url="{{ qr_data.rating_url }}"
                                                     >
                                                         Copy Link
                                                     </button>
 
-
                                                 </div>
-
 
                                             </div>
 
-
                                         </div>
-
 
                                     {% else %}
 
-
                                         <div class="qr-generate">
 
-
                                             <div>
-
 
                                                 <h4>
                                                     Create Customer Rating QR
                                                 </h4>
 
-
                                                 <p>
 
                                                     Generate one permanent
                                                     QR code for
+
                                                     <strong>
                                                         {{ advert.business_name }}
                                                     </strong>.
 
                                                 </p>
 
-
                                                 <div
                                                     class="qr-message"
                                                     id="qr-message-{{ advert.id }}"
                                                 ></div>
 
-
                                             </div>
-
 
                                             <button
                                                 type="button"
@@ -4189,30 +3893,21 @@
                                                 Generate Rating QR
                                             </button>
 
-
                                         </div>
-
 
                                     {% endif %}
 
-
                                 </article>
-
 
                             {% endif %}
 
-
                         {% endfor %}
-
 
                     </div>
 
-
                 </section>
 
-
             {% endif %}
-
 
             <!-- =================================================
                  WORKING HOURS
@@ -4220,74 +3915,56 @@
 
             {% if adverts %}
 
-
                 <section
                     class="section"
                     id="working-hours"
                 >
 
-
                     <div class="section-header">
 
-
                         <div>
-
 
                             <h2>
                                 Working Hours
                             </h2>
-
 
                             <p>
                                 Operational hours are available
                                 on Standard and Premium.
                             </p>
 
-
                         </div>
-
 
                         <span class="section-count">
                             Standard + Premium
                         </span>
 
-
                     </div>
-
 
                     {% for advert in adverts %}
 
-
                         {% if advert.can_use_opening_hours %}
-
 
                             <section
                                 class="hours-card"
                                 id="hours-{{ advert.id }}"
                             >
 
-
                                 <div class="hours-card-header">
 
-
                                     <div>
-
 
                                         <h3>
                                             {{ advert.business_name }}
                                         </h3>
 
-
                                         <p>
                                             Weekly public restaurant hours.
                                         </p>
 
-
                                     </div>
 
-
                                     <div class="hours-card-actions">
-
 
                                         <a
                                             href="{{ url_for(
@@ -4297,7 +3974,6 @@
                                         >
                                             Edit Restaurant
                                         </a>
-
 
                                         <a
                                             href="{{ url_for(
@@ -4311,12 +3987,9 @@
                                             Public Page →
                                         </a>
 
-
                                     </div>
 
-
                                 </div>
-
 
                                 <form
                                     method="POST"
@@ -4326,12 +3999,9 @@
                                     ) }}"
                                 >
 
-
                                     <div class="table-scroll">
 
-
                                         <table class="hours-table">
-
 
                                             <thead>
 
@@ -4347,9 +4017,7 @@
 
                                             </thead>
 
-
                                             <tbody>
-
 
                                                 {% for day in [
                                                     'monday',
@@ -4361,21 +4029,15 @@
                                                     'sunday'
                                                 ] %}
 
-
-                                                    {% set hour_ns =
-                                                        namespace(
-                                                            open_time='',
-                                                            close_time='',
-                                                            is_closed=true
-                                                        )
-                                                    %}
-
+                                                    {% set hour_ns = namespace(
+                                                        open_time='',
+                                                        close_time='',
+                                                        is_closed=true
+                                                    ) %}
 
                                                     {% for opening_hour in advert.opening_hours %}
 
-
                                                         {% if opening_hour.day_of_week == day %}
-
 
                                                             {% set hour_ns.open_time =
                                                                 opening_hour.open_time.strftime('%H:%M')
@@ -4383,27 +4045,21 @@
                                                                 else ''
                                                             %}
 
-
                                                             {% set hour_ns.close_time =
                                                                 opening_hour.close_time.strftime('%H:%M')
                                                                 if opening_hour.close_time
                                                                 else ''
                                                             %}
 
-
                                                             {% set hour_ns.is_closed =
                                                                 opening_hour.is_closed
                                                             %}
 
-
                                                         {% endif %}
-
 
                                                     {% endfor %}
 
-
                                                     <tr>
-
 
                                                         <td>
 
@@ -4412,7 +4068,6 @@
                                                             </span>
 
                                                         </td>
-
 
                                                         <td>
 
@@ -4425,7 +4080,6 @@
 
                                                         </td>
 
-
                                                         <td>
 
                                                             <input
@@ -4437,11 +4091,9 @@
 
                                                         </td>
 
-
                                                         <td>
 
                                                             <label class="closed-label">
-
 
                                                                 <input
                                                                     type="checkbox"
@@ -4452,34 +4104,23 @@
                                                                     {% endif %}
                                                                 >
 
-
                                                                 Closed
-
 
                                                             </label>
 
                                                         </td>
 
-
                                                         <td>
-
 
                                                             {% if hour_ns.is_closed %}
 
-                                                                <span class="
-                                                                    status-badge
-                                                                    badge-paused
-                                                                ">
+                                                                <span class="status-badge badge-paused">
                                                                     Closed
                                                                 </span>
 
-
                                                             {% elif hour_ns.open_time and hour_ns.close_time %}
 
-                                                                <span class="
-                                                                    status-badge
-                                                                    badge-live
-                                                                ">
+                                                                <span class="status-badge badge-live">
 
                                                                     {{ hour_ns.open_time }}
                                                                     –
@@ -4487,39 +4128,27 @@
 
                                                                 </span>
 
-
                                                             {% else %}
 
-                                                                <span class="
-                                                                    status-badge
-                                                                    badge-scheduled
-                                                                ">
+                                                                <span class="status-badge badge-scheduled">
                                                                     Not configured
                                                                 </span>
 
                                                             {% endif %}
 
-
                                                         </td>
-
 
                                                     </tr>
 
-
                                                 {% endfor %}
-
 
                                             </tbody>
 
-
                                         </table>
-
 
                                     </div>
 
-
                                     <div class="hours-footer">
-
 
                                         <div class="hours-footer-note">
 
@@ -4532,7 +4161,6 @@
 
                                         </div>
 
-
                                         <button
                                             type="submit"
                                             class="save-hours"
@@ -4540,27 +4168,19 @@
                                             Save Working Hours
                                         </button>
 
-
                                     </div>
-
 
                                 </form>
 
-
                             </section>
-
 
                         {% endif %}
 
-
                     {% endfor %}
-
 
                 </section>
 
-
             {% endif %}
-
 
             <!-- =================================================
                  SETUP CHECKLIST
@@ -4568,44 +4188,35 @@
 
             {% if adverts %}
 
-
                 <section
                     class="section"
                     id="setup-checklist"
                 >
 
-
                     <div class="section-header">
 
-
                         <div>
-
 
                             <h2>
                                 Restaurant Setup Checklist
                             </h2>
 
-
                             <p>
+
                                 Review each restaurant's
                                 Kalxa setup and plan access.
-                            </p>
 
+                            </p>
 
                         </div>
 
-
                     </div>
-
 
                     <div class="table-card">
 
-
                         <div class="table-scroll">
 
-
                             <table>
-
 
                                 <thead>
 
@@ -4626,52 +4237,33 @@
 
                                 </thead>
 
-
                                 <tbody>
-
 
                                     {% for advert in adverts %}
 
+                                        {% set setup_ns = namespace(
+                                            has_hours=false
+                                        ) %}
 
-                                        {% set setup_ns =
-                                            namespace(
-                                                has_hours=false
-                                            )
-                                        %}
-
-
-                                        {% set qr_data =
-                                            restaurant_qr_data.get(
-                                                advert.id
-                                            )
-                                        %}
-
+                                        {% set qr_data = restaurant_qr_data.get(advert.id) %}
 
                                         {% if advert.can_use_opening_hours %}
 
-
                                             {% for opening_hour in advert.opening_hours %}
 
-
-                                                {% if
-                                                    opening_hour.open_time
-                                                    or
-                                                    opening_hour.is_closed
-                                                %}
+                                                {% if opening_hour.open_time or opening_hour.is_closed %}
 
                                                     {% set setup_ns.has_hours = true %}
 
                                                 {% endif %}
 
-
                                             {% endfor %}
-
 
                                         {% endif %}
 
-
                                         <tr>
 
+                                            <!-- RESTAURANT -->
 
                                             <td>
 
@@ -4681,47 +4273,35 @@
 
                                             </td>
 
+                                            <!-- PLAN -->
 
                                             <td>
 
-
                                                 {% if advert.is_premium_plan %}
 
-                                                    <span class="
-                                                        plan-badge
-                                                        plan-premium
-                                                    ">
+                                                    <span class="plan-badge plan-premium">
                                                         Premium
                                                     </span>
 
-
                                                 {% elif advert.is_standard_plan %}
 
-                                                    <span class="
-                                                        plan-badge
-                                                        plan-standard
-                                                    ">
+                                                    <span class="plan-badge plan-standard">
                                                         Standard
                                                     </span>
 
-
                                                 {% else %}
 
-                                                    <span class="
-                                                        plan-badge
-                                                        plan-free
-                                                    ">
+                                                    <span class="plan-badge plan-free">
                                                         Free
                                                     </span>
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- POSTER -->
 
                                             <td>
-
 
                                                 {% if advert.poster_image_url %}
 
@@ -4737,12 +4317,11 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- GALLERY -->
 
                                             <td>
-
 
                                                 {% if not advert.can_use_gallery %}
 
@@ -4750,13 +4329,13 @@
                                                         Locked
                                                     </span>
 
-
                                                 {% elif advert.gallery_images %}
 
                                                     <span class="yes-badge">
-                                                        ✓ {{ advert.gallery_images|length }} / 5
-                                                    </span>
 
+                                                        ✓ {{ advert.gallery_images|length }} / 5
+
+                                                    </span>
 
                                                 {% else %}
 
@@ -4766,12 +4345,11 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- LOCATION -->
 
                                             <td>
-
 
                                                 {% if advert.address or advert.area %}
 
@@ -4787,12 +4365,11 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- REEL -->
 
                                             <td>
-
 
                                                 {% if advert.reel %}
 
@@ -4808,12 +4385,11 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- HOURS -->
 
                                             <td>
-
 
                                                 {% if not advert.can_use_opening_hours %}
 
@@ -4821,13 +4397,11 @@
                                                         Locked
                                                     </span>
 
-
                                                 {% elif setup_ns.has_hours %}
 
                                                     <span class="yes-badge">
                                                         ✓ Configured
                                                     </span>
-
 
                                                 {% else %}
 
@@ -4837,19 +4411,17 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- RATING QR -->
 
                                             <td>
-
 
                                                 {% if not advert.can_receive_customer_experiences %}
 
                                                     <span class="no-badge">
                                                         Locked
                                                     </span>
-
 
                                                 {% elif qr_data and qr_data.exists %}
 
@@ -4860,7 +4432,6 @@
                                                     >
                                                         ✓ Created
                                                     </a>
-
 
                                                 {% else %}
 
@@ -4874,63 +4445,45 @@
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- CAMPAIGN -->
 
                                             <td>
 
-
                                                 {% if advert.campaign_status == "live" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-live
-                                                    ">
+                                                    <span class="status-badge badge-live">
                                                         Live
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "scheduled" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-scheduled
-                                                    ">
+                                                    <span class="status-badge badge-scheduled">
                                                         Scheduled
                                                     </span>
 
-
                                                 {% elif advert.campaign_status == "expired" %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-expired
-                                                    ">
+                                                    <span class="status-badge badge-expired">
                                                         Expired
                                                     </span>
 
-
                                                 {% else %}
 
-                                                    <span class="
-                                                        status-badge
-                                                        badge-paused
-                                                    ">
+                                                    <span class="status-badge badge-paused">
                                                         Paused
                                                     </span>
 
                                                 {% endif %}
 
-
                                             </td>
 
+                                            <!-- ACTION -->
 
                                             <td>
 
-
                                                 {% if advert.is_standard_plan %}
-
 
                                                     <form
                                                         method="POST"
@@ -4939,96 +4492,70 @@
                                                             advert_id=advert.id,
                                                             plan_tier='premium'
                                                         ) }}"
+                                                        data-payment-form
                                                     >
 
                                                         <button
                                                             type="submit"
-                                                            class="
-                                                                table-action
-                                                                table-action-upgrade
-                                                            "
+                                                            class="table-action table-action-upgrade"
                                                         >
-                                                            Upgrade Premium
+                                                            Upgrade Premium · Yoco
                                                         </button>
 
                                                     </form>
 
-
                                                 {% elif advert.is_free_plan %}
-
 
                                                     <a
                                                         href="{{ url_for(
                                                             'admin_manage_restaurant',
                                                             advert_id=advert.id
                                                         ) }}#restaurant-subscription"
-                                                        class="
-                                                            table-action
-                                                            table-action-upgrade
-                                                        "
+                                                        class="table-action table-action-upgrade"
                                                     >
                                                         Upgrade Plan
                                                     </a>
 
-
                                                 {% else %}
-
 
                                                     <a
                                                         href="{{ url_for(
                                                             'admin_manage_restaurant',
                                                             advert_id=advert.id
                                                         ) }}"
-                                                        class="
-                                                            table-action
-                                                            table-action-edit
-                                                        "
+                                                        class="table-action table-action-edit"
                                                     >
                                                         Manage
                                                     </a>
 
-
                                                 {% endif %}
-
 
                                             </td>
 
-
                                         </tr>
-
 
                                     {% endfor %}
 
-
                                 </tbody>
-
 
                             </table>
 
-
                         </div>
-
 
                     </div>
 
-
                 </section>
-
 
             {% endif %}
 
-
         </main>
-
 
     </div>
 
-
 </div>
 
-
 <!-- =========================================================
-     CUSTOMER RATING QR JAVASCRIPT
+     JAVASCRIPT
 ========================================================== -->
 
 <script>
@@ -5037,6 +4564,39 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+        /* =================================================
+           PREVENT DUPLICATE PAYMENT SUBMISSIONS
+        ================================================== */
+
+        document.querySelectorAll(
+            "[data-payment-form]"
+        ).forEach(function (form) {
+
+            form.addEventListener(
+                "submit",
+                function () {
+
+                    const button = form.querySelector(
+                        'button[type="submit"]'
+                    );
+
+                    if (!button) {
+                        return;
+                    }
+
+                    if (button.disabled) {
+                        return;
+                    }
+
+                    button.disabled = true;
+
+                    button.textContent =
+                        "Redirecting to Yoco...";
+
+                }
+            );
+
+        });
 
         /* =================================================
            GENERATE CUSTOMER RATING QR
@@ -5047,33 +4607,25 @@ document.addEventListener(
                 "[data-create-qr-url]"
             );
 
-
         generateButtons.forEach(
             function (button) {
-
 
                 button.addEventListener(
                     "click",
                     async function () {
 
-
                         const createUrl =
                             button.dataset.createQrUrl;
-
 
                         const restaurantId =
                             button.dataset.restaurantId;
 
-
                         const messageBox =
                             document.getElementById(
-                                "qr-message-" +
-                                restaurantId
+                                "qr-message-" + restaurantId
                             );
 
-
                         if (!createUrl) {
-
 
                             if (messageBox) {
 
@@ -5085,21 +4637,16 @@ document.addEventListener(
 
                             }
 
-
                             return;
-
                         }
-
 
                         const originalText =
                             button.textContent;
-
 
                         button.disabled = true;
 
                         button.textContent =
                             "Generating QR...";
-
 
                         if (messageBox) {
 
@@ -5110,9 +4657,7 @@ document.addEventListener(
 
                         }
 
-
                         try {
-
 
                             const response =
                                 await fetch(
@@ -5121,20 +4666,16 @@ document.addEventListener(
                                         method: "POST",
 
                                         headers: {
-                                            "Accept":
-                                                "application/json"
+                                            "Accept": "application/json"
                                         }
                                     }
                                 );
 
-
                             let data = {};
-
 
                             try {
 
-                                data =
-                                    await response.json();
+                                data = await response.json();
 
                             } catch (jsonError) {
 
@@ -5142,21 +4683,17 @@ document.addEventListener(
 
                             }
 
-
                             if (
-                                !response.ok
-                                ||
+                                !response.ok ||
                                 !data.success
                             ) {
 
                                 throw new Error(
-                                    data.error
-                                    ||
+                                    data.error ||
                                     "Unable to generate QR code."
                                 );
 
                             }
-
 
                             if (messageBox) {
 
@@ -5168,7 +4705,6 @@ document.addEventListener(
 
                             }
 
-
                             window.setTimeout(
                                 function () {
 
@@ -5178,21 +4714,17 @@ document.addEventListener(
                                 650
                             );
 
-
                         } catch (error) {
-
 
                             button.disabled = false;
 
                             button.textContent =
                                 originalText;
 
-
                             if (messageBox) {
 
                                 messageBox.textContent =
-                                    error.message
-                                    ||
+                                    error.message ||
                                     "Unable to generate QR code.";
 
                                 messageBox.className =
@@ -5208,7 +4740,6 @@ document.addEventListener(
             }
         );
 
-
         /* =================================================
            COPY CUSTOMER RATING LINK
         ================================================== */
@@ -5218,64 +4749,41 @@ document.addEventListener(
                 "[data-copy-rating-url]"
             );
 
-
         copyButtons.forEach(
             function (button) {
-
 
                 button.addEventListener(
                     "click",
                     async function () {
 
-
                         const ratingUrl =
                             button.dataset.copyRatingUrl;
-
 
                         if (!ratingUrl) {
                             return;
                         }
 
-
                         const originalText =
                             button.textContent;
 
-
                         try {
-
 
                             await navigator.clipboard.writeText(
                                 ratingUrl
                             );
 
-
                             button.textContent =
                                 "Copied ✓";
 
-
-                            window.setTimeout(
-                                function () {
-
-                                    button.textContent =
-                                        originalText;
-
-                                },
-                                1800
-                            );
-
-
                         } catch (error) {
-
 
                             const temporaryInput =
                                 document.createElement(
                                     "textarea"
                                 );
 
-
                             temporaryInput.value =
                                 ratingUrl;
-
 
                             temporaryInput.style.position =
                                 "fixed";
@@ -5283,38 +4791,33 @@ document.addEventListener(
                             temporaryInput.style.opacity =
                                 "0";
 
-
                             document.body.appendChild(
                                 temporaryInput
                             );
 
-
                             temporaryInput.select();
 
-
-                            document.execCommand(
-                                "copy"
-                            );
-
+                            const copied =
+                                document.execCommand("copy");
 
                             temporaryInput.remove();
 
-
                             button.textContent =
-                                "Copied ✓";
-
-
-                            window.setTimeout(
-                                function () {
-
-                                    button.textContent =
-                                        originalText;
-
-                                },
-                                1800
-                            );
+                                copied
+                                    ? "Copied ✓"
+                                    : "Copy failed";
 
                         }
+
+                        window.setTimeout(
+                            function () {
+
+                                button.textContent =
+                                    originalText;
+
+                            },
+                            1800
+                        );
 
                     }
                 );
@@ -5326,7 +4829,6 @@ document.addEventListener(
 );
 
 </script>
-
 
 </body>
 
