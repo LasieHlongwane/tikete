@@ -204,6 +204,57 @@ class Organizer(db.Model):
         index=True,
     )
 
+
+    # ========================================================
+    # KALXA ADMIN APPROVAL
+    # ========================================================
+    #
+    # pending
+    # approved
+    # rejected
+    # suspended
+    #
+    # Approval applies to event organiser accounts.
+    # Restaurant account access remains separate.
+    # ========================================================
+
+    approval_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        server_default="pending",
+        index=True,
+    )
+
+    approved_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    approved_by = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    rejected_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    rejection_reason = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    @property
+    def is_approved_event_organizer(self):
+
+        return (
+            self.account_type == "event"
+            and self.active
+            and self.approval_status == "approved"
+        )
+
     # ========================================================
     # SUBSCRIPTION / SaaS ACCESS
     # ========================================================
