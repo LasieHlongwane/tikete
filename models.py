@@ -3475,15 +3475,53 @@ class EntryPass(db.Model):
 # ============================================================
 
 class CheckIn(db.Model):
+    """
+    Records a successful admission to a KALXA event.
+
+    Each EntryPass can have only one CheckIn record.
+
+    Supported operators:
+        - Event organisers
+        - Authorised event staff
+
+    Security:
+        - One successful check-in per entry pass.
+        - Database-level uniqueness protection.
+        - Staff accountability.
+        - Organiser ownership verification through
+          the associated entry pass and event.
+
+    IMPORTANT:
+        This model records successful admissions.
+
+        It does not record failed scans or rejected
+        admission attempts.
+
+        Those would require a separate audit model.
+    """
 
     __tablename__ = "checkins"
 
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
+    # ========================================================
+    # ENTRY PASS
+    # ========================================================
+    #
+    # UNIQUE:
+    #
+    # One entry pass can have only one successful check-in.
+    #
+    # This protects against duplicate admission records,
+    # including accidental duplicate inserts.
+    # ========================================================
 
     entry_pass_id = db.Column(
         db.Integer,
@@ -3492,9 +3530,13 @@ class CheckIn(db.Model):
             ondelete="CASCADE",
         ),
         nullable=False,
+        unique=True,
         index=True,
     )
 
+    # ========================================================
+    # CHECK-IN TIMESTAMP
+    # ========================================================
 
     checked_in_at = db.Column(
         db.DateTime,
@@ -3503,10 +3545,29 @@ class CheckIn(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # CHECK-IN OPERATOR
+    # ========================================================
+
     checked_in_by = db.Column(
         db.String(100),
         nullable=True,
     )
+
+    # ========================================================
+    # STAFF ACCOUNT
+    # ========================================================
+    #
+    # NULL:
+    #     Check-in performed directly by organiser.
+    #
+    # NOT NULL:
+    #     Check-in performed by a staff account.
+    #
+    # ON DELETE SET NULL:
+    #     Preserve historical check-in records when
+    #     a staff account is deleted.
+    # ========================================================
 
     staff_account_id = db.Column(
         db.Integer,
@@ -3518,60 +3579,108 @@ class CheckIn(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # RELATIONSHIP: ENTRY PASS
+    # ========================================================
 
     entry_pass = db.relationship(
         "EntryPass",
         back_populates="checkins",
     )
 
+    # ========================================================
+    # RELATIONSHIP: STAFF ACCOUNT
+    # ========================================================
+
     staff_account = db.relationship(
         "StaffAccount",
         back_populates="checkins",
     )
 
+    # ========================================================
+    # EVENT
+    # ========================================================
 
     @property
     def event(self):
+        """
+        Return the event associated with this check-in.
+        """
 
-        if not self.entry_pass:
+        if self.entry_pass is None:
             return None
 
         return self.entry_pass.event
 
+    # ========================================================
+    # ORGANISER ID
+    # ========================================================
 
     @property
     def organizer_id(self):
+        """
+        Return the organiser responsible for the event.
+        """
 
-        if not self.event:
+        event = self.event
+
+        if event is None:
             return None
 
-        return self.event.organizer_id
+        return event.organizer_id
 
+    # ========================================================
+    # ORGANISER OWNERSHIP
+    # ========================================================
 
     def belongs_to_organizer(
         self,
         organizer_id,
     ):
+        """
+        Determine whether this check-in belongs
+        to the specified organiser.
+        """
 
-        if not self.entry_pass:
+        if self.entry_pass is None:
             return False
 
-        return (
-            self.entry_pass
-            .belongs_to_organizer(
-                organizer_id
-            )
+        return self.entry_pass.belongs_to_organizer(
+            organizer_id
         )
 
+    # ========================================================
+    # DISPLAY OPERATOR
+    # ========================================================
+
+    @property
+    def display_checked_in_by(self):
+        """
+        Return a readable check-in operator label.
+        """
+
+        if (
+            isinstance(self.checked_in_by, str)
+            and self.checked_in_by.strip()
+        ):
+            return self.checked_in_by.strip()
+
+        if self.staff_account_id is not None:
+            return f"Staff #{self.staff_account_id}"
+
+        return "Unknown operator"
+
+    # ========================================================
+    # DEBUG REPRESENTATION
+    # ========================================================
 
     def __repr__(self):
-
         return (
             "<CheckIn "
             f"id={self.id} "
-            f"entry_pass_id={self.entry_pass_id}>"
+            f"entry_pass_id={self.entry_pass_id} "
+            f"staff_account_id={self.staff_account_id}>"
         )
-
 
 # ============================================================
 # ATTENDEE CONTACT
