@@ -31474,11 +31474,19 @@ def paystack_restaurant_subscription_callback():
 # ORGANIZER PAYSTACK SETUP
 # ============================================================
 
+# ============================================================
+# ADMIN - PAYSTACK PAYMENT SETUP
+# ============================================================
+
 @app.route(
     "/admin/payments",
     methods=["GET", "POST"],
 )
 def admin_payments():
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
 
     auth = require_ticketing_organizer()
 
@@ -31487,227 +31495,442 @@ def admin_payments():
 
     organizer = get_current_organizer()
 
+    if organizer is None:
+        return redirect(
+            url_for("organizer_login")
+        )
+
+    # ========================================================
+    # ACCOUNT ELIGIBILITY
+    # ========================================================
+
+    is_event_account = (
+        organizer.normalized_account_type == "event"
+    )
+
+    if is_event_account:
+
+        payment_eligible = bool(
+            organizer.is_approved_event_organizer
+        )
+
+    else:
+
+        # Preserve legacy subscription rules.
+        payment_eligible = bool(
+            organizer.is_subscription_active
+        )
+
+    # ========================================================
+    # PAYSTACK CONFIGURATION
+    # ========================================================
+
+    paystack_configured = bool(
+        paystack_is_configured()
+    )
+
+    # ========================================================
+    # LOAD SOUTH AFRICAN BANKS
+    # ========================================================
+
     banks = []
 
-    if paystack_is_configured():
+    if paystack_configured:
 
         try:
+
             banks = get_paystack_za_banks()
 
-        except Exception as error:
+        except Exception:
 
             current_app.logger.exception(
-                "[Paystack] Bank list failed: %s",
-                error,
+                "[Paystack] Failed to load ZA banks"
             )
 
             flash(
+                "Could not load the bank list. Please try again.",
+                "error",
+            )
+
+    # ========================================================
+    # RENDER HELPER
+    # ========================================================
+
+    def render_payments_page():
+
+        return render_template(
+            "admin/payments.html",
+            organizer=organizer,
+            banks=banks,
+            paystack_configured=paystack_configured,
+        )
+
+    # ========================================================
+    # GET REQUEST
+    # ========================================================
+
+    if request.method == "GET":
+
+        return render_payments_page()
+
+    # ========================================================
+    # POST - ELIGIBILITY VALIDATION
+    # ========================================================
+
+    # Existing application CSRF validation must run here,
+    # or be enforced globally through Flask-WTF CSRFProtect.
+    # Do not deploy this POST handler without protection.
+
+    if not payment_eligible:
+
+        if is_event_account:
+
+            flash(
                 (
-                    "Could not load Paystack banks: "
-                    f"{error}"
+                    "Your event organizer account must "
+                    "be approved and active before "
+                    "connecting Paystack."
                 ),
                 "error",
             )
 
-    if request.method == "POST":
-
-        if not organizer.is_subscription_active:
+        else:
 
             flash(
-                "Activate your Kalxa Ticketing subscription first.",
-                "error",
-            )
-
-            return redirect(
-                url_for("admin_payments")
-            )
-
-        if not paystack_is_configured():
-
-            flash(
-                "Paystack is not configured yet.",
-                "error",
-            )
-
-            return redirect(
-                url_for("admin_payments")
-            )
-
-        bank_code = (
-            request.form.get("bank_code", "")
-            .strip()
-        )
-
-        bank_name = (
-            request.form.get("bank_name", "")
-            .strip()
-        )
-
-        account_number = (
-            request.form.get("account_number", "")
-            .strip()
-            .replace(" ", "")
-        )
-
-        account_name = (
-            request.form.get("account_name", "")
-            .strip()
-        )
-
-        if (
-            not bank_code
-            or not account_number
-            or not account_name
-        ):
-
-            flash(
-                "Bank, account holder and account number are required.",
-                "error",
-            )
-
-            return render_template(
-                "admin/payments.html",
-                organizer=organizer,
-                banks=banks,
-                paystack_configured=
-                    paystack_is_configured(),
-            )
-
-        if not account_number.isdigit():
-
-            flash(
-                "Account number must contain digits only.",
-                "error",
-            )
-
-            return render_template(
-                "admin/payments.html",
-                organizer=organizer,
-                banks=banks,
-                paystack_configured=
-                    paystack_is_configured(),
-            )
-
-        payload = {
-            "business_name":
-                organizer.display_name,
-
-            "settlement_bank":
-                bank_code,
-
-            "account_number":
-                account_number,
-
-            # Kalxa commission is 0%.
-            "percentage_charge":
-                0,
-
-            "description":
-                f"Kalxa Ticketing organizer #{organizer.id}",
-
-            "primary_contact_email":
-                organizer.email,
-
-            "primary_contact_name":
-                organizer.name,
-
-            "primary_contact_phone":
-                organizer.phone,
-        }
-
-        payload = {
-            key: value
-            for key, value in payload.items()
-            if value not in (None, "")
-        }
-
-        try:
-
-            result = paystack_api_request(
-                "POST",
-                "/subaccount",
-                payload,
-            )
-
-            data = result.get("data") or {}
-
-            subaccount_code = str(
-                data.get("subaccount_code", "")
-            ).strip()
-
-            if not subaccount_code:
-                raise RuntimeError(
-                    "Paystack did not return a subaccount code."
-                )
-
-            organizer.payment_provider = "paystack"
-            organizer.payment_setup_status = "connected"
-            organizer.paystack_subaccount_code = (
-                subaccount_code
-            )
-            organizer.paystack_subaccount_id = (
-                str(data.get("id", "")) or None
-            )
-            organizer.payment_bank_name = (
-                data.get("settlement_bank")
-                or bank_name
-                or None
-            )
-            organizer.payment_bank_code = (
-                bank_code
-            )
-            organizer.payment_account_name = (
-                data.get("account_name")
-                or account_name
-            )
-            organizer.payment_account_last4 = (
-                account_number[-4:]
-            )
-            organizer.payment_connected_at = (
-                datetime.utcnow()
-            )
-
-            db.session.commit()
-
-        except Exception as error:
-
-            db.session.rollback()
-
-            current_app.logger.exception(
                 (
-                    "[Paystack] Connection failed "
-                    "organizer_id=%s error=%s"
+                    "Activate your Kalxa Ticketing "
+                    "subscription first."
                 ),
-                organizer.id,
-                error,
+                "error",
             )
 
-            flash(str(error), "error")
+        return redirect(
+            url_for("admin_payments")
+        )
 
-            return render_template(
-                "admin/payments.html",
-                organizer=organizer,
-                banks=banks,
-                paystack_configured=
-                    paystack_is_configured(),
-            )
+    if not paystack_configured:
 
         flash(
-            "Paystack payments connected successfully.",
-            "success",
+            "Paystack is not configured yet.",
+            "error",
         )
 
         return redirect(
             url_for("admin_payments")
         )
 
-    return render_template(
-        "admin/payments.html",
-        organizer=organizer,
-        banks=banks,
-        paystack_configured=
-            paystack_is_configured(),
+    # ========================================================
+    # READ FORM DATA
+    # ========================================================
+
+    bank_code = (
+        request.form.get("bank_code", "")
+        .strip()
     )
+
+    bank_name = (
+        request.form.get("bank_name", "")
+        .strip()
+    )
+
+    account_number = (
+        request.form.get("account_number", "")
+        .strip()
+        .replace(" ", "")
+    )
+
+    account_name = (
+        request.form.get("account_name", "")
+        .strip()
+    )
+
+    # ========================================================
+    # REQUIRED FIELDS
+    # ========================================================
+
+    if (
+        not bank_code
+        or not account_number
+        or not account_name
+    ):
+
+        flash(
+            (
+                "Bank, account holder and "
+                "account number are required."
+            ),
+            "error",
+        )
+
+        return render_payments_page()
+
+    # ========================================================
+    # VALIDATE BANK ACCOUNT NUMBER
+    # ========================================================
+
+    if (
+        not account_number.isascii()
+        or not account_number.isdigit()
+        or len(account_number) > 25
+    ):
+
+        flash(
+            (
+                "Enter a valid bank account number "
+                "containing digits only."
+            ),
+            "error",
+        )
+
+        return render_payments_page()
+
+    if len(account_name) > 120:
+
+        flash(
+            "Account holder name is too long.",
+            "error",
+        )
+
+        return render_payments_page()
+
+    # ========================================================
+    # VALIDATE SELECTED BANK
+    # ========================================================
+
+    selected_bank = None
+
+    for bank in banks:
+
+        if str(bank.get("code", "")).strip() == bank_code:
+
+            selected_bank = bank
+            break
+
+    if selected_bank is None:
+
+        flash(
+            (
+                "Please select a valid bank "
+                "from the Paystack bank list."
+            ),
+            "error",
+        )
+
+        return render_payments_page()
+
+    # Never trust the hidden bank_name field.
+    bank_name = str(
+        selected_bank.get("name") or ""
+    ).strip()
+
+    # ========================================================
+    # EXISTING CONNECTION SAFEGUARD
+    # ========================================================
+
+    # Updating an existing Paystack subaccount requires
+    # a separate, verified update flow. Do not create
+    # another subaccount on every form submission.
+
+    existing_subaccount_code = str(
+        organizer.paystack_subaccount_code or ""
+    ).strip()
+
+    if existing_subaccount_code:
+
+        flash(
+            (
+                "This organizer already has a Paystack "
+                "subaccount. Updating settlement details "
+                "requires the existing subaccount update flow."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_payments")
+        )
+
+    # ========================================================
+    # PAYSTACK SUBACCOUNT PAYLOAD
+    # ========================================================
+
+    # The 4% platform commission is represented here.
+    #
+    # IMPORTANT:
+    # Confirm the ticket checkout split configuration
+    # does not also deduct the same commission.
+    #
+    # percentage_charge is a Paystack subaccount setting;
+    # it is not, by itself, proof that your entire checkout
+    # commission and settlement flow is configured correctly.
+
+    payload = {
+
+        "business_name":
+            organizer.display_name,
+
+        "settlement_bank":
+            bank_code,
+
+        "account_number":
+            account_number,
+
+        "percentage_charge":
+            4,
+
+        "description":
+            f"Kalxa Ticketing organizer #{organizer.id}",
+
+        "primary_contact_email":
+            organizer.email,
+
+        "primary_contact_name":
+            organizer.name,
+
+        "primary_contact_phone":
+            organizer.phone,
+
+    }
+
+    payload = {
+        key: value
+        for key, value in payload.items()
+        if value not in (None, "")
+    }
+
+    # ========================================================
+    # CREATE PAYSTACK SUBACCOUNT
+    # ========================================================
+
+    try:
+
+        result = paystack_api_request(
+            "POST",
+            "/subaccount",
+            payload,
+        )
+
+        if not isinstance(result, dict):
+
+            raise RuntimeError(
+                "Unexpected response from Paystack."
+            )
+
+        if result.get("status") is not True:
+
+            raise RuntimeError(
+                (
+                    "Paystack did not confirm "
+                    "subaccount creation."
+                )
+            )
+
+        data = result.get("data") or {}
+
+        if not isinstance(data, dict):
+
+            raise RuntimeError(
+                "Invalid Paystack subaccount response."
+            )
+
+        subaccount_code = str(
+            data.get("subaccount_code") or ""
+        ).strip()
+
+        if not subaccount_code:
+
+            raise RuntimeError(
+                (
+                    "Paystack did not return "
+                    "a subaccount code."
+                )
+            )
+
+        # ====================================================
+        # SAVE VERIFIED CONNECTION
+        # ====================================================
+
+        organizer.payment_provider = "paystack"
+
+        organizer.payment_setup_status = "connected"
+
+        organizer.paystack_subaccount_code = (
+            subaccount_code
+        )
+
+        subaccount_id = data.get("id")
+
+        organizer.paystack_subaccount_id = (
+            str(subaccount_id)
+            if subaccount_id is not None
+            else None
+        )
+
+        organizer.payment_bank_name = (
+            bank_name or None
+        )
+
+        organizer.payment_bank_code = bank_code
+
+        organizer.payment_account_name = (
+            data.get("account_name")
+            or account_name
+        )
+
+        organizer.payment_account_last4 = (
+            account_number[-4:]
+        )
+
+        organizer.payment_connected_at = (
+            datetime.utcnow()
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Paystack] Connection failed "
+                "organizer_id=%s"
+            ),
+            organizer.id,
+        )
+
+        flash(
+            (
+                "Paystack connection failed. "
+                "Please try again or contact support."
+            ),
+            "error",
+        )
+
+        return render_payments_page()
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Paystack] Organizer connected "
+            "organizer_id=%s subaccount_code=%s"
+        ),
+        organizer.id,
+        subaccount_code,
+    )
+
+    flash(
+        "Paystack payments connected successfully.",
+        "success",
+    )
+
+    return redirect(
+        url_for("admin_payments")
+    )
+
 
 
 # ============================================================
