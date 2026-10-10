@@ -84,137 +84,725 @@ def _fetch_refund(refund, order, paystack_api_request):
     return data
 
 
-def initiate_ticket_refund(*, order_id, entry_pass_ids, requested_by, db,
-                           TicketOrder, TicketRefund, TicketRefundItem, EntryPass,
-                           paystack_api_request, reason=None):
-    """Request a face-value refund for selected unused passes.
 
-    No automatic retry of ambiguous POST /refund responses: a timeout might
-    occur after Paystack accepted the request. Reconcile manually first.
+def initiate_ticket_refund(
+    *,
+    order_id,
+    entry_pass_ids,
+    requested_by,
+    db,
+    TicketOrder,
+    TicketRefund,
+    TicketRefundItem,
+    EntryPass,
+    paystack_api_request,
+    reason=None,
+):
     """
-    if not requested_by or not str(requested_by).strip():
-        raise TicketRefundError("Authenticated administrator identity required.")
-    if not isinstance(entry_pass_ids, (list, tuple)) or not entry_pass_ids:
-        raise TicketRefundError("Select at least one ticket to refund.")
-    if any(isinstance(x, bool) or not isinstance(x, int) or x <= 0 for x in entry_pass_ids):
-        raise TicketRefundError("Invalid entry pass ID.")
-    ids = sorted(set(entry_pass_ids))
-    if len(ids) != len(entry_pass_ids):
-        raise TicketRefundError("Duplicate entry pass selected.")
+    Initiate a KALXA ticket refund for selected unused passes.
 
-    # Reserve the selected passes by creating a durable refund request under
-    # the order lock. A single active refund per order is allowed.
+    SECURITY:
+        - Caller must authenticate the super-admin.
+        - Lock the ticket order.
+        - Lock selected entry passes.
+        - Reject used, cancelled and refunded tickets.
+        - Reject active or overlapping refunds.
+
+    CONCURRENCY:
+        Refund initiation and ticket check-in must lock
+        the same EntryPass rows before changing state.
+
+        Lock acquisition order:
+            1. TicketOrder
+            2. EntryPass rows, ascending ID
+
+    PAYSTACK:
+        - Persist the refund reservation first.
+        - Commit before contacting Paystack.
+        - Submit only one POST /refund attempt.
+        - Never automatically retry uncertain requests.
+        - Independently reconcile provider completion.
+
+    ACCOUNTING:
+        - Do not reverse KALXA commission here.
+        - Do not increment refunded face value here.
+        - Do not mark entry passes refunded here.
+
+    Those operations belong to reconcile_ticket_refund()
+    after Paystack confirms refund completion.
+
+    IMPORTANT:
+        A 'requested' refund may already have been
+        accepted by Paystack even if this function raises
+        an exception after sending the API request.
+    """
+
+    # ========================================================
+    # 1. VALIDATE ADMINISTRATOR
+    # ========================================================
+
+    if (
+        not isinstance(requested_by, str)
+        or not requested_by.strip()
+    ):
+        raise TicketRefundError(
+            "Authenticated administrator identity required."
+        )
+
+    requested_by = requested_by.strip()[:100]
+
+    # ========================================================
+    # 2. VALIDATE ORDER ID
+    # ========================================================
+
+    if (
+        isinstance(order_id, bool)
+        or not isinstance(order_id, int)
+        or order_id <= 0
+    ):
+        raise TicketRefundError(
+            "Invalid ticket order ID."
+        )
+
+    # ========================================================
+    # 3. VALIDATE ENTRY-PASS SELECTION
+    # ========================================================
+
+    if (
+        not isinstance(entry_pass_ids, (list, tuple))
+        or not entry_pass_ids
+    ):
+        raise TicketRefundError(
+            "Select at least one ticket to refund."
+        )
+
+    if len(entry_pass_ids) > 100:
+        raise TicketRefundError(
+            "A maximum of 100 tickets may be refunded "
+            "in one request."
+        )
+
+    if any(
+        isinstance(pass_id, bool)
+        or not isinstance(pass_id, int)
+        or pass_id <= 0
+        for pass_id in entry_pass_ids
+    ):
+        raise TicketRefundError(
+            "Invalid entry pass ID."
+        )
+
+    ids = sorted(entry_pass_ids)
+
+    if len(ids) != len(set(ids)):
+        raise TicketRefundError(
+            "Duplicate entry pass selected."
+        )
+
+    # ========================================================
+    # 4. VALIDATE REFUND REASON
+    # ========================================================
+
+    if reason is not None:
+
+        if (
+            not isinstance(reason, str)
+            or len(reason) > 2000
+        ):
+            raise TicketRefundError(
+                "Invalid refund reason."
+            )
+
+        reason = reason.strip() or None
+
+    # ========================================================
+    # 5. RESERVE REFUND IN DATABASE
+    # ========================================================
+    #
+    # The reservation is committed before contacting
+    # Paystack.
+    #
+    # This prevents another administrator from submitting
+    # an overlapping refund while the provider request
+    # is being processed.
+    # ========================================================
+
     try:
-        order = (db.session.query(TicketOrder).filter_by(id=order_id)
-                 .with_for_update().one_or_none())
-        if order is None or order.payment_status != "paid":
-            raise TicketRefundError("Order is not paid or does not exist.")
-        if order.payment_provider != "paystack" or not order.paystack_transaction_id:
-            raise TicketRefundError("Order has no verified Paystack transaction.")
-        if order.commission_amount is None or order.commission_rate is None:
-            raise TicketRefundError("Order commission snapshot missing; reconcile first.")
-        if db.session.query(TicketRefund.id).filter(
-            TicketRefund.order_id == order.id,
-            TicketRefund.status.in_(ACTIVE_REFUNDS)
-        ).first():
-            raise TicketRefundError("An unresolved refund already exists for this order.")
 
-        passes = (db.session.query(EntryPass).filter(
-            EntryPass.order_id == order.id, EntryPass.id.in_(ids)
-        ).with_for_update().all())
+        # ====================================================
+        # LOCK TICKET ORDER
+        # ====================================================
+
+        order = (
+            db.session.query(TicketOrder)
+            .filter(
+                TicketOrder.id == order_id
+            )
+            .populate_existing()
+            .with_for_update()
+            .one_or_none()
+        )
+
+        if order is None:
+            raise TicketRefundError(
+                "Ticket order does not exist."
+            )
+
+        if order.payment_status != "paid":
+            raise TicketRefundError(
+                "Only paid ticket orders can be refunded."
+            )
+
+        # ====================================================
+        # VERIFY PAYMENT PROVIDER
+        # ====================================================
+
+        if order.payment_provider != "paystack":
+            raise TicketRefundError(
+                "This order was not paid through Paystack."
+            )
+
+        if not order.paystack_transaction_id:
+            raise TicketRefundError(
+                "Verified Paystack transaction ID is missing."
+            )
+
+        # ====================================================
+        # VERIFY COMMISSION SNAPSHOT
+        # ====================================================
+
+        if (
+            order.commission_amount is None
+            or order.commission_rate is None
+            or order.organizer_gross_share is None
+            or order.commission_recorded_at is None
+        ):
+            raise TicketRefundError(
+                "Ticket commission snapshot is incomplete. "
+                "Reconcile the order before refunding."
+            )
+
+        # ====================================================
+        # BLOCK OTHER ACTIVE REFUNDS
+        # ========================================================
+        #
+        # Preserve the existing policy of allowing
+        # only one unresolved refund per order.
+        # ====================================================
+
+        existing_active_refund = (
+            db.session.query(TicketRefund.id)
+            .filter(
+                TicketRefund.order_id == order.id,
+                TicketRefund.status.in_(
+                    (
+                        "requested",
+                        "submitted",
+                        "pending",
+                        "processing",
+                    )
+                ),
+            )
+            .first()
+        )
+
+        if existing_active_refund is not None:
+            raise TicketRefundError(
+                "An unresolved refund already exists "
+                "for this order."
+            )
+
+        # ====================================================
+        # LOCK SELECTED ENTRY PASSES
+        # ========================================================
+        #
+        # Lock rows in ascending order.
+        #
+        # The check-in service must acquire the same
+        # EntryPass lock before checking refund state.
+        # ====================================================
+
+        passes = (
+            db.session.query(EntryPass)
+            .filter(
+                EntryPass.order_id == order.id,
+                EntryPass.id.in_(ids),
+            )
+            .order_by(
+                EntryPass.id.asc()
+            )
+            .populate_existing()
+            .with_for_update(
+                of=EntryPass
+            )
+            .all()
+        )
+
         if len(passes) != len(ids):
-            raise TicketRefundError("One or more passes do not belong to this order.")
-        if any(p.status != "valid" or p.checked_in_at is not None or p.checkins for p in passes):
-            raise TicketRefundError("Used, cancelled, or previously refunded tickets cannot be refunded.")
+            raise TicketRefundError(
+                "One or more selected tickets do not "
+                "belong to this order."
+            )
 
-        items_by_id = {i.id: i for i in order.order_items}
-        legacy = not bool(order.order_items)
-        if not legacy and any(p.order_item_id not in items_by_id for p in passes):
-            raise TicketRefundError("Ticket line association missing.")
-        if legacy and any(p.order_item_id is not None for p in passes):
-            raise TicketRefundError("Unexpected ticket line on legacy order.")
+        # ====================================================
+        # VERIFY ENTRY-PASS STATES
+        # ====================================================
 
-        lines = []
-        for p in passes:
-            unit = (order.ticket_price if legacy else items_by_id[p.order_item_id].unit_price)
-            amount = _money(unit)
-            if amount <= 0:
-                raise TicketRefundError("Zero-price tickets require a separate cancellation workflow.")
-            lines.append((p, amount))
-        face_value = sum((a for _, a in lines), Decimal("0.00"))
-        total = _money(order.total_amount)
-        if face_value > total - _money(order.refunded_face_value or 0):
-            raise TicketRefundError("Refund exceeds remaining ticket face value.")
-        if _money(order.checkout_amount if order.checkout_amount is not None else total) < face_value:
-            raise TicketRefundError("Refund exceeds original checkout amount.")
+        for entry_pass in passes:
 
-        # Block tickets that already have a succeeded refund, including a
-        # previously reconciled request whose pass state is inconsistent.
-        previous = (db.session.query(TicketRefundItem.entry_pass_id)
-                    .join(TicketRefund, TicketRefund.id == TicketRefundItem.refund_id)
-                    .filter(TicketRefund.order_id == order.id,
-                            TicketRefund.status == "succeeded",
-                            TicketRefundItem.entry_pass_id.in_(ids)).first())
-        if previous:
-            raise TicketRefundError("One of these tickets was already refunded.")
+            if entry_pass.status != "valid":
+                raise TicketRefundError(
+                    "Used, cancelled or refunded tickets "
+                    "cannot be refunded."
+                )
+
+            if entry_pass.checked_in_at is not None:
+                raise TicketRefundError(
+                    "A checked-in ticket cannot be refunded."
+                )
+
+            existing_checkin = (
+                db.session.query(CheckIn.id)
+                .filter(
+                    CheckIn.entry_pass_id
+                    == entry_pass.id
+                )
+                .first()
+            )
+
+            if existing_checkin is not None:
+                raise TicketRefundError(
+                    "A ticket already has check-in history "
+                    "and cannot be refunded."
+                )
+
+        # ====================================================
+        # BLOCK PREVIOUS REFUNDS
+        # ========================================================
+        #
+        # A selected ticket must not appear in an active
+        # or successfully completed refund.
+        #
+        # Failed and cancelled refunds are excluded,
+        # provided their final provider status has been
+        # independently verified.
+        # ====================================================
+
+        previous_refund = (
+            db.session.query(
+                TicketRefundItem.entry_pass_id
+            )
+            .join(
+                TicketRefund,
+                TicketRefund.id
+                == TicketRefundItem.refund_id,
+            )
+            .filter(
+                TicketRefund.order_id == order.id,
+                TicketRefundItem.entry_pass_id.in_(ids),
+                TicketRefund.status.in_(
+                    (
+                        "requested",
+                        "submitted",
+                        "pending",
+                        "processing",
+                        "succeeded",
+                    )
+                ),
+            )
+            .first()
+        )
+
+        if previous_refund is not None:
+            raise TicketRefundError(
+                "One or more selected tickets already "
+                "have a refund request."
+            )
+
+        # ====================================================
+        # DETERMINE TICKET PRICES
+        # ========================================================
+
+        order_items = list(
+            order.order_items
+        )
+
+        legacy_order = not bool(order_items)
+
+        items_by_id = {
+            item.id: item
+            for item in order_items
+        }
+
+        refund_lines = []
+
+        for entry_pass in passes:
+
+            if legacy_order:
+
+                if entry_pass.order_item_id is not None:
+                    raise TicketRefundError(
+                        "Unexpected ticket line on "
+                        "a legacy order."
+                    )
+
+                unit_price = order.ticket_price
+
+            else:
+
+                order_item = items_by_id.get(
+                    entry_pass.order_item_id
+                )
+
+                if order_item is None:
+                    raise TicketRefundError(
+                        "Ticket line association is missing."
+                    )
+
+                unit_price = order_item.unit_price
+
+            amount = _money(
+                unit_price
+            )
+
+            if amount <= Decimal("0.00"):
+                raise TicketRefundError(
+                    "Zero-price tickets require a "
+                    "separate cancellation workflow."
+                )
+
+            refund_lines.append(
+                (
+                    entry_pass.id,
+                    entry_pass.order_item_id,
+                    amount,
+                )
+            )
+
+        # ====================================================
+        # CALCULATE FACE-VALUE REFUND
+        # ========================================================
+
+        face_value = sum(
+            (
+                line[2]
+                for line in refund_lines
+            ),
+            Decimal("0.00"),
+        )
+
+        face_value = _money(
+            face_value
+        )
+
+        original_face_value = _money(
+            order.total_amount
+        )
+
+        already_refunded = _money(
+            order.refunded_face_value or 0
+        )
+
+        remaining_face_value = (
+            original_face_value
+            - already_refunded
+        )
+
+        if face_value > remaining_face_value:
+            raise TicketRefundError(
+                "Refund exceeds the remaining "
+                "ticket face value."
+            )
+
+        checkout_value = _money(
+            order.checkout_amount
+            if order.checkout_amount is not None
+            else original_face_value
+        )
+
+        if face_value > checkout_value:
+            raise TicketRefundError(
+                "Refund exceeds the original "
+                "checkout amount."
+            )
+
+        # ====================================================
+        # CAPTURE PAYSTACK DETAILS BEFORE COMMIT
+        # ========================================================
+
+        paystack_transaction_id = str(
+            order.paystack_transaction_id
+        ).strip()
+
+        # ====================================================
+        # CREATE REFUND RESERVATION
+        # ========================================================
+
+        refund_reference = (
+            "KXRF-"
+            + uuid4().hex.upper()
+        )
 
         refund = TicketRefund(
             order_id=order.id,
-            refund_reference="KXRF-" + uuid4().hex.upper(),
-            paystack_transaction_id=str(order.paystack_transaction_id),
+            refund_reference=refund_reference,
+            paystack_transaction_id=paystack_transaction_id,
             face_value_amount=face_value,
             provider_refund_amount=face_value,
             status="requested",
-            requested_by=str(requested_by).strip()[:100],
+            requested_by=requested_by,
             reason=reason,
         )
-        db.session.add(refund)
+
+        db.session.add(
+            refund
+        )
+
         db.session.flush()
-        for p, amount in lines:
-            db.session.add(TicketRefundItem(
-                refund_id=refund.id, order_item_id=p.order_item_id,
-                entry_pass_id=p.id, quantity=1, face_value_amount=amount
-            ))
-        order.refund_status = "pending"
+
         refund_id = refund.id
+
+        # ====================================================
+        # RESERVE SELECTED PASSES
+        # ========================================================
+
+        for (
+            entry_pass_id,
+            order_item_id,
+            amount,
+        ) in refund_lines:
+
+            refund_item = TicketRefundItem(
+                refund_id=refund_id,
+                order_item_id=order_item_id,
+                entry_pass_id=entry_pass_id,
+                quantity=1,
+                face_value_amount=amount,
+            )
+
+            db.session.add(
+                refund_item
+            )
+
+        # ====================================================
+        # MARK ORDER REFUND STATUS
+        # ========================================================
+
+        order.refund_status = "pending"
+
+        # ====================================================
+        # COMMIT RESERVATION
+        # ========================================================
+
         db.session.commit()
+
     except Exception:
+
         db.session.rollback()
+
         raise
 
-    # External network call must occur outside the order lock/DB transaction.
-    # A transport error leaves 'requested' for investigation; never blindly
-    # send a second POST because the first request may have succeeded.
+    # ========================================================
+    # 6. SUBMIT REFUND TO PAYSTACK
+    # ========================================================
+    #
+    # The database reservation is now durable.
+    #
+    # Do not hold PostgreSQL locks during the
+    # external Paystack API request.
+    #
+    # Do not automatically retry this POST.
+    # ========================================================
+
     try:
-        response = paystack_api_request("POST", "/refund", json={
-            "transaction": str(order.paystack_transaction_id),
+
+        refund_payload = {
+            "transaction": paystack_transaction_id,
             "amount": _cents(face_value),
-            "merchant_note": "KALXA ticket refund " + refund.refund_reference,
-        })
-        if not isinstance(response, dict) or response.get("status") is not True:
-            raise TicketRefundError("Paystack did not confirm refund request acceptance.")
-        data = response.get("data")
+            "merchant_note": (
+                "KALXA ticket refund "
+                + refund_reference
+            ),
+        }
+
+        response = paystack_api_request(
+            "POST",
+            "/refund",
+            json=refund_payload,
+        )
+
+        # ====================================================
+        # VERIFY PAYSTACK API RESPONSE
+        # ========================================================
+
+        if (
+            not isinstance(response, dict)
+            or response.get("status") is not True
+        ):
+            raise TicketRefundError(
+                "Paystack did not confirm refund "
+                "request acceptance."
+            )
+
+        data = response.get(
+            "data"
+        )
+
         if not isinstance(data, dict):
-            raise TicketRefundError("Paystack returned invalid refund data.")
-        provider_id = _refund_provider_id(data)
-        _provider_transaction_matches(data, order)
-        amount = data.get("amount")
-        if isinstance(amount, bool) or not isinstance(amount, int) or amount != _cents(face_value):
-            raise TicketRefundError("Paystack refund request amount mismatch.")
+            raise TicketRefundError(
+                "Paystack returned invalid refund data."
+            )
+
+        provider_id = _refund_provider_id(
+            data
+        )
+
+        # ====================================================
+        # VERIFY ORIGINAL TRANSACTION
+        # ========================================================
+
+        provider_transaction = data.get(
+            "transaction"
+        )
+
+        if isinstance(provider_transaction, dict):
+
+            provider_transaction = (
+                provider_transaction.get("id")
+            )
+
+        if (
+            provider_transaction is not None
+            and str(provider_transaction)
+            != paystack_transaction_id
+        ):
+            raise TicketRefundError(
+                "Paystack refund transaction mismatch."
+            )
+
+        # ====================================================
+        # VERIFY REFUND AMOUNT
+        # ========================================================
+
+        provider_amount = data.get(
+            "amount"
+        )
+
+        if (
+            isinstance(provider_amount, bool)
+            or not isinstance(provider_amount, int)
+            or provider_amount != _cents(face_value)
+        ):
+            raise TicketRefundError(
+                "Paystack refund amount mismatch."
+            )
+
     except Exception:
-        # Keep 'requested': external state unknown; investigate in Paystack.
+
+        # ====================================================
+        # UNKNOWN PROVIDER STATE
+        # ========================================================
+        #
+        # The request may already have reached Paystack.
+        #
+        # Keep the reservation in requested state.
+        #
+        # Never submit another refund automatically.
+        # ========================================================
+
+        current_app.logger.exception(
+            (
+                "[Ticket Refund] "
+                "Paystack submission uncertain "
+                "refund_id=%s order_id=%s "
+                "reference=%s"
+            ),
+            refund_id,
+            order_id,
+            refund_reference,
+        )
+
         raise
 
+    # ========================================================
+    # 7. RECORD PAYSTACK REFUND ACCEPTANCE
+    # ========================================================
+
     try:
-        refund = (db.session.query(TicketRefund).filter_by(id=refund_id)
-                  .with_for_update().one())
-        refund.paystack_refund_id = provider_id
-        refund.status = "pending"
-        refund.submitted_at = datetime.utcnow()
+
+        refund = (
+            db.session.query(TicketRefund)
+            .filter(
+                TicketRefund.id == refund_id
+            )
+            .populate_existing()
+            .with_for_update()
+            .one()
+        )
+
+        # ====================================================
+        # HANDLE EARLY WEBHOOK RECONCILIATION
+        # ========================================================
+        #
+        # A webhook may have already updated the refund
+        # while this request was awaiting Paystack.
+        #
+        # Do not downgrade a terminal or more advanced
+        # refund status.
+        # ========================================================
+
+        if (
+            refund.paystack_refund_id is not None
+            and str(refund.paystack_refund_id)
+            != str(provider_id)
+        ):
+            raise TicketRefundError(
+                "Refund is linked to a different "
+                "Paystack refund ID."
+            )
+
+        if refund.paystack_refund_id is None:
+            refund.paystack_refund_id = str(
+                provider_id
+            )
+
+        if refund.submitted_at is None:
+            refund.submitted_at = datetime.utcnow()
+
+        if refund.status == "requested":
+            refund.status = "pending"
+
         db.session.commit()
+
+        current_app.logger.info(
+            (
+                "[Ticket Refund] "
+                "Paystack refund request accepted "
+                "refund_id=%s order_id=%s "
+                "provider_id=%s status=%s"
+            ),
+            refund_id,
+            order_id,
+            provider_id,
+            refund.status,
+        )
+
         return refund
+
     except Exception:
+
         db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticket Refund] "
+                "Failed to record Paystack acceptance "
+                "refund_id=%s order_id=%s"
+            ),
+            refund_id,
+            order_id,
+        )
+
         raise
 
 
