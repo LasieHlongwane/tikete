@@ -9648,158 +9648,232 @@ def generate_entry_code():
 
 @app.route(
     "/superadmin/login",
-    methods=[
-        "GET",
-        "POST",
-    ],
+    methods=["GET", "POST"],
 )
 def superadmin_login():
+    """
+    Authenticate the KALXA super-admin.
+
+    Successful authentication grants access to
+    super-admin-only operations, including
+    ticket refund administration.
+
+    Security:
+        - Server-configured credentials
+        - Password hash verification
+        - CSRF protection
+        - Session reset after login
+        - Secure session identity
+    """
 
     if is_superadmin_authenticated():
-
         return redirect(
-            url_for(
-                "superadmin_dashboard"
-            )
+            url_for("superadmin_dashboard")
         )
 
-
-    if request.method == "POST":
-
-        email = normalize_email(
-            request.form.get(
-                "email",
-                "",
-            )
+    if request.method == "GET":
+        session["superadmin_login_csrf"] = (
+            secrets.token_urlsafe(32)
         )
 
-
-        password = (
-            request.form.get(
-                "password",
-                ""
-            )
+        return render_template(
+            "superadmin/login.html",
+            csrf_token=session["superadmin_login_csrf"],
         )
 
+    # ========================================================
+    # VALIDATE LOGIN CSRF
+    # ========================================================
 
-        if (
-            not SUPERADMIN_EMAIL
-            or not SUPERADMIN_PASSWORD_HASH
-        ):
-
-            current_app.logger.error(
-                (
-                    "[Super Admin] Missing "
-                    "SUPERADMIN_EMAIL or "
-                    "SUPERADMIN_PASSWORD_HASH."
-                )
-            )
-
-
-            flash(
-                (
-                    "Super Admin credentials are not "
-                    "configured on the server."
-                ),
-                "error",
-            )
-
-
-            return render_template(
-                "superadmin/login.html"
-            )
-
-
-        email_ok = (
-            secrets.compare_digest(
-                email,
-                SUPERADMIN_EMAIL,
-            )
-        )
-
-
-        password_ok = (
-            check_password_hash(
-                SUPERADMIN_PASSWORD_HASH,
-                password,
-            )
-            if password
-            else False
-        )
-
-
-        if (
-            not email_ok
-            or not password_ok
-        ):
-
-            current_app.logger.warning(
-                (
-                    "[Super Admin] Invalid login "
-                    "attempt email=%s"
-                ),
-                email,
-            )
-
-
-            flash(
-                "Invalid Super Admin credentials.",
-                "error",
-            )
-
-
-            return render_template(
-                "superadmin/login.html"
-            )
-
-
-        session.clear()
-
-
-        session[
-            SUPERADMIN_SESSION_KEY
-        ] = True
-
-
-        session.permanent = True
-
-
-        current_app.logger.info(
-            "[Super Admin] Login successful."
-        )
-
-
-        return redirect(
-            url_for(
-                "superadmin_dashboard"
-            )
-        )
-
-
-    return render_template(
-        "superadmin/login.html"
+    submitted_token = request.form.get(
+        "csrf_token",
+        "",
     )
 
+    expected_token = session.get(
+        "superadmin_login_csrf",
+        "",
+    )
+
+    if (
+        not isinstance(submitted_token, str)
+        or not isinstance(expected_token, str)
+        or not submitted_token
+        or not expected_token
+        or not secrets.compare_digest(
+            submitted_token,
+            expected_token,
+        )
+    ):
+        abort(400)
+
+    # ========================================================
+    # READ CREDENTIALS
+    # ========================================================
+
+    email = normalize_email(
+        request.form.get("email", "")
+    )
+
+    password = request.form.get(
+        "password",
+        "",
+    )
+
+    # ========================================================
+    # CHECK SERVER CONFIGURATION
+    # ========================================================
+
+    if (
+        not SUPERADMIN_EMAIL
+        or not SUPERADMIN_PASSWORD_HASH
+    ):
+        current_app.logger.error(
+            "[Super Admin] Credentials are not configured."
+        )
+
+        flash(
+            "Super Admin credentials are not configured.",
+            "error",
+        )
+
+        session["superadmin_login_csrf"] = (
+            secrets.token_urlsafe(32)
+        )
+
+        return render_template(
+            "superadmin/login.html",
+            csrf_token=session["superadmin_login_csrf"],
+        ), 503
+
+    # ========================================================
+    # VERIFY CREDENTIALS
+    # ========================================================
+
+    email_ok = secrets.compare_digest(
+        email,
+        SUPERADMIN_EMAIL,
+    )
+
+    password_ok = (
+        check_password_hash(
+            SUPERADMIN_PASSWORD_HASH,
+            password,
+        )
+        if password
+        else False
+    )
+
+    if not email_ok or not password_ok:
+        current_app.logger.warning(
+            "[Super Admin] Invalid login attempt."
+        )
+
+        flash(
+            "Invalid Super Admin credentials.",
+            "error",
+        )
+
+        session["superadmin_login_csrf"] = (
+            secrets.token_urlsafe(32)
+        )
+
+        return render_template(
+            "superadmin/login.html",
+            csrf_token=session["superadmin_login_csrf"],
+        ), 401
+
+    # ========================================================
+    # ESTABLISH AUTHENTICATED SESSION
+    # ========================================================
+
+    session.clear()
+
+    session[SUPERADMIN_SESSION_KEY] = True
+
+    session["superadmin_authenticated_at"] = (
+        datetime.utcnow().isoformat()
+    )
+
+    session.permanent = True
+
+    current_app.logger.info(
+        "[Super Admin] Login successful."
+    )
+
+    return redirect(
+        url_for("superadmin_dashboard")
+    )
 
 # ============================================================
 # SUPER ADMIN LOGOUT
 # ============================================================
 
 @app.route(
-    "/superadmin/logout"
+    "/superadmin/logout",
+    methods=["POST"],
 )
 def superadmin_logout():
+    """
+    End the KALXA super-admin session.
+
+    POST-only logout prevents ordinary GET links
+    from ending the session.
+    """
+
+    if not is_superadmin_authenticated():
+        abort(403)
+
+    expected_token = session.get(
+        "superadmin_csrf_token",
+        "",
+    )
+
+    submitted_token = (
+        request.form.get("csrf_token")
+        or request.headers.get("X-CSRF-Token")
+        or ""
+    )
+
+    if (
+        not expected_token
+        or not submitted_token
+        or not secrets.compare_digest(
+            str(expected_token),
+            str(submitted_token),
+        )
+    ):
+        abort(400)
 
     session.clear()
 
-
     return redirect(
-        url_for(
-            "superadmin_login"
-        )
+        url_for("superadmin_login")
     )
 
 
+def kalxa_refund_superadmin_guard():
+    """
+    Authenticate refund administration requests.
+
+    Returns:
+        Super-admin identity when authenticated.
+        None otherwise.
+
+    Never trust role information supplied by
+    request parameters or JSON.
+    """
+
+    if not is_superadmin_authenticated():
+        return None
+
+    if session.get(SUPERADMIN_SESSION_KEY) is not True:
+        return None
+
+    if not SUPERADMIN_EMAIL:
+        return None
+
+    return normalize_email(SUPERADMIN_EMAIL)
 
 # ============================================================
 # SUPER ADMIN - CREATE EVENT PARTNER ACCOUNT
