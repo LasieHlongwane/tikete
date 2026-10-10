@@ -35665,212 +35665,435 @@ def perform_ticket_checkin(
     staff_account_id=None,
     allowed_event_ids=None,
 ):
+    """
+    Atomically check in a KALXA event ticket.
 
-    query = (
-        EntryPass.query
+    Supported users:
+        - Event organisers
+        - Authorised event staff
 
-        .join(
-            TicketOrder,
-            EntryPass.order_id
-            == TicketOrder.id,
+    Security:
+        - Verify organiser ownership.
+        - Enforce staff event assignments.
+        - Require confirmed payment.
+        - Reject cancelled or refunded passes.
+        - Prevent duplicate check-ins.
+        - Prevent simultaneous gate admissions.
+        - Record check-in history.
+
+    Returns:
+        (
+            success: bool,
+            message: str,
+            entry_pass: EntryPass | None,
         )
 
-        .join(
-            TicketEvent,
-            TicketOrder.event_id
-            == TicketEvent.id,
+    IMPORTANT:
+        This function must be called only after
+        authenticating the organiser or staff member.
+
+        The caller must derive organizer_id,
+        staff_account_id and allowed_event_ids
+        from trusted server-side authorization,
+        never from untrusted form data.
+
+        This function does not calculate
+        or modify KALXA's 4% commission.
+    """
+
+    # ========================================================
+    # 1. VALIDATE REQUIRED IDENTIFIERS
+    # ========================================================
+
+    if (
+        isinstance(pass_id, bool)
+        or not isinstance(pass_id, int)
+        or pass_id <= 0
+    ):
+        return (
+            False,
+            "Invalid ticket identifier.",
+            None,
         )
 
-        .filter(
-            EntryPass.id
-            == pass_id
+    if (
+        isinstance(organizer_id, bool)
+        or not isinstance(organizer_id, int)
+        or organizer_id <= 0
+    ):
+        return (
+            False,
+            "Invalid organiser identifier.",
+            None,
         )
 
-        .filter(
-            TicketEvent.organizer_id
-            == organizer_id
+    if (
+        not isinstance(checked_in_by, str)
+        or not checked_in_by.strip()
+    ):
+        return (
+            False,
+            "Invalid check-in operator.",
+            None,
         )
-    )
 
+    checked_in_by = checked_in_by.strip()
+
+    # ========================================================
+    # 2. VALIDATE STAFF ACCOUNT ID
+    # ========================================================
+
+    if staff_account_id is not None:
+
+        if (
+            isinstance(staff_account_id, bool)
+            or not isinstance(staff_account_id, int)
+            or staff_account_id <= 0
+        ):
+            return (
+                False,
+                "Invalid staff account.",
+                None,
+            )
+
+    # ========================================================
+    # 3. VALIDATE STAFF EVENT ASSIGNMENTS
+    # ========================================================
 
     if allowed_event_ids is not None:
 
-        if not allowed_event_ids:
+        try:
+            allowed_event_ids = list(
+                allowed_event_ids
+            )
 
+        except TypeError:
+            return (
+                False,
+                "Invalid event assignments.",
+                None,
+            )
+
+        if not allowed_event_ids:
             return (
                 False,
                 "You are not assigned to this event.",
                 None,
             )
 
-        query = query.filter(
-            TicketEvent.id.in_(
-                allowed_event_ids
-            )
-        )
-
-
-    entry_pass = (
-        query.first()
-    )
-
-
-    if not entry_pass:
-
-        return (
-            False,
-            "Ticket not found for your assigned events.",
-            None,
-        )
-
-
-    if (
-        not entry_pass.order
-        or not entry_pass.order.event
-    ):
-
-        return (
-            False,
-            "This ticket record is incomplete.",
-            entry_pass,
-        )
-
-
-    if (
-        entry_pass.order.payment_status
-        != "paid"
-    ):
-
-        return (
-            False,
-            (
-                "This ticket cannot be checked in "
-                "because payment has not been confirmed."
-            ),
-            entry_pass,
-        )
-
-
-    now = (
-        datetime.utcnow()
-    )
-
-
-    # Atomic state transition prevents two gate devices from
-    # accepting the same QR at the same time.
-    updated = (
-        EntryPass.query
-
-        .filter(
-            EntryPass.id
-            == entry_pass.id
-        )
-
-        .filter(
-            EntryPass.status
-            == "valid"
-        )
-
-        .filter(
-            EntryPass.checked_in_at
-            .is_(None)
-        )
-
-        .update(
-            {
-                EntryPass.status:
-                    "used",
-
-                EntryPass.checked_in_at:
-                    now,
-            },
-            synchronize_session=
+        if any(
+            isinstance(event_id, bool)
+            or not isinstance(event_id, int)
+            or event_id <= 0
+            for event_id in allowed_event_ids
+        ):
+            return (
                 False,
-        )
-    )
+                "Invalid event assignments.",
+                None,
+            )
 
-
-    if updated != 1:
-
-        db.session.rollback()
-
-        return (
-            False,
-            (
-                "This ticket has already been checked in "
-                "or is no longer valid."
-            ),
-            entry_pass,
-        )
-
-
-    existing_checkin = (
-        CheckIn.query
-        .filter_by(
-            entry_pass_id=
-                entry_pass.id
-        )
-        .first()
-    )
-
-
-    if existing_checkin:
-
-        db.session.rollback()
-
-        return (
-            False,
-            "This ticket has already been checked in.",
-            entry_pass,
-        )
-
-
-    checkin = CheckIn(
-
-        entry_pass_id=
-            entry_pass.id,
-
-        checked_in_at=
-            now,
-
-        checked_in_by=
-            checked_in_by,
-
-        staff_account_id=
-            staff_account_id,
-    )
-
-
-    db.session.add(
-        checkin
-    )
-
+    # ========================================================
+    # 4. BEGIN CHECK-IN TRANSACTION
+    # ========================================================
+    #
+    # Lock the EntryPass row before checking its state.
+    #
+    # PostgreSQL SELECT FOR UPDATE ensures that
+    # concurrent check-in attempts for the same pass
+    # are processed sequentially.
+    #
+    # The lock remains held until commit or rollback.
+    # ========================================================
 
     try:
 
+        query = (
+            db.session.query(EntryPass)
+            .join(
+                TicketOrder,
+                EntryPass.order_id == TicketOrder.id,
+            )
+            .join(
+                TicketEvent,
+                TicketOrder.event_id == TicketEvent.id,
+            )
+            .filter(
+                EntryPass.id == pass_id,
+                TicketEvent.organizer_id == organizer_id,
+            )
+        )
+
+        # ====================================================
+        # STAFF EVENT RESTRICTIONS
+        # ====================================================
+
+        if allowed_event_ids is not None:
+
+            query = query.filter(
+                TicketEvent.id.in_(
+                    allowed_event_ids
+                )
+            )
+
+        # ====================================================
+        # LOCK ENTRY PASS
+        # ====================================================
+        #
+        # of=EntryPass restricts the PostgreSQL lock
+        # to the entry_passes table.
+        #
+        # populate_existing refreshes an EntryPass that
+        # may already exist in the SQLAlchemy session.
+        # ====================================================
+
+        entry_pass = (
+            query
+            .populate_existing()
+            .with_for_update(
+                of=EntryPass
+            )
+            .one_or_none()
+        )
+
+        # ====================================================
+        # TICKET NOT FOUND
+        # ====================================================
+
+        if entry_pass is None:
+
+            return (
+                False,
+                "Ticket not found for your assigned events.",
+                None,
+            )
+
+        # ====================================================
+        # 5. VERIFY TICKET ORDER
+        # ====================================================
+
+        order = entry_pass.order
+
+        if (
+            order is None
+            or order.event is None
+        ):
+
+            return (
+                False,
+                "This ticket record is incomplete.",
+                entry_pass,
+            )
+
+        # ====================================================
+        # 6. VERIFY PAYMENT
+        # ====================================================
+
+        if order.payment_status != "paid":
+
+            return (
+                False,
+                (
+                    "This ticket cannot be checked in "
+                    "because payment has not been confirmed."
+                ),
+                entry_pass,
+            )
+
+        # ====================================================
+        # 7. REJECT CANCELLED / REFUNDED PASSES
+        # ====================================================
+
+        if entry_pass.status == "cancelled":
+
+            return (
+                False,
+                "This ticket has been cancelled.",
+                entry_pass,
+            )
+
+        if entry_pass.status == "refunded":
+
+            return (
+                False,
+                "This ticket has been refunded.",
+                entry_pass,
+            )
+
+        # ====================================================
+        # 8. REJECT PREVIOUSLY USED PASSES
+        # ====================================================
+
+        if (
+            entry_pass.status == "used"
+            or entry_pass.checked_in_at is not None
+        ):
+
+            return (
+                False,
+                "This ticket has already been checked in.",
+                entry_pass,
+            )
+
+        # ====================================================
+        # 9. VERIFY VALID STATUS
+        # ====================================================
+
+        if entry_pass.status != "valid":
+
+            return (
+                False,
+                "This ticket is not valid.",
+                entry_pass,
+            )
+
+        # ====================================================
+        # 10. CHECK EXISTING CHECK-IN HISTORY
+        # ====================================================
+        #
+        # A ticket with an existing CheckIn record
+        # must not be admitted again, even if its
+        # status was accidentally reset to valid.
+        # ====================================================
+
+        existing_checkin = (
+            db.session.query(CheckIn.id)
+            .filter(
+                CheckIn.entry_pass_id == entry_pass.id
+            )
+            .first()
+        )
+
+        if existing_checkin is not None:
+
+            return (
+                False,
+                "This ticket has already been checked in.",
+                entry_pass,
+            )
+
+        # ====================================================
+        # 11. ATOMIC STATE TRANSITION
+        # ========================================================
+        #
+        # The conditional UPDATE is a second protection
+        # against duplicate admissions.
+        #
+        # Only an unused valid pass can be updated.
+        # ====================================================
+
+        now = datetime.utcnow()
+
+        updated = (
+            db.session.query(EntryPass)
+            .filter(
+                EntryPass.id == entry_pass.id,
+                EntryPass.status == "valid",
+                EntryPass.checked_in_at.is_(None),
+            )
+            .update(
+                {
+                    EntryPass.status: "used",
+                    EntryPass.checked_in_at: now,
+                },
+                synchronize_session=False,
+            )
+        )
+
+        if updated != 1:
+
+            db.session.rollback()
+
+            return (
+                False,
+                (
+                    "This ticket has already been checked in "
+                    "or is no longer valid."
+                ),
+                None,
+            )
+
+        # ====================================================
+        # 12. CREATE CHECK-IN RECORD
+        # ========================================================
+
+        checkin = CheckIn(
+            entry_pass_id=entry_pass.id,
+            checked_in_at=now,
+            checked_in_by=checked_in_by,
+            staff_account_id=staff_account_id,
+        )
+
+        db.session.add(checkin)
+
+        # ====================================================
+        # 13. COMMIT ATOMICALLY
+        # ========================================================
+        #
+        # Both changes must succeed together:
+        #
+        #   EntryPass.status = used
+        #   CheckIn record created
+        #
+        # If the database commit fails,
+        # neither change should persist.
+        # ====================================================
+
         db.session.commit()
 
+        # ====================================================
+        # 14. RELOAD ENTRY PASS
+        # ====================================================
+
+        entry_pass = db.session.get(
+            EntryPass,
+            pass_id,
+        )
+
+        # ====================================================
+        # 15. AUDIT LOG
+        # ====================================================
+
+        current_app.logger.info(
+            (
+                "[Ticketing Check-In] "
+                "Ticket checked in successfully "
+                "pass_id=%s organizer_id=%s "
+                "staff_account_id=%s checked_in_by=%s"
+            ),
+            pass_id,
+            organizer_id,
+            staff_account_id,
+            checked_in_by,
+        )
+
+        # ====================================================
+        # 16. SUCCESS RESPONSE
+        # ====================================================
+
+        return (
+            True,
+            "Ticket checked in successfully.",
+            entry_pass,
+        )
 
     except Exception:
 
         db.session.rollback()
-        raise
 
-
-    entry_pass = (
-        db.session.get(
-            EntryPass,
-            entry_pass.id,
+        current_app.logger.exception(
+            (
+                "[Ticketing Check-In] "
+                "Check-in transaction failed "
+                "pass_id=%s organizer_id=%s "
+                "staff_account_id=%s"
+            ),
+            pass_id,
+            organizer_id,
+            staff_account_id,
         )
-    )
 
-
-    return (
-        True,
-        "Ticket checked in successfully.",
-        entry_pass,
-    )
-
+        raise
 
 # ============================================================
 # CHECK-IN PAGE
@@ -35878,45 +36101,70 @@ def perform_ticket_checkin(
 
 @app.route(
     "/admin/checkin",
-    methods=[
-        "GET",
-        "POST",
-    ],
+    methods=["GET", "POST"],
 )
 def admin_checkin():
+    """
+    Organiser ticket scanning and verification.
 
-    auth = (
-        require_ticketing_organizer()
-    )
+    GET:
+        Display the ticket check-in page.
 
+    POST:
+        Read the scanned QR code or manually entered
+        ticket code and retrieve the matching entry pass.
+
+    Security:
+        - Require an authenticated ticketing organiser.
+        - Restrict ticket lookup to the organiser's events.
+        - Validate the ticket's payment status.
+        - Reject cancelled, refunded and used passes.
+        - Do not modify the pass during scanning.
+
+    Actual admission is performed separately by
+    admin_confirm_checkin() and perform_ticket_checkin().
+    """
+
+    # ========================================================
+    # ORGANISER AUTHENTICATION
+    # ========================================================
+
+    auth = require_ticketing_organizer()
 
     if auth:
-
         return auth
 
+    organizer = get_current_organizer()
 
-    organizer = (
-        get_current_organizer()
-    )
+    if organizer is None:
+        abort(403)
 
+    # ========================================================
+    # DEFAULT TEMPLATE DATA
+    # ========================================================
 
     entry_pass = None
     message = None
 
+    # ========================================================
+    # PROCESS SCANNED TICKET
+    # ========================================================
 
-    if (
-        request.method
-        == "POST"
-    ):
+    if request.method == "POST":
 
-        raw_value = (
-            request.form.get(
-                "entry_code",
-                "",
-            )
-            .strip()
+        raw_value = request.form.get(
+            "entry_code",
+            "",
         )
 
+        if not isinstance(raw_value, str):
+            raw_value = ""
+
+        raw_value = raw_value.strip()
+
+        # ====================================================
+        # EMPTY SCAN
+        # ====================================================
 
         if not raw_value:
 
@@ -35924,197 +36172,367 @@ def admin_checkin():
                 "No ticket code was provided."
             )
 
+            return render_template(
+                "admin/checkin.html",
+                entry_pass=None,
+                message=message,
+            )
+
+        # ====================================================
+        # INPUT LENGTH LIMIT
+        # ====================================================
+        #
+        # A complete QR URL may be longer than the
+        # entry code itself.
+        #
+        # Limit the overall input before parsing.
+        # ====================================================
+
+        if len(raw_value) > 2048:
+
+            message = (
+                "The scanned ticket value is too long."
+            )
 
             return render_template(
                 "admin/checkin.html",
-
                 entry_pass=None,
-
-                message=
-                    message,
+                message=message,
             )
 
+        # ====================================================
+        # NORMALISE ENTRY CODE
+        # ====================================================
 
-        entry_code = (
-            raw_value
-            .strip()
-            .upper()
-        )
+        entry_code = raw_value
 
+        # ====================================================
+        # HANDLE COMPLETE TICKET URL
+        # ====================================================
+        #
+        # Example:
+        #
+        # https://tickets.kalxa.co.za/ticket/KX-ABC123...
+        #
+        # The scanner may return either:
+        #
+        #     KX-ABC123...
+        #
+        # or:
+        #
+        #     https://.../ticket/KX-ABC123...
+        # ====================================================
+
+        if "://" in entry_code:
+
+            try:
+
+                parsed_url = urllib.parse.urlsplit(
+                    entry_code
+                )
+
+                path = urllib.parse.unquote(
+                    parsed_url.path
+                )
+
+                path_parts = [
+                    part
+                    for part in path.split("/")
+                    if part
+                ]
+
+                ticket_position = next(
+                    (
+                        index
+                        for index, part in enumerate(path_parts)
+                        if part.lower() == "ticket"
+                    ),
+                    None,
+                )
+
+                if (
+                    ticket_position is None
+                    or ticket_position + 1 >= len(path_parts)
+                ):
+
+                    entry_code = ""
+
+                else:
+
+                    entry_code = path_parts[
+                        ticket_position + 1
+                    ]
+
+            except (ValueError, UnicodeError):
+
+                entry_code = ""
+
+        else:
+
+            # =================================================
+            # HANDLE RELATIVE TICKET PATH
+            # =================================================
+            #
+            # Example:
+            #
+            # /ticket/KX-ABC123
+            # =================================================
+
+            entry_code = entry_code.split(
+                "?",
+                1,
+            )[0].split(
+                "#",
+                1,
+            )[0]
+
+            if "/ticket/" in entry_code.lower():
+
+                parts = entry_code.split("/")
+
+                for index, part in enumerate(parts):
+
+                    if (
+                        part.lower() == "ticket"
+                        and index + 1 < len(parts)
+                    ):
+
+                        entry_code = parts[index + 1]
+                        break
+
+        entry_code = entry_code.strip().upper()
+
+        # ====================================================
+        # VALIDATE EXTRACTED CODE
+        # ====================================================
+        #
+        # Support both existing and newly generated
+        # KALXA entry-code formats.
+        # ====================================================
 
         if (
-            "/TICKET/"
-            in entry_code
+            not entry_code
+            or len(entry_code) > 50
+            or not entry_code.startswith("KX-")
+            or any(
+                character not in (
+                    string.ascii_uppercase
+                    + string.digits
+                    + "-"
+                )
+                for character in entry_code
+            )
         ):
 
-            entry_code = (
-                entry_code
-                .split(
-                    "/TICKET/",
-                    1,
-                )[1]
-                .split(
-                    "?",
-                    1,
-                )[0]
-                .split(
-                    "#",
-                    1,
-                )[0]
-                .strip()
+            message = (
+                "Invalid ticket QR code or entry code."
             )
 
+            return render_template(
+                "admin/checkin.html",
+                entry_pass=None,
+                message=message,
+            )
+
+        # ====================================================
+        # FIND TICKET BELONGING TO ORGANISER
+        # ====================================================
 
         entry_pass = (
             EntryPass.query
-
             .join(
                 TicketOrder,
-                EntryPass.order_id
-                == TicketOrder.id,
+                EntryPass.order_id == TicketOrder.id,
             )
-
             .join(
                 TicketEvent,
-                TicketOrder.event_id
-                == TicketEvent.id,
+                TicketOrder.event_id == TicketEvent.id,
             )
-
             .filter(
-                EntryPass.entry_code
-                == entry_code
+                EntryPass.entry_code == entry_code,
+                TicketEvent.organizer_id == organizer.id,
             )
-
-            .filter(
-                TicketEvent.organizer_id
-                == organizer.id
-            )
-
             .first()
         )
 
+        # ====================================================
+        # TICKET NOT FOUND
+        # ====================================================
 
-        if not entry_pass:
+        if entry_pass is None:
 
             message = (
                 "Ticket not found for your events."
             )
 
+        # ====================================================
+        # INCOMPLETE TICKET RECORD
+        # ====================================================
 
         elif (
-            not entry_pass.order
-            or not entry_pass.order.event
+            entry_pass.order is None
+            or entry_pass.order.event is None
         ):
 
             message = (
                 "This ticket record is incomplete."
             )
 
+        # ====================================================
+        # PAYMENT NOT CONFIRMED
+        # ====================================================
 
-        elif (
-            entry_pass.order.payment_status
-            != "paid"
-        ):
+        elif entry_pass.order.payment_status != "paid":
 
             message = (
                 "Payment has not been confirmed "
                 "for this ticket."
             )
 
+        # ====================================================
+        # CANCELLED OR REFUNDED TICKET
+        # ====================================================
 
-        elif (
-            entry_pass.status
-            == "used"
-        ):
+        elif entry_pass.status in {
+            "cancelled",
+            "refunded",
+        }:
+
+            message = (
+                "This ticket has been cancelled or refunded."
+            )
+
+        # ====================================================
+        # ALREADY USED
+        # ====================================================
+
+        elif entry_pass.is_used:
 
             message = (
                 "This ticket has already been used."
             )
 
+        # ====================================================
+        # INVALID STATUS
+        # ====================================================
 
-        elif (
-            entry_pass.status
-            != "valid"
-        ):
+        elif not entry_pass.is_valid:
 
             message = (
                 "This ticket is not valid."
             )
 
+        # ====================================================
+        # VALID TICKET
+        # ====================================================
+
+        else:
+
+            message = None
+
+    # ========================================================
+    # RENDER CHECK-IN PAGE
+    # ========================================================
 
     return render_template(
         "admin/checkin.html",
-
-        entry_pass=
-            entry_pass,
-
-        message=
-            message,
+        entry_pass=entry_pass,
+        message=message,
     )
-
 
 # ============================================================
 # CONFIRM CHECK-IN
 # ============================================================
+# ============================================================
+# CONFIRM TICKET CHECK-IN
+# ============================================================
 
 @app.route(
     "/admin/checkin/<int:pass_id>",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
 def admin_confirm_checkin(
     pass_id,
 ):
+    """
+    Confirm attendee admission for an entry pass.
 
-    auth = (
-        require_ticketing_organizer()
-    )
+    Security:
+        - Require authenticated ticketing organiser.
+        - Require a valid organiser session.
+        - Delegate ticket ownership and admission checks
+          to perform_ticket_checkin().
+        - Never directly mark tickets as used here.
 
+    IMPORTANT:
+        perform_ticket_checkin() must enforce:
+
+            - Organiser ownership
+            - Confirmed payment
+            - Valid ticket status
+            - No previous check-in
+            - Atomic database update
+            - Prevention of simultaneous check-ins
+    """
+
+    # ========================================================
+    # ORGANISER AUTHENTICATION
+    # ========================================================
+
+    auth = require_ticketing_organizer()
 
     if auth:
-
         return auth
 
+    organizer = get_current_organizer()
 
-    organizer = (
-        get_current_organizer()
-    )
+    if organizer is None:
 
+        abort(403)
+
+    # ========================================================
+    # VALIDATE PASS ID
+    # ========================================================
+
+    if pass_id <= 0:
+
+        flash(
+            "Invalid ticket.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_checkin")
+        )
+
+    # ========================================================
+    # PERFORM CHECK-IN
+    # ========================================================
 
     try:
 
-        (
-            success,
-            message,
-            entry_pass,
-        ) = perform_ticket_checkin(
-
-            pass_id=
-                pass_id,
-
-            organizer_id=
-                organizer.id,
-
-            checked_in_by=(
-                f"organizer:{organizer.id}"
-            ),
+        success, message, entry_pass = (
+            perform_ticket_checkin(
+                pass_id=pass_id,
+                organizer_id=organizer.id,
+                checked_in_by=(
+                    f"organizer:{organizer.id}"
+                ),
+            )
         )
 
-
-    except Exception as error:
+    except Exception:
 
         db.session.rollback()
 
         current_app.logger.exception(
             (
-                "[Ticketing Check-In] Organizer "
-                "check-in failed organizer_id=%s "
-                "pass_id=%s error=%s"
+                "[Ticketing Check-In] "
+                "Organiser check-in failed "
+                "organizer_id=%s pass_id=%s"
             ),
             organizer.id,
             pass_id,
-            error,
         )
 
         flash(
@@ -36126,29 +36544,25 @@ def admin_confirm_checkin(
         )
 
         return redirect(
-            url_for(
-                "admin_checkin"
-            )
+            url_for("admin_checkin")
         )
 
+    # ========================================================
+    # CHECK-IN RESULT
+    # ========================================================
 
     flash(
         message,
-        (
-            "success"
-            if success
-            else "error"
-        ),
+        "success" if success else "error",
     )
 
+    # ========================================================
+    # REDIRECT TO SCANNER
+    # ========================================================
 
     return redirect(
-        url_for(
-            "admin_checkin"
-        )
+        url_for("admin_checkin")
     )
-
-
 # ============================================================
 # STAFF ACCOUNT MANAGEMENT
 # ============================================================
