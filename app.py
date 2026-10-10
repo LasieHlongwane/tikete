@@ -39283,3 +39283,15 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
+
+register_ticket_refund_routes(
+    app,
+    db=db,
+    TicketOrder=TicketOrder,
+    TicketOrderItem=TicketOrderItem,
+    TicketRefund=TicketRefund,
+    TicketRefundItem=TicketRefundItem,
+    EntryPass=EntryPass,
+    paystack_api_request=paystack_api_request,
+    superadmin_guard=kalxa_refund_superadmin_guard,
+)
