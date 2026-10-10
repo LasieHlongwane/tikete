@@ -27567,161 +27567,580 @@ def reserve_ticket(event_id):
 
 
 
-@app.route("/payments/paystack/webhook", methods=["POST"])
-def paystack_ticket_webhook():
-    """Signed Paystack notifications for all existing KALXA payment products.
+# ============================================================
+# KALXA TICKETING
+# PAYSTACK PAYMENT + REFUND WEBHOOK
+# ============================================================
 
-    Refund notifications are logged but NOT applied here. Refund accounting must
-    use a separate, verified, idempotent refund processor before enabling them.
+@app.route(
+    "/payments/paystack/webhook",
+    methods=["POST"],
+)
+def paystack_ticket_webhook():
     """
+    Handle signed Paystack webhook notifications.
+
+    Supported KALXA payment products:
+
+        1. Event ticket purchases
+        2. Restaurant subscriptions
+        3. Legacy organiser subscriptions
+        4. Event Boost payments
+        5. Featured Listing payments
+        6. Event ticket refunds
+
+    Security:
+
+        - Verify Paystack HMAC-SHA512 signature.
+        - Reject unsigned or incorrectly signed requests.
+        - Verify successful payments directly with Paystack.
+        - Reconcile refunds using the refund service.
+        - Preserve existing payment-product dispatch order.
+        - Do not process settlement accounting here.
+
+    IMPORTANT:
+
+        Refund accounting must only be applied after
+        independent provider verification inside
+        reconcile_ticket_refund().
+
+        Payment finalization functions must remain
+        idempotent.
+    """
+
+    # ========================================================
+    # 1. VERIFY PAYSTACK CONFIGURATION
+    # ========================================================
+
     if not PAYSTACK_SECRET_KEY:
-        current_app.logger.error("[Paystack Webhook] Missing secret key.")
+
+        current_app.logger.error(
+            "[Paystack Webhook] Missing Paystack secret key."
+        )
+
         abort(503)
 
+    # ========================================================
+    # 2. READ ORIGINAL REQUEST BODY
+    # ========================================================
+
     raw_body = request.get_data()
-    received_signature = (request.headers.get("x-paystack-signature") or "").strip()
+
+    received_signature = (
+        request.headers.get(
+            "x-paystack-signature"
+        ) or ""
+    ).strip()
+
+    # ========================================================
+    # 3. CALCULATE EXPECTED SIGNATURE
+    # ========================================================
+
     expected_signature = hmac.new(
-        PAYSTACK_SECRET_KEY.encode("utf-8"), raw_body, hashlib.sha512
+        PAYSTACK_SECRET_KEY.encode("utf-8"),
+        raw_body,
+        hashlib.sha512,
     ).hexdigest()
-    if not received_signature or not hmac.compare_digest(
-        received_signature, expected_signature
+
+    # ========================================================
+    # 4. VALIDATE SIGNATURE
+    # ========================================================
+
+    if (
+        not received_signature
+        or not hmac.compare_digest(
+            received_signature,
+            expected_signature,
+        )
     ):
-        current_app.logger.warning("[Paystack Webhook] Invalid signature.")
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Invalid signature."
+        )
+
         abort(400)
 
+    # ========================================================
+    # 5. PARSE VERIFIED WEBHOOK PAYLOAD
+    # ========================================================
+
     try:
-        payload = json.loads(raw_body.decode("utf-8"))
-    except (ValueError, UnicodeDecodeError):
+
+        payload = json.loads(
+            raw_body.decode("utf-8")
+        )
+
+    except (
+        ValueError,
+        UnicodeDecodeError,
+    ):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Invalid JSON payload."
+        )
+
         abort(400)
+
     if not isinstance(payload, dict):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Payload must be an object."
+        )
+
         abort(400)
+
+    # ========================================================
+    # 6. IDENTIFY EVENT TYPE
+    # ========================================================
 
     event_type = payload.get("event")
-    if event_type != "charge.success":
-        # IMPORTANT: Do not mutate refunds or settlements from an unverified
-        # event. This route does not yet implement refund reconciliation.
-        if isinstance(event_type, str) and (
-            event_type.startswith("refund.") or event_type.startswith("settlement.")
-        ):
-            current_app.logger.warning(
-                "[Paystack Webhook] %s received but financial reconciliation "
-                "is not enabled; investigate using Paystack dashboard/API.",
+
+    if not isinstance(event_type, str):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Missing or invalid event type."
+        )
+
+        abort(400)
+
+    # ========================================================
+    # 7. PROCESS TICKET REFUND EVENTS
+    # ========================================================
+    #
+    # Refunds are handled separately from charge.success.
+    #
+    # The refund handler must independently verify
+    # the refund against Paystack before applying:
+    #
+    # - Ticket refund status
+    # - EntryPass status
+    # - Refunded ticket face value
+    # - KALXA commission reversal
+    #
+    # Never calculate or apply refund accounting
+    # directly from webhook payload values.
+    # ========================================================
+
+    if event_type.startswith("refund."):
+
+        from ticket_refund_routes import (
+            handle_ticket_refund_webhook,
+        )
+
+        try:
+
+            handled = handle_ticket_refund_webhook(
+                payload,
+                db=db,
+                TicketOrder=TicketOrder,
+                TicketOrderItem=TicketOrderItem,
+                TicketRefund=TicketRefund,
+                TicketRefundItem=TicketRefundItem,
+                EntryPass=EntryPass,
+                paystack_api_request=paystack_api_request,
+            )
+
+            if not handled:
+
+                current_app.logger.warning(
+                    (
+                        "[Paystack Refund Webhook] "
+                        "Unrecognized refund event=%s"
+                    ),
+                    event_type,
+                )
+
+            return "", 200
+
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Paystack Refund Webhook] "
+                    "Refund reconciliation failed "
+                    "event=%s"
+                ),
                 event_type,
             )
+
+            # Returning 500 allows Paystack to retry
+            # delivery according to its retry policy.
+            #
+            # The refund processor must be idempotent.
+
+            return "", 500
+
+    # ========================================================
+    # 8. HANDLE SETTLEMENT EVENTS
+    # ========================================================
+    #
+    # Settlement events require separate reconciliation.
+    #
+    # Do not update organiser payouts or refund
+    # accounting directly from these notifications.
+    # ========================================================
+
+    if event_type.startswith("settlement."):
+
+        current_app.logger.warning(
+            (
+                "[Paystack Webhook] "
+                "Settlement event requires "
+                "separate reconciliation event=%s"
+            ),
+            event_type,
+        )
+
         return "", 200
+
+    # ========================================================
+    # 9. IGNORE OTHER NON-PAYMENT EVENTS
+    # ========================================================
+
+    if event_type != "charge.success":
+
+        current_app.logger.info(
+            (
+                "[Paystack Webhook] "
+                "Ignoring unsupported event=%s"
+            ),
+            event_type,
+        )
+
+        return "", 200
+
+    # ========================================================
+    # 10. EXTRACT PAYMENT DATA
+    # ========================================================
 
     webhook_data = payload.get("data")
-    if not isinstance(webhook_data, dict):
+
+    if not isinstance(
+        webhook_data,
+        dict,
+    ):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Invalid payment data."
+        )
+
         abort(400)
-    reference = webhook_data.get("reference")
-    if not isinstance(reference, str) or not reference.strip():
+
+    reference = webhook_data.get(
+        "reference"
+    )
+
+    if (
+        not isinstance(reference, str)
+        or not reference.strip()
+    ):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Missing payment reference."
+        )
+
         abort(400)
+
     reference = reference.strip()
 
+    # ========================================================
+    # 11. VERIFY PAYMENT DIRECTLY WITH PAYSTACK
+    # ========================================================
+    #
+    # A signed webhook is not sufficient on its own
+    # to finalize a KALXA payment.
+    #
+    # The transaction must be verified using the
+    # existing Paystack verification helper.
+    # ========================================================
+
     try:
-        transaction_data = _kalxa_verified_paystack_transaction(reference)
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Paystack Webhook] Verification failed reference=%s", reference
+
+        transaction_data = (
+            _kalxa_verified_paystack_transaction(
+                reference
+            )
         )
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Paystack Webhook] "
+                "Transaction verification failed "
+                "reference=%s"
+            ),
+            reference,
+        )
+
         return "", 500
 
-    # Existing payment product dispatch order is preserved.
-    order = TicketOrder.query.filter_by(payment_reference=reference).first()
+    # ========================================================
+    # 12. EVENT TICKET PAYMENTS
+    # ========================================================
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first()
+    )
+
     if order is not None:
+
         try:
-            finalize_paystack_ticket_order(order, transaction_data)
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Paystack Ticket Webhook] Finalisation failed reference=%s order_id=%s",
-                reference, order.id,
+
+            finalize_paystack_ticket_order(
+                order,
+                transaction_data,
             )
+
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Paystack Ticket Webhook] "
+                    "Finalisation failed "
+                    "reference=%s order_id=%s"
+                ),
+                reference,
+                order.id,
+            )
+
             return "", 500
+
         return "", 200
 
-    restaurant_payment = RestaurantSubscriptionPayment.query.filter_by(
-        payment_reference=reference
-    ).first()
+    # ========================================================
+    # 13. RESTAURANT SUBSCRIPTION PAYMENTS
+    # ========================================================
+
+    restaurant_payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first()
+    )
+
     if restaurant_payment is not None:
+
+        # ----------------------------------------------------
+        # Prevent automatic reactivation of cancelled checkout
+        # ----------------------------------------------------
+
         if restaurant_payment.payment_status == "cancelled":
+
             current_app.logger.warning(
-                "[Restaurant Subscription Webhook] Paid cancelled checkout "
-                "requires manual reconciliation reference=%s payment_id=%s",
-                reference, restaurant_payment.id,
+                (
+                    "[Restaurant Subscription Webhook] "
+                    "Paid cancelled checkout requires "
+                    "manual reconciliation "
+                    "reference=%s payment_id=%s"
+                ),
+                reference,
+                restaurant_payment.id,
             )
+
             return "", 200
+
         try:
+
             finalize_restaurant_subscription_payment(
-                restaurant_payment, transaction_data
+                restaurant_payment,
+                transaction_data,
             )
+
         except Exception:
+
             db.session.rollback()
+
             current_app.logger.exception(
-                "[Restaurant Subscription Webhook] Finalisation failed reference=%s payment_id=%s",
-                reference, restaurant_payment.id,
+                (
+                    "[Restaurant Subscription Webhook] "
+                    "Finalisation failed "
+                    "reference=%s payment_id=%s"
+                ),
+                reference,
+                restaurant_payment.id,
             )
+
             return "", 500
+
         return "", 200
 
-    subscription_payment = SubscriptionPayment.query.filter_by(
-        payment_reference=reference
-    ).first()
+    # ========================================================
+    # 14. LEGACY ORGANISER SUBSCRIPTION PAYMENTS
+    # ========================================================
+    #
+    # Subscription payment does not automatically
+    # approve an event organiser.
+    #
+    # Organiser approval remains controlled by
+    # the KALXA super-admin.
+    # ========================================================
+
+    subscription_payment = (
+        SubscriptionPayment.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first()
+    )
+
     if subscription_payment is not None:
+
         if subscription_payment.payment_status == "cancelled":
+
             current_app.logger.warning(
-                "[Legacy Subscription Webhook] Paid cancelled checkout "
-                "requires manual reconciliation reference=%s payment_id=%s",
-                reference, subscription_payment.id,
+                (
+                    "[Legacy Subscription Webhook] "
+                    "Paid cancelled checkout requires "
+                    "manual reconciliation "
+                    "reference=%s payment_id=%s"
+                ),
+                reference,
+                subscription_payment.id,
             )
+
             return "", 200
+
         try:
+
             finalize_paystack_subscription_payment(
-                subscription_payment, transaction_data
+                subscription_payment,
+                transaction_data,
             )
+
         except Exception:
+
             db.session.rollback()
+
             current_app.logger.exception(
-                "[Legacy Subscription Webhook] Finalisation failed reference=%s payment_id=%s",
-                reference, subscription_payment.id,
+                (
+                    "[Legacy Subscription Webhook] "
+                    "Finalisation failed "
+                    "reference=%s payment_id=%s"
+                ),
+                reference,
+                subscription_payment.id,
             )
+
             return "", 500
+
         return "", 200
 
-    boost = EventBoost.query.filter_by(payment_reference=reference).first()
+    # ========================================================
+    # 15. EVENT BOOST PAYMENTS
+    # ========================================================
+
+    boost = (
+        EventBoost.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first()
+    )
+
     if boost is not None:
+
         try:
-            finalize_event_boost_payment(boost, transaction_data)
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Event Boost Webhook] Finalisation failed reference=%s boost_id=%s",
-                reference, boost.id,
+
+            finalize_event_boost_payment(
+                boost,
+                transaction_data,
             )
+
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Event Boost Webhook] "
+                    "Finalisation failed "
+                    "reference=%s boost_id=%s"
+                ),
+                reference,
+                boost.id,
+            )
+
             return "", 500
+
         return "", 200
 
-    listing = FeaturedListing.query.filter_by(payment_reference=reference).first()
+    # ========================================================
+    # 16. FEATURED LISTING PAYMENTS
+    # ========================================================
+
+    listing = (
+        FeaturedListing.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first()
+    )
+
     if listing is not None:
+
         try:
-            finalize_featured_listing_payment(listing, transaction_data)
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Featured Listing Webhook] Finalisation failed reference=%s listing_id=%s",
-                reference, listing.id,
+
+            finalize_featured_listing_payment(
+                listing,
+                transaction_data,
             )
+
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "[Featured Listing Webhook] "
+                    "Finalisation failed "
+                    "reference=%s listing_id=%s"
+                ),
+                reference,
+                listing.id,
+            )
+
             return "", 500
+
         return "", 200
+
+    # ========================================================
+    # 17. UNMATCHED VERIFIED PAYMENT
+    # ========================================================
+    #
+    # A successful Paystack transaction exists,
+    # but no matching KALXA payment record was found.
+    #
+    # Do not assign the payment to another product.
+    # Manual reconciliation is required.
+    # ========================================================
 
     current_app.logger.error(
-        "[Paystack Webhook] Unmatched verified payment requires reconciliation "
-        "reference=%s transaction_id=%s amount=%s",
-        reference, transaction_data.get("id"), transaction_data.get("amount"),
+        (
+            "[Paystack Webhook] "
+            "Unmatched verified payment requires "
+            "manual reconciliation "
+            "reference=%s "
+            "transaction_id=%s "
+            "amount=%s"
+        ),
+        reference,
+        transaction_data.get("id"),
+        transaction_data.get("amount"),
     )
-    return "", 200
 
+    return "", 200
 
 # ============================================================
 # OPTIONAL KALXA DISCOVERY -> TICKETING BRIDGE
@@ -34871,171 +35290,6 @@ def _kalxa_verified_paystack_transaction(reference):
 
 
 
-
-@app.route("/payments/paystack/webhook", methods=["POST"])
-def paystack_ticket_webhook():
-    """Signed Paystack notifications for all existing KALXA payment products.
-
-    Refund notifications are logged but NOT applied here. Refund accounting must
-    use a separate, verified, idempotent refund processor before enabling them.
-    """
-    if not PAYSTACK_SECRET_KEY:
-        current_app.logger.error("[Paystack Webhook] Missing secret key.")
-        abort(503)
-
-    raw_body = request.get_data()
-    received_signature = (request.headers.get("x-paystack-signature") or "").strip()
-    expected_signature = hmac.new(
-        PAYSTACK_SECRET_KEY.encode("utf-8"), raw_body, hashlib.sha512
-    ).hexdigest()
-    if not received_signature or not hmac.compare_digest(
-        received_signature, expected_signature
-    ):
-        current_app.logger.warning("[Paystack Webhook] Invalid signature.")
-        abort(400)
-
-    try:
-        payload = json.loads(raw_body.decode("utf-8"))
-    except (ValueError, UnicodeDecodeError):
-        abort(400)
-    if not isinstance(payload, dict):
-        abort(400)
-
-    event_type = payload.get("event")
-    if isinstance(event_type, str) and event_type.startswith("refund."):
-        from ticket_refund_routes import handle_ticket_refund_webhook
-        try:
-            handle_ticket_refund_webhook(
-                payload, db=db, TicketOrder=TicketOrder,
-                TicketOrderItem=TicketOrderItem, TicketRefund=TicketRefund,
-                TicketRefundItem=TicketRefundItem, EntryPass=EntryPass,
-                paystack_api_request=paystack_api_request,
-            )
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception("[Paystack Webhook] Refund reconciliation failed")
-            return "", 500
-        return "", 200
-
-    if event_type != "charge.success":
-        if isinstance(event_type, str) and event_type.startswith("settlement."):
-            current_app.logger.warning(
-                "[Paystack Webhook] Settlement event requires separate reconciliation: %s",
-                event_type,
-            )
-        return "", 200
-
-    webhook_data = payload.get("data")
-    if not isinstance(webhook_data, dict):
-        abort(400)
-    reference = webhook_data.get("reference")
-    if not isinstance(reference, str) or not reference.strip():
-        abort(400)
-    reference = reference.strip()
-
-    try:
-        transaction_data = _kalxa_verified_paystack_transaction(reference)
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Paystack Webhook] Verification failed reference=%s", reference
-        )
-        return "", 500
-
-    # Existing payment product dispatch order is preserved.
-    order = TicketOrder.query.filter_by(payment_reference=reference).first()
-    if order is not None:
-        try:
-            finalize_paystack_ticket_order(order, transaction_data)
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Paystack Ticket Webhook] Finalisation failed reference=%s order_id=%s",
-                reference, order.id,
-            )
-            return "", 500
-        return "", 200
-
-    restaurant_payment = RestaurantSubscriptionPayment.query.filter_by(
-        payment_reference=reference
-    ).first()
-    if restaurant_payment is not None:
-        if restaurant_payment.payment_status == "cancelled":
-            current_app.logger.warning(
-                "[Restaurant Subscription Webhook] Paid cancelled checkout "
-                "requires manual reconciliation reference=%s payment_id=%s",
-                reference, restaurant_payment.id,
-            )
-            return "", 200
-        try:
-            finalize_restaurant_subscription_payment(
-                restaurant_payment, transaction_data
-            )
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Restaurant Subscription Webhook] Finalisation failed reference=%s payment_id=%s",
-                reference, restaurant_payment.id,
-            )
-            return "", 500
-        return "", 200
-
-    subscription_payment = SubscriptionPayment.query.filter_by(
-        payment_reference=reference
-    ).first()
-    if subscription_payment is not None:
-        if subscription_payment.payment_status == "cancelled":
-            current_app.logger.warning(
-                "[Legacy Subscription Webhook] Paid cancelled checkout "
-                "requires manual reconciliation reference=%s payment_id=%s",
-                reference, subscription_payment.id,
-            )
-            return "", 200
-        try:
-            finalize_paystack_subscription_payment(
-                subscription_payment, transaction_data
-            )
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Legacy Subscription Webhook] Finalisation failed reference=%s payment_id=%s",
-                reference, subscription_payment.id,
-            )
-            return "", 500
-        return "", 200
-
-    boost = EventBoost.query.filter_by(payment_reference=reference).first()
-    if boost is not None:
-        try:
-            finalize_event_boost_payment(boost, transaction_data)
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Event Boost Webhook] Finalisation failed reference=%s boost_id=%s",
-                reference, boost.id,
-            )
-            return "", 500
-        return "", 200
-
-    listing = FeaturedListing.query.filter_by(payment_reference=reference).first()
-    if listing is not None:
-        try:
-            finalize_featured_listing_payment(listing, transaction_data)
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception(
-                "[Featured Listing Webhook] Finalisation failed reference=%s listing_id=%s",
-                reference, listing.id,
-            )
-            return "", 500
-        return "", 200
-
-    current_app.logger.error(
-        "[Paystack Webhook] Unmatched verified payment requires reconciliation "
-        "reference=%s transaction_id=%s amount=%s",
-        reference, transaction_data.get("id"), transaction_data.get("amount"),
-    )
-    return "", 200
 
 
 # ============================================================
