@@ -150,7 +150,6 @@ class Organizer(db.Model):
 
     __tablename__ = "organizers"
 
-
     # ========================================================
     # PRIMARY KEY
     # ========================================================
@@ -159,7 +158,6 @@ class Organizer(db.Model):
         db.Integer,
         primary_key=True,
     )
-
 
     # ========================================================
     # ACCOUNT DETAILS
@@ -192,9 +190,47 @@ class Organizer(db.Model):
         nullable=False,
     )
 
+    # ========================================================
+    # ACCOUNT TYPE
+    # ========================================================
+    #
+    # event
+    # restaurant
+    #
+    # Event organisers use KALXA administrator approval.
+    #
+    # Restaurant advertisers retain their existing
+    # account and subscription arrangements.
+    # ========================================================
+
+    account_type = db.Column(
+        db.String(30),
+        nullable=False,
+        default="event",
+        index=True,
+    )
 
     # ========================================================
     # ACCOUNT STATUS
+    # ========================================================
+    #
+    # For event organisers:
+    #
+    # active=False + pending
+    #     Application awaiting approval.
+    #
+    # active=True + approved
+    #     Event management permitted.
+    #
+    # active=False + rejected
+    #     Application rejected.
+    #
+    # active=False + suspended
+    #     Account suspended.
+    #
+    # For restaurants:
+    #
+    # Preserve existing active/inactive account behaviour.
     # ========================================================
 
     active = db.Column(
@@ -204,18 +240,20 @@ class Organizer(db.Model):
         index=True,
     )
 
-
     # ========================================================
     # KALXA ADMIN APPROVAL
     # ========================================================
+    #
+    # Possible values:
     #
     # pending
     # approved
     # rejected
     # suspended
     #
-    # Approval applies to event organiser accounts.
-    # Restaurant account access remains separate.
+    # Approval applies to EVENT organiser accounts.
+    #
+    # Restaurant subscriptions are managed separately.
     # ========================================================
 
     approval_status = db.Column(
@@ -246,29 +284,140 @@ class Organizer(db.Model):
         nullable=True,
     )
 
+    # ========================================================
+    # ACCOUNT SUSPENSION
+    # ========================================================
+
+    suspended_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    suspension_reason = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    # ========================================================
+    # EVENT ORGANISER APPROVAL HELPERS
+    # ========================================================
+
+    @property
+    def normalized_account_type(self):
+
+        account_type = (
+            str(
+                self.account_type
+                or "event"
+            )
+            .strip()
+            .lower()
+        )
+
+        if account_type not in {
+            "event",
+            "restaurant",
+        }:
+
+            return "event"
+
+        return account_type
+
+    @property
+    def effective_approval_status(self):
+
+        status = (
+            str(
+                self.approval_status
+                or "pending"
+            )
+            .strip()
+            .lower()
+        )
+
+        if status not in {
+            "pending",
+            "approved",
+            "rejected",
+            "suspended",
+        }:
+
+            return "pending"
+
+        return status
+
     @property
     def is_approved_event_organizer(self):
 
-        return (
-            self.account_type == "event"
+        return bool(
+            self.normalized_account_type == "event"
             and self.active
-            and self.approval_status == "approved"
+            and self.effective_approval_status == "approved"
         )
 
+    @property
+    def is_pending_event_organizer(self):
+
+        return bool(
+            self.normalized_account_type == "event"
+            and self.effective_approval_status == "pending"
+        )
+
+    @property
+    def is_rejected_event_organizer(self):
+
+        return bool(
+            self.normalized_account_type == "event"
+            and self.effective_approval_status == "rejected"
+        )
+
+    @property
+    def is_suspended_event_organizer(self):
+
+        return bool(
+            self.normalized_account_type == "event"
+            and self.effective_approval_status == "suspended"
+        )
+
+    @property
+    def can_manage_events(self):
+
+        return self.is_approved_event_organizer
+
+    @property
+    def can_publish_events(self):
+
+        return self.is_approved_event_organizer
+
+    @property
+    def can_sell_tickets(self):
+
+        return self.is_approved_event_organizer
+
     # ========================================================
-    # SUBSCRIPTION / SaaS ACCESS
+    # SUBSCRIPTION / LEGACY SAAS ACCESS
     # ========================================================
     #
-    # Possible subscription_status values:
+    # Possible values:
     #
     # inactive
     # active
     # expired
     # suspended
     #
-    # An organizer may still log in and view existing records
-    # when inactive/expired. New event creation is controlled
-    # by is_subscription_active.
+    # IMPORTANT:
+    #
+    # Event organisers no longer require monthly
+    # subscriptions to create or publish events.
+    #
+    # These fields remain for:
+    #
+    # 1. Historical subscription records.
+    # 2. Existing application compatibility.
+    # 3. Restaurant-related legacy integrations.
+    #
+    # Event permissions must use approval status.
     # ========================================================
 
     subscription_status = db.Column(
@@ -289,27 +438,15 @@ class Organizer(db.Model):
         index=True,
     )
 
-    suspended_at = db.Column(
-        db.DateTime,
-        nullable=True,
-        index=True,
-    )
-
-    suspension_reason = db.Column(
-        db.Text,
-        nullable=True,
-    )
-
-    account_type = db.Column(
-        db.String(30),
-        nullable=False,
-        default="event",
-        index=True,
-    )
-
-
     # ========================================================
     # PAYSTACK / SETTLEMENT CONNECTION
+    # ========================================================
+    #
+    # Preserve these fields until Paystack confirms
+    # KALXA's collection and settlement arrangements.
+    #
+    # Event organiser approval does not depend on
+    # payment connection status.
     # ========================================================
 
     payment_provider = db.Column(
@@ -364,6 +501,19 @@ class Organizer(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # PAYMENT CONNECTION HELPER
+    # ========================================================
+    #
+    # This property preserves the existing Paystack
+    # subaccount integration.
+    #
+    # It does not determine organiser approval.
+    #
+    # Do not use it as the sole condition for allowing
+    # ticket checkout until the settlement model is
+    # confirmed with Paystack.
+    # ========================================================
 
     @property
     def is_payment_connected(self):
@@ -372,7 +522,6 @@ class Organizer(db.Model):
             self.payment_setup_status == "connected"
             and self.paystack_subaccount_code
         )
-
 
     # ========================================================
     # OPTIONAL KALXA DISCOVERY LINK
@@ -384,7 +533,6 @@ class Organizer(db.Model):
         unique=True,
         index=True,
     )
-
 
     # ========================================================
     # TIMESTAMPS
@@ -404,7 +552,6 @@ class Organizer(db.Model):
         onupdate=datetime.utcnow,
     )
 
-
     # ========================================================
     # RELATIONSHIPS
     # ========================================================
@@ -415,7 +562,6 @@ class Organizer(db.Model):
         lazy=True,
     )
 
-
     subscription_payments = db.relationship(
         "SubscriptionPayment",
         back_populates="organizer",
@@ -423,15 +569,16 @@ class Organizer(db.Model):
         cascade="all, delete-orphan",
     )
 
-
     staff_accounts = db.relationship(
         "StaffAccount",
         back_populates="organizer",
         lazy=True,
         cascade="all, delete-orphan",
-        order_by="StaffAccount.name.asc(), StaffAccount.id.asc()",
+        order_by=(
+            "StaffAccount.name.asc(), "
+            "StaffAccount.id.asc()"
+        ),
     )
-
 
     # ========================================================
     # PASSWORD HELPERS
@@ -448,7 +595,6 @@ class Organizer(db.Model):
             )
         )
 
-
     def check_password(
         self,
         password,
@@ -462,7 +608,6 @@ class Organizer(db.Model):
             password,
         )
 
-
     # ========================================================
     # DISPLAY HELPERS
     # ========================================================
@@ -475,20 +620,41 @@ class Organizer(db.Model):
             or self.name
         )
 
-
     # ========================================================
-    # SUBSCRIPTION HELPERS
+    # ACCOUNT SUSPENSION HELPER
+    # ========================================================
+    #
+    # Pending applications must not be incorrectly
+    # classified as suspended.
+    #
+    # Event organisers:
+    #     Use approval_status.
+    #
+    # Restaurant advertisers:
+    #     Preserve existing account/subscription rules.
     # ========================================================
 
     @property
     def is_suspended(self):
 
-        return (
+        if self.normalized_account_type == "event":
+
+            return self.is_suspended_event_organizer
+
+        return bool(
             not self.active
-            or self.subscription_status
-            == "suspended"
+            or self.subscription_status == "suspended"
         )
 
+    # ========================================================
+    # LEGACY SUBSCRIPTION HELPERS
+    # ========================================================
+    #
+    # These are retained for compatibility.
+    #
+    # Event-management routes must NOT use
+    # is_subscription_active as their permission check.
+    # ========================================================
 
     @property
     def is_subscription_active(self):
@@ -496,16 +662,10 @@ class Organizer(db.Model):
         if not self.active:
             return False
 
-        if (
-            self.subscription_status
-            != "active"
-        ):
+        if self.subscription_status != "active":
             return False
 
-        if (
-            self.subscription_expires_at
-            is None
-        ):
+        if self.subscription_expires_at is None:
             return False
 
         return (
@@ -513,16 +673,37 @@ class Organizer(db.Model):
             > datetime.utcnow()
         )
 
-
     @property
     def effective_subscription_status(self):
+
+        if self.normalized_account_type == "event":
+
+            if self.is_suspended_event_organizer:
+                return "suspended"
+
+            # This is the historical subscription state,
+            # not the current event approval state.
+
+            if (
+                self.subscription_status == "active"
+                and self.subscription_expires_at
+                and self.subscription_expires_at
+                <= datetime.utcnow()
+            ):
+                return "expired"
+
+            return (
+                self.subscription_status
+                or "inactive"
+            )
+
+        # Preserve legacy restaurant behaviour.
 
         if self.is_suspended:
             return "suspended"
 
         if (
-            self.subscription_status
-            == "active"
+            self.subscription_status == "active"
             and self.subscription_expires_at
             and self.subscription_expires_at
             <= datetime.utcnow()
@@ -533,7 +714,6 @@ class Organizer(db.Model):
             self.subscription_status
             or "inactive"
         )
-
 
     @property
     def subscription_days_remaining(self):
@@ -551,6 +731,9 @@ class Organizer(db.Model):
             delta.days,
         )
 
+    # ========================================================
+    # REPRESENTATION
+    # ========================================================
 
     def __repr__(self):
 
@@ -558,10 +741,10 @@ class Organizer(db.Model):
             "<Organizer "
             f"id={self.id} "
             f"email={self.email} "
+            f"account_type={self.normalized_account_type} "
+            f"approval={self.effective_approval_status} "
             f"subscription={self.effective_subscription_status}>"
         )
-
-
 # ============================================================
 # SUBSCRIPTION PAYMENT
 # ============================================================
