@@ -14,7 +14,6 @@
         {{ organizer.display_name }} | Kalxa Super Admin
     </title>
 
-
     <style>
 
         /* =====================================================
@@ -25,10 +24,8 @@
             box-sizing: border-box;
         }
 
-
         body {
             margin: 0;
-
             background: #f6f7f9;
             color: #111827;
 
@@ -45,83 +42,55 @@
             -webkit-font-smoothing: antialiased;
         }
 
-
         .shell {
-            width:
-                min(
-                    1100px,
-                    calc(100% - 28px)
-                );
-
+            width: min(1100px, calc(100% - 28px));
             margin: 0 auto;
-
-            padding:
-                22px 0 60px;
+            padding: 22px 0 60px;
         }
 
-
         /* =====================================================
-           NAV
+           NAVIGATION
         ===================================================== */
 
         .nav,
         .card {
             background: #ffffff;
-
-            border:
-                1px solid #e5e7eb;
-
+            border: 1px solid #e5e7eb;
             border-radius: 16px;
         }
 
-
         .nav {
             display: flex;
-
             justify-content: space-between;
             align-items: center;
-
             gap: 14px;
-
             padding: 14px 16px;
-
             margin-bottom: 20px;
         }
-
 
         .brand {
             font-size: 14px;
             font-weight: 900;
         }
 
-
         .nav-links {
             display: flex;
-
             gap: 8px;
-
             flex-wrap: wrap;
         }
 
-
         .nav a {
             padding: 7px 9px;
-
             color: #334155;
-
             border-radius: 8px;
-
             text-decoration: none;
-
             font-size: 12px;
             font-weight: 750;
         }
 
-
         .nav a:hover {
             background: #f1f5f9;
         }
-
 
         /* =====================================================
            CARDS
@@ -129,122 +98,132 @@
 
         .card {
             padding: 22px;
-
             margin-bottom: 18px;
         }
 
-
         .eyebrow {
             margin: 0 0 6px;
-
             color: #64748b;
-
             font-size: 10px;
             font-weight: 850;
-
             letter-spacing: .12em;
-
             text-transform: uppercase;
         }
 
-
         h1 {
             margin: 0 0 8px;
-
-            font-size:
-                clamp(
-                    28px,
-                    6vw,
-                    36px
-                );
-
+            font-size: clamp(28px, 6vw, 36px);
             letter-spacing: -.04em;
         }
 
-
         h2 {
             margin: 0 0 16px;
-
             font-size: 20px;
         }
 
-
         .meta {
             color: #64748b;
-
             font-size: 13px;
-
             line-height: 1.8;
         }
 
-
         /* =====================================================
-           PROFILE BADGES
+           STATUS BADGES
         ===================================================== */
 
         .badges {
             display: flex;
-
             align-items: center;
-
             gap: 7px;
-
             flex-wrap: wrap;
-
             margin-top: 12px;
         }
 
-
         .status {
             display: inline-flex;
-
+            align-items: center;
             padding: 6px 9px;
-
             border-radius: 999px;
-
             font-size: 9px;
             font-weight: 900;
-
             text-transform: uppercase;
         }
 
-
-        .status.active {
+        .status.active,
+        .status.approved {
             background: #dcfce7;
             color: #166534;
         }
 
-
+        .status.pending,
         .status.inactive,
         .status.expired {
             background: #fff7ed;
             color: #9a3412;
         }
 
-
-        .status.suspended {
+        .status.suspended,
+        .status.rejected {
             background: #fef2f2;
             color: #991b1b;
         }
-
 
         .status.partner {
             background: #ede9fe;
             color: #5b21b6;
         }
 
-
         .status.event-account {
             background: #eff6ff;
             color: #1d4ed8;
         }
-
 
         .status.restaurant-account {
             background: #fef3c7;
             color: #92400e;
         }
 
+        /* =====================================================
+           APPROVAL BANNER
+        ===================================================== */
+
+        .approval-banner {
+            margin-top: 16px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .approval-banner strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .approval-banner p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .approval-banner.pending {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .approval-banner.approved {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .approval-banner.rejected,
+        .approval-banner.suspended {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
 
         /* =====================================================
            PARTNER BANNER
@@ -252,36 +231,24 @@
 
         .partner-banner {
             margin-top: 16px;
-
             padding: 15px;
-
             background: #f5f3ff;
             color: #5b21b6;
-
-            border:
-                1px solid #ddd6fe;
-
+            border: 1px solid #ddd6fe;
             border-radius: 12px;
         }
 
-
         .partner-banner strong {
             display: block;
-
             margin-bottom: 4px;
-
             font-size: 13px;
         }
 
-
         .partner-banner p {
             margin: 0;
-
             font-size: 11px;
-
             line-height: 1.55;
         }
-
 
         /* =====================================================
            GRID / PANELS
@@ -289,51 +256,35 @@
 
         .grid {
             display: grid;
-
-            grid-template-columns:
-                repeat(
-                    2,
-                    minmax(0, 1fr)
-                );
-
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 16px;
         }
 
-
         .panel {
             padding: 16px;
-
             background: #fafafa;
-
-            border:
-                1px solid #e8edf2;
-
+            border: 1px solid #e8edf2;
             border-radius: 12px;
         }
 
-
         .panel-title {
             display: block;
-
             margin-bottom: 8px;
-
             color: #111827;
-
             font-size: 12px;
             font-weight: 900;
         }
 
-
         .panel-copy {
             margin: 0 0 12px;
-
             color: #64748b;
-
-            font-size: 10px;
-
-            line-height: 1.5;
+            font-size: 11px;
+            line-height: 1.6;
         }
 
+        .panel.approval-panel {
+            background: #f8fafc;
+        }
 
         /* =====================================================
            FORMS
@@ -341,80 +292,67 @@
 
         form {
             display: grid;
-
             gap: 10px;
         }
 
-
         label {
             color: #475569;
-
             font-size: 11px;
             font-weight: 800;
         }
 
-
         input,
         textarea {
             width: 100%;
-
             min-height: 42px;
-
             padding: 9px 10px;
-
             background: #ffffff;
-
-            border:
-                1px solid #cbd5e1;
-
+            border: 1px solid #cbd5e1;
             border-radius: 9px;
-
             font: inherit;
         }
-
 
         textarea {
             min-height: 80px;
-
             resize: vertical;
         }
 
-
         button {
             min-height: 42px;
-
             padding: 9px 12px;
-
-            border:
-                1px solid #111111;
-
+            border: 1px solid #111111;
             border-radius: 9px;
-
             background: #111111;
             color: #ffffff;
-
             font: inherit;
-
             font-size: 12px;
             font-weight: 850;
-
             cursor: pointer;
         }
 
+        button:hover {
+            opacity: .92;
+        }
 
         .danger button {
             background: #991b1b;
-
             border-color: #991b1b;
         }
 
-
         .success button {
             background: #166534;
-
             border-color: #166534;
         }
 
+        .notice {
+            padding: 12px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            color: #1e40af;
+            font-size: 11px;
+            line-height: 1.6;
+        }
 
         /* =====================================================
            STATS
@@ -422,45 +360,28 @@
 
         .stats {
             display: grid;
-
-            grid-template-columns:
-                repeat(
-                    4,
-                    minmax(0, 1fr)
-                );
-
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 10px;
         }
 
-
         .stat {
             padding: 14px;
-
             background: #fafafa;
-
-            border:
-                1px solid #e8edf2;
-
+            border: 1px solid #e8edf2;
             border-radius: 11px;
         }
 
-
         .stat span {
             color: #64748b;
-
             font-size: 10px;
             font-weight: 800;
         }
 
-
         .stat strong {
             display: block;
-
             margin-top: 5px;
-
             font-size: 24px;
         }
-
 
         /* =====================================================
            LISTS
@@ -468,55 +389,38 @@
 
         .event-list {
             display: grid;
-
             gap: 9px;
         }
 
-
         .event-row {
             padding: 12px;
-
             background: #fafafa;
-
-            border:
-                1px solid #e8edf2;
-
+            border: 1px solid #e8edf2;
             border-radius: 10px;
         }
 
-
         .payment-head {
             display: flex;
-
             justify-content: space-between;
             align-items: flex-start;
-
             gap: 10px;
         }
 
-
         .payment-method {
             display: inline-flex;
-
             padding: 4px 7px;
-
             background: #f1f5f9;
             color: #475569;
-
             border-radius: 999px;
-
             font-size: 8px;
             font-weight: 900;
-
             text-transform: uppercase;
         }
-
 
         .payment-method.partner {
             background: #ede9fe;
             color: #5b21b6;
         }
-
 
         /* =====================================================
            FLASH
@@ -524,64 +428,46 @@
 
         .flash-wrapper {
             display: grid;
-
             gap: 8px;
-
             margin-bottom: 16px;
         }
 
-
         .alert {
             padding: 11px 13px;
-
             background: #f8fafc;
-
-            border:
-                1px solid #e2e8f0;
-
+            border: 1px solid #e2e8f0;
             border-radius: 10px;
-
             font-size: 12px;
             font-weight: 700;
         }
 
-
         .alert[data-category="error"] {
             color: #991b1b;
-
             background: #fef2f2;
-
             border-color: #fecaca;
         }
 
-
         .alert[data-category="success"] {
             color: #166534;
-
             background: #f0fdf4;
-
             border-color: #bbf7d0;
         }
-
 
         /* =====================================================
            RESPONSIVE
         ===================================================== */
 
-        @media(max-width: 760px) {
+        @media (max-width: 760px) {
 
             .grid,
             .stats {
                 grid-template-columns: 1fr;
             }
 
-
             .nav {
                 align-items: flex-start;
-
                 flex-direction: column;
             }
-
 
             .payment-head {
                 flex-direction: column;
@@ -593,12 +479,9 @@
 
 </head>
 
-
 <body>
 
-
 <div class="shell">
-
 
     <!-- =====================================================
          NAVIGATION
@@ -610,50 +493,25 @@
             KALXA TICKETING · SUPER ADMIN
         </div>
 
-
         <div class="nav-links">
 
-            <a
-                href="{{ url_for(
-                    'superadmin_dashboard'
-                ) }}"
-            >
+            <a href="{{ url_for('superadmin_dashboard') }}">
                 Dashboard
             </a>
 
-
-            <a
-                href="{{ url_for(
-                    'superadmin_organizers'
-                ) }}"
-            >
+            <a href="{{ url_for('superadmin_organizers') }}">
                 Organizers
             </a>
 
-
-            <a
-                href="{{ url_for(
-                    'superadmin_create_partner'
-                ) }}"
-            >
+            <a href="{{ url_for('superadmin_create_partner') }}">
                 🤝 Partners
             </a>
 
-
-            <a
-                href="{{ url_for(
-                    'superadmin_notifications'
-                ) }}"
-            >
+            <a href="{{ url_for('superadmin_notifications') }}">
                 🔔 Notifications
             </a>
 
-
-            <a
-                href="{{ url_for(
-                    'superadmin_logout'
-                ) }}"
-            >
+            <a href="{{ url_for('superadmin_logout') }}">
                 Logout
             </a>
 
@@ -661,17 +519,11 @@
 
     </nav>
 
-
-
     <!-- =====================================================
          FLASH MESSAGES
     ====================================================== -->
 
-    {% with messages =
-        get_flashed_messages(
-            with_categories=true
-        )
-    %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
 
         {% if messages %}
 
@@ -694,7 +546,17 @@
 
     {% endwith %}
 
+    <!-- =====================================================
+         DETECT ACCOUNT TYPE AND APPROVAL
+    ====================================================== -->
 
+    {% set is_event_account =
+        organizer.normalized_account_type == "event"
+    %}
+
+    {% set approval_status =
+        organizer.effective_approval_status
+    %}
 
     <!-- =====================================================
          DETECT PARTNER GRANT
@@ -705,18 +567,13 @@
         latest_grant=None
     ) %}
 
-
     {% for payment in subscription_payments %}
 
-        {% if
-            payment.payment_method
-            == "partner_grant"
-        %}
+        {% if payment.payment_method == "partner_grant" %}
 
             {% if not partner.is_partner %}
 
                 {% set partner.is_partner = true %}
-
                 {% set partner.latest_grant = payment %}
 
             {% endif %}
@@ -725,24 +582,19 @@
 
     {% endfor %}
 
-
-
     <!-- =====================================================
          ORGANIZER PROFILE
     ====================================================== -->
 
     <section class="card">
 
-
         <p class="eyebrow">
             ORGANIZER PROFILE
         </p>
 
-
         <h1>
             {{ organizer.display_name }}
         </h1>
-
 
         <div class="meta">
 
@@ -753,68 +605,171 @@
             {{ organizer.email }}
 
             {% if organizer.phone %}
-
                 · {{ organizer.phone }}
-
             {% endif %}
 
         </div>
 
-
         <div class="badges">
 
+            {% if is_event_account %}
 
-            {% if organizer.account_type == "restaurant" %}
-
-                <span
-                    class="
-                        status
-                        restaurant-account
-                    "
-                >
-                    🍔 Restaurant Account
+                <span class="status event-account">
+                    🎟 Event Account
                 </span>
+
+                <span class="status {{ approval_status }}">
+                    {{ approval_status | title }}
+                </span>
+
+                {% if organizer.is_approved_event_organizer %}
+
+                    <span class="status approved">
+                        Event Management Enabled
+                    </span>
+
+                {% elif approval_status == "approved" %}
+
+                    <span class="status inactive">
+                        Activation Required
+                    </span>
+
+                {% endif %}
 
             {% else %}
 
-                <span
-                    class="
-                        status
-                        event-account
-                    "
-                >
-                    🎟 Event Account
+                <span class="status restaurant-account">
+                    🍔 Restaurant Account
+                </span>
+
+                <span class="status {{ organizer.effective_subscription_status }}">
+                    {{ organizer.effective_subscription_status | title }}
                 </span>
 
             {% endif %}
 
-
-            <span
-                class="
-                    status
-                    {{ organizer.effective_subscription_status }}
-                "
-            >
-                {{ organizer.effective_subscription_status }}
-            </span>
-
-
             {% if partner.is_partner %}
 
-                <span
-                    class="
-                        status
-                        partner
-                    "
-                >
+                <span class="status partner">
                     🤝 Event Partner
                 </span>
 
             {% endif %}
 
-
         </div>
 
+        <!-- ================================================
+             EVENT ORGANIZER APPROVAL STATUS
+        ================================================= -->
+
+        {% if is_event_account %}
+
+            <div class="approval-banner {{ approval_status }}">
+
+                {% if organizer.is_approved_event_organizer %}
+
+                    <strong>
+                        ✓ Event Organizer Approved
+                    </strong>
+
+                    <p>
+                        This organizer can manage events
+                        without purchasing a subscription.
+
+                        {% if organizer.approved_at %}
+
+                            <br>
+
+                            Approved on
+                            {{ organizer.approved_at.strftime('%d %B %Y %H:%M') }}.
+
+                        {% endif %}
+
+                        {% if organizer.approved_by %}
+
+                            <br>
+
+                            Approved by:
+                            {{ organizer.approved_by }}
+
+                        {% endif %}
+
+                    </p>
+
+                {% elif approval_status == "pending" %}
+
+                    <strong>
+                        ⏳ Awaiting Approval
+                    </strong>
+
+                    <p>
+                        This event organizer has registered
+                        and is waiting for KALXA
+                        administrator approval.
+                    </p>
+
+                {% elif approval_status == "rejected" %}
+
+                    <strong>
+                        ✕ Application Rejected
+                    </strong>
+
+                    <p>
+                        This organizer's application
+                        has been rejected.
+
+                        {% if organizer.rejection_reason %}
+
+                            <br>
+
+                            Reason:
+                            {{ organizer.rejection_reason }}
+
+                        {% endif %}
+
+                    </p>
+
+                {% elif approval_status == "suspended" %}
+
+                    <strong>
+                        Account Suspended
+                    </strong>
+
+                    <p>
+                        This event organizer cannot manage
+                        events while suspended.
+
+                        {% if organizer.suspension_reason %}
+
+                            <br>
+
+                            Reason:
+                            {{ organizer.suspension_reason }}
+
+                        {% endif %}
+
+                    </p>
+
+                {% else %}
+
+                    <strong>
+                        Account Requires Attention
+                    </strong>
+
+                    <p>
+                        This organizer is marked approved
+                        but is not currently active.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+        <!-- ================================================
+             LEGACY SUBSCRIPTION DETAILS
+        ================================================= -->
 
         {% if organizer.subscription_expires_at %}
 
@@ -823,16 +778,28 @@
                 style="margin-top:10px;"
             >
 
-                Access expires:
+                Historical subscription expiry:
 
                 <strong>
                     {{ organizer.subscription_expires_at.strftime('%d %B %Y %H:%M') }}
                 </strong>
 
+                {% if is_event_account %}
+
+                    <br>
+
+                    Event management approval does not
+                    depend on this date.
+
+                {% endif %}
+
             </div>
 
         {% endif %}
 
+        <!-- ================================================
+             PARTNER BANNER
+        ================================================= -->
 
         {% if partner.is_partner %}
 
@@ -842,16 +809,17 @@
                     🤝 Kalxa Event Partner
                 </strong>
 
-
                 <p>
 
-                    This organizer has received
+                    This organizer has previously received
                     complimentary Kalxa Ticketing access.
 
-                    {% if partner.latest_grant
-                          and partner.latest_grant.subscription_end %}
+                    {% if
+                        partner.latest_grant
+                        and partner.latest_grant.subscription_end
+                    %}
 
-                        Latest partner period ends on
+                        Latest recorded partner period ends on
 
                         <strong
                             style="
@@ -864,10 +832,18 @@
 
                     {% endif %}
 
-                    Their events, orders and account data
-                    remain available after expiry,
-                    but normal subscription rules apply
-                    when complimentary access ends.
+                    {% if is_event_account %}
+
+                        Event management now follows
+                        KALXA's administrator approval
+                        status rather than subscription expiry.
+
+                    {% else %}
+
+                        Existing subscription rules
+                        continue to apply.
+
+                    {% endif %}
 
                 </p>
 
@@ -875,8 +851,7 @@
 
         {% endif %}
 
-
-        {% if organizer.suspension_reason %}
+        {% if organizer.suspension_reason and not is_event_account %}
 
             <div
                 class="meta"
@@ -884,17 +859,233 @@
             >
 
                 Suspension reason:
-
                 {{ organizer.suspension_reason }}
 
             </div>
 
         {% endif %}
 
-
     </section>
 
+    <!-- =====================================================
+         EVENT ORGANIZER APPROVAL
+    ====================================================== -->
 
+    {% if is_event_account %}
+
+        <section class="card">
+
+            <p class="eyebrow">
+                KALXA ACCOUNT VERIFICATION
+            </p>
+
+            <h2>
+                Event Organizer Approval
+            </h2>
+
+            <p class="meta">
+
+                Event organizers register for free.
+
+                KALXA administrator approval is required
+                before an organizer can manage events.
+
+                Approval is independent of subscription
+                payments and subscription expiry dates.
+
+            </p>
+
+            <div class="grid" style="margin-top:16px;">
+
+                <!-- =========================================
+                     PENDING APPLICATION
+                ========================================== -->
+
+                {% if approval_status == "pending" %}
+
+                    <div class="panel approval-panel success">
+
+                        <span class="panel-title">
+                            ✓ Approve Application
+                        </span>
+
+                        <p class="panel-copy">
+
+                            Approve this event organizer
+                            and activate event-management
+                            permissions.
+
+                            No subscription payment
+                            will be created.
+
+                        </p>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'superadmin_approve_event_organizer',
+                                organizer_id=organizer.id
+                            ) }}"
+                        >
+
+                            {% if csrf_token is defined %}
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                            {% endif %}
+
+                            <button type="submit">
+                                ✓ Approve Event Organizer
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                    <div class="panel">
+
+                        <span class="panel-title">
+                            Application Status
+                        </span>
+
+                        <p class="panel-copy">
+                            This application has not
+                            been approved yet.
+                        </p>
+
+                        <div class="notice">
+                            Current status:
+                            <strong>Pending</strong>
+
+                            <br>
+
+                            Event management:
+                            <strong>Disabled</strong>
+                        </div>
+
+                    </div>
+
+                <!-- =========================================
+                     APPROVED APPLICATION
+                ========================================== -->
+
+                {% elif organizer.is_approved_event_organizer %}
+
+                    <div class="panel success">
+
+                        <span class="panel-title">
+                            ✓ Approved Event Organizer
+                        </span>
+
+                        <p class="panel-copy">
+
+                            This organizer has been
+                            approved and can access
+                            event-management features.
+
+                        </p>
+
+                        <div class="notice">
+
+                            Approval:
+                            <strong>Approved</strong>
+
+                            <br>
+
+                            Account:
+                            <strong>Active</strong>
+
+                            <br>
+
+                            Event management:
+                            <strong>Enabled</strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="panel">
+
+                        <span class="panel-title">
+                            KALXA Ticketing Commission
+                        </span>
+
+                        <p class="panel-copy">
+
+                            Event organizers do not
+                            need a monthly subscription.
+
+                            KALXA earns its configured
+                            commission from ticket sales.
+
+                        </p>
+
+                        <strong>
+                            4% Ticket Commission
+                        </strong>
+
+                    </div>
+
+                <!-- =========================================
+                     APPROVED BUT INACTIVE
+                ========================================== -->
+
+                {% elif approval_status == "approved" %}
+
+                    <div class="panel">
+
+                        <span class="panel-title">
+                            Account Activation Required
+                        </span>
+
+                        <p class="panel-copy">
+
+                            This organizer is approved,
+                            but the account is inactive.
+
+                            Review the account status
+                            before enabling access.
+
+                        </p>
+
+                    </div>
+
+                <!-- =========================================
+                     REJECTED / SUSPENDED
+                ========================================== -->
+
+                {% else %}
+
+                    <div class="panel">
+
+                        <span class="panel-title">
+                            Application Requires Review
+                        </span>
+
+                        <p class="panel-copy">
+
+                            Current approval status:
+                            {{ approval_status | title }}.
+
+                            This account cannot be approved
+                            through the pending-application
+                            action.
+
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+    {% endif %}
 
     <!-- =====================================================
          USAGE
@@ -902,14 +1093,11 @@
 
     <section class="card">
 
-
         <h2>
             Usage
         </h2>
 
-
         <div class="stats">
-
 
             <div class="stat">
 
@@ -923,7 +1111,6 @@
 
             </div>
 
-
             <div class="stat">
 
                 <span>
@@ -935,7 +1122,6 @@
                 </strong>
 
             </div>
-
 
             <div class="stat">
 
@@ -949,7 +1135,6 @@
 
             </div>
 
-
             <div class="stat">
 
                 <span>
@@ -962,164 +1147,193 @@
 
             </div>
 
-
         </div>
 
-
     </section>
-
-
 
     <!-- =====================================================
          SUBSCRIPTION / PARTNER CONTROLS
     ====================================================== -->
 
-    <section class="card">
+    {% if not is_event_account %}
 
+        <section class="card">
 
-        <h2>
-            Access Controls
-        </h2>
+            <h2>
+                Subscription Access Controls
+            </h2>
 
+            <div class="grid">
 
-        <div class="grid">
+                <!-- =========================================
+                     EXTEND ACCESS
+                ========================================== -->
 
+                <div class="panel">
 
-            <!-- =============================================
-                 EXTEND
-            ============================================== -->
-
-            <div class="panel">
-
-                <span class="panel-title">
-
-                    {% if partner.is_partner %}
-
-                        🤝 Extend Partner Access
-
-                    {% else %}
-
-                        Subscription Access
-
-                    {% endif %}
-
-                </span>
-
-
-                <p class="panel-copy">
-
-                    {% if partner.is_partner %}
-
-                        Extend this partner's
-                        current complimentary access.
-
-                    {% else %}
-
-                        Activate or extend this
-                        organizer's access.
-
-                    {% endif %}
-
-                </p>
-
-
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'superadmin_extend_partner_access',
-                        organizer_id=organizer.id
-                    ) }}"
-                >
-
-                    <label for="days">
-                        Extend access by days
-                    </label>
-
-
-                    <input
-                        id="days"
-                        name="days"
-                        type="number"
-                        min="1"
-                        max="3650"
-                        value="30"
-                        required
-                    >
-
-
-                    <button type="submit">
+                    <span class="panel-title">
 
                         {% if partner.is_partner %}
 
-                            Grant Another 30 Days
+                            🤝 Extend Partner Access
 
                         {% else %}
 
-                            Activate / Extend Subscription
+                            Subscription Access
 
                         {% endif %}
 
-                    </button>
+                    </span>
 
-                </form>
+                    <p class="panel-copy">
 
-            </div>
+                        {% if partner.is_partner %}
 
+                            Extend this partner's
+                            current complimentary access.
 
+                        {% else %}
 
-            <!-- =============================================
-                 EXACT EXPIRY
-            ============================================== -->
+                            Activate or extend this
+                            organizer's subscription access.
 
-            <div class="panel">
+                        {% endif %}
 
-                <span class="panel-title">
-                    Set Exact Expiry
-                </span>
+                    </p>
 
-
-                <p class="panel-copy">
-                    Override the current access expiry
-                    using a specific calendar date.
-                </p>
-
-
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'superadmin_set_subscription_expiry',
-                        organizer_id=organizer.id
-                    ) }}"
-                >
-
-                    <label for="subscription_expires_on">
-                        Access expiry date
-                    </label>
-
-
-                    <input
-                        id="subscription_expires_on"
-                        name="subscription_expires_on"
-                        type="date"
-                        required
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'superadmin_extend_partner_access',
+                            organizer_id=organizer.id
+                        ) }}"
                     >
 
+                        {% if csrf_token is defined %}
 
-                    <button type="submit">
-                        Set Expiry Date
-                    </button>
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
 
-                </form>
+                        {% endif %}
+
+                        <label for="days">
+                            Extend access by days
+                        </label>
+
+                        <input
+                            id="days"
+                            name="days"
+                            type="number"
+                            min="1"
+                            max="3650"
+                            value="30"
+                            required
+                        >
+
+                        <button type="submit">
+
+                            {% if partner.is_partner %}
+
+                                Grant Another 30 Days
+
+                            {% else %}
+
+                                Activate / Extend Subscription
+
+                            {% endif %}
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <!-- =========================================
+                     EXACT EXPIRY
+                ========================================== -->
+
+                <div class="panel">
+
+                    <span class="panel-title">
+                        Set Exact Expiry
+                    </span>
+
+                    <p class="panel-copy">
+
+                        Override the current
+                        subscription expiry date.
+
+                    </p>
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'superadmin_set_subscription_expiry',
+                            organizer_id=organizer.id
+                        ) }}"
+                    >
+
+                        {% if csrf_token is defined %}
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                        {% endif %}
+
+                        <label for="subscription_expires_on">
+                            Access expiry date
+                        </label>
+
+                        <input
+                            id="subscription_expires_on"
+                            name="subscription_expires_on"
+                            type="date"
+                            required
+                        >
+
+                        <button type="submit">
+                            Set Expiry Date
+                        </button>
+
+                    </form>
+
+                </div>
 
             </div>
 
+        </section>
 
-        </div>
+    {% elif partner.is_partner %}
 
+        <section class="card">
 
-    </section>
+            <h2>
+                Historical Partner Access
+            </h2>
 
+            <div class="notice">
 
+                This event organizer has historical
+                complimentary partner access.
+
+                New event-management permissions are
+                controlled by KALXA administrator approval,
+                not subscription expiry.
+
+                Historical partner grants remain visible
+                in the payment history below.
+
+            </div>
+
+        </section>
+
+    {% endif %}
 
     <!-- =====================================================
          SUBSCRIPTION / PARTNER HISTORY
@@ -1127,24 +1341,19 @@
 
     <section class="card">
 
-
         <h2>
             Access &amp; Payment History
         </h2>
-
 
         {% if subscription_payments %}
 
             <div class="event-list">
 
-
                 {% for payment in subscription_payments %}
 
                     <div class="event-row">
 
-
                         <div class="payment-head">
-
 
                             <div>
 
@@ -1152,17 +1361,13 @@
                                     {{ payment.payment_reference }}
                                 </strong>
 
-
                                 <div class="meta">
 
                                     {{ payment.plan_name }}
 
                                     ·
 
-                                    {% if
-                                        payment.payment_method
-                                        == "partner_grant"
-                                    %}
+                                    {% if payment.payment_method == "partner_grant" %}
 
                                         Complimentary
 
@@ -1184,18 +1389,9 @@
 
                             </div>
 
+                            {% if payment.payment_method == "partner_grant" %}
 
-                            {% if
-                                payment.payment_method
-                                == "partner_grant"
-                            %}
-
-                                <span
-                                    class="
-                                        payment-method
-                                        partner
-                                    "
-                                >
+                                <span class="payment-method partner">
                                     🤝 Partner Grant
                                 </span>
 
@@ -1207,15 +1403,9 @@
 
                             {% endif %}
 
-
                         </div>
 
-
-
-                        {% if
-                            payment.payment_status
-                            == "pending"
-                        %}
+                        {% if payment.payment_status == "pending" %}
 
                             <div
                                 style="
@@ -1226,11 +1416,7 @@
                                 "
                             >
 
-
-                                {% if
-                                    payment.payment_method
-                                    != "paystack"
-                                %}
+                                {% if payment.payment_method != "paystack" %}
 
                                     <form
                                         method="POST"
@@ -1241,6 +1427,16 @@
                                         style="display:inline;"
                                     >
 
+                                        {% if csrf_token is defined %}
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="{{ csrf_token() }}"
+                                            >
+
+                                        {% endif %}
+
                                         <button type="submit">
                                             Confirm Payment
                                         </button>
@@ -1248,7 +1444,6 @@
                                     </form>
 
                                 {% endif %}
-
 
                                 <form
                                     method="POST"
@@ -1260,20 +1455,25 @@
                                     class="danger"
                                 >
 
+                                    {% if csrf_token is defined %}
+
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token() }}"
+                                        >
+
+                                    {% endif %}
+
                                     <button type="submit">
                                         Cancel Request
                                     </button>
 
                                 </form>
 
-
                             </div>
 
-
-                        {% elif
-                            payment.payment_status
-                            == "paid"
-                        %}
+                        {% elif payment.payment_status == "paid" %}
 
                             <div
                                 class="meta"
@@ -1283,25 +1483,20 @@
                                 {% if payment.subscription_start %}
 
                                     Access starts:
-
                                     {{ payment.subscription_start.strftime('%d %B %Y') }}
 
                                 {% endif %}
 
-
                                 {% if payment.subscription_end %}
 
                                     · Access ends:
-
                                     {{ payment.subscription_end.strftime('%d %B %Y') }}
 
                                 {% endif %}
 
-
                                 {% if payment.confirmed_by %}
 
                                     · Granted / confirmed by:
-
                                     {{ payment.confirmed_by }}
 
                                 {% endif %}
@@ -1310,28 +1505,36 @@
 
                         {% endif %}
 
-
                     </div>
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
             <p class="meta">
-                No subscription or partner
-                access records yet.
+
+                {% if is_event_account %}
+
+                    No historical subscription
+                    or partner access records.
+
+                    This does not prevent
+                    administrator approval.
+
+                {% else %}
+
+                    No subscription or partner
+                    access records yet.
+
+                {% endif %}
+
             </p>
 
         {% endif %}
 
-
     </section>
-
-
 
     <!-- =====================================================
          ACCOUNT CONTROLS
@@ -1339,84 +1542,198 @@
 
     <section class="card">
 
-
         <h2>
             Account Controls
         </h2>
 
+        {% if is_event_account %}
 
-        {% if
-            organizer.effective_subscription_status
-            == "suspended"
-        %}
+            {% if approval_status == "suspended" %}
 
-            <div
-                class="
-                    panel
-                    success
-                "
-            >
+                <div class="panel success">
 
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'superadmin_reactivate_organizer',
-                        organizer_id=organizer.id
-                    ) }}"
-                >
+                    <span class="panel-title">
+                        Suspended Event Organizer
+                    </span>
 
-                    <button type="submit">
-                        Reactivate Organizer
-                    </button>
+                    <p class="panel-copy">
 
-                </form>
+                        This account is suspended.
 
-            </div>
+                        Reactivation must restore
+                        the correct event-organizer
+                        approval state.
 
+                    </p>
+
+                    <div class="notice">
+
+                        The current legacy reactivation
+                        route only updates account
+                        activation and subscription fields.
+
+                        Its event-approval handling
+                        must be updated before this
+                        action is made available.
+
+                    </div>
+
+                </div>
+
+            {% elif approval_status == "approved" %}
+
+                <div class="panel danger">
+
+                    <span class="panel-title">
+                        Suspend Event Organizer
+                    </span>
+
+                    <p class="panel-copy">
+
+                        Suspend this approved organizer
+                        and prevent further event
+                        management.
+
+                    </p>
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'superadmin_suspend_organizer',
+                            organizer_id=organizer.id
+                        ) }}"
+                    >
+
+                        {% if csrf_token is defined %}
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                        {% endif %}
+
+                        <label for="reason">
+                            Suspension reason
+                        </label>
+
+                        <textarea
+                            id="reason"
+                            name="reason"
+                            placeholder="Reason for suspension..."
+                        ></textarea>
+
+                        <button type="submit">
+                            Suspend Organizer
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% else %}
+
+                <div class="notice">
+
+                    Current event-organizer status:
+                    <strong>{{ approval_status | title }}</strong>.
+
+                    {% if approval_status == "pending" %}
+
+                        Use the Event Organizer Approval
+                        section above to approve
+                        this application.
+
+                    {% elif approval_status == "rejected" %}
+
+                        This application has been rejected.
+                        Review it before taking
+                        any further action.
+
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
 
         {% else %}
 
-            <div
-                class="
-                    panel
-                    danger
-                "
-            >
+            {% if organizer.effective_subscription_status == "suspended" %}
 
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'superadmin_suspend_organizer',
-                        organizer_id=organizer.id
-                    ) }}"
-                >
+                <div class="panel success">
 
-                    <label for="reason">
-                        Suspension reason
-                    </label>
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'superadmin_reactivate_organizer',
+                            organizer_id=organizer.id
+                        ) }}"
+                    >
 
+                        {% if csrf_token is defined %}
 
-                    <textarea
-                        id="reason"
-                        name="reason"
-                        placeholder="Reason for suspension..."
-                    ></textarea>
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
 
+                        {% endif %}
 
-                    <button type="submit">
-                        Suspend Organizer
-                    </button>
+                        <button type="submit">
+                            Reactivate Organizer
+                        </button>
 
-                </form>
+                    </form>
 
-            </div>
+                </div>
+
+            {% else %}
+
+                <div class="panel danger">
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'superadmin_suspend_organizer',
+                            organizer_id=organizer.id
+                        ) }}"
+                    >
+
+                        {% if csrf_token is defined %}
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                        {% endif %}
+
+                        <label for="reason">
+                            Suspension reason
+                        </label>
+
+                        <textarea
+                            id="reason"
+                            name="reason"
+                            placeholder="Reason for suspension..."
+                        ></textarea>
+
+                        <button type="submit">
+                            Suspend Organizer
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% endif %}
 
         {% endif %}
 
-
     </section>
-
-
 
     <!-- =====================================================
          ORGANIZER EVENTS
@@ -1424,26 +1741,21 @@
 
     <section class="card">
 
-
         <h2>
             Organizer Events
         </h2>
-
 
         {% if events %}
 
             <div class="event-list">
 
-
                 {% for event in events %}
 
                     <div class="event-row">
 
-
                         <strong>
                             {{ event.title }}
                         </strong>
-
 
                         <div class="meta">
 
@@ -1460,7 +1772,6 @@
                             {{ event.paid_ticket_count }}
 
                         </div>
-
 
                         {% if event.status %}
 
@@ -1483,14 +1794,11 @@
 
                         {% endif %}
 
-
                     </div>
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
@@ -1512,12 +1820,9 @@
 
         {% endif %}
 
-
     </section>
 
-
 </div>
-
 
 </body>
 
