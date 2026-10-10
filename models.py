@@ -3050,14 +3050,53 @@ class TicketOrderItem(db.Model):
 
 class EntryPass(db.Model):
 
+    """
+    Represents one individual admission pass
+    issued for a successfully paid ticket order.
+
+    Each EntryPass belongs to:
+
+        - One TicketOrder
+        - Optionally one TicketOrderItem
+
+    A ticket order may contain multiple passes.
+
+    Entry codes must be unique across the
+    entire KALXA Ticketing platform.
+
+    Ticket lifecycle:
+
+        valid
+            |
+            | Successful check-in
+            v
+        used
+
+    Other statuses may be managed by
+    cancellation and refund workflows.
+
+    IMPORTANT:
+        This model does not calculate
+        KALXA's ticket commission.
+
+        Commission accounting belongs
+        to the TicketOrder model.
+    """
+
     __tablename__ = "entry_passes"
 
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
+    # ========================================================
+    # TICKET ORDER
+    # ========================================================
 
     order_id = db.Column(
         db.Integer,
@@ -3069,6 +3108,19 @@ class EntryPass(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # TICKET ORDER ITEM
+    # ========================================================
+    #
+    # New ticketing system:
+    #
+    # Each pass may belong to a specific
+    # ticket type purchased in an order.
+    #
+    # Legacy orders:
+    #
+    # order_item_id may remain NULL.
+    # ========================================================
 
     order_item_id = db.Column(
         db.Integer,
@@ -3079,14 +3131,20 @@ class EntryPass(db.Model):
         nullable=True,
         index=True,
     )
-    
-    
+
+    # ========================================================
+    # ATTENDEE NAME
+    # ========================================================
+
     attendee_name = db.Column(
         db.String(150),
         nullable=True,
         index=True,
     )
 
+    # ========================================================
+    # UNIQUE ENTRY CODE
+    # ========================================================
 
     entry_code = db.Column(
         db.String(50),
@@ -3095,6 +3153,21 @@ class EntryPass(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # ENTRY STATUS
+    # ========================================================
+    #
+    # Common values:
+    #
+    # valid
+    # used
+    # cancelled
+    # refunded
+    #
+    # These are application-level statuses.
+    # This model does not enforce an SQL CHECK
+    # constraint on the allowed values.
+    # ========================================================
 
     status = db.Column(
         db.String(30),
@@ -3103,6 +3176,9 @@ class EntryPass(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # ISSUE TIMESTAMP
+    # ========================================================
 
     issued_at = db.Column(
         db.DateTime,
@@ -3110,23 +3186,37 @@ class EntryPass(db.Model):
         default=datetime.utcnow,
     )
 
+    # ========================================================
+    # CHECK-IN TIMESTAMP
+    # ========================================================
+
     checked_in_at = db.Column(
         db.DateTime,
         nullable=True,
         index=True,
     )
 
+    # ========================================================
+    # RELATIONSHIP: TICKET ORDER
+    # ========================================================
 
     order = db.relationship(
         "TicketOrder",
         back_populates="entry_passes",
     )
 
+    # ========================================================
+    # RELATIONSHIP: TICKET ORDER ITEM
+    # ========================================================
 
     order_item = db.relationship(
         "TicketOrderItem",
         back_populates="entry_passes",
     )
+
+    # ========================================================
+    # RELATIONSHIP: CHECK-INS
+    # ========================================================
 
     checkins = db.relationship(
         "CheckIn",
@@ -3135,90 +3225,250 @@ class EntryPass(db.Model):
         cascade="all, delete-orphan",
     )
 
+    # ========================================================
+    # EVENT
+    # ========================================================
 
     @property
     def event(self):
+        """
+        Return the event associated with
+        this ticket's order.
+        """
 
-        if not self.order:
+        if self.order is None:
             return None
 
         return self.order.event
 
+    # ========================================================
+    # ORGANISER ID
+    # ========================================================
 
     @property
     def organizer_id(self):
+        """
+        Return the organiser that owns
+        the associated event.
+        """
 
-        if not self.event:
+        event = self.event
+
+        if event is None:
             return None
 
-        return self.event.organizer_id
+        return event.organizer_id
 
+    # ========================================================
+    # ORGANISER OWNERSHIP CHECK
+    # ========================================================
 
     def belongs_to_organizer(
         self,
         organizer_id,
     ):
+        """
+        Check whether this pass belongs
+        to the specified organiser.
 
-        if not self.order:
+        Used for organiser-specific
+        ticket management and check-in.
+        """
+
+        if self.order is None:
             return False
 
         return self.order.belongs_to_organizer(
             organizer_id
         )
 
+    # ========================================================
+    # TICKET TYPE NAME
+    # ========================================================
 
     @property
     def ticket_type_name(self):
+        """
+        Return the ticket type name.
 
-        if self.order_item:
-            return self.order_item.ticket_name
+        Examples:
+            General
+            VIP
+            Early Bird
+
+        Legacy orders without order items
+        use the General label.
+        """
+
+        if self.order_item is not None:
+
+            return (
+                self.order_item.ticket_name
+                or "General"
+            )
 
         return "General"
 
+    # ========================================================
+    # DISPLAY ATTENDEE NAME
+    # ========================================================
 
-    @property
-    def is_valid(self):
-
-        return (
-            self.status
-            == "valid"
-            and self.checked_in_at
-            is None
-        )
-
-
-    @property
-    def is_used(self):
-
-        return (
-            self.status
-            == "used"
-            or self.checked_in_at
-            is not None
-        )
-        
-        
     @property
     def display_attendee_name(self):
+        """
+        Return the attendee's display name.
 
-        if self.attendee_name:
-            return self.attendee_name
+        Priority:
+            1. Individual attendee name
+            2. Order customer name
+            3. Guest
+        """
 
-        if self.order:
-            return self.order.customer_name
+        if (
+            isinstance(self.attendee_name, str)
+            and self.attendee_name.strip()
+        ):
+
+            return self.attendee_name.strip()
+
+        if self.order is not None:
+
+            customer_name = (
+                self.order.customer_name
+            )
+
+            if (
+                isinstance(customer_name, str)
+                and customer_name.strip()
+            ):
+
+                return customer_name.strip()
 
         return "Guest"
 
+    # ========================================================
+    # VALID ENTRY PASS
+    # ========================================================
+
+    @property
+    def is_valid(self):
+        """
+        A pass is valid when:
+
+            - Its status is valid
+            - It has not been checked in
+
+        This property describes the pass's
+        local state.
+
+        Admission authorization must also
+        verify that the associated order is
+        paid, belongs to the correct event,
+        and has not been refunded or cancelled.
+        """
+
+        return (
+            self.status == "valid"
+            and self.checked_in_at is None
+        )
+
+    # ========================================================
+    # USED ENTRY PASS
+    # ========================================================
+
+    @property
+    def is_used(self):
+        """
+        Return True if the ticket
+        has already been checked in.
+        """
+
+        return (
+            self.status == "used"
+            or self.checked_in_at is not None
+        )
+
+    # ========================================================
+    # CANCELLED ENTRY PASS
+    # ========================================================
+
+    @property
+    def is_cancelled(self):
+        """
+        Return True when the pass
+        has been cancelled.
+        """
+
+        return self.status == "cancelled"
+
+    # ========================================================
+    # REFUNDED ENTRY PASS
+    # ========================================================
+
+    @property
+    def is_refunded(self):
+        """
+        Return True when the pass
+        has been marked as refunded.
+        """
+
+        return self.status == "refunded"
+
+    # ========================================================
+    # SERIALIZATION
+    # ========================================================
+
+    def to_dict(self):
+        """
+        Return a safe representation
+        of the entry pass.
+
+        Use only in authenticated or
+        appropriately authorized endpoints.
+
+        Entry codes are admission credentials
+        and should not be exposed through
+        public listing APIs.
+        """
+
+        return {
+            "id": self.id,
+            "order_id": self.order_id,
+            "order_item_id": self.order_item_id,
+            "attendee_name": (
+                self.display_attendee_name
+            ),
+            "ticket_type": (
+                self.ticket_type_name
+            ),
+            "entry_code": self.entry_code,
+            "status": self.status,
+            "is_valid": self.is_valid,
+            "is_used": self.is_used,
+            "issued_at": (
+                self.issued_at.isoformat()
+                if self.issued_at
+                else None
+            ),
+            "checked_in_at": (
+                self.checked_in_at.isoformat()
+                if self.checked_in_at
+                else None
+            ),
+        }
+
+    # ========================================================
+    # DEBUG REPRESENTATION
+    # ========================================================
 
     def __repr__(self):
 
         return (
             "<EntryPass "
             f"id={self.id} "
-            f"entry_code={self.entry_code} "
+            f"order_id={self.order_id} "
             f"status={self.status}>"
-        )
-
+        )    
 
 # ============================================================
 # CHECK-IN AUDIT
