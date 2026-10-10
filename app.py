@@ -10901,7 +10901,157 @@ def superadmin_dashboard():
             KALXA_SUBSCRIPTION_PRICE,
     )
 
+# ============================================================
+# SUPER ADMIN - APPROVE EVENT ORGANIZER
+# ============================================================
 
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/approve",
+    methods=["POST"],
+)
+def superadmin_approve_event_organizer(organizer_id):
+
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    # IMPORTANT:
+    # Use the existing super-admin CSRF validation here.
+    # Do not deploy without matching CSRF protection.
+
+    # ========================================================
+    # LOAD ORGANIZER
+    # ========================================================
+
+    organizer = db.session.get(
+        Organizer,
+        organizer_id,
+    )
+
+    if organizer is None:
+        abort(404)
+
+    # ========================================================
+    # EVENT ACCOUNTS ONLY
+    # ========================================================
+
+    if organizer.normalized_account_type != "event":
+
+        flash(
+            "Only event organizer accounts can be approved here.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    # ========================================================
+    # ACCOUNT STATUS VALIDATION
+    # ========================================================
+
+    if organizer.effective_approval_status == "suspended":
+
+        flash(
+            "Suspended accounts cannot be approved using this action.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    if organizer.is_approved_event_organizer:
+
+        flash(
+            "This event organizer is already approved.",
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    # ========================================================
+    # APPROVE
+    # ========================================================
+
+    now = datetime.utcnow()
+
+    organizer.active = True
+    organizer.approval_status = "approved"
+
+    organizer.approved_at = now
+    organizer.approved_by = "superadmin"
+
+    organizer.rejected_at = None
+    organizer.rejection_reason = None
+
+    organizer.suspended_at = None
+    organizer.suspension_reason = None
+
+    # Do not modify subscription fields.
+    # Event organizer registration and approval are free.
+
+    # ========================================================
+    # COMMIT
+    # ========================================================
+
+    try:
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Super Admin] Failed to approve organizer_id=%s",
+            organizer_id,
+        )
+
+        flash(
+            "Organizer approval failed.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer_id,
+            )
+        )
+
+    current_app.logger.info(
+        "[Super Admin] Approved event organizer_id=%s",
+        organizer.id,
+    )
+
+    flash(
+        "Event organizer approved successfully.",
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=organizer.id,
+        )
+    )
 # ============================================================
 # SUPERADMIN - RESTAURANT EXPERIENCE MODERATION
 # ============================================================
