@@ -79,6 +79,8 @@ from models import (
     CheckIn,
     EntryPass,
     EventBoost,
+    TicketRefund,
+    TicketRefundItem,
     EventBoostReminder,
     FeaturedListing,
     FeaturedListingImage,
@@ -119,22 +121,25 @@ from models import (
    
 )
 
-from ticket_refund_routes import register_ticket_refund_routes
-from dotenv import load_dotenv
-from services.ticket_refunds import initiate_ticket_refund, reconcile_ticket_refund, TicketRefundError
 
+# ============================================================
+# TICKET REFUND INTEGRATION
+# ============================================================
 
-register_ticket_refund_routes(
-    app,
-    db=db,
-    TicketOrder=TicketOrder,
-    TicketOrderItem=TicketOrderItem,
-    TicketRefund=TicketRefund,
-    TicketRefundItem=TicketRefundItem,
-    EntryPass=EntryPass,
-    paystack_api_request=paystack_api_request,
-    superadmin_guard=your_existing_superadmin_guard,
+from ticket_refund_routes import (
+    register_ticket_refund_routes,
+    handle_ticket_refund_webhook,
 )
+
+from dotenv import load_dotenv
+
+from services.ticket_refunds import (
+    initiate_ticket_refund,
+    reconcile_ticket_refund,
+    TicketRefundError,
+)
+
+
 
 # ============================================================
 # ENVIRONMENT
@@ -38822,7 +38827,21 @@ def admin_attendees_export_xlsx():
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ),
     )
+# ============================================================
+# REGISTER KALXA TICKET REFUND ROUTES
+# ============================================================
 
+register_ticket_refund_routes(
+    app,
+    db=db,
+    TicketOrder=TicketOrder,
+    TicketOrderItem=TicketOrderItem,
+    TicketRefund=TicketRefund,
+    TicketRefundItem=TicketRefundItem,
+    EntryPass=EntryPass,
+    paystack_api_request=paystack_api_request,
+    superadmin_guard=kalxa_refund_superadmin_guard,
+)
 
 # ============================================================
 # HEALTH
