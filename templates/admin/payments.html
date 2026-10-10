@@ -1,151 +1,1118 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Payments | Kalxa Ticketing</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f7f9;color:#111827}
-.page{width:min(760px,calc(100% - 28px));margin:0 auto;padding:28px 0 60px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
-.back-link{text-decoration:none;color:#111827;font-weight:800}
-.brand{font-weight:900}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;box-shadow:0 8px 28px rgba(0,0,0,.05);margin-bottom:18px}
-.kicker{margin:0 0 8px;font-size:.78rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#6b7280}
-h1,h2{margin-top:0}
-.muted{color:#6b7280;line-height:1.55}
-.status{display:inline-flex;padding:8px 12px;border-radius:999px;background:#ecfdf5;color:#065f46;font-weight:850;margin-bottom:18px}
-.field{margin-bottom:16px}
-label{display:block;margin-bottom:7px;font-weight:800}
-input,select{width:100%;min-height:48px;padding:11px 12px;border:1px solid #d1d5db;border-radius:11px;background:#fff;font:inherit}
-.button{width:100%;min-height:50px;border:0;border-radius:12px;padding:12px 16px;background:#111827;color:#fff;font:inherit;font-weight:900;cursor:pointer}
-.button:disabled{opacity:.5;cursor:not-allowed}
-.notice{padding:14px;border-radius:12px;background:#fff7ed;color:#9a3412;line-height:1.5;margin-bottom:18px}
-.row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #f0f1f3}
-.row:last-child{border-bottom:0}
-.value{font-weight:850;text-align:right}
-.flash{padding:12px 14px;margin-bottom:14px;border-radius:10px;background:#eef2ff}
-</style>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
+    <title>
+        Payments | Kalxa Ticketing
+    </title>
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #f6f7f9;
+            color: #111827;
+
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            width: min(760px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 28px 0 60px;
+        }
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #111827;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .brand {
+            font-size: 14px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        /* =====================================================
+           CARDS
+        ===================================================== */
+
+        .card {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+
+            padding: 22px;
+
+            box-shadow:
+                0 8px 28px rgba(0, 0, 0, .05);
+
+            margin-bottom: 18px;
+        }
+
+        .kicker {
+            margin: 0 0 8px;
+
+            font-size: .78rem;
+            font-weight: 900;
+
+            letter-spacing: .08em;
+            text-transform: uppercase;
+
+            color: #6b7280;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+
+            font-size: clamp(27px, 5vw, 34px);
+            letter-spacing: -.04em;
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 20px;
+            letter-spacing: -.02em;
+        }
+
+        .muted {
+            color: #6b7280;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 8px 12px;
+            border-radius: 999px;
+
+            font-size: 11px;
+            font-weight: 850;
+
+            margin-bottom: 18px;
+        }
+
+        .status.connected {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .status.pending {
+            background: #fffbeb;
+            color: #92400e;
+        }
+
+        .status.blocked {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        /* =====================================================
+           FORM
+        ===================================================== */
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        input,
+        select {
+            width: 100%;
+            min-height: 48px;
+
+            padding: 11px 12px;
+
+            border: 1px solid #d1d5db;
+            border-radius: 11px;
+
+            background: #ffffff;
+            color: #111827;
+
+            font: inherit;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #111827;
+
+            box-shadow:
+                0 0 0 3px rgba(17, 24, 39, .08);
+        }
+
+        .help {
+            display: block;
+            margin-top: 6px;
+
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 100%;
+            min-height: 50px;
+
+            border: 0;
+            border-radius: 12px;
+
+            padding: 12px 16px;
+
+            background: #111827;
+            color: #ffffff;
+
+            font: inherit;
+            font-size: 13px;
+            font-weight: 900;
+
+            cursor: pointer;
+
+            transition:
+                opacity .2s ease,
+                background .2s ease;
+        }
+
+        .button:hover:not(:disabled) {
+            background: #303846;
+        }
+
+        .button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* =====================================================
+           NOTICES
+        ===================================================== */
+
+        .notice {
+            padding: 14px;
+            border-radius: 12px;
+
+            background: #fff7ed;
+            color: #9a3412;
+
+            font-size: 12px;
+            line-height: 1.6;
+
+            margin-bottom: 18px;
+        }
+
+        .notice.info {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .notice.success {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .notice.error {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        /* =====================================================
+           DETAILS
+        ===================================================== */
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+
+            padding: 10px 0;
+
+            border-bottom: 1px solid #f0f1f3;
+
+            font-size: 13px;
+        }
+
+        .row:last-child {
+            border-bottom: 0;
+        }
+
+        .value {
+            font-weight: 850;
+            text-align: right;
+            overflow-wrap: anywhere;
+        }
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash {
+            padding: 12px 14px;
+            margin-bottom: 14px;
+
+            border-radius: 10px;
+
+            background: #eef2ff;
+            color: #3730a3;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .flash.error {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .flash.success {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        /* =====================================================
+           COMMISSION
+        ===================================================== */
+
+        .commission {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .commission-item {
+            padding: 16px;
+
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+
+        .commission-label {
+            display: block;
+
+            color: #64748b;
+
+            font-size: 11px;
+            font-weight: 800;
+
+            margin-bottom: 6px;
+        }
+
+        .commission-value {
+            display: block;
+
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 520px) {
+
+            .page {
+                padding-top: 18px;
+            }
+
+            .card {
+                padding: 17px;
+            }
+
+            .commission {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                align-items: flex-start;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 <body>
+
 <main class="page">
 
-<div class="topbar">
-<a href="{{ url_for('admin_dashboard') }}" class="back-link">← Dashboard</a>
-<div class="brand">Kalxa Ticketing</div>
-</div>
+    <!-- =====================================================
+         TOPBAR
+    ====================================================== -->
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% for category, message in messages %}
-<div class="flash">{{ message }}</div>
-{% endfor %}
-{% endwith %}
+    <div class="topbar">
 
-<section class="card">
+        <a
+            href="{{ url_for('admin_dashboard') }}"
+            class="back-link"
+        >
+            ← Dashboard
+        </a>
 
-<p class="kicker">Organizer Payments</p>
-<h1>Connect Paystack</h1>
+        <div class="brand">
+            KALXA TICKETING
+        </div>
 
-<p class="muted">
-Connect the bank account where Paystack should settle your ticket sales.
-Kalxa takes 0% commission from your ticket price.
-</p>
+    </div>
 
-{% if organizer.is_payment_connected %}
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
 
-<div class="status">✓ Payments Connected</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
 
-<div class="row">
-<span>Provider</span>
-<span class="value">Paystack</span>
-</div>
+        {% for category, message in messages %}
 
-<div class="row">
-<span>Settlement Bank</span>
-<span class="value">{{ organizer.payment_bank_name or 'Connected' }}</span>
-</div>
+            <div class="flash {{ category|e }}">
+                {{ message }}
+            </div>
 
-<div class="row">
-<span>Settlement Account</span>
-<span class="value">•••• {{ organizer.payment_account_last4 }}</span>
-</div>
+        {% endfor %}
 
-<div class="row">
-<span>Account Holder</span>
-<span class="value">{{ organizer.payment_account_name or organizer.display_name }}</span>
-</div>
+    {% endwith %}
 
-<p class="muted">
-Kalxa does not display your full settlement account to attendees.
-</p>
+    <!-- =====================================================
+         ACCOUNT ELIGIBILITY
+    ====================================================== -->
 
-{% endif %}
+    {% set is_event_account =
+        organizer.normalized_account_type == "event"
+    %}
 
-{% if not paystack_configured %}
-<div class="notice">
-Paystack credentials have not been configured on the Kalxa server yet.
-</div>
-{% endif %}
+    {% set event_approved =
+        organizer.is_approved_event_organizer
+    %}
 
-{% if not organizer.is_subscription_active %}
-<div class="notice">
-Your Kalxa Ticketing subscription must be active before you can connect payments.
-</div>
-{% endif %}
+    {% set payment_eligible =
+        event_approved
+        if is_event_account
+        else organizer.is_subscription_active
+    %}
 
-<form method="POST">
+    {% set can_connect =
+        paystack_configured and payment_eligible
+    %}
 
-<div class="field">
-<label for="bank_code">Settlement Bank</label>
-<select id="bank_code" name="bank_code" required>
-<option value="">Select your bank</option>
-{% for bank in banks %}
-<option value="{{ bank.code }}" data-name="{{ bank.name }}">{{ bank.name }}</option>
-{% endfor %}
-</select>
-<input type="hidden" id="bank_name" name="bank_name">
-</div>
+    <!-- =====================================================
+         PAYSTACK CONNECTION
+    ====================================================== -->
 
-<div class="field">
-<label for="account_name">Account Holder / Business Name</label>
-<input id="account_name" name="account_name" type="text"
-value="{{ organizer.display_name }}" autocomplete="organization" required>
-</div>
+    <section class="card">
 
-<div class="field">
-<label for="account_number">Bank Account Number</label>
-<input id="account_number" name="account_number" type="text"
-inputmode="numeric" autocomplete="off" required>
-</div>
+        <p class="kicker">
+            Organizer Payments
+        </p>
 
-<button class="button" type="submit"
-{% if not paystack_configured or not organizer.is_subscription_active %}disabled{% endif %}>
-Connect Paystack
-</button>
+        <h1>
+            Connect Paystack
+        </h1>
 
-</form>
-</section>
+        <p class="muted">
 
-<section class="card">
-<h2>How your ticket money works</h2>
-<p class="muted">
-Your ticket face value belongs to you. Kalxa's ticket commission is 0%.
-At checkout, payment-processing costs will be disclosed separately to the attendee.
-</p>
-</section>
+            Connect your settlement bank account
+            so you can receive payments from
+            ticket sales through Paystack.
+
+            {% if is_event_account %}
+
+                KALXA earns a 4% commission
+                on ticket face value.
+
+                No monthly organiser subscription
+                is required.
+
+            {% endif %}
+
+        </p>
+
+        <!-- ================================================
+             CONNECTION STATUS
+        ================================================= -->
+
+        {% if organizer.is_payment_connected %}
+
+            <div class="status connected">
+                ✓ Payments Connected
+            </div>
+
+            <div class="row">
+
+                <span>
+                    Provider
+                </span>
+
+                <span class="value">
+                    Paystack
+                </span>
+
+            </div>
+
+            <div class="row">
+
+                <span>
+                    Settlement Bank
+                </span>
+
+                <span class="value">
+                    {{ organizer.payment_bank_name or 'Connected' }}
+                </span>
+
+            </div>
+
+            <div class="row">
+
+                <span>
+                    Settlement Account
+                </span>
+
+                <span class="value">
+
+                    {% if organizer.payment_account_last4 %}
+
+                        •••• {{ organizer.payment_account_last4 }}
+
+                    {% else %}
+
+                        Connected
+
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+            <div class="row">
+
+                <span>
+                    Account Holder
+                </span>
+
+                <span class="value">
+                    {{ organizer.payment_account_name or organizer.display_name }}
+                </span>
+
+            </div>
+
+            <div class="notice success" style="margin-top:18px;">
+
+                Your settlement details are connected.
+
+                KALXA does not display your full
+                bank account number to attendees.
+
+            </div>
+
+        {% else %}
+
+            <div class="status pending">
+                Payment Setup Required
+            </div>
+
+        {% endif %}
+
+        <!-- ================================================
+             PAYSTACK CONFIGURATION
+        ================================================= -->
+
+        {% if not paystack_configured %}
+
+            <div class="notice error">
+
+                <strong>
+                    Paystack is not configured.
+                </strong>
+
+                <div style="margin-top:6px;">
+
+                    Payment onboarding is temporarily
+                    unavailable because KALXA's
+                    Paystack server configuration
+                    is incomplete.
+
+                    Please contact KALXA support.
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+        <!-- ================================================
+             EVENT ACCOUNT APPROVAL
+        ================================================= -->
+
+        {% if is_event_account %}
+
+            {% if not event_approved %}
+
+                <div class="notice">
+
+                    <strong>
+                        Organizer approval required.
+                    </strong>
+
+                    <div style="margin-top:6px;">
+
+                        Your event organizer account
+                        must be approved and active
+                        before you can connect Paystack.
+
+                        Current approval status:
+
+                        <strong>
+                            {{ organizer.effective_approval_status|title }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="notice success">
+
+                    <strong>
+                        ✓ Event Organizer Approved
+                    </strong>
+
+                    <div style="margin-top:6px;">
+
+                        Your account is approved.
+
+                        You can connect Paystack
+                        without purchasing a
+                        monthly subscription.
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        {% else %}
+
+            <!-- ============================================
+                 LEGACY SUBSCRIPTION ACCOUNT
+            ============================================= -->
+
+            {% if not organizer.is_subscription_active %}
+
+                <div class="notice">
+
+                    Your KALXA Ticketing
+                    subscription must be active
+                    before connecting payments.
+
+                </div>
+
+            {% endif %}
+
+        {% endif %}
+
+        <!-- ================================================
+             BANK ACCOUNT FORM
+        ================================================= -->
+
+        {% if can_connect %}
+
+            <form
+                id="paystack-connect-form"
+                method="POST"
+                action=""
+            >
+
+                <!-- ========================================
+                     CSRF
+                ========================================= -->
+
+                {% if csrf_token is defined %}
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                {% endif %}
+
+                <!-- ========================================
+                     BANK SELECTION
+                ========================================= -->
+
+                <div class="field">
+
+                    <label for="bank_code">
+                        Settlement Bank
+                    </label>
+
+                    <select
+                        id="bank_code"
+                        name="bank_code"
+                        required
+                    >
+
+                        <option value="">
+                            Select your bank
+                        </option>
+
+                        {% for bank in banks %}
+
+                            <option
+                                value="{{ bank.code }}"
+                                data-name="{{ bank.name }}"
+                            >
+                                {{ bank.name }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <input
+                        type="hidden"
+                        id="bank_name"
+                        name="bank_name"
+                    >
+
+                    <span class="help">
+
+                        Choose the bank where
+                        ticket-sale settlements
+                        should be received.
+
+                    </span>
+
+                </div>
+
+                <!-- ========================================
+                     ACCOUNT HOLDER
+                ========================================= -->
+
+                <div class="field">
+
+                    <label for="account_name">
+                        Account Holder / Business Name
+                    </label>
+
+                    <input
+                        id="account_name"
+                        name="account_name"
+                        type="text"
+                        value="{{ organizer.display_name }}"
+                        autocomplete="organization"
+                        maxlength="120"
+                        required
+                    >
+
+                    <span class="help">
+
+                        Enter the name registered
+                        on your settlement bank account.
+
+                    </span>
+
+                </div>
+
+                <!-- ========================================
+                     ACCOUNT NUMBER
+                ========================================= -->
+
+                <div class="field">
+
+                    <label for="account_number">
+                        Bank Account Number
+                    </label>
+
+                    <input
+                        id="account_number"
+                        name="account_number"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        pattern="[0-9]+"
+                        maxlength="25"
+                        required
+                    >
+
+                    <span class="help">
+
+                        Enter your bank account number
+                        without spaces or hyphens.
+
+                        Your banking information
+                        must be processed securely
+                        by KALXA's payment setup service.
+
+                    </span>
+
+                </div>
+
+                <!-- ========================================
+                     SUBMIT
+                ========================================= -->
+
+                <button
+                    id="connect-paystack-button"
+                    class="button"
+                    type="submit"
+                >
+
+                    {% if organizer.is_payment_connected %}
+
+                        Update Paystack Settlement Details
+
+                    {% else %}
+
+                        Connect Paystack
+
+                    {% endif %}
+
+                </button>
+
+                <p
+                    id="submit-message"
+                    class="help"
+                    aria-live="polite"
+                    style="margin-top:10px;"
+                ></p>
+
+            </form>
+
+        {% else %}
+
+            <!-- ============================================
+                 NOT ELIGIBLE
+            ============================================= -->
+
+            <div class="notice info">
+
+                Payment setup will become available
+                when the requirements above
+                have been completed.
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- =====================================================
+         HOW TICKET PAYMENTS WORK
+    ====================================================== -->
+
+    <section class="card">
+
+        <h2>
+            How your ticket money works
+        </h2>
+
+        {% if is_event_account %}
+
+            <p class="muted">
+
+                KALXA charges a 4% commission
+                on the ticket face value.
+
+                Your remaining ticket revenue
+                is subject to applicable
+                payment-processing fees
+                and settlement arrangements.
+
+            </p>
+
+            <div class="commission">
+
+                <div class="commission-item">
+
+                    <span class="commission-label">
+                        Example ticket price
+                    </span>
+
+                    <strong class="commission-value">
+                        R100.00
+                    </strong>
+
+                </div>
+
+                <div class="commission-item">
+
+                    <span class="commission-label">
+                        KALXA commission (4%)
+                    </span>
+
+                    <strong class="commission-value">
+                        R4.00
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <span>
+                    Organizer share before
+                    payment-processing fees
+                </span>
+
+                <span class="value">
+                    R96.00
+                </span>
+
+            </div>
+
+            <p class="muted" style="margin-top:14px;">
+
+                This is an illustrative calculation.
+
+                Actual payment-processing fees,
+                settlement timing, and deductions
+                depend on the configured
+                checkout and payment arrangement.
+
+            </p>
+
+        {% else %}
+
+            <p class="muted">
+
+                Payment settlement and applicable
+                fees follow the terms of your
+                existing KALXA account
+                and payment arrangement.
+
+            </p>
+
+        {% endif %}
+
+    </section>
 
 </main>
 
+<!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
 <script>
-const bankSelect=document.getElementById("bank_code");
-const bankName=document.getElementById("bank_name");
-function syncBankName(){
- const option=bankSelect.options[bankSelect.selectedIndex];
- bankName.value=option?(option.dataset.name||option.textContent.trim()):"";
-}
-bankSelect.addEventListener("change",syncBankName);
-syncBankName();
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        "use strict";
+
+        // ====================================================
+        // ELEMENTS
+        // ====================================================
+
+        const form = document.getElementById(
+            "paystack-connect-form"
+        );
+
+        const bankSelect = document.getElementById(
+            "bank_code"
+        );
+
+        const bankName = document.getElementById(
+            "bank_name"
+        );
+
+        const accountNumber = document.getElementById(
+            "account_number"
+        );
+
+        const submitButton = document.getElementById(
+            "connect-paystack-button"
+        );
+
+        const submitMessage = document.getElementById(
+            "submit-message"
+        );
+
+        // ====================================================
+        // BANK NAME
+        // ====================================================
+
+        function syncBankName() {
+
+            if (!bankSelect || !bankName) {
+                return;
+            }
+
+            const selectedOption =
+                bankSelect.options[
+                    bankSelect.selectedIndex
+                ];
+
+            bankName.value = (
+                selectedOption &&
+                selectedOption.value
+            )
+                ? (
+                    selectedOption.dataset.name ||
+                    selectedOption.textContent.trim()
+                )
+                : "";
+
+        }
+
+        if (bankSelect) {
+
+            bankSelect.addEventListener(
+                "change",
+                syncBankName
+            );
+
+            syncBankName();
+
+        }
+
+        // ====================================================
+        // ACCOUNT NUMBER NORMALIZATION
+        // ====================================================
+
+        if (accountNumber) {
+
+            accountNumber.addEventListener(
+                "input",
+                function () {
+
+                    accountNumber.value =
+                        accountNumber.value.replace(
+                            /\D/g,
+                            ""
+                        );
+
+                }
+            );
+
+        }
+
+        // ====================================================
+        // SUBMISSION
+        // ====================================================
+
+        if (form && submitButton) {
+
+            form.addEventListener(
+                "submit",
+                function (event) {
+
+                    syncBankName();
+
+                    if (!form.checkValidity()) {
+
+                        event.preventDefault();
+
+                        form.reportValidity();
+
+                        return;
+
+                    }
+
+                    if (submitButton.disabled) {
+
+                        event.preventDefault();
+                        return;
+
+                    }
+
+                    submitButton.disabled = true;
+
+                    submitButton.textContent =
+                        "Connecting Paystack...";
+
+                    if (submitMessage) {
+
+                        submitMessage.textContent =
+                            "Please wait while KALXA processes your payment setup.";
+
+                    }
+
+                    // Allow normal POST submission to Flask.
+                    // The backend must validate the request
+                    // and communicate with Paystack securely.
+
+                }
+            );
+
+        }
+
+    }
+);
+
 </script>
+
 </body>
 </html>
