@@ -27170,838 +27170,254 @@ def love_restaurant_experience(
 # ============================================================
 # RESERVE TICKET
 # ============================================================
+@app.route("/event/<int:event_id>/reserve", methods=["GET", "POST"])
+def reserve_ticket(event_id):
+    event = TicketEvent.query.filter_by(
+        id=event_id, active=True, status="published", organizer_deleted=False
+    ).first_or_404()
 
-@app.route(
-    "/event/<int:event_id>/reserve",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-def reserve_ticket(
-    event_id,
-):
+    # Check approval for buyers on BOTH GET and POST.
+    # A suspended organiser must not be able to keep selling.
+    if not event_organizer_is_approved(event.organizer):
+        flash("Ticket purchases are unavailable for this event.", "error")
+        return redirect(url_for("event_page", event_id=event.id))
 
-    event = (
-        TicketEvent.query
-        .filter_by(
-            id=
-                event_id,
-
-            active=
-                True,
-
-            status=
-                "published",
-
-            organizer_deleted=
-                False,
-        )
-        .first_or_404()
-    )
-
-
-    if not event.sales_open:
-
-        flash(
-            "Ticket sales are currently paused for this event.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "event_page",
-                event_id=
-                    event.id,
-            )
-        )
-
-
-    organizer = (
-        event.organizer
-    )
-
-
-    if (
-        not organizer
-        or not organizer.is_payment_connected
-    ):
-
-        flash(
-            "Secure Paystack payments are not connected for this event yet.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "event_page",
-                event_id=
-                    event.id,
-            )
-        )
-
-
+    if not event.sales_open or event.is_closed:
+        flash("Ticket sales are currently paused for this event.", "error")
+        return redirect(url_for("event_page", event_id=event.id))
     if event.is_sold_out:
-
-        flash(
-            "This event is sold out.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "event_page",
-                event_id=
-                    event.id,
-            )
-        )
-
-
-    ticket_types = (
-        event.active_ticket_types
-    )
-
-
-    if request.method == "POST":
-
-        customer_name = (
-            request.form.get(
-                "customer_name",
-                "",
-            )
-            .strip()
-        )
-
-        customer_phone = (
-            request.form.get(
-                "customer_phone",
-                "",
-            )
-            .strip()
-        )
-
-        customer_email = (
-            request.form.get(
-                "customer_email",
-                "",
-            )
-            .strip()
-            .lower()
-        )
-
-
-        if (
-            not customer_name
-            or not customer_phone
-            or not customer_email
-        ):
-
-            flash(
-                "Name, phone number and email are required for secure checkout.",
-                "error",
-            )
-
-            return render_template(
-                "reserve_ticket.html",
-                event=
-                    event,
-                ticket_types=
-                    ticket_types,
-                processing_rate=
-                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-            )
-
-
-        if "@" not in customer_email:
-
-            flash(
-                "Enter a valid email address.",
-                "error",
-            )
-
-            return render_template(
-                "reserve_ticket.html",
-                event=
-                    event,
-                ticket_types=
-                    ticket_types,
-                processing_rate=
-                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-            )
-
-
-        basket = []
-
-
-        if ticket_types:
-
-            for ticket_type in ticket_types:
-
-                quantity = (
-                    request.form.get(
-                        f"qty_{ticket_type.id}",
-                        type=int,
-                    )
-                    or 0
-                )
-
-
-                if quantity < 0:
-
-                    abort(400)
-
-
-                if quantity == 0:
-
-                    continue
-
-
-                if (
-                    ticket_type.capacity is not None
-                    and quantity
-                    > ticket_type.remaining_quantity
-                ):
-
-                    flash(
-                        (
-                            f"Only {ticket_type.remaining_quantity} "
-                            f"{ticket_type.name} ticket(s) remain."
-                        ),
-                        "error",
-                    )
-
-                    return render_template(
-                        "reserve_ticket.html",
-                        event=
-                            event,
-                        ticket_types=
-                            ticket_types,
-                        processing_rate=
-                            PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-                    )
-
-
-                current_phase = ticket_type.current_sale_phase
-
-                if ticket_type.active_sale_phases and current_phase is None:
-                    flash(f"{ticket_type.name} is not currently on sale.", "error")
-                    return render_template("reserve_ticket.html", event=event, ticket_types=ticket_types, processing_rate=PAYSTACK_EFT_EFFECTIVE_FEE_RATE)
-
-                if current_phase and current_phase.remaining_quantity is not None and quantity > current_phase.remaining_quantity:
-                    flash(f"Only {current_phase.remaining_quantity} {ticket_type.name} ticket(s) remain in {current_phase.name}.", "error")
-                    return render_template("reserve_ticket.html", event=event, ticket_types=ticket_types, processing_rate=PAYSTACK_EFT_EFFECTIVE_FEE_RATE)
-
-                effective_price = current_phase.price if current_phase else ticket_type.price
-
-                attendee_names = []
-
-                for attendee_index in range(
-                    1,
-                    quantity + 1,
-                ):
-
-                    attendee_name = (
-                        request.form.get(
-                            (
-                                f"attendee_"
-                                f"{ticket_type.id}_"
-                                f"{attendee_index}"
-                            ),
-                            "",
-                        )
-                        .strip()
-                    )
-
-                    if not attendee_name:
-
-                        flash(
-                            (
-                                f"Enter the attendee name for "
-                                f"every {ticket_type.name} ticket."
-                            ),
-                            "error",
-                        )
-
-                        return render_template(
-                            "reserve_ticket.html",
-                            event=event,
-                            ticket_types=ticket_types,
-                            processing_rate=
-                                PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-                        )
-
-                    attendee_names.append(
-                        attendee_name
-                    )
-
-
-
-                basket.append({
-                    "ticket_type": ticket_type,
-                    "sale_phase": current_phase,
-                    "name": ticket_type.name,
-                    "price": Decimal(str(effective_price)),
-                    "quantity": quantity,
-                    "attendee_names": attendee_names,
-                })
-
-
-        else:
-
-            # Legacy single-price event fallback.
-            quantity = (
-                request.form.get(
-                    "quantity",
-                    type=int,
-                )
-                or 0
-            )
-
-
-            if quantity > 0:
-
-                if (
-                    event.ticket_capacity is not None
-                    and quantity
-                    > event.remaining_tickets
-                ):
-
-                    flash(
-                        "There are not enough tickets remaining.",
-                        "error",
-                    )
-
-                    return render_template(
-                        "reserve_ticket.html",
-                        event=
-                            event,
-                        ticket_types=
-                            [],
-                        processing_rate=
-                            PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-                    )
-
-                attendee_names = []
-
-                for attendee_index in range(
-                    1,
-                    quantity + 1,
-                ):
-
-                    attendee_name = (
-                        request.form.get(
-                            f"attendee_general_{attendee_index}",
-                            "",
-                        )
-                        .strip()
-                    )
-
-                    if not attendee_name:
-
-                        flash(
-                            "Enter the attendee name for every General ticket.",
-                            "error",
-                        )
-
-                        return render_template(
-                            "reserve_ticket.html",
-                            event=event,
-                            ticket_types=[],
-                            processing_rate=
-                                PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-                        )
-
-                    attendee_names.append(
-                        attendee_name
-                    )
-
-
-
-                basket.append(
-                    {
-                        "ticket_type":
-                            None,
-                        "name":
-                            "General",              
-                        "attendee_names": 
-                            attendee_names,
-                        "price":
-                            Decimal(
-                                str(
-                                    event.ticket_price
-                                    or 0
-                                )
-                            ),
-                        "quantity":
-                            quantity,
-                    }
-                )
-
-
-        total_quantity = sum(
-            item["quantity"]
-            for item in basket
-        )
-
-
-        if (
-            total_quantity < 1
-            or total_quantity > 10
-        ):
-
-            flash(
-                "Choose between 1 and 10 tickets in total.",
-                "error",
-            )
-
-            return render_template(
-                "reserve_ticket.html",
-                event=
-                    event,
-                ticket_types=
-                    ticket_types,
-                processing_rate=
-                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-            )
-
-
-        total_amount = sum(
-            (
-                item["price"]
-                * item["quantity"]
-            )
-            for item in basket
-        ).quantize(
-            Decimal("0.01")
-        )
-
-
-        (
-            checkout_amount,
-            processing_fee,
-        ) = (
-            calculate_paystack_checkout_amount(
-                total_amount
-            )
-        )
-
-
-        reference = (
-            generate_payment_reference()
-        )
-
-
-        order = TicketOrder(
-            event_id=
-                event.id,
-
-            customer_name=
-                customer_name,
-
-            customer_phone=
-                customer_phone,
-
-            customer_email=
-                customer_email,
-
-            quantity=
-                total_quantity,
-
-            # Legacy summary field retained for compatibility.
-            ticket_price=(
-                (
-                    total_amount
-                    / total_quantity
-                ).quantize(
-                    Decimal("0.01")
-                )
-            ),
-
-            total_amount=
-                total_amount,
-
-            processing_fee=
-                processing_fee,
-
-            checkout_amount=
-                checkout_amount,
-
-            payment_provider=
-                "paystack",
-
-            payment_reference=
-                reference,
-
-            payment_status=
-                "pending",
-        )
-
-
-        try:
-
-            db.session.add(
-                order
-            )
-
-            db.session.flush()
-
-
-            for item in basket:
-
-
-
-                line_total = (
-                    item["price"]
-                    * item["quantity"]
-                ).quantize(
-                    Decimal("0.01")
-                )
-
-                db.session.add(
-                    TicketOrderItem(
-                        order_id=order.id,
-                        ticket_type_id=(
-                            item["ticket_type"].id
-                            if item["ticket_type"]
-                            else None
-                        ),
-                        sale_phase_id=(
-                            item["sale_phase"].id
-                            if item.get("sale_phase")
-                            else None
-                        ),
-                        sale_phase_name=(
-                            item["sale_phase"].name
-                            if item.get("sale_phase")
-                            else None
-                        ),
-                        ticket_name=item["name"],
-                        unit_price=item["price"],
-                        quantity=item["quantity"],
-                        line_total=line_total,
-                        attendee_names=(
-                            item.get("attendee_names")
-                            or []
-                        ),
-                    )
-                )
-
-            db.session.commit()
-
-
-            callback_url = url_for(
-                "paystack_ticket_callback",
-                _external=
-                    True,
-                _scheme=
-                    "https",
-            )
-
-            cancel_url = url_for(
-                "booking_status",
-                reference=
-                    reference,
-                _external=
-                    True,
-                _scheme=
-                    "https",
-            )
-
-
-            basket_metadata = [
-                {
-                    "name":
-                        item["name"],
-                    "quantity":
-                        item["quantity"],
-                    "unit_price": str(item["price"]),
-                    "sale_phase": (item["sale_phase"].name if item.get("sale_phase") else None),
-                }
-                for item in basket
+        flash("This event is sold out.", "error")
+        return redirect(url_for("event_page", event_id=event.id))
+
+    organizer = event.organizer
+    ticket_types = event.active_ticket_types
+
+    if request.method == "GET":
+        return _reserve_page(event, ticket_types)
+
+    customer_name = request.form.get("customer_name", "").strip()
+    customer_phone = request.form.get("customer_phone", "").strip()
+    customer_email = request.form.get("customer_email", "").strip().lower()
+    if not all((customer_name, customer_phone, customer_email)):
+        flash("Name, phone number and email are required for secure checkout.", "error")
+        return _reserve_page(event, ticket_types)
+    if "@" not in customer_email:
+        flash("Enter a valid email address.", "error")
+        return _reserve_page(event, ticket_types)
+
+    basket = []
+    if ticket_types:
+        for t in ticket_types:
+            qty = request.form.get(f"qty_{t.id}", type=int)
+            if qty is None:
+                qty = 0
+            if qty < 0:
+                abort(400)
+            if not qty:
+                continue
+            if t.capacity is not None and qty > t.remaining_quantity:
+                flash(f"Only {t.remaining_quantity} {t.name} ticket(s) remain.", "error")
+                return _reserve_page(event, ticket_types)
+
+            phase = t.current_sale_phase
+            if t.active_sale_phases and phase is None:
+                flash(f"{t.name} is not currently on sale.", "error")
+                return _reserve_page(event, ticket_types)
+            if phase and phase.remaining_quantity is not None and qty > phase.remaining_quantity:
+                flash(f"Only {phase.remaining_quantity} {t.name} ticket(s) remain in {phase.name}.", "error")
+                return _reserve_page(event, ticket_types)
+
+            names = [
+                request.form.get(f"attendee_{t.id}_{i}", "").strip()
+                for i in range(1, qty + 1)
             ]
+            if not all(names):
+                flash(f"Enter the attendee name for every {t.name} ticket.", "error")
+                return _reserve_page(event, ticket_types)
+            basket.append({
+                "ticket_type": t, "sale_phase": phase,
+                "name": t.name, "price": Decimal(str(phase.price if phase else t.price)),
+                "quantity": qty, "attendee_names": names,
+            })
+    else:
+        qty = request.form.get("quantity", type=int)
+        if qty is None:
+            qty = 0
+        if qty < 0:
+            abort(400)
+        if qty:
+            if event.ticket_capacity is not None and qty > event.remaining_tickets:
+                flash("There are not enough tickets remaining.", "error")
+                return _reserve_page(event, [])
+            names = [
+                request.form.get(f"attendee_general_{i}", "").strip()
+                for i in range(1, qty + 1)
+            ]
+            if not all(names):
+                flash("Enter the attendee name for every General ticket.", "error")
+                return _reserve_page(event, [])
+            basket.append({
+                "ticket_type": None, "sale_phase": None,
+                "name": "General", "price": Decimal(str(event.ticket_price or 0)),
+                "quantity": qty, "attendee_names": names,
+            })
 
+    total_quantity = sum(item["quantity"] for item in basket)
+    if not 1 <= total_quantity <= 10:
+        flash("Choose between 1 and 10 tickets in total.", "error")
+        return _reserve_page(event, ticket_types)
 
-            payload = {
-                "email":
-                    customer_email,
+    total_amount = sum(
+        (item["price"] * item["quantity"] for item in basket),
+        Decimal("0"),
+    ).quantize(Decimal("0.01"))
+    checkout_amount, processing_fee = calculate_paystack_checkout_amount(total_amount)
+    reference = generate_payment_reference()
 
-                "amount":
-                    str(
-                        int(
-                            (
-                                checkout_amount
-                                * 100
-                            )
-                            .quantize(
-                                Decimal("1"),
-                                rounding=
-                                    ROUND_UP,
-                            )
-                        )
-                    ),
+    # Recheck immediately before persisting a new order.
+    db.session.refresh(organizer)
+    db.session.refresh(event)
+    if not event_available_for_checkout(event):
+        flash("This event is no longer available for checkout.", "error")
+        return redirect(url_for("event_page", event_id=event.id))
 
-                "currency":
-                    "ZAR",
-
-                "reference":
-                    reference,
-
-                "callback_url":
-                    callback_url,
-
-                "channels": [
-                    "eft",
-                    "capitec_pay",
-                ],
-
-                "subaccount":
-                    organizer.paystack_subaccount_code,
-
-                "bearer":
-                    "subaccount",
-
-                "metadata":
-                    json.dumps(
-                        {
-                            "kalxa_order_id":
-                                order.id,
-                            "event_id":
-                                event.id,
-                            "ticket_face_value":
-                                str(
-                                    total_amount
-                                ),
-                            "processing_fee":
-                                str(
-                                    processing_fee
-                                ),
-                            "ticket_types":
-                                basket_metadata,
-                            "cancel_action":
-                                cancel_url,
-                        }
-                    ),
-            }
-
-            paystack_result = (
-                paystack_api_request(
-                    "POST",
-                    "/transaction/initialize",
-                    payload,
-                )
-            )
-
-
-            data = (
-                paystack_result.get(
-                    "data"
-                )
-                or {}
-            )
-
-            authorization_url = (
-                data.get(
-                    "authorization_url"
-                )
-            )
-
-
-            if not authorization_url:
-
-                raise RuntimeError(
-                    "Paystack did not return a checkout URL."
-                )
-
-
-            order.paystack_access_code = (
-                data.get(
-                    "access_code"
-                )
-                or None
-            )
-
-            order.paystack_authorization_url = (
-                authorization_url
-            )
-
-
-            db.session.commit()
-
-
-        except Exception as error:
-
-            db.session.rollback()
-
-            current_app.logger.exception(
-                (
-                    "[Paystack Ticket Checkout] "
-                    "Unable to initialize payment "
-                    "event_id=%s reference=%s error=%s"
-                ),
-                event.id,
-                reference,
-                error,
-            )
-
-            try:
-
-                persisted_order = (
-                    TicketOrder.query
-                    .filter_by(
-                        payment_reference=
-                            reference
-                    )
-                    .first()
-                )
-
-                if persisted_order:
-
-                    db.session.delete(
-                        persisted_order
-                    )
-
-                    db.session.commit()
-
-            except Exception:
-
-                db.session.rollback()
-
-
-            flash(
-                "Secure checkout could not be started. Please try again.",
-                "error",
-            )
-
-            return render_template(
-                "reserve_ticket.html",
-                event=
-                    event,
-                ticket_types=
-                    ticket_types,
-                processing_rate=
-                    PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
-            )
-
-
-        return redirect(
-            authorization_url
-        )
-
-
-    return render_template(
-        "reserve_ticket.html",
-        event=
-            event,
-        ticket_types=
-            ticket_types,
-        processing_rate=
-            PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
+    order = TicketOrder(
+        event_id=event.id,
+        customer_name=customer_name,
+        customer_phone=customer_phone,
+        customer_email=customer_email,
+        quantity=total_quantity,
+        ticket_price=(total_amount / total_quantity).quantize(Decimal("0.01")),
+        total_amount=total_amount,
+        processing_fee=processing_fee,
+        checkout_amount=checkout_amount,
+        payment_provider="paystack",
+        payment_reference=reference,
+        payment_status="pending",
     )
+    try:
+        db.session.add(order)
+        db.session.flush()
+        for item in basket:
+            line_total = (item["price"] * item["quantity"]).quantize(Decimal("0.01"))
+            phase = item.get("sale_phase")
+            db.session.add(TicketOrderItem(
+                order_id=order.id,
+                ticket_type_id=item["ticket_type"].id if item["ticket_type"] else None,
+                sale_phase_id=phase.id if phase else None,
+                sale_phase_name=phase.name if phase else None,
+                ticket_name=item["name"],
+                unit_price=item["price"],
+                quantity=item["quantity"],
+                line_total=line_total,
+                attendee_names=item["attendee_names"],
+            ))
+        db.session.commit()
+
+        callback_url = url_for("paystack_ticket_callback", _external=True, _scheme="https")
+        cancel_url = url_for(
+            "booking_status", reference=reference, _external=True, _scheme="https"
+        )
+        metadata = {
+            "kalxa_order_id": order.id,
+            "event_id": event.id,
+            "ticket_face_value": str(total_amount),
+            "processing_fee": str(processing_fee),
+            "ticket_types": [{
+                "name": item["name"],
+                "quantity": item["quantity"],
+                "unit_price": str(item["price"]),
+                "sale_phase": item["sale_phase"].name if item.get("sale_phase") else None,
+            } for item in basket],
+            "cancel_action": cancel_url,
+        }
+        payload = {
+            "email": customer_email,
+            "amount": str(int(
+                (checkout_amount * 100).quantize(Decimal("1"), rounding=ROUND_UP)
+            )),
+            "currency": "ZAR",
+            "reference": reference,
+            "callback_url": callback_url,
+            "channels": ["eft", "capitec_pay"],
+            "metadata": json.dumps(metadata),
+        }
+
+        # IMPORTANT: NO organiser subaccount or bearer="subaccount".
+        # This is platform checkout only, pending Paystack's written approval
+        # of KALXA's merchant-of-record / settlement arrangements.
+        # Do not enable live payments until those arrangements are approved.
+        result = paystack_api_request("POST", "/transaction/initialize", payload)
+        data = result.get("data") or {}
+        authorization_url = data.get("authorization_url")
+        if not authorization_url:
+            raise RuntimeError("Paystack did not return a checkout URL.")
+        order.paystack_access_code = data.get("access_code") or None
+        order.paystack_authorization_url = authorization_url
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "[Paystack Ticket Checkout] Initialize failed event_id=%s reference=%s",
+            event.id, reference,
+        )
+        # Retain pending order for reconciliation; never delete it blindly:
+        # Paystack initialization may have succeeded before a local error.
+        flash("Secure checkout could not be started. Please try again.", "error")
+        return _reserve_page(event, ticket_types)
+
+    return redirect(authorization_url)
+
+
 
 
 # ============================================================
 # PAYSTACK TICKET CALLBACK
 # ============================================================
 
-@app.route(
-    "/payments/paystack/callback"
-)
+@app.route("/payments/paystack/callback")
 def paystack_ticket_callback():
-
-    reference = (
-        request.args.get(
-            "reference",
-            "",
-        )
-        .strip()
-    )
-
-
+    reference = request.args.get("reference", "").strip()
     if not reference:
-
         abort(400)
-
-
-    order = (
-        TicketOrder.query
-        .filter_by(
-            payment_reference=
-                reference
-        )
-        .first_or_404()
-    )
-
-
+    order = TicketOrder.query.filter_by(payment_reference=reference).first_or_404()
     try:
+        result = paystack_api_request(
+            "GET", "/transaction/verify/" + urllib.parse.quote(reference, safe="")
+        )
+        data = result.get("data") or {}
 
-        result = (
-            paystack_api_request(
-                "GET",
-                (
-                    "/transaction/verify/"
-                    + urllib.parse.quote(
-                        reference,
-                        safe="",
-                    )
-                ),
+        # Never trust a callback URL alone. Verify identity, status,
+        # amount and currency before calling the existing finalizer.
+        expected_amount = int(
+            (Decimal(str(order.checkout_amount)) * 100).quantize(
+                Decimal("1"), rounding=ROUND_UP
             )
         )
+        verified_amount = data.get("amount")
+        if (
+            data.get("reference") != reference
+            or data.get("status") != "success"
+            or data.get("currency") != "ZAR"
+            or isinstance(verified_amount, bool)
+            or not isinstance(verified_amount, int)
+            or verified_amount != expected_amount
+        ):
+            raise ValueError("Paystack transaction verification did not match the order.")
 
-
-        transaction_data = (
-            result.get(
-                "data"
-            )
-            or {}
-        )
-
-
-        finalize_paystack_ticket_order(
-            order,
-            transaction_data,
-        )
-
-
-        flash(
-            (
-                "Payment confirmed. "
-                "Your Kalxa ticket is ready."
-            ),
-            "success",
-        )
-
-
-    except Exception as error:
-
+        # This existing function must be idempotent and safe on repeated
+        # callbacks/webhooks; it must not issue tickets twice.
+        finalize_paystack_ticket_order(order, data)
+        flash("Payment confirmed. Your Kalxa ticket is ready.", "success")
+    except Exception:
         db.session.rollback()
-
-
         current_app.logger.exception(
-            (
-                "[Paystack Callback] Verification failed "
-                "reference=%s error=%s"
-            ),
-            reference,
-            error,
+            "[Paystack Callback] Verification failed reference=%s", reference
         )
+        flash("Your payment is still being verified. Refresh this page shortly.", "error")
 
+    return redirect(url_for("booking_status", reference=reference))
 
-        flash(
-            (
-                "Your payment is still being verified. "
-                "Refresh this page shortly."
-            ),
-            "error",
-        )
-
-
-    return redirect(
-        url_for(
-            "booking_status",
-            reference=
-                reference,
-        )
-    )
 
 
 # ============================================================
@@ -32108,894 +31524,213 @@ def admin_payments():
 # ORGANIZER DASHBOARD
 # ============================================================
 
-@app.route(
-    "/admin"
-)
+@app.route('/admin')
 def admin_dashboard():
-
-    auth = (
-        require_ticketing_organizer()
-    )
-
-
+    # Authentication permits pending event organisers to see their status.
+    auth = require_event_organizer()
     if auth:
-
         return auth
 
+    organizer = get_current_organizer()
+    if organizer is None:
+        return redirect(url_for('organizer_login'))
 
-    organizer = (
-        get_current_organizer()
-    )
+    approval_status = str(
+        getattr(organizer, 'approval_status', None) or 'pending'
+    ).strip().lower()
+    if approval_status not in {'pending', 'approved', 'rejected', 'suspended'}:
+        approval_status = 'pending'
 
-    if (
-      organizer.account_type
-      == "restaurant"
-    ):
-
-      return redirect(
-        url_for(
-            "admin_restaurants"
-        )
-      )
-
+    # Both approval and account activation are required for event management.
+    can_manage_events = approval_status == 'approved' and bool(organizer.active)
 
     current_app.logger.info(
-        (
-            "[Organizer Dashboard] session organizer_id=%s"
-        ),
-        (
-            organizer.id
-            if organizer
-            else None
-        ),
+        '[Organizer Dashboard] organizer_id=%s approval_status=%s active=%s',
+        organizer.id, approval_status, organizer.active,
     )
 
-
-    active_content_item_id = (
-        get_ticketing_content_item_id()
-    )
-
-
+    active_content_item_id = get_ticketing_content_item_id()
     current_ticket_event = None
-
-
     if active_content_item_id:
-
         current_ticket_event = (
-            TicketEvent.query
-            .filter_by(
-
-                organizer_id=
-                    organizer.id,
-
-                kalxa_content_item_id=
-                    active_content_item_id,
-
-                organizer_deleted=
-                    False,
-            )
-            .first()
+            TicketEvent.query.filter_by(
+                organizer_id=organizer.id,
+                kalxa_content_item_id=active_content_item_id,
+                organizer_deleted=False,
+            ).first()
         )
-
 
     events = (
-        TicketEvent.query
-        .filter_by(
-            organizer_id=
-                organizer.id,
-
-            organizer_deleted=
-                False,
-        )
-        .order_by(
-            TicketEvent.created_at.desc()
-        )
-        .all()
+        TicketEvent.query.filter_by(
+            organizer_id=organizer.id,
+            organizer_deleted=False,
+        ).order_by(TicketEvent.created_at.desc()).all()
     )
-
 
     organizer_orders = (
-        TicketOrder.query
-
-        .join(
+        TicketOrder.query.join(
             TicketEvent,
-            TicketOrder.event_id
-            == TicketEvent.id,
-        )
-
-        .filter(
-            TicketEvent.organizer_id
-            == organizer.id
-        )
+            TicketOrder.event_id == TicketEvent.id,
+        ).filter(TicketEvent.organizer_id == organizer.id)
     )
-
-
-    total_orders = (
-        organizer_orders.count()
-    )
-
-
-    paid_orders = (
-        organizer_orders
-
-        .filter(
-            TicketOrder.payment_status
-            == "paid"
-        )
-
-        .count()
-    )
-
-
+    total_orders = organizer_orders.count()
+    paid_orders = organizer_orders.filter(
+        TicketOrder.payment_status == 'paid'
+    ).count()
     checked_in = (
-        EntryPass.query
-
-        .join(
+        EntryPass.query.join(
             TicketOrder,
-            EntryPass.order_id
-            == TicketOrder.id,
-        )
-
-        .join(
+            EntryPass.order_id == TicketOrder.id,
+        ).join(
             TicketEvent,
-            TicketOrder.event_id
-            == TicketEvent.id,
-        )
-
-        .filter(
-            TicketEvent.organizer_id
-            == organizer.id
-        )
-
-        .filter(
-            EntryPass.status
-            == "used"
-        )
-
-        .count()
+            TicketOrder.event_id == TicketEvent.id,
+        ).filter(
+            TicketEvent.organizer_id == organizer.id,
+            EntryPass.status == 'used',
+        ).count()
     )
-
-
-    pending_subscription_payment = (
-        SubscriptionPayment.query
-        .filter_by(
-            organizer_id=
-                organizer.id,
-
-            payment_status=
-                "pending",
-        )
-        .order_by(
-            SubscriptionPayment.created_at.desc()
-        )
-        .first()
-    )
-
 
     return render_template(
-        "admin/dashboard.html",
-
-        events=
-            events,
-
-        total_orders=
-            total_orders,
-
-        paid_orders=
-            paid_orders,
-
-        checked_in=
-            checked_in,
-
-        organizer=
-            organizer,
-
-        organizer_id=
-            organizer.id,
-
-        active_content_item_id=
-            active_content_item_id,
-
-        current_ticket_event=
-            current_ticket_event,
-
-        subscription_active=
-            organizer.is_subscription_active,
-
-        subscription_status=
-            organizer.effective_subscription_status,
-
-        subscription_expires_at=
-            organizer.subscription_expires_at,
-
-        pending_subscription_payment=
-            pending_subscription_payment,
-
-        subscription_plan_name=
-            KALXA_SUBSCRIPTION_PLAN_NAME,
-
-        subscription_price=
-            KALXA_SUBSCRIPTION_PRICE,
+        'admin/dashboard.html',
+        organizer=organizer,
+        organizer_id=organizer.id,
+        approval_status=approval_status,
+        can_manage_events=can_manage_events,
+        approved_at=getattr(organizer, 'approved_at', None),
+        rejection_reason=getattr(organizer, 'rejection_reason', None),
+        commission_rate=4,
+        events=events,
+        total_orders=total_orders,
+        paid_orders=paid_orders,
+        checked_in=checked_in,
+        active_content_item_id=active_content_item_id,
+        current_ticket_event=current_ticket_event,
     )
+
+
+
+    
 
 
 # ============================================================
 # CREATE EVENT
 # ============================================================
 
-@app.route(
-    "/admin/events/new",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-
+@app.route("/admin/events/new", methods=["GET", "POST"])
 def admin_new_event():
-
-    auth = (
-        require_ticketing_organizer()
-    )
-
-
+    auth = require_approved_event_organizer()
     if auth:
-
         return auth
-
-
-    organizer = (
-        get_current_organizer()
-    )
-
-
-    subscription_auth = (
-        require_active_subscription(
-            organizer
-        )
-    )
-
-
-    if subscription_auth:
-
-        return subscription_auth
-
+    organizer = get_current_organizer()
+    content_id = get_ticketing_content_item_id()
 
     if request.method == "GET":
-
-        active_content_item_id = (
-            get_ticketing_content_item_id()
-        )
-
-        current_ticket_event = None
-
-
-        if active_content_item_id:
-
-            current_ticket_event = (
-                TicketEvent.query
-                .filter_by(
-                    organizer_id=
-                        organizer.id,
-
-                    kalxa_content_item_id=
-                        active_content_item_id,
-                )
-                .first()
-            )
-
-
+        linked = None
+        if content_id:
+            linked = TicketEvent.query.filter_by(
+                organizer_id=organizer.id,
+                kalxa_content_item_id=content_id,
+            ).first()
         return render_template(
-            "admin/new_event.html",
-
-            organizer=
-                organizer,
-
-            active_content_item_id=
-                active_content_item_id,
-
-            current_ticket_event=
-                current_ticket_event,
+            "admin/new_event.html", organizer=organizer,
+            active_content_item_id=content_id, current_ticket_event=linked,
         )
 
-
-    kalxa_content_item_id = (
-        get_ticketing_content_item_id()
-    )
-
-
-    kalxa_organizer_id = (
-        get_ticketing_legacy_kalxa_organizer_id()
-    )
-
-
-    # ========================================================
-    # DUPLICATE DISCOVERY LINK PROTECTION
-    # ========================================================
-
-    if kalxa_content_item_id:
-
-        existing_event = (
-            TicketEvent.query
-            .filter_by(
-                kalxa_content_item_id=
-                    kalxa_content_item_id
-            )
-            .first()
-        )
-
-
-        if existing_event:
-
-            if (
-                existing_event.organizer_id
-                != organizer.id
-            ):
-
+    if content_id:
+        existing = TicketEvent.query.filter_by(
+            kalxa_content_item_id=content_id
+        ).first()
+        if existing:
+            if existing.organizer_id != organizer.id:
                 abort(403)
+            flash("Ticketing has already been created for this linked Kalxa event.", "error")
+            return redirect(url_for("admin_dashboard"))
 
-
-            flash(
-                (
-                    "Ticketing has already been created "
-                    "for this linked Kalxa event."
-                ),
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-    # ========================================================
-    # TITLE
-    # ========================================================
-
-    title = (
-        request.form.get(
-            "title",
-            "",
-        )
-        .strip()
-    )
-
-
+    title = request.form.get("title", "").strip()
     if not title:
-
-        flash(
-            "Event title is required.",
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    # ========================================================
-    # EVENT DATE / TIME
-    # ========================================================
-
-    event_date = None
-    event_time = None
-
-
-    event_date_raw = (
-        request.form.get(
-            "event_date",
-            "",
-        )
-        .strip()
-    )
-
-
-    event_time_raw = (
-        request.form.get(
-            "event_time",
-            "",
-        )
-        .strip()
-    )
-
-
-    if event_date_raw:
-
-        try:
-
-            event_date = (
-                datetime.strptime(
-                    event_date_raw,
-                    "%Y-%m-%d",
-                )
-                .date()
-            )
-
-
-        except ValueError:
-
-            flash(
-                "Invalid event date.",
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-    if event_time_raw:
-
-        try:
-
-            event_time = (
-                datetime.strptime(
-                    event_time_raw,
-                    "%H:%M",
-                )
-                .time()
-            )
-
-
-        except ValueError:
-
-            flash(
-                "Invalid event time.",
-                "error",
-            )
-
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-    # ========================================================
-    # EVENT NOTIFICATION AREA
-    # ========================================================
-
-    event_area = (
-        request.form.get(
-            "notification_area",
-            "",
-        )
-        .strip()
-    )
-
-    if not event_area:
-
-        flash(
-            "Event area or town is required so Kalxa "
-            "can target nearby notification subscribers.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_new_event")
-        )
+        flash("Event title is required.", "error")
+        return redirect(url_for("admin_new_event"))
 
     try:
-        event_location = geocode_area(
-            event_area
+        event_date, event_time = _event_date_time_from_form()
+        area = request.form.get("notification_area", "").strip()
+        if not area:
+            raise ValueError(
+                "Event area or town is required so Kalxa can target nearby notification subscribers."
+            )
+        location = geocode_area(area)
+        ticket_rows = parse_ticket_type_form(request.form)
+        if not ticket_rows:
+            raise ValueError("Add at least one ticket type.")
+        poster_data, poster_mime, poster_filename = _read_event_poster(
+            request.files.get("poster_image")
         )
-
     except (ValueError, RuntimeError) as error:
-
         flash(str(error), "error")
-
-        return redirect(
-            url_for("admin_new_event")
-        )
-
-
-    # ========================================================
-    # TICKET TYPES
-    # ========================================================
-
-    try:
-
-        ticket_rows = (
-            parse_ticket_type_form(
-                request.form
-            )
-        )
-
-
-    except ValueError as error:
-
-        flash(
-            str(
-                error
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_new_event"
-            )
-        )
-
-
-    # ========================================================
-    # EVENT POSTER
-    # ========================================================
-    #
-    # Store poster bytes in PostgreSQL so the image survives
-    # Render deploys and restarts.
-    # ========================================================
-
-    poster_image = (
-        request.files.get(
-            "poster_image"
-        )
-    )
-
-
-    poster_image_data = None
-    poster_image_mimetype = None
-    poster_image_filename = None
-
-    # Kept as None so the existing exception cleanup remains
-    # safe even though local-disk storage is no longer used.
-    poster_path = None
-
-
-    if (
-        poster_image
-        and poster_image.filename
-    ):
-
-        original_filename = (
-            secure_filename(
-                poster_image.filename
-            )
-        )
-
-
-        if "." not in original_filename:
-
-            flash(
-                "Poster must be a JPG, JPEG, PNG or WEBP image.",
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        extension = (
-            original_filename
-            .rsplit(
-                ".",
-                1,
-            )[1]
-            .lower()
-        )
-
-
-        mimetype_lookup = {
-            "jpg": "image/jpeg",
-            "jpeg": "image/jpeg",
-            "png": "image/png",
-            "webp": "image/webp",
-        }
-
-
-        if extension not in mimetype_lookup:
-
-            flash(
-                "Poster must be a JPG, JPEG, PNG or WEBP image.",
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        poster_image_data = poster_image.read()
-
-
-        if not poster_image_data:
-
-            flash(
-                "The poster image is empty.",
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        if (
-            len(
-                poster_image_data
-            )
-            > (
-                5
-                * 1024
-                * 1024
-            )
-        ):
-
-            flash(
-                "Poster must be 5 MB or smaller.",
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "admin_dashboard"
-                )
-            )
-
-
-        poster_image_mimetype = (
-            mimetype_lookup[
-                extension
-            ]
-        )
-
-        poster_image_filename = (
-            original_filename
-        )
-
-
-    # ========================================================
-    # PAYMENT SETUP
-    # ========================================================
-    #
-    # Bank details no longer belong to individual events.
-    # Settlement is configured once on the Organizer through
-    # the Paystack connection in /admin/payments.
-    # ========================================================
-
-
-    # ========================================================
-    # CREATE EVENT
-    # ========================================================
-    #
-    # SECURITY:
-    #
-    # organizer_id comes only from the authenticated local
-    # organizer session.
-    #
-    # Optional Discovery IDs are metadata only.
-    # ========================================================
+        return redirect(url_for("admin_new_event"))
 
     event = TicketEvent(
-
-        organizer_id=
-            organizer.id,
-
-        kalxa_organizer_id=
-            kalxa_organizer_id,
-
-        kalxa_content_item_id=
-            kalxa_content_item_id,
-
-        title=
-            title,
-
-        description=(
-            request.form.get(
-                "description",
-                "",
-            )
-            .strip()
-            or None
-        ),
-
-        venue=(
-            request.form.get(
-                "venue",
-                "",
-            )
-            .strip()
-            or None
-        ),
-
-        notification_area=
-            event_area,
-
-        notification_location_display=
-            event_location.display_name,
-
-        notification_latitude=
-            event_location.latitude,
-
-        notification_longitude=
-            event_location.longitude,
-
-        event_date=
-            event_date,
-
-        event_time=
-            event_time,
-
-        organizer_name=
-            organizer.display_name,
-
-        organizer_phone=
-            organizer.phone,
-
-        image_url=
-            None,
-
-        poster_image_data=
-            poster_image_data,
-
-        poster_image_mimetype=
-            poster_image_mimetype,
-
-        poster_image_filename=
-            poster_image_filename,
-
-        ticket_price=
-            min(
-                row["price"]
-                for row in ticket_rows
-            ),
-
+        organizer_id=organizer.id,
+        kalxa_organizer_id=get_ticketing_legacy_kalxa_organizer_id(),
+        kalxa_content_item_id=content_id,
+        title=title,
+        description=request.form.get("description", "").strip() or None,
+        venue=request.form.get("venue", "").strip() or None,
+        notification_area=area,
+        notification_location_display=location.display_name,
+        notification_latitude=location.latitude,
+        notification_longitude=location.longitude,
+        event_date=event_date,
+        event_time=event_time,
+        organizer_name=organizer.display_name,
+        organizer_phone=organizer.phone,
+        image_url=None,
+        poster_image_data=poster_data,
+        poster_image_mimetype=poster_mime,
+        poster_image_filename=poster_filename,
+        ticket_price=min(row["price"] for row in ticket_rows),
         ticket_capacity=(
-            sum(
-                row["capacity"]
-                for row in ticket_rows
-            )
-            if all(
-                row["capacity"] is not None
-                for row in ticket_rows
-            )
+            sum(row["capacity"] for row in ticket_rows)
+            if all(row["capacity"] is not None for row in ticket_rows)
             else None
         ),
-
-        active=
-            False,
-
-        status=
-            "draft",
-
-        sales_open=
-            False,
+        active=False,
+        status="draft",
+        sales_open=False,
     )
-
 
     try:
-
-        db.session.add(
-            event
-        )
-
+        # Refresh approval immediately before write; don't trust the browser.
+        db.session.refresh(organizer)
+        if not event_organizer_is_approved(organizer):
+            flash("Your organiser approval has changed. Event creation is blocked.", "error")
+            return redirect(url_for("admin_dashboard"))
+        db.session.add(event)
         db.session.flush()
-
-
         for row in ticket_rows:
-
-            db.session.add(
-                TicketType(
-                    event_id=
-                        event.id,
-
-                    name=
-                        row["name"],
-
-                    price=
-                        row["price"],
-
-                    capacity=
-                        row["capacity"],
-
-                    active=
-                        True,
-
-                    sort_order=
-                        row["sort_order"],
-                )
-            )
-
-
+            db.session.add(TicketType(
+                event_id=event.id,
+                name=row["name"],
+                price=row["price"],
+                capacity=row["capacity"],
+                active=True,
+                sort_order=row["sort_order"],
+            ))
         db.session.commit()
-
-
-    except Exception as error:
-
+    except Exception:
         db.session.rollback()
-
-
-        if (
-            poster_path
-            and os.path.exists(
-                poster_path
-            )
-        ):
-
-            try:
-
-                os.remove(
-                    poster_path
-                )
-
-
-            except Exception:
-
-                current_app.logger.exception(
-                    (
-                        "[Ticketing] Failed to remove "
-                        "poster after event save failure."
-                    )
-                )
-
-
         current_app.logger.exception(
-            (
-                "[Ticketing] Failed to create event "
-                "organizer_id=%s "
-                "title=%s "
-                "error=%s"
-            ),
-            organizer.id,
-            title,
-            error,
+            "[Ticketing] Failed to create event organizer_id=%s title=%s",
+            organizer.id, title,
         )
+        flash("Ticket event could not be created. Please try again.", "error")
+        return redirect(url_for("admin_dashboard"))
 
+    flash("Ticket event created as a draft. Review it, then publish when ready.", "success")
+    return redirect(url_for("admin_event_control", event_id=event.id))
 
-        flash(
-            (
-                "Ticket event could not be created. "
-                "Please try again."
-            ),
-            "error",
-        )
-
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    flash(
-        (
-            "Ticket event created as a draft. "
-            "Review it, then publish when ready."
-        ),
-        "success",
-    )
-
-
-    return redirect(
-        url_for(
-            "admin_event_control",
-            event_id=event.id,
-        )
-    )
-
-
-# ============================================================
-# ORGANIZER - DELETE EVENT
-# ============================================================
-#
+                
+                            
 # SAFE DELETE:
 #
 # We intentionally do NOT call db.session.delete(event).
@@ -34877,607 +33612,116 @@ def process_event_boost_cron():
 # ORGANIZER - EDIT EVENT
 # ============================================================
 
-@app.route(
-    "/admin/events/<int:event_id>/edit",
-    methods=[
-        "GET",
-        "POST",
-    ],
-)
-def admin_edit_event(
-    event_id,
-):
-
-    auth = (
-        require_ticketing_organizer()
-    )
 
 
+@app.route("/admin/events/<int:event_id>/edit", methods=["GET", "POST"])
+def admin_edit_event(event_id):
+    auth = require_approved_event_organizer()
     if auth:
-
         return auth
-
-
-    organizer = (
-        get_current_organizer()
-    )
-
-
-    event = (
-        TicketEvent.query
-        .filter_by(
-            id=
-                event_id,
-
-            organizer_id=
-                organizer.id,
-        )
-        .first_or_404()
-    )
-
+    organizer = get_current_organizer()
+    event = TicketEvent.query.filter_by(
+        id=event_id, organizer_id=organizer.id
+    ).first_or_404()
 
     if event.is_closed:
+        flash("Closed events are read-only. Orders and check-in history remain available.", "error")
+        return redirect(url_for("admin_dashboard"))
 
-        flash(
-            (
-                "Closed events are read-only. "
-                "Orders and check-in history remain available."
-            ),
-            "error",
+    if request.method == "GET":
+        return render_template("admin/edit_event.html", event=event)
+
+    title = request.form.get("title", "").strip()
+    if not title:
+        flash("Event title is required.", "error")
+        return render_template("admin/edit_event.html", event=event)
+
+    try:
+        event_date, event_time = _event_date_time_from_form()
+        area = request.form.get("notification_area", "").strip()
+        if not area:
+            raise ValueError("Event area or town is required for local notification targeting.")
+        location = geocode_area(area)
+        ticket_rows = parse_ticket_type_form(request.form)
+        if not ticket_rows:
+            raise ValueError("Add at least one ticket type.")
+        poster_data, poster_mime, poster_filename = _read_event_poster(
+            request.files.get("poster_image")
         )
+    except (ValueError, RuntimeError) as error:
+        flash(str(error), "error")
+        return render_template("admin/edit_event.html", event=event)
 
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
-        )
-
-
-    if request.method == "POST":
-
-        title = (
-            request.form.get(
-                "title",
-                "",
-            )
-            .strip()
-        )
-
-
-        if not title:
-
-            flash(
-                "Event title is required.",
-                "error",
-            )
-
-            return render_template(
-                "admin/edit_event.html",
-                event=
-                    event,
-            )
-
-
-        event_date = None
-        event_time = None
-
-
-        event_date_raw = (
-            request.form.get(
-                "event_date",
-                "",
-            )
-            .strip()
-        )
-
-
-        event_time_raw = (
-            request.form.get(
-                "event_time",
-                "",
-            )
-            .strip()
-        )
-
-
-        if event_date_raw:
-
-            try:
-
-                event_date = (
-                    datetime.strptime(
-                        event_date_raw,
-                        "%Y-%m-%d",
-                    )
-                    .date()
-                )
-
-            except ValueError:
-
+    existing_types = {t.id: t for t in event.ticket_types}
+    for row in ticket_rows:
+        if row["id"] is not None and row["id"] not in existing_types:
+            abort(400)
+        if row["id"] is not None:
+            t = existing_types[row["id"]]
+            if row["capacity"] is not None and row["capacity"] < t.sold_quantity:
                 flash(
-                    "Invalid event date.",
+                    f"{t.name} capacity cannot be lower than tickets already sold.",
                     "error",
                 )
-
-                return render_template(
-                    "admin/edit_event.html",
-                    event=
-                        event,
-                )
-
-
-        if event_time_raw:
-
-            try:
-
-                event_time = (
-                    datetime.strptime(
-                        event_time_raw,
-                        "%H:%M",
-                    )
-                    .time()
-                )
-
-            except ValueError:
-
-                flash(
-                    "Invalid event time.",
-                    "error",
-                )
-
-                return render_template(
-                    "admin/edit_event.html",
-                    event=
-                        event,
-                )
-
-
-        event_area = (
-            request.form.get(
-                "notification_area",
-                "",
-            )
-            .strip()
-        )
-
-        if not event_area:
-
-            flash(
-                "Event area or town is required for "
-                "local notification targeting.",
-                "error",
-            )
-
-            return render_template(
-                "admin/edit_event.html",
-                event=event,
-            )
-
-        try:
-            event_location = geocode_area(
-                event_area
-            )
-
-        except (ValueError, RuntimeError) as error:
-
-            flash(str(error), "error")
-
-            return render_template(
-                "admin/edit_event.html",
-                event=event,
-            )
-
-
-        try:
-
-            ticket_rows = (
-                parse_ticket_type_form(
-                    request.form
-                )
-            )
-
-
-        except ValueError as error:
-
-            flash(
-                str(
-                    error
-                ),
-                "error",
-            )
-
-
-            return render_template(
-                "admin/edit_event.html",
-                event=
-                    event,
-            )
-
-
-        existing_types_by_id = {
-            ticket_type.id:
-                ticket_type
-            for ticket_type
-            in event.ticket_types
-        }
-
-
-        for row in ticket_rows:
-
-            if (
-                row["id"] is not None
-                and row["id"] not in existing_types_by_id
-            ):
-
-                abort(400)
-
-
-            if row["id"] is not None:
-
-                ticket_type = (
-                    existing_types_by_id[
-                        row["id"]
-                    ]
-                )
-
-
-                if (
-                    row["capacity"] is not None
-                    and row["capacity"]
-                    < ticket_type.sold_quantity
-                ):
-
-                    flash(
-                        (
-                            f"{ticket_type.name} capacity "
-                            "cannot be lower than tickets "
-                            "already sold."
-                        ),
-                        "error",
-                    )
-
-
-                    return render_template(
-                        "admin/edit_event.html",
-                        event=
-                            event,
-                    )
-
-
-        poster_image = (
-            request.files.get(
-                "poster_image"
-            )
-        )
-
-
-        new_poster_image_data = None
-        new_poster_image_mimetype = None
-        new_poster_image_filename = None
-
-        # Keep old cleanup code safe.
-        new_poster_path = None
-        new_image_url = None
-
-
-        if (
-            poster_image
-            and poster_image.filename
-        ):
-
-            original_filename = (
-                secure_filename(
-                    poster_image.filename
-                )
-            )
-
-
-            if "." not in original_filename:
-
-                flash(
-                    "Poster must be a JPG, JPEG, PNG or WEBP image.",
-                    "error",
-                )
-
-                return render_template(
-                    "admin/edit_event.html",
-                    event=
-                        event,
-                )
-
-
-            extension = (
-                original_filename
-                .rsplit(
-                    ".",
-                    1,
-                )[1]
-                .lower()
-            )
-
-
-            mimetype_lookup = {
-                "jpg": "image/jpeg",
-                "jpeg": "image/jpeg",
-                "png": "image/png",
-                "webp": "image/webp",
-            }
-
-
-            if extension not in mimetype_lookup:
-
-                flash(
-                    "Poster must be a JPG, JPEG, PNG or WEBP image.",
-                    "error",
-                )
-
-                return render_template(
-                    "admin/edit_event.html",
-                    event=
-                        event,
-                )
-
-
-            new_poster_image_data = (
-                poster_image.read()
-            )
-
-
-            if not new_poster_image_data:
-
-                flash(
-                    "The poster image is empty.",
-                    "error",
-                )
-
-                return render_template(
-                    "admin/edit_event.html",
-                    event=
-                        event,
-                )
-
-
-            if (
-                len(
-                    new_poster_image_data
-                )
-                > (
-                    5
-                    * 1024
-                    * 1024
-                )
-            ):
-
-                flash(
-                    "Poster must be 5 MB or smaller.",
-                    "error",
-                )
-
-                return render_template(
-                    "admin/edit_event.html",
-                    event=
-                        event,
-                )
-
-
-            new_poster_image_mimetype = (
-                mimetype_lookup[
-                    extension
-                ]
-            )
-
-            new_poster_image_filename = (
-                original_filename
-            )
-
-
-        event.title = title
-
-        event.description = (
-            request.form.get(
-                "description",
-                "",
-            )
-            .strip()
-            or None
-        )
-
-        event.venue = (
-            request.form.get(
-                "venue",
-                "",
-            )
-            .strip()
-            or None
-        )
-        event.notification_area = (
-            event_area
-        )
-
-        event.notification_location_display = (
-            event_location.display_name
-        )
-
-        event.notification_latitude = (
-            event_location.latitude
-        )
-
-        event.notification_longitude = (
-            event_location.longitude
-        )
-
-        event.event_date = (
-            event_date
-        )
-
-        event.event_time = (
-            event_time
-        )
-
-        sync_event_legacy_ticket_summary(
-            event,
-            ticket_rows,
-        )
-
-
-        submitted_ids = set()
-
-
-        for row in ticket_rows:
-
-            if row["id"] is not None:
-
-                ticket_type = (
-                    existing_types_by_id[
-                        row["id"]
-                    ]
-                )
-
-                submitted_ids.add(
-                    ticket_type.id
-                )
-
-                ticket_type.name = (
-                    row["name"]
-                )
-
-                ticket_type.price = (
-                    row["price"]
-                )
-
-                ticket_type.capacity = (
-                    row["capacity"]
-                )
-
-                ticket_type.sort_order = (
-                    row["sort_order"]
-                )
-
-                ticket_type.active = (
-                    True
-                )
-
-
+                return render_template("admin/edit_event.html", event=event)
+
+    event.title = title
+    event.description = request.form.get("description", "").strip() or None
+    event.venue = request.form.get("venue", "").strip() or None
+    event.notification_area = area
+    event.notification_location_display = location.display_name
+    event.notification_latitude = location.latitude
+    event.notification_longitude = location.longitude
+    event.event_date = event_date
+    event.event_time = event_time
+    if poster_data is not None:
+        event.poster_image_data = poster_data
+        event.poster_image_mimetype = poster_mime
+        event.poster_image_filename = poster_filename
+        event.image_url = None
+
+    sync_event_legacy_ticket_summary(event, ticket_rows)
+    submitted_ids = set()
+    for row in ticket_rows:
+        if row["id"] is not None:
+            t = existing_types[row["id"]]
+            submitted_ids.add(t.id)
+            t.name = row["name"]
+            t.price = row["price"]
+            t.capacity = row["capacity"]
+            t.sort_order = row["sort_order"]
+            t.active = True
+        else:
+            db.session.add(TicketType(
+                event_id=event.id, name=row["name"], price=row["price"],
+                capacity=row["capacity"], active=True, sort_order=row["sort_order"],
+            ))
+
+    for t in event.ticket_types:
+        if t.id and t.id not in submitted_ids:
+            if t.sold_quantity > 0:
+                t.active = False
             else:
+                db.session.delete(t)
 
-                db.session.add(
-                    TicketType(
-                        event_id=
-                            event.id,
-
-                        name=
-                            row["name"],
-
-                        price=
-                            row["price"],
-
-                        capacity=
-                            row["capacity"],
-
-                        active=
-                            True,
-
-                        sort_order=
-                            row["sort_order"],
-                    )
-                )
-
-
-        for ticket_type in event.ticket_types:
-
-            if (
-                ticket_type.id
-                and ticket_type.id
-                not in submitted_ids
-            ):
-
-                if ticket_type.sold_quantity > 0:
-
-                    ticket_type.active = (
-                        False
-                    )
-
-                else:
-
-                    db.session.delete(
-                        ticket_type
-                    )
-
-
-        # Payment settlement is organizer-level through
-        # Paystack. Event-level bank details are intentionally
-        # no longer edited or collected.
-
-
-        try:
-
-            db.session.commit()
-
-        except Exception as error:
-
+    try:
+        db.session.refresh(organizer)
+        if not event_organizer_is_approved(organizer):
             db.session.rollback()
-
-
-            if (
-                new_poster_path
-                and os.path.exists(
-                    new_poster_path
-                )
-            ):
-
-                try:
-
-                    os.remove(
-                        new_poster_path
-                    )
-
-                except Exception:
-
-                    pass
-
-
-            current_app.logger.exception(
-                (
-                    "[Ticketing] Failed to update event "
-                    "event_id=%s organizer_id=%s error=%s"
-                ),
-                event.id,
-                organizer.id,
-                error,
-            )
-
-
-            flash(
-                "Event update failed.",
-                "error",
-            )
-
-            return render_template(
-                "admin/edit_event.html",
-                event=
-                    event,
-            )
-
-
-        flash(
-            "Event details updated.",
-            "success",
+            flash("Your organiser approval has changed. Editing is blocked.", "error")
+            return redirect(url_for("admin_dashboard"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "[Ticketing] Failed to update event_id=%s organizer_id=%s",
+            event.id, organizer.id,
         )
+        flash("Event update failed.", "error")
+        return redirect(url_for("admin_dashboard"))
 
-
-        return redirect(
-            url_for(
-                "admin_event_control",
-                event_id=event.id,
-            )
-        )
-
-
-    return render_template(
-        "admin/edit_event.html",
-        event=
-            event,
-    )
+    flash("Event details updated.", "success")
+    return redirect(url_for("admin_event_control", event_id=event.id))
 
 
 # ============================================================
@@ -35970,116 +34214,48 @@ def admin_clear_sales_phases(event_id,ticket_type_id):
 # ORGANIZER - PUBLISH EVENT
 # ============================================================
 
-@app.route(
-    "/admin/events/<int:event_id>/publish",
-    methods=[
-        "POST",
-    ],
-)
-def admin_publish_event(
-    event_id,
-):
-
-    auth = (
-        require_ticketing_organizer()
-    )
 
 
+@app.route("/admin/events/<int:event_id>/publish", methods=["POST"])
+def admin_publish_event(event_id):
+    auth = require_approved_event_organizer()
     if auth:
-
         return auth
-
-
-    organizer = (
-        get_current_organizer()
-    )
-
-
-    event = (
-        TicketEvent.query
-        .filter_by(
-            id=
-                event_id,
-
-            organizer_id=
-                organizer.id,
-        )
-        .first_or_404()
-    )
-
-
+    organizer = get_current_organizer()
+    event = TicketEvent.query.filter_by(
+        id=event_id, organizer_id=organizer.id
+    ).first_or_404()
     if event.is_closed:
-
-        flash(
-            "Closed events cannot be published again.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin_event_control",
-                event_id=event.id,
-            )
-        )
-
-
-    event.status = (
-        "published"
-    )
-
-    event.active = True
-
-    event.published_at = (
-        event.published_at
-        or datetime.utcnow()
-    )
-
+        flash("Closed events cannot be published again.", "error")
+        return redirect(url_for("admin_event_control", event_id=event.id))
 
     try:
-
+        db.session.refresh(organizer)
+        if not event_organizer_is_approved(organizer):
+            flash("Your organiser approval has changed. Publishing is blocked.", "error")
+            return redirect(url_for("admin_dashboard"))
+        event.status = "published"
+        event.active = True
+        event.published_at = event.published_at or datetime.utcnow()
+        # Do not automatically open ticket sales on publish.
         db.session.commit()
-
-    except Exception as error:
-
+    except Exception:
         db.session.rollback()
-
         current_app.logger.exception(
-            (
-                "[Ticketing] Failed to publish event "
-                "event_id=%s error=%s"
-            ),
-            event.id,
-            error,
+            "[Ticketing] Failed to publish event_id=%s", event.id
         )
+        flash("Unable to publish the event.", "error")
+        return redirect(url_for("admin_event_control", event_id=event.id))
 
-        flash(
-            "Unable to publish the event.",
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "admin_event_control",
-                event_id=event.id,
-            )
-        )
+    flash("Event published. Ticket sales are still paused until you open them.", "success")
+    return redirect(url_for("admin_dashboard"))
 
 
-    flash(
-        (
-            "Event published. "
-            "Ticket sales are still paused until you open them."
-        ),
-        "success",
+def _reserve_page(event, ticket_types):
+    return render_template(
+        "reserve_ticket.html", event=event, ticket_types=ticket_types,
+        processing_rate=PAYSTACK_EFT_EFFECTIVE_FEE_RATE,
     )
-
-
-    return redirect(
-        url_for(
-            "admin_dashboard"
-        )
-    )
-
 
 # ============================================================
 # ORGANIZER - OPEN TICKET SALES
