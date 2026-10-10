@@ -35627,8 +35627,8 @@ def register_ticket_refund_routes(app, *, db, TicketOrder, TicketOrderItem,
             if parsed.scheme != 'https' or parsed.netloc != request.host:
                 abort(403, description='Invalid refund request origin.')
 
-    @app.get('/admin/ticket-refunds/csrf')
-    def kalxa_refund_csrf():
+@app.get('/admin/ticket-refunds/csrf')
+def kalxa_refund_csrf():
         admin_identity()
         token = session.get('kalxa_refund_csrf_token')
         if not token:
@@ -35638,38 +35638,320 @@ def register_ticket_refund_routes(app, *, db, TicketOrder, TicketOrderItem,
         response.headers['Cache-Control'] = 'no-store'
         return response
 
-    @app.post('/admin/ticket-refunds')
-    def kalxa_initiate_ticket_refund():
-        admin = admin_identity()
-        require_csrf()
-        data = request.get_json(silent=True)
-        if not isinstance(data, dict):
-            return jsonify({'error': 'JSON body required.'}), 400
-        order_id = data.get('order_id')
-        pass_ids = data.get('entry_pass_ids')
-        if isinstance(order_id, bool) or not isinstance(order_id, int) or order_id <= 0:
-            return jsonify({'error': 'Valid order_id required.'}), 400
-        reason = data.get('reason')
-        if reason is not None and (not isinstance(reason, str) or len(reason) > 2000):
-            return jsonify({'error': 'Invalid refund reason.'}), 400
-        try:
-            refund = initiate_ticket_refund(
-                order_id=order_id, entry_pass_ids=pass_ids, requested_by=admin,
-                reason=reason, db=db, TicketOrder=TicketOrder,
-                TicketRefund=TicketRefund, TicketRefundItem=TicketRefundItem,
-                EntryPass=EntryPass, paystack_api_request=paystack_api_request)
-            return jsonify({'refund_id': refund.id, 'status': refund.status,
-                            'reference': refund.refund_reference}), 202
-        except TicketRefundError as exc:
-            db.session.rollback()
-            return jsonify({'error': str(exc)}), 409
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception('[Ticket Refund] Initiation failed order_id=%s', order_id)
-            return jsonify({'error': 'Refund state may be uncertain. Investigate Paystack before retrying.'}), 503
 
-    @app.post('/admin/ticket-refunds/<int:refund_id>/reconcile')
-    def kalxa_reconcile_ticket_refund(refund_id):
+
+@app.post("/admin/ticket-refunds")
+def kalxa_initiate_ticket_refund():
+    """
+    Initiate a KALXA event ticket refund.
+
+    Access:
+        Super-admin only.
+
+    Security:
+        - Authenticate super-admin.
+        - Validate CSRF token.
+        - Validate request JSON.
+        - Validate ticket order ID.
+        - Validate selected entry-pass IDs.
+        - Reject duplicate entry-pass IDs.
+        - Reject invalid refund reasons.
+
+    Refund service responsibilities:
+        - Lock the ticket order and selected passes.
+        - Verify the order was paid.
+        - Reject used or cancelled tickets.
+        - Reject tickets with active refunds.
+        - Reserve the refund in PostgreSQL.
+        - Commit the reservation before calling Paystack.
+        - Submit the refund request once.
+        - Preserve uncertain provider outcomes.
+        - Never reverse commission before confirmation.
+
+    IMPORTANT:
+        A successful refund request does not mean
+        Paystack has completed the refund.
+
+        Refund accounting must be applied only after
+        independent Paystack verification.
+    """
+
+    # ========================================================
+    # 1. AUTHENTICATE SUPER-ADMIN
+    # ========================================================
+
+    admin = admin_identity()
+
+    if not admin:
+        abort(403)
+
+    # ========================================================
+    # 2. VALIDATE CSRF
+    # ========================================================
+
+    require_csrf()
+
+    # ========================================================
+    # 3. REQUIRE JSON CONTENT TYPE
+    # ========================================================
+
+    if not request.is_json:
+        return jsonify({
+            "error": "Content-Type must be application/json."
+        }), 415
+
+    # ========================================================
+    # 4. PARSE JSON BODY
+    # ========================================================
+
+    data = request.get_json(
+        silent=True
+    )
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "A valid JSON object is required."
+        }), 400
+
+    # ========================================================
+    # 5. EXTRACT REFUND DETAILS
+    # ========================================================
+
+    order_id = data.get("order_id")
+
+    entry_pass_ids = data.get(
+        "entry_pass_ids"
+    )
+
+    reason = data.get(
+        "reason"
+    )
+
+    # ========================================================
+    # 6. VALIDATE ORDER ID
+    # ========================================================
+
+    if (
+        isinstance(order_id, bool)
+        or not isinstance(order_id, int)
+        or order_id <= 0
+    ):
+        return jsonify({
+            "error": "A valid order_id is required."
+        }), 400
+
+    # ========================================================
+    # 7. VALIDATE ENTRY-PASS LIST
+    # ========================================================
+
+    if (
+        not isinstance(entry_pass_ids, list)
+        or not entry_pass_ids
+    ):
+        return jsonify({
+            "error": (
+                "entry_pass_ids must be a non-empty "
+                "list of ticket identifiers."
+            )
+        }), 400
+
+    # Prevent excessive refund requests.
+    #
+    # Adjust this limit if your ticketing system
+    # supports larger bulk purchases.
+
+    MAX_REFUND_PASSES = 100
+
+    if len(entry_pass_ids) > MAX_REFUND_PASSES:
+        return jsonify({
+            "error": (
+                "A maximum of 100 tickets can be "
+                "selected per refund request."
+            )
+        }), 400
+
+    # ========================================================
+    # 8. VALIDATE EACH ENTRY-PASS ID
+    # ========================================================
+
+    if any(
+        isinstance(pass_id, bool)
+        or not isinstance(pass_id, int)
+        or pass_id <= 0
+        for pass_id in entry_pass_ids
+    ):
+        return jsonify({
+            "error": (
+                "Every entry_pass_id must be "
+                "a positive integer."
+            )
+        }), 400
+
+    # ========================================================
+    # 9. REJECT DUPLICATE ENTRY-PASS IDs
+    # ========================================================
+
+    if len(entry_pass_ids) != len(
+        set(entry_pass_ids)
+    ):
+        return jsonify({
+            "error": (
+                "Duplicate entry-pass IDs are "
+                "not allowed."
+            )
+        }), 400
+
+    # Deterministic ordering helps the refund service
+    # acquire PostgreSQL locks consistently.
+
+    entry_pass_ids = sorted(
+        entry_pass_ids
+    )
+
+    # ========================================================
+    # 10. VALIDATE REFUND REASON
+    # ========================================================
+
+    if reason is not None:
+
+        if (
+            not isinstance(reason, str)
+            or len(reason) > 2000
+        ):
+            return jsonify({
+                "error": "Invalid refund reason."
+            }), 400
+
+        reason = reason.strip() or None
+
+    # ========================================================
+    # 11. INITIATE REFUND
+    # ========================================================
+
+    try:
+
+        refund = initiate_ticket_refund(
+            order_id=order_id,
+            entry_pass_ids=entry_pass_ids,
+            requested_by=admin,
+            reason=reason,
+            db=db,
+            TicketOrder=TicketOrder,
+            TicketRefund=TicketRefund,
+            TicketRefundItem=TicketRefundItem,
+            EntryPass=EntryPass,
+            paystack_api_request=paystack_api_request,
+        )
+
+        # ====================================================
+        # 12. VALIDATE SERVICE RESULT
+        # ====================================================
+
+        if refund is None:
+            raise RuntimeError(
+                "Refund service returned no refund record."
+            )
+
+        refund_id = refund.id
+
+        refund_status = refund.status
+
+        refund_reference = refund.refund_reference
+
+        # ====================================================
+        # 13. AUDIT LOG
+        # ====================================================
+
+        current_app.logger.info(
+            (
+                "[Ticket Refund] "
+                "Refund request recorded "
+                "refund_id=%s order_id=%s "
+                "status=%s reference=%s "
+                "admin=%s pass_count=%s"
+            ),
+            refund_id,
+            order_id,
+            refund_status,
+            refund_reference,
+            admin,
+            len(entry_pass_ids),
+        )
+
+        # ====================================================
+        # 14. RETURN REFUND REQUEST RESULT
+        # ========================================================
+
+        return jsonify({
+            "success": True,
+            "message": (
+                "Refund request recorded. "
+                "Paystack refund completion "
+                "has not yet been confirmed."
+            ),
+            "refund_id": refund_id,
+            "order_id": order_id,
+            "status": refund_status,
+            "reference": refund_reference,
+            "entry_pass_ids": entry_pass_ids,
+            "requires_reconciliation": True,
+        }), 202
+
+    # ========================================================
+    # 15. KNOWN REFUND BUSINESS ERRORS
+    # ========================================================
+
+    except TicketRefundError as exc:
+
+        db.session.rollback()
+
+        current_app.logger.warning(
+            (
+                "[Ticket Refund] "
+                "Refund request rejected "
+                "order_id=%s admin=%s reason=%s"
+            ),
+            order_id,
+            admin,
+            str(exc),
+        )
+
+        return jsonify({
+            "success": False,
+            "error": str(exc),
+        }), 409
+
+    # ========================================================
+    # 16. UNEXPECTED ERRORS
+    # ========================================================
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Ticket Refund] "
+                "Refund initiation failed "
+                "order_id=%s admin=%s"
+            ),
+            order_id,
+            admin,
+        )
+
+        return jsonify({
+            "success": False,
+            "error": (
+                "Refund processing could not be confirmed. "
+                "The request may already have reached "
+                "Paystack. Investigate the existing refund "
+                "record and provider status before retrying."
+            ),
+        }), 503
+                                      
+ 
+@app.post('/admin/ticket-refunds/<int:refund_id>/reconcile')
+def kalxa_reconcile_ticket_refund(refund_id):
         admin_identity()
         require_csrf()
         try:
