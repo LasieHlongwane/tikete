@@ -31111,102 +31111,43 @@ def paystack_restaurant_subscription_callback():
 # PAYSTACK SUBSCRIPTION CALLBACK
 # ============================================================
 
-@app.route(
-    "/payments/paystack/subscription/callback"
-)
+@app.route("/payments/paystack/subscription/callback", methods=["GET"])
 def paystack_subscription_callback():
-
-    reference = (
-        request.args.get(
-            "reference",
-            "",
-        )
-        .strip()
-    )
-
-
+    """Legacy organiser subscription return URL; not organiser approval."""
+    reference = (request.args.get("reference") or "").strip()
     if not reference:
-
         abort(400)
+    payment = SubscriptionPayment.query.filter_by(
+        payment_reference=reference
+    ).first_or_404()
 
-
-    payment = (
-        SubscriptionPayment.query
-        .filter_by(
-            payment_reference=
-                reference
+    if payment.payment_status == "cancelled":
+        current_app.logger.warning(
+            "[Legacy Subscription Callback] Cancelled payment needs manual "
+            "reconciliation reference=%s payment_id=%s",
+            reference, payment.id,
         )
-        .first_or_404()
-    )
-
+        flash("This checkout was cancelled. Contact support if you were charged.", "warning")
+        return redirect(url_for("admin_subscription"))
 
     try:
-
-        result = (
-            paystack_api_request(
-                "GET",
-                (
-                    "/transaction/verify/"
-                    + urllib.parse.quote(
-                        reference,
-                        safe="",
-                    )
-                ),
-            )
-        )
-
-
-        transaction_data = (
-            result.get(
-                "data"
-            )
-            or {}
-        )
-
-
-        finalize_paystack_subscription_payment(
-            payment,
-            transaction_data,
-        )
-
-
+        transaction_data = _kalxa_verified_paystack_transaction(reference)
+        finalize_paystack_subscription_payment(payment, transaction_data)
         flash(
-            (
-                "Subscription payment confirmed. "
-                "Your Kalxa organizer access is now active."
-            ),
+            "Subscription payment confirmed. Event organiser approval is managed separately.",
             "success",
         )
-
-
-    except Exception as error:
-
+    except Exception:
         db.session.rollback()
-
         current_app.logger.exception(
-            (
-                "[Subscription Paystack Callback] "
-                "Verification failed reference=%s error=%s"
-            ),
+            "[Legacy Subscription Callback] Verification failed reference=%s",
             reference,
-            error,
         )
-
         flash(
-            (
-                "Your subscription payment is still being "
-                "verified. Please refresh shortly."
-            ),
-            "error",
+            "Your subscription payment is still being verified. Please check again shortly.",
+            "warning",
         )
-
-
-    return redirect(
-        url_for(
-            "admin_subscription"
-        )
-    )
-
+    return redirect(url_for("admin_subscription"))
 
 # ============================================================
 # ORGANIZER PAYSTACK SETUP
