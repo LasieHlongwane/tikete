@@ -32656,29 +32656,60 @@ def admin_purchase_featured_listing(
     )
 
 
+
+
 @app.route(
-    "/payments/paystack/featured/callback"
+    "/payments/paystack/featured/callback",
+    methods=["GET"],
 )
 def paystack_featured_listing_callback():
+    """
+    Handle the customer's return from Paystack
+    after purchasing a Featured Listing.
 
-    reference = (
-        request.args.get(
-            "reference",
-            "",
-        )
-        .strip()
-    )
+    SECURITY:
+        The callback URL does not prove payment.
+        Always verify the transaction directly
+        with Paystack before activating the listing.
+
+    IDEMPOTENCY:
+        The finalisation service must prevent
+        repeated callbacks from activating or
+        extending the same purchase more than once.
+
+    This callback does not initiate settlements,
+    refunds, or organiser transfers.
+    """
+
+    # ========================================================
+    # EXTRACT PAYMENT REFERENCE
+    # ========================================================
+
+    reference = request.args.get("reference", "")
+
+    if not isinstance(reference, str):
+        abort(400)
+
+    reference = reference.strip()
 
     if not reference:
         abort(400)
 
+    # ========================================================
+    # FIND FEATURED LISTING
+    # ========================================================
+
     listing = (
         FeaturedListing.query
         .filter_by(
-            payment_reference=reference
+            payment_reference=reference,
         )
         .first_or_404()
     )
+
+    # ========================================================
+    # VERIFY PAYMENT DIRECTLY WITH PAYSTACK
+    # ========================================================
 
     try:
 
@@ -32693,44 +32724,147 @@ def paystack_featured_listing_callback():
             ),
         )
 
-        transaction_data = (
-            result.get("data")
-            or {}
-        )
+        if (
+            not isinstance(result, dict)
+            or result.get("status") is not True
+        ):
+            raise RuntimeError(
+                "Paystack verification request failed."
+            )
+
+        transaction_data = result.get("data")
+
+        if not isinstance(transaction_data, dict):
+            raise RuntimeError(
+                "Paystack returned invalid transaction data."
+            )
+
+        # ====================================================
+        # VERIFY TRANSACTION REFERENCE
+        # ====================================================
+
+        if transaction_data.get("reference") != reference:
+            raise RuntimeError(
+                "Paystack transaction reference mismatch."
+            )
+
+        # ====================================================
+        # VERIFY PAYMENT STATUS
+        # ====================================================
+
+        if transaction_data.get("status") != "success":
+            raise RuntimeError(
+                "Featured Listing payment is not successful."
+            )
+
+        # ====================================================
+        # VERIFY CURRENCY
+        # ====================================================
+
+        if transaction_data.get("currency") != "ZAR":
+            raise RuntimeError(
+                "Unexpected Paystack payment currency."
+            )
+
+        # ====================================================
+        # VERIFY PAYMENT AMOUNT FORMAT
+        # ========================================================
+        #
+        # Paystack reports the amount in cents.
+        #
+        # The product-specific finaliser must also
+        # verify this amount against the price stored
+        # for this Featured Listing.
+        # ====================================================
+
+        verified_amount = transaction_data.get("amount")
+
+        if (
+            isinstance(verified_amount, bool)
+            or not isinstance(verified_amount, int)
+            or verified_amount <= 0
+        ):
+            raise RuntimeError(
+                "Invalid Paystack transaction amount."
+            )
+
+        # ====================================================
+        # VERIFY TRANSACTION ID
+        # ====================================================
+
+        transaction_id = transaction_data.get("id")
+
+        if (
+            isinstance(transaction_id, bool)
+            or not isinstance(transaction_id, (int, str))
+            or not str(transaction_id).strip()
+        ):
+            raise RuntimeError(
+                "Missing Paystack transaction ID."
+            )
+
+        # ====================================================
+        # FINALISE FEATURED LISTING PAYMENT
+        # ========================================================
+        #
+        # IMPORTANT:
+        #
+        # finalize_featured_listing_payment() must
+        # validate the expected purchase amount and
+        # handle repeated calls idempotently.
+        # ====================================================
 
         finalize_featured_listing_payment(
             listing,
             transaction_data,
         )
 
+        current_app.logger.info(
+            (
+                "[Featured Listing Callback] "
+                "Payment confirmed "
+                "reference=%s listing_id=%s "
+                "transaction_id=%s"
+            ),
+            reference,
+            listing.id,
+            transaction_id,
+        )
+
         flash(
             (
                 f"{listing.plan_name} activated. "
-                "Your event is now featured at the top of Kalxa."
+                "Your event is now featured on Kalxa."
             ),
             "success",
         )
 
-    except Exception as error:
+    except Exception:
 
         db.session.rollback()
 
         current_app.logger.exception(
             (
                 "[Featured Listing Callback] "
-                "Verification failed reference=%s error=%s"
+                "Payment verification or finalisation "
+                "failed reference=%s listing_id=%s"
             ),
             reference,
-            error,
+            listing.id,
         )
 
         flash(
             (
-                "Your Featured Listing payment is still being "
-                "verified. Please refresh shortly."
+                "Your Featured Listing payment could not "
+                "be confirmed yet. Please check its "
+                "status shortly."
             ),
-            "error",
+            "warning",
         )
+
+    # ========================================================
+    # RETURN TO FEATURED LISTING PAGE
+    # ========================================================
 
     return redirect(
         url_for(
