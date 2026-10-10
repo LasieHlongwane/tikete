@@ -2880,9 +2880,7 @@ class TicketOrder(db.Model):
         
         
         
-        
-        
- class TicketOrderItem(db.Model):
+class TicketOrderItem(db.Model):
 
     __tablename__ = "ticket_order_items"
 
