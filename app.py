@@ -3700,6 +3700,97 @@ def firebase_web_push_configured():
     )
 
 
+
+# KALXA TICKETING — APPROVAL-GATED ROUTES
+# Replace existing functions with these definitions in the module where
+# app, db, models and existing helpers are already defined.
+# Required imports (add if absent):
+# from decimal import Decimal, ROUND_UP
+# from datetime import datetime
+# import json, urllib.parse
+# from flask import abort, current_app, flash, redirect, render_template, request, url_for
+# from werkzeug.utils import secure_filename
+#
+# IMPORTANT: Organizer.approval_status must exist in the DB.
+# New event organizers should default to 'pending'. Existing accounts
+# require an intentional backfill/review, not automatic approval.
+#
+# Call require_approved_event_organizer() in EVERY event mutation endpoint,
+# including opening sales, changing ticket phases and creating staff passes.
+# This file only changes the routes provided by the user.
+
+
+def event_organizer_is_approved(organizer):
+    """Fail closed for missing/unknown status, wrong account type, inactive."""
+    return bool(
+        organizer is not None
+        and getattr(organizer, "active", False)
+        and str(getattr(organizer, "account_type", "") or "").strip().lower() == "event"
+        and str(getattr(organizer, "approval_status", "") or "").strip().lower() == "approved"
+    )
+
+
+def require_approved_event_organizer():
+    """Use in event mutation routes; never substitute a template-only check."""
+    auth = require_event_organizer()
+    if auth:
+        return auth
+    organizer = get_current_organizer()
+    if event_organizer_is_approved(organizer):
+        return None
+    flash(
+        "Your event organiser account must be approved and active before "
+        "you can create, edit, publish or manage ticket sales.",
+        "error",
+    )
+    return redirect(url_for("admin_dashboard"))
+
+
+def event_available_for_checkout(event):
+    """Public buyer checkout does not require an organiser login."""
+    return bool(
+        event is not None
+        and event.active
+        and event.status == "published"
+        and not event.organizer_deleted
+        and event.sales_open
+        and not event.is_closed
+        and event_organizer_is_approved(event.organizer)
+    )
+
+
+def _read_event_poster(upload):
+    """Return image data, MIME type and sanitized name, or all None."""
+    if not upload or not upload.filename:
+        return None, None, None
+    filename = secure_filename(upload.filename)
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg",
+            "png": "image/png", "webp": "image/webp"}.get(ext)
+    if not mime:
+        raise ValueError("Poster must be a JPG, JPEG, PNG or WEBP image.")
+    data = upload.read(5 * 1024 * 1024 + 1)
+    if not data:
+        raise ValueError("The poster image is empty.")
+    if len(data) > 5 * 1024 * 1024:
+        raise ValueError("Poster must be 5 MB or smaller.")
+    return data, mime, filename
+
+
+def _event_date_time_from_form():
+    date_raw = request.form.get("event_date", "").strip()
+    time_raw = request.form.get("event_time", "").strip()
+    try:
+        date = datetime.strptime(date_raw, "%Y-%m-%d").date() if date_raw else None
+    except ValueError:
+        raise ValueError("Invalid event date.")
+    try:
+        time = datetime.strptime(time_raw, "%H:%M").time() if time_raw else None
+    except ValueError:
+        raise ValueError("Invalid event time.")
+    return date, time
+
+
 # ============================================================
 # RESTAURANT HAS ACTIVE SUBSCRIPTION
 # ============================================================
