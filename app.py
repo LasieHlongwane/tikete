@@ -1792,400 +1792,194 @@ def allowed_event_reel_filename(filename):
 # ============================================================
 # RECORD RESTAURANT ANALYTICS EVENT
 # ============================================================
+"""KALXA Paystack ticket finalisation service.
+
+Requires existing application imports/globals: db, TicketOrder, EntryPass,
+generate_entry_code, current_app, datetime, Decimal, ROUND_HALF_UP.
+Only pass `transaction_data` obtained from authenticated server-side Paystack
+transaction verification. This service does not initiate refunds or settlements.
+"""
+
+from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
+from flask import current_app
 
 
-def finalize_paystack_ticket_order(
-    order,
-    transaction_data,
-):
+def finalize_paystack_ticket_order(order, transaction_data):
+    """Atomically verify and finalise one Paystack ticket order.
+
+    The caller must supply transaction_data from a trusted server-side
+    Paystack verification response, never an unverified webhook/browser body.
     """
-    Finalise a Paystack ticket payment.
-
-    This function must receive transaction_data from
-    a trusted server-side Paystack verification request,
-    not directly from browser or webhook payload data.
-
-    Responsibilities:
-        1. Validate the verified transaction.
-        2. Lock the order against concurrent callbacks.
-        3. Verify payment reference, amount and currency.
-        4. Prevent duplicate transaction finalisation.
-        5. Mark the order as paid.
-        6. Record KALXA's 4% commission.
-        7. Generate attendee entry passes.
-        8. Preserve legacy single-price orders.
-        9. Commit all changes atomically.
-
-    Commission is an accounting record only.
-    This function does not instruct Paystack to split
-    funds, transfer money, or settle organiser balances.
-    """
-
-    # ========================================================
-    # VALIDATE TRANSACTION DATA
-    # ========================================================
-
     if not isinstance(transaction_data, dict):
-        raise RuntimeError(
-            "Invalid Paystack transaction data."
-        )
-
+        raise RuntimeError("Invalid Paystack transaction data.")
     if transaction_data.get("status") != "success":
-        raise RuntimeError(
-            "Paystack transaction is not successful."
-        )
-
-    # ========================================================
-    # EXTRACT PAYMENT DETAILS
-    # ========================================================
+        raise RuntimeError("Paystack transaction is not successful.")
 
     reference = transaction_data.get("reference")
     currency = transaction_data.get("currency")
     actual_amount = transaction_data.get("amount")
     transaction_id = transaction_data.get("id")
 
-    if (
-        not isinstance(reference, str)
-        or not reference.strip()
-    ):
-        raise RuntimeError(
-            "Paystack payment reference is missing."
-        )
-
+    if not isinstance(reference, str) or not reference.strip():
+        raise RuntimeError("Paystack payment reference is missing.")
     reference = reference.strip()
-
     if currency != "ZAR":
-        raise RuntimeError(
-            "Unexpected or missing Paystack currency."
-        )
-
-    if (
-        isinstance(actual_amount, bool)
-        or not isinstance(actual_amount, int)
-        or actual_amount <= 0
-    ):
-        raise RuntimeError(
-            "Invalid Paystack payment amount."
-        )
-
-    if (
-        isinstance(transaction_id, bool)
-        or not isinstance(transaction_id, (int, str))
-        or not str(transaction_id).strip()
-    ):
-        raise RuntimeError(
-            "Paystack transaction ID is missing."
-        )
-
+        raise RuntimeError("Unexpected or missing Paystack currency.")
+    if isinstance(actual_amount, bool) or not isinstance(actual_amount, int) or actual_amount <= 0:
+        raise RuntimeError("Invalid Paystack payment amount.")
+    if (isinstance(transaction_id, bool)
+            or not isinstance(transaction_id, (int, str))
+            or not str(transaction_id).strip()):
+        raise RuntimeError("Paystack transaction ID is missing.")
     transaction_id = str(transaction_id).strip()
 
-    # ========================================================
-    # LOCK ORDER FOR FINALISATION
-    # ========================================================
-    #
-    # PostgreSQL SELECT FOR UPDATE serialises concurrent
-    # finalisation attempts for the same ticket order.
-    #
-    # The lock remains held until commit or rollback.
-    # ========================================================
+    order_id = getattr(order, "id", None)
+    if order_id is None:
+        raise RuntimeError("A persisted ticket order is required.")
 
     try:
-
+        # PostgreSQL serialises concurrent finalisation attempts on this row.
         locked_order = (
             db.session.query(TicketOrder)
-            .filter(
-                TicketOrder.id == order.id
-            )
+            .filter(TicketOrder.id == order_id)
             .populate_existing()
             .with_for_update()
             .one_or_none()
         )
-
         if locked_order is None:
-            raise RuntimeError(
-                "Ticket order no longer exists."
-            )
-
+            raise RuntimeError("Ticket order no longer exists.")
         order = locked_order
 
-        # ====================================================
-        # VERIFY ORDER PAYMENT REFERENCE
-        # ====================================================
-
+        if order.payment_provider != "paystack":
+            raise RuntimeError("Ticket order does not use Paystack.")
         if reference != order.payment_reference:
-            raise RuntimeError(
-                "Paystack reference does not match this order."
-            )
-
-        # ====================================================
-        # VERIFY PAYMENT AMOUNT
-        # ====================================================
+            raise RuntimeError("Paystack reference does not match this order.")
 
         checkout_value = (
             order.checkout_amount
             if order.checkout_amount is not None
             else order.total_amount
         )
-
         if checkout_value is None:
-            raise RuntimeError(
-                "Ticket order has no checkout amount."
-            )
-
-        expected_amount = int(
-            (
-                Decimal(str(checkout_value))
-                * Decimal("100")
-            ).quantize(
-                Decimal("1"),
-                rounding=ROUND_UP,
-            )
-        )
-
-        if (
-            expected_amount <= 0
-            or actual_amount != expected_amount
-        ):
-            raise RuntimeError(
-                "Paystack amount does not match this order."
-            )
-
-        # ====================================================
-        # PREVENT REUSING A PAYSTACK TRANSACTION
-        # ====================================================
-        #
-        # This checks for an existing transaction ID on
-        # another order.
-        #
-        # A database-level unique constraint is also
-        # recommended for complete concurrency protection.
-        # ====================================================
+            raise RuntimeError("Ticket order has no checkout amount.")
+        amount_decimal = Decimal(str(checkout_value))
+        if not amount_decimal.is_finite() or amount_decimal <= 0:
+            raise RuntimeError("Invalid ticket order checkout amount.")
+        cents = amount_decimal * Decimal("100")
+        if cents != cents.to_integral_value():
+            raise RuntimeError("Checkout amount contains fractional cents.")
+        expected_amount = int(cents)
+        if actual_amount != expected_amount:
+            raise RuntimeError("Paystack amount does not match this order.")
 
         duplicate_order = (
             db.session.query(TicketOrder.id)
             .filter(
-                TicketOrder.paystack_transaction_id
-                == transaction_id,
+                TicketOrder.paystack_transaction_id == transaction_id,
                 TicketOrder.id != order.id,
             )
             .first()
         )
-
         if duplicate_order is not None:
-            raise RuntimeError(
-                "Paystack transaction is already linked "
-                "to another ticket order."
-            )
-
-        # ====================================================
-        # IDEMPOTENCY
-        # ====================================================
+            raise RuntimeError("Paystack transaction is already linked to another ticket order.")
 
         if order.payment_status == "paid":
-
-            existing_transaction_id = (
+            # An existing payment must be bound to the same verified ID.
+            # Do not backfill historical commission or issue passes here.
+            existing_id = (
                 str(order.paystack_transaction_id).strip()
-                if order.paystack_transaction_id
+                if order.paystack_transaction_id is not None
                 else None
             )
-
-            if (
-                existing_transaction_id is not None
-                and existing_transaction_id != transaction_id
-            ):
+            if existing_id != transaction_id:
                 raise RuntimeError(
-                    "Order was paid using another transaction."
+                    "Paid order has a missing or different Paystack transaction ID; "
+                    "manual reconciliation is required."
                 )
-
-            # Already-paid orders should not be silently
-            # recalculated at today's commission rate.
-            #
-            # Historical commission backfills require
-            # a separate, audited reconciliation process.
-
             db.session.commit()
-
             return order
 
-        if order.payment_status not in {
-            "pending",
-            "processing",
-        }:
-            raise RuntimeError(
-                "Order is not eligible for finalisation."
-            )
+        if order.payment_status not in {"pending", "processing"}:
+            raise RuntimeError("Order is not eligible for finalisation.")
 
-        # ====================================================
-        # MARK ORDER AS PAID
-        # ====================================================
+        # Validate ticket inventory before marking payment paid.
+        items = list(order.order_items)
+        if items:
+            total_quantity = sum(int(item.quantity) for item in items)
+            if any(int(item.quantity) <= 0 for item in items):
+                raise RuntimeError("Order contains an invalid ticket quantity.")
+            if total_quantity != int(order.quantity):
+                raise RuntimeError("Order quantity does not match ticket line quantities.")
+            if any(p.order_item_id is None for p in order.entry_passes):
+                raise RuntimeError("Order has unassigned entry passes; manual reconciliation required.")
+        elif int(order.quantity) <= 0:
+            raise RuntimeError("Order has an invalid ticket quantity.")
 
         now = datetime.utcnow()
-
         order.payment_status = "paid"
         order.paid_at = now
         order.payment_verified_at = now
-
         order.paystack_transaction_id = transaction_id
-
         channel = transaction_data.get("channel")
+        order.payment_channel = channel.strip() if isinstance(channel, str) and channel.strip() else None
 
-        order.payment_channel = (
-            channel
-            if isinstance(channel, str)
-            and channel.strip()
-            else None
-        )
+        # The commission snapshot is based on ticket face value, not fees.
+        order.record_commission(rate=Decimal("0.04"))
 
-        # ====================================================
-        # RECORD KALXA COMMISSION
-        # ====================================================
-        #
-        # Commission is based on the ticket face value:
-        #
-        #     order.total_amount
-        #
-        # NOT on:
-        #
-        #     order.checkout_amount
-        #     order.processing_fee
-        #
-        # Example:
-        #
-        # Ticket face value: R200
-        # Commission:         R8
-        # Organiser share:  R192
-        #
-        # record_commission() is defined in the updated
-        # TicketOrder model.
-        # ====================================================
-
-        order.record_commission(
-            rate=Decimal("0.04")
-        )
-
-        # ====================================================
-        # GENERATE ENTRY PASSES
-        # ====================================================
-
-        if order.order_items:
-
-            # -----------------------------------------------
-            # MULTIPLE TICKET TYPES
-            # -----------------------------------------------
-
-            for item in order.order_items:
-
-                existing_item_passes = len(
-                    item.entry_passes
-                )
-
+        if items:
+            for item in items:
+                # Query from the identity map relationship; the order row is locked.
+                existing_item_passes = len(item.entry_passes)
                 if existing_item_passes > item.quantity:
-                    raise RuntimeError(
-                        "Order item has more entry passes "
-                        "than purchased tickets."
-                    )
-
-                attendee_names = (
-                    item.attendee_names
-                    if isinstance(item.attendee_names, list)
-                    else []
-                )
-
-                passes_to_create = (
-                    item.quantity - existing_item_passes
-                )
-
-                for offset in range(passes_to_create):
-
-                    attendee_index = (
-                        existing_item_passes + offset
-                    )
-
+                    raise RuntimeError("Order item has more entry passes than purchased tickets.")
+                attendee_names = item.attendee_names if isinstance(item.attendee_names, list) else []
+                for attendee_index in range(existing_item_passes, int(item.quantity)):
                     attendee_name = (
                         attendee_names[attendee_index]
                         if attendee_index < len(attendee_names)
                         else order.customer_name
                     )
-
+                    if not isinstance(attendee_name, str) or not attendee_name.strip():
+                        attendee_name = order.customer_name
                     db.session.add(
                         EntryPass(
                             order_id=order.id,
                             order_item_id=item.id,
-                            attendee_name=(
-                                attendee_name
-                                or order.customer_name
-                            ),
+                            attendee_name=attendee_name.strip(),
                             entry_code=generate_entry_code(),
                             status="valid",
                         )
                     )
-
         else:
-
-            # -----------------------------------------------
-            # LEGACY SINGLE-PRICE ORDERS
-            # -----------------------------------------------
-
-            existing_pass_count = len(
-                order.entry_passes
-            )
-
+            existing_pass_count = len(order.entry_passes)
             if existing_pass_count > order.quantity:
-                raise RuntimeError(
-                    "Order has more entry passes "
-                    "than purchased tickets."
-                )
-
-            passes_to_create = (
-                order.quantity - existing_pass_count
-            )
-
-            for _ in range(passes_to_create):
-
+                raise RuntimeError("Order has more entry passes than purchased tickets.")
+            for _ in range(int(order.quantity) - existing_pass_count):
                 db.session.add(
                     EntryPass(
                         order_id=order.id,
+                        attendee_name=order.customer_name,
                         entry_code=generate_entry_code(),
                         status="valid",
                     )
                 )
 
-        # ====================================================
-        # COMMIT PAYMENT, COMMISSION AND PASSES TOGETHER
-        # ====================================================
-
         db.session.commit()
-
         current_app.logger.info(
-            (
-                "[Paystack Finalisation] "
-                "Order paid and commission recorded. "
-                "order_id=%s reference=%s "
-                "transaction_id=%s commission=%s"
-            ),
-            order.id,
-            order.payment_reference,
-            transaction_id,
-            order.commission_amount,
+            "[Paystack Finalisation] Paid order_id=%s reference=%s transaction_id=%s commission=%s",
+            order.id, reference, transaction_id, order.commission_amount,
         )
-
         return order
-
     except Exception:
-
         db.session.rollback()
-
         current_app.logger.exception(
-            (
-                "[Paystack Finalisation] "
-                "Failed to finalise order_id=%s "
-                "reference=%s"
-            ),
-            getattr(order, "id", None),
-            reference,
+            "[Paystack Finalisation] Failed order_id=%s reference=%s",
+            order_id, reference,
         )
-
         raise
+
+
 
 
 # ============================================================
