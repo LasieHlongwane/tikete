@@ -39259,6 +39259,57 @@ register_ticket_refund_routes(
     superadmin_guard=kalxa_refund_superadmin_guard,
 )
 
+
+# ============================================================
+# KALXA TICKETING
+# REGISTER REFUND ROUTES ONLY IF NOT ALREADY REGISTERED
+# ============================================================
+
+REFUND_ENDPOINTS = {
+    "kalxa_refund_csrf",
+    "kalxa_initiate_ticket_refund",
+    "kalxa_reconcile_ticket_refund",
+}
+
+existing_refund_endpoints = (
+    REFUND_ENDPOINTS.intersection(app.view_functions)
+)
+
+if not existing_refund_endpoints:
+
+    register_ticket_refund_routes(
+        app,
+        db=db,
+        TicketOrder=TicketOrder,
+        TicketOrderItem=TicketOrderItem,
+        TicketRefund=TicketRefund,
+        TicketRefundItem=TicketRefundItem,
+        EntryPass=EntryPass,
+        paystack_api_request=paystack_api_request,
+        superadmin_guard=kalxa_refund_superadmin_guard,
+    )
+
+    app.logger.info(
+        "[KALXA Refunds] Refund routes registered successfully."
+    )
+
+else:
+
+    app.logger.warning(
+        "[KALXA Refunds] Existing refund endpoints detected: %s",
+        sorted(existing_refund_endpoints),
+    )
+
+    missing_refund_endpoints = (
+        REFUND_ENDPOINTS - set(app.view_functions)
+    )
+
+    if missing_refund_endpoints:
+        raise RuntimeError(
+            "Partial refund route registration detected. "
+            f"Missing endpoints: {sorted(missing_refund_endpoints)}. "
+            "Check app.py for duplicate or incomplete registrations."
+        )
 # ============================================================
 # HEALTH
 # ============================================================
@@ -39288,30 +39339,3 @@ if __name__ == "__main__":
 # REFUND ROUTE REGISTRATION DIAGNOSTIC
 # ============================================================
 
-existing_refund_endpoints = [
-    (rule.rule, rule.endpoint)
-    for rule in app.url_map.iter_rules()
-    if (
-        "ticket-refund" in rule.rule
-        or "kalxa_refund" in rule.endpoint
-        or "kalxa_initiate_ticket_refund" == rule.endpoint
-        or "kalxa_reconcile_ticket_refund" == rule.endpoint
-    )
-]
-
-app.logger.warning(
-    "[KALXA REFUND DEBUG] Existing refund endpoints before registration: %s",
-    existing_refund_endpoints,
-)
-
-register_ticket_refund_routes(
-    app,
-    db=db,
-    TicketOrder=TicketOrder,
-    TicketOrderItem=TicketOrderItem,
-    TicketRefund=TicketRefund,
-    TicketRefundItem=TicketRefundItem,
-    EntryPass=EntryPass,
-    paystack_api_request=paystack_api_request,
-    superadmin_guard=kalxa_refund_superadmin_guard,
-)
