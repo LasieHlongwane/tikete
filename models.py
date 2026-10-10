@@ -1,10 +1,8 @@
 # ============================================================
 # KALXA TICKETING - MODELS
 # ============================================================
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
-from datetime import timezone
-from decimal import Decimal
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import deferred
 from werkzeug.security import (
@@ -12,6 +10,11 @@ from werkzeug.security import (
     generate_password_hash,
 )
 
+
+from decimal import (
+    Decimal,
+    ROUND_HALF_UP,
+)
 
 db = SQLAlchemy()
 
@@ -3205,6 +3208,490 @@ class TicketOrderItem(db.Model):
             f"ticket_name={self.ticket_name} "
             f"quantity={self.quantity} "
             f"refunded_quantity={self.refunded_quantity}>"
+        )
+        
+        
+        
+        
+class TicketRefund(db.Model):
+
+    __tablename__ = "ticket_refunds"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    order_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_orders.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    # ========================================================
+    # UNIQUE REFUND REFERENCE
+    # ========================================================
+
+    refund_reference = db.Column(
+        db.String(100),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # ========================================================
+    # PAYSTACK REFERENCES
+    # ========================================================
+
+    paystack_refund_id = db.Column(
+        db.String(100),
+        nullable=True,
+        unique=True,
+    )
+
+    paystack_transaction_id = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    # ========================================================
+    # REFUND FINANCIALS
+    # ========================================================
+
+    face_value_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    # Actual payment-provider refund amount.
+    #
+    # May differ from face value if processing fees
+    # or other permitted charges are included.
+
+    provider_refund_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    commission_reversal_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    # ========================================================
+    # REFUND STATUS
+    # ========================================================
+    #
+    # requested
+    # submitted
+    # pending
+    # processing
+    # succeeded
+    # failed
+    # cancelled
+    #
+    # Only succeeded refunds may update the order's
+    # cumulative financial accounting.
+    # ========================================================
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="requested",
+        server_default="requested",
+        index=True,
+    )
+
+    reason = db.Column(
+        db.Text,
+        nullable=True,
+    )
+
+    requested_by = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    # ========================================================
+    # IDEMPOTENT ACCOUNTING
+    # ========================================================
+    #
+    # Prevent the same completed refund from being applied
+    # to order financial totals more than once.
+    # ========================================================
+
+    accounting_applied_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    submitted_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    completed_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    order = db.relationship(
+        "TicketOrder",
+        back_populates="refunds",
+    )
+
+    items = db.relationship(
+        "TicketRefundItem",
+        back_populates="refund",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self):
+
+        return (
+            "<TicketRefund "
+            f"id={self.id} "
+            f"order_id={self.order_id} "
+            f"status={self.status}>"
+        )
+        
+        
+class TicketRefundItem(db.Model):
+
+    __tablename__ = "ticket_refund_items"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    refund_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_refunds.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    order_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_order_items.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    # ========================================================
+    # SPECIFIC ENTRY PASS
+    # ========================================================
+    #
+    # Nullable for legacy ticket orders.
+    #
+    # New refunds should identify the actual EntryPass
+    # whenever possible.
+    # ========================================================
+
+    entry_pass_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "entry_passes.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    quantity = db.Column(
+        db.Integer,
+        nullable=False,
+        default=1,
+    )
+
+    face_value_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    refund = db.relationship(
+        "TicketRefund",
+        back_populates="items",
+    )
+
+    order_item = db.relationship(
+        "TicketOrderItem",
+        back_populates="refund_items",
+    )
+
+    entry_pass = db.relationship(
+        "EntryPass",
+    )
+
+    def __repr__(self):
+
+        return (
+            "<TicketRefundItem "
+            f"id={self.id} "
+            f"refund_id={self.refund_id} "
+            f"entry_pass_id={self.entry_pass_id}>"
+        )
+        
+        
+class PaystackSettlement(db.Model):
+
+    __tablename__ = "paystack_settlements"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    # ========================================================
+    # PAYSTACK SETTLEMENT IDENTIFIER
+    # ========================================================
+
+    paystack_settlement_id = db.Column(
+        db.String(100),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    # ========================================================
+    # SETTLEMENT DETAILS
+    # ========================================================
+
+    currency = db.Column(
+        db.String(10),
+        nullable=False,
+        default="ZAR",
+    )
+
+    gross_amount = db.Column(
+        db.Numeric(12, 2),
+        nullable=True,
+    )
+
+    processing_fees = db.Column(
+        db.Numeric(12, 2),
+        nullable=True,
+    )
+
+    net_amount = db.Column(
+        db.Numeric(12, 2),
+        nullable=True,
+    )
+
+    # ========================================================
+    # RECONCILIATION STATUS
+    # ========================================================
+    #
+    # discovered
+    # pending
+    # reconciled
+    # exception
+    # ========================================================
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="discovered",
+        server_default="discovered",
+        index=True,
+    )
+
+    # ========================================================
+    # SETTLEMENT DESTINATION
+    # ========================================================
+    #
+    # This field is informational.
+    #
+    # It must not be treated as proof that the
+    # organiser received payment.
+    # ========================================================
+
+    destination_type = db.Column(
+        db.String(30),
+        nullable=True,
+    )
+
+    destination_reference = db.Column(
+        db.String(150),
+        nullable=True,
+    )
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
+
+    settlement_date = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    reconciled_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    allocations = db.relationship(
+        "TicketSettlementAllocation",
+        back_populates="settlement",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self):
+
+        return (
+            "<PaystackSettlement "
+            f"id={self.id} "
+            f"reference={self.paystack_settlement_id} "
+            f"status={self.status}>"
+        )
+        
+        
+class TicketSettlementAllocation(db.Model):
+
+    __tablename__ = "ticket_settlement_allocations"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    settlement_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "paystack_settlements.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    order_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "ticket_orders.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    # ========================================================
+    # RECONCILED FINANCIAL VALUES
+    # ========================================================
+
+    transaction_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    processing_fee = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    net_settlement_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+    )
+
+    # ========================================================
+    # RECONCILIATION TIMESTAMP
+    # ========================================================
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
+
+    settlement = db.relationship(
+        "PaystackSettlement",
+        back_populates="allocations",
+    )
+
+    order = db.relationship(
+        "TicketOrder",
+        back_populates="settlement_allocations",
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "settlement_id",
+            "order_id",
+            name="uq_ticket_settlement_order",
+        ),
+    )
+
+    def __repr__(self):
+
+        return (
+            "<TicketSettlementAllocation "
+            f"id={self.id} "
+            f"settlement_id={self.settlement_id} "
+            f"order_id={self.order_id}>"
         )
 # ============================================================
 # ENTRY PASS
