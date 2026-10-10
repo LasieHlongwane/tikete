@@ -39243,26 +39243,10 @@ def admin_attendees_export_xlsx():
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ),
     )
-# ============================================================
-# REGISTER KALXA TICKET REFUND ROUTES
-# ============================================================
-
-register_ticket_refund_routes(
-    app,
-    db=db,
-    TicketOrder=TicketOrder,
-    TicketOrderItem=TicketOrderItem,
-    TicketRefund=TicketRefund,
-    TicketRefundItem=TicketRefundItem,
-    EntryPass=EntryPass,
-    paystack_api_request=paystack_api_request,
-    superadmin_guard=kalxa_refund_superadmin_guard,
-)
-
 
 # ============================================================
 # KALXA TICKETING
-# REGISTER REFUND ROUTES ONLY IF NOT ALREADY REGISTERED
+# REGISTER TICKET REFUND ROUTES
 # ============================================================
 
 REFUND_ENDPOINTS = {
@@ -39305,18 +39289,18 @@ else:
     )
 
     if missing_refund_endpoints:
+
         raise RuntimeError(
             "Partial refund route registration detected. "
-            f"Missing endpoints: {sorted(missing_refund_endpoints)}. "
-            "Check app.py for duplicate or incomplete registrations."
+            f"Missing endpoints: {sorted(missing_refund_endpoints)}."
         )
+
+
 # ============================================================
 # HEALTH
 # ============================================================
 
-@app.route(
-    "/health"
-)
+@app.route("/health")
 def health():
 
     return {
@@ -39334,8 +39318,5 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-
-# ============================================================
-# REFUND ROUTE REGISTRATION DIAGNOSTIC
 # ============================================================
 
