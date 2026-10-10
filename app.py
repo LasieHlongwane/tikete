@@ -39284,6 +39284,26 @@ if __name__ == "__main__":
         debug=True
     )
 
+# ============================================================
+# REFUND ROUTE REGISTRATION DIAGNOSTIC
+# ============================================================
+
+existing_refund_endpoints = [
+    (rule.rule, rule.endpoint)
+    for rule in app.url_map.iter_rules()
+    if (
+        "ticket-refund" in rule.rule
+        or "kalxa_refund" in rule.endpoint
+        or "kalxa_initiate_ticket_refund" == rule.endpoint
+        or "kalxa_reconcile_ticket_refund" == rule.endpoint
+    )
+]
+
+app.logger.warning(
+    "[KALXA REFUND DEBUG] Existing refund endpoints before registration: %s",
+    existing_refund_endpoints,
+)
+
 register_ticket_refund_routes(
     app,
     db=db,
