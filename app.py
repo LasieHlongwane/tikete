@@ -45,6 +45,7 @@ from firebase_admin import (
 )
 
 from dotenv import load_dotenv
+from services.ticket_refunds import initiate_ticket_refund, reconcile_ticket_refund, TicketRefundError
 
 
 from services.yoco_webhook import (
@@ -119,6 +120,20 @@ from models import (
     RESTAURANT_PLAN_FEATURES,
     RESTAURANT_SUBSCRIPTION_GRACE_DAYS,
    
+)
+
+from ticket_refund_routes import register_ticket_refund_routes
+
+register_ticket_refund_routes(
+    app,
+    db=db,
+    TicketOrder=TicketOrder,
+    TicketOrderItem=TicketOrderItem,
+    TicketRefund=TicketRefund,
+    TicketRefundItem=TicketRefundItem,
+    EntryPass=EntryPass,
+    paystack_api_request=paystack_api_request,
+    superadmin_guard=your_existing_superadmin_guard,
 )
 
 # ============================================================
@@ -34810,6 +34825,259 @@ def admin_verify_paystack_order(
     )
 
 
+
+
+def _kalxa_verified_paystack_transaction(reference):
+    """Fetch a verified successful ZAR transaction from Paystack."""
+    if not isinstance(reference, str) or not reference.strip():
+        raise RuntimeError("Missing Paystack payment reference.")
+    reference = reference.strip()
+    result = paystack_api_request(
+        "GET", "/transaction/verify/" + urllib.parse.quote(reference, safe="")
+    )
+    if not isinstance(result, dict) or result.get("status") is not True:
+        raise RuntimeError("Paystack verification request failed.")
+    data = result.get("data")
+    if not isinstance(data, dict):
+        raise RuntimeError("Paystack returned invalid transaction data.")
+    if data.get("reference") != reference:
+        raise RuntimeError("Verified Paystack reference mismatch.")
+    if data.get("status") != "success" or data.get("currency") != "ZAR":
+        raise RuntimeError("Paystack transaction is not a successful ZAR payment.")
+    amount = data.get("amount")
+    if isinstance(amount, bool) or not isinstance(amount, int) or amount <= 0:
+        raise RuntimeError("Invalid verified Paystack amount.")
+    return data
+
+
+@app.route("/payments/paystack/callback", methods=["GET"])
+def paystack_ticket_callback():
+    """Customer return URL; always verify payment server-side."""
+    reference = (request.args.get("reference") or "").strip()
+    if not reference:
+        abort(400)
+    order = TicketOrder.query.filter_by(payment_reference=reference).first_or_404()
+    try:
+        transaction_data = _kalxa_verified_paystack_transaction(reference)
+        finalize_paystack_ticket_order(order, transaction_data)
+        flash("Payment confirmed. Your Kalxa ticket is ready.", "success")
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "[Paystack Ticket Callback] Verification/finalisation failed reference=%s",
+            reference,
+        )
+        flash(
+            "Your payment could not be confirmed yet. Please check your booking status shortly.",
+            "warning",
+        )
+    return redirect(url_for("booking_status", reference=reference))
+
+
+@app.route("/payments/paystack/webhook", methods=["POST"])
+def paystack_ticket_webhook():
+    """Signed Paystack notifications for all existing KALXA payment products.
+
+    Refund notifications are logged but NOT applied here. Refund accounting must
+    use a separate, verified, idempotent refund processor before enabling them.
+    """
+    if not PAYSTACK_SECRET_KEY:
+        current_app.logger.error("[Paystack Webhook] Missing secret key.")
+        abort(503)
+
+    raw_body = request.get_data()
+    received_signature = (request.headers.get("x-paystack-signature") or "").strip()
+    expected_signature = hmac.new(
+        PAYSTACK_SECRET_KEY.encode("utf-8"), raw_body, hashlib.sha512
+    ).hexdigest()
+    if not received_signature or not hmac.compare_digest(
+        received_signature, expected_signature
+    ):
+        current_app.logger.warning("[Paystack Webhook] Invalid signature.")
+        abort(400)
+
+    try:
+        payload = json.loads(raw_body.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        abort(400)
+    if not isinstance(payload, dict):
+        abort(400)
+
+    event_type = payload.get("event")
+    if isinstance(event_type, str) and event_type.startswith("refund."):
+        from ticket_refund_routes import handle_ticket_refund_webhook
+        try:
+            handle_ticket_refund_webhook(
+                payload, db=db, TicketOrder=TicketOrder,
+                TicketOrderItem=TicketOrderItem, TicketRefund=TicketRefund,
+                TicketRefundItem=TicketRefundItem, EntryPass=EntryPass,
+                paystack_api_request=paystack_api_request,
+            )
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception("[Paystack Webhook] Refund reconciliation failed")
+            return "", 500
+        return "", 200
+
+    if event_type != "charge.success":
+        if isinstance(event_type, str) and event_type.startswith("settlement."):
+            current_app.logger.warning(
+                "[Paystack Webhook] Settlement event requires separate reconciliation: %s",
+                event_type,
+            )
+        return "", 200
+
+    webhook_data = payload.get("data")
+    if not isinstance(webhook_data, dict):
+        abort(400)
+    reference = webhook_data.get("reference")
+    if not isinstance(reference, str) or not reference.strip():
+        abort(400)
+    reference = reference.strip()
+
+    try:
+        transaction_data = _kalxa_verified_paystack_transaction(reference)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "[Paystack Webhook] Verification failed reference=%s", reference
+        )
+        return "", 500
+
+    # Existing payment product dispatch order is preserved.
+    order = TicketOrder.query.filter_by(payment_reference=reference).first()
+    if order is not None:
+        try:
+            finalize_paystack_ticket_order(order, transaction_data)
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                "[Paystack Ticket Webhook] Finalisation failed reference=%s order_id=%s",
+                reference, order.id,
+            )
+            return "", 500
+        return "", 200
+
+    restaurant_payment = RestaurantSubscriptionPayment.query.filter_by(
+        payment_reference=reference
+    ).first()
+    if restaurant_payment is not None:
+        if restaurant_payment.payment_status == "cancelled":
+            current_app.logger.warning(
+                "[Restaurant Subscription Webhook] Paid cancelled checkout "
+                "requires manual reconciliation reference=%s payment_id=%s",
+                reference, restaurant_payment.id,
+            )
+            return "", 200
+        try:
+            finalize_restaurant_subscription_payment(
+                restaurant_payment, transaction_data
+            )
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                "[Restaurant Subscription Webhook] Finalisation failed reference=%s payment_id=%s",
+                reference, restaurant_payment.id,
+            )
+            return "", 500
+        return "", 200
+
+    subscription_payment = SubscriptionPayment.query.filter_by(
+        payment_reference=reference
+    ).first()
+    if subscription_payment is not None:
+        if subscription_payment.payment_status == "cancelled":
+            current_app.logger.warning(
+                "[Legacy Subscription Webhook] Paid cancelled checkout "
+                "requires manual reconciliation reference=%s payment_id=%s",
+                reference, subscription_payment.id,
+            )
+            return "", 200
+        try:
+            finalize_paystack_subscription_payment(
+                subscription_payment, transaction_data
+            )
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                "[Legacy Subscription Webhook] Finalisation failed reference=%s payment_id=%s",
+                reference, subscription_payment.id,
+            )
+            return "", 500
+        return "", 200
+
+    boost = EventBoost.query.filter_by(payment_reference=reference).first()
+    if boost is not None:
+        try:
+            finalize_event_boost_payment(boost, transaction_data)
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                "[Event Boost Webhook] Finalisation failed reference=%s boost_id=%s",
+                reference, boost.id,
+            )
+            return "", 500
+        return "", 200
+
+    listing = FeaturedListing.query.filter_by(payment_reference=reference).first()
+    if listing is not None:
+        try:
+            finalize_featured_listing_payment(listing, transaction_data)
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception(
+                "[Featured Listing Webhook] Finalisation failed reference=%s listing_id=%s",
+                reference, listing.id,
+            )
+            return "", 500
+        return "", 200
+
+    current_app.logger.error(
+        "[Paystack Webhook] Unmatched verified payment requires reconciliation "
+        "reference=%s transaction_id=%s amount=%s",
+        reference, transaction_data.get("id"), transaction_data.get("amount"),
+    )
+    return "", 200
+
+
+@app.route("/payments/paystack/subscription/callback", methods=["GET"])
+def paystack_subscription_callback():
+    """Legacy organiser subscription return URL; not organiser approval."""
+    reference = (request.args.get("reference") or "").strip()
+    if not reference:
+        abort(400)
+    payment = SubscriptionPayment.query.filter_by(
+        payment_reference=reference
+    ).first_or_404()
+
+    if payment.payment_status == "cancelled":
+        current_app.logger.warning(
+            "[Legacy Subscription Callback] Cancelled payment needs manual "
+            "reconciliation reference=%s payment_id=%s",
+            reference, payment.id,
+        )
+        flash("This checkout was cancelled. Contact support if you were charged.", "warning")
+        return redirect(url_for("admin_subscription"))
+
+    try:
+        transaction_data = _kalxa_verified_paystack_transaction(reference)
+        finalize_paystack_subscription_payment(payment, transaction_data)
+        flash(
+            "Subscription payment confirmed. Event organiser approval is managed separately.",
+            "success",
+        )
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "[Legacy Subscription Callback] Verification failed reference=%s",
+            reference,
+        )
+        flash(
+            "Your subscription payment is still being verified. Please check again shortly.",
+            "warning",
+        )
+    return redirect(url_for("admin_subscription"))
+
 # ============================================================
 # TICKET PAYMENT POLICY
 # ============================================================
@@ -35267,6 +35535,133 @@ def perform_ticket_checkin(
         )
 
         raise
+
+
+def register_ticket_refund_routes(app, *, db, TicketOrder, TicketOrderItem,
+                                  TicketRefund, TicketRefundItem, EntryPass,
+                                  paystack_api_request, superadmin_guard):
+    if not callable(superadmin_guard):
+        raise ValueError('A verified super-admin authorization guard is required.')
+
+    def admin_identity():
+        identity = superadmin_guard()
+        if not identity:
+            abort(403)
+        return str(identity)
+
+    def require_csrf():
+        expected = session.get('kalxa_refund_csrf_token')
+        supplied = request.headers.get('X-CSRF-Token', '')
+        if not isinstance(expected, str) or not expected or not hmac.compare_digest(expected, supplied):
+            abort(403, description='Invalid refund CSRF token.')
+        # Reject cross-site browser requests when Origin is supplied.
+        origin = request.headers.get('Origin')
+        if origin:
+            from urllib.parse import urlsplit
+            parsed = urlsplit(origin)
+            if parsed.scheme != 'https' or parsed.netloc != request.host:
+                abort(403, description='Invalid refund request origin.')
+
+    @app.get('/admin/ticket-refunds/csrf')
+    def kalxa_refund_csrf():
+        admin_identity()
+        token = session.get('kalxa_refund_csrf_token')
+        if not token:
+            token = secrets.token_urlsafe(32)
+            session['kalxa_refund_csrf_token'] = token
+        response = jsonify({'csrf_token': token})
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+
+    @app.post('/admin/ticket-refunds')
+    def kalxa_initiate_ticket_refund():
+        admin = admin_identity()
+        require_csrf()
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify({'error': 'JSON body required.'}), 400
+        order_id = data.get('order_id')
+        pass_ids = data.get('entry_pass_ids')
+        if isinstance(order_id, bool) or not isinstance(order_id, int) or order_id <= 0:
+            return jsonify({'error': 'Valid order_id required.'}), 400
+        reason = data.get('reason')
+        if reason is not None and (not isinstance(reason, str) or len(reason) > 2000):
+            return jsonify({'error': 'Invalid refund reason.'}), 400
+        try:
+            refund = initiate_ticket_refund(
+                order_id=order_id, entry_pass_ids=pass_ids, requested_by=admin,
+                reason=reason, db=db, TicketOrder=TicketOrder,
+                TicketRefund=TicketRefund, TicketRefundItem=TicketRefundItem,
+                EntryPass=EntryPass, paystack_api_request=paystack_api_request)
+            return jsonify({'refund_id': refund.id, 'status': refund.status,
+                            'reference': refund.refund_reference}), 202
+        except TicketRefundError as exc:
+            db.session.rollback()
+            return jsonify({'error': str(exc)}), 409
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('[Ticket Refund] Initiation failed order_id=%s', order_id)
+            return jsonify({'error': 'Refund state may be uncertain. Investigate Paystack before retrying.'}), 503
+
+    @app.post('/admin/ticket-refunds/<int:refund_id>/reconcile')
+    def kalxa_reconcile_ticket_refund(refund_id):
+        admin_identity()
+        require_csrf()
+        try:
+            refund = reconcile_ticket_refund(
+                refund_id=refund_id, db=db, TicketOrder=TicketOrder,
+                TicketOrderItem=TicketOrderItem, TicketRefund=TicketRefund,
+                TicketRefundItem=TicketRefundItem, EntryPass=EntryPass,
+                paystack_api_request=paystack_api_request)
+            return jsonify({'refund_id': refund.id, 'status': refund.status,
+                            'accounting_applied': refund.accounting_applied_at is not None})
+        except TicketRefundError as exc:
+            db.session.rollback()
+            return jsonify({'error': str(exc)}), 409
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('[Ticket Refund] Reconciliation failed refund_id=%s', refund_id)
+            return jsonify({'error': 'Refund reconciliation failed; manual review required.'}), 503
+
+
+def handle_ticket_refund_webhook(payload, *, db, TicketOrder, TicketOrderItem,
+                                 TicketRefund, TicketRefundItem, EntryPass,
+                                 paystack_api_request):
+    """Call ONLY after the existing Paystack HMAC signature verification.
+
+    Never trust webhook status for accounting; fetch provider refund by ID.
+    Unknown/unmatched events are logged for manual review, not attached to a
+    ticket order by amount or transaction reference alone.
+    """
+    event = payload.get('event')
+    if event not in {'refund.pending', 'refund.processing', 'refund.processed',
+                     'refund.failed', 'refund.needs-attention'}:
+        return False
+    data = payload.get('data')
+    if not isinstance(data, dict):
+        current_app.logger.error('[Refund Webhook] Malformed %s event', event)
+        return True
+    provider_id = data.get('id')
+    # Paystack webhook examples often omit the refund ID. Do not guess which
+    # partial refund belongs to a transaction.
+    if isinstance(provider_id, bool) or not isinstance(provider_id, (str, int)) or not str(provider_id).strip():
+        current_app.logger.warning('[Refund Webhook] %s without refund ID; manual/periodic reconciliation required transaction_reference=%s', event, data.get('transaction_reference'))
+        return True
+    refund = TicketRefund.query.filter_by(paystack_refund_id=str(provider_id).strip()).first()
+    if refund is None:
+        current_app.logger.warning('[Refund Webhook] Unknown refund ID=%s event=%s; manual review', provider_id, event)
+        return True
+    try:
+        reconcile_ticket_refund(
+            refund_id=refund.id, db=db, TicketOrder=TicketOrder,
+            TicketOrderItem=TicketOrderItem, TicketRefund=TicketRefund,
+            TicketRefundItem=TicketRefundItem, EntryPass=EntryPass,
+            paystack_api_request=paystack_api_request)
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('[Refund Webhook] Reconciliation failed refund_id=%s', refund.id)
+        raise
+    return True
 
 # ============================================================
 # CHECK-IN PAGE
