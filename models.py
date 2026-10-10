@@ -4,6 +4,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from datetime import timezone
+from decimal import Decimal
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import deferred
 from werkzeug.security import (
