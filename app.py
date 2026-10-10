@@ -35168,11 +35168,6 @@ def paystack_subscription_callback():
 # Paystack's reference / amount / currency checks.
 # ============================================================
 
-
-# ============================================================
-# ATOMIC TICKET CHECK-IN
-# ============================================================
-
 def perform_ticket_checkin(
     pass_id,
     organizer_id,
@@ -35191,7 +35186,8 @@ def perform_ticket_checkin(
         - Verify organiser ownership.
         - Enforce staff event assignments.
         - Require confirmed payment.
-        - Reject cancelled or refunded passes.
+        - Reject cancelled/refunded tickets.
+        - Block tickets with active refunds.
         - Prevent duplicate check-ins.
         - Prevent simultaneous gate admissions.
         - Record check-in history.
@@ -35203,17 +35199,9 @@ def perform_ticket_checkin(
             entry_pass: EntryPass | None,
         )
 
-    IMPORTANT:
-        This function must be called only after
-        authenticating the organiser or staff member.
-
-        The caller must derive organizer_id,
-        staff_account_id and allowed_event_ids
-        from trusted server-side authorization,
-        never from untrusted form data.
-
-        This function does not calculate
-        or modify KALXA's 4% commission.
+    The caller must authenticate the operator and
+    derive organiser/staff/event permissions from
+    trusted server-side state.
     """
 
     # ========================================================
@@ -35255,11 +35243,10 @@ def perform_ticket_checkin(
     checked_in_by = checked_in_by.strip()
 
     # ========================================================
-    # 2. VALIDATE STAFF ACCOUNT ID
+    # 2. VALIDATE STAFF ACCOUNT
     # ========================================================
 
     if staff_account_id is not None:
-
         if (
             isinstance(staff_account_id, bool)
             or not isinstance(staff_account_id, int)
@@ -35281,7 +35268,6 @@ def perform_ticket_checkin(
             allowed_event_ids = list(
                 allowed_event_ids
             )
-
         except TypeError:
             return (
                 False,
@@ -35309,16 +35295,7 @@ def perform_ticket_checkin(
             )
 
     # ========================================================
-    # 4. BEGIN CHECK-IN TRANSACTION
-    # ========================================================
-    #
-    # Lock the EntryPass row before checking its state.
-    #
-    # PostgreSQL SELECT FOR UPDATE ensures that
-    # concurrent check-in attempts for the same pass
-    # are processed sequentially.
-    #
-    # The lock remains held until commit or rollback.
+    # 4. BEGIN DATABASE TRANSACTION
     # ========================================================
 
     try:
@@ -35339,28 +35316,14 @@ def perform_ticket_checkin(
             )
         )
 
-        # ====================================================
-        # STAFF EVENT RESTRICTIONS
-        # ====================================================
-
         if allowed_event_ids is not None:
-
             query = query.filter(
-                TicketEvent.id.in_(
-                    allowed_event_ids
-                )
+                TicketEvent.id.in_(allowed_event_ids)
             )
 
         # ====================================================
-        # LOCK ENTRY PASS
-        # ====================================================
-        #
-        # of=EntryPass restricts the PostgreSQL lock
-        # to the entry_passes table.
-        #
-        # populate_existing refreshes an EntryPass that
-        # may already exist in the SQLAlchemy session.
-        # ====================================================
+        # 5. LOCK ENTRY PASS
+        # ========================================================
 
         entry_pass = (
             query
@@ -35371,11 +35334,8 @@ def perform_ticket_checkin(
             .one_or_none()
         )
 
-        # ====================================================
-        # TICKET NOT FOUND
-        # ====================================================
-
         if entry_pass is None:
+            db.session.rollback()
 
             return (
                 False,
@@ -35384,27 +35344,26 @@ def perform_ticket_checkin(
             )
 
         # ====================================================
-        # 5. VERIFY TICKET ORDER
-        # ====================================================
+        # 6. VERIFY ORDER
+        # ========================================================
 
         order = entry_pass.order
 
-        if (
-            order is None
-            or order.event is None
-        ):
+        if order is None or order.event is None:
+            db.session.rollback()
 
             return (
                 False,
                 "This ticket record is incomplete.",
-                entry_pass,
+                None,
             )
 
         # ====================================================
-        # 6. VERIFY PAYMENT
-        # ====================================================
+        # 7. VERIFY PAYMENT
+        # ========================================================
 
         if order.payment_status != "paid":
+            db.session.rollback()
 
             return (
                 False,
@@ -35412,64 +35371,111 @@ def perform_ticket_checkin(
                     "This ticket cannot be checked in "
                     "because payment has not been confirmed."
                 ),
-                entry_pass,
+                None,
             )
 
         # ====================================================
-        # 7. REJECT CANCELLED / REFUNDED PASSES
-        # ====================================================
+        # 8. REJECT CANCELLED / REFUNDED TICKETS
+        # ========================================================
 
         if entry_pass.status == "cancelled":
+            db.session.rollback()
 
             return (
                 False,
                 "This ticket has been cancelled.",
-                entry_pass,
+                None,
             )
 
         if entry_pass.status == "refunded":
+            db.session.rollback()
 
             return (
                 False,
                 "This ticket has been refunded.",
-                entry_pass,
+                None,
             )
 
         # ====================================================
-        # 8. REJECT PREVIOUSLY USED PASSES
-        # ====================================================
+        # 9. REJECT PREVIOUSLY USED TICKETS
+        # ========================================================
 
         if (
             entry_pass.status == "used"
             or entry_pass.checked_in_at is not None
         ):
+            db.session.rollback()
 
             return (
                 False,
                 "This ticket has already been checked in.",
-                entry_pass,
+                None,
             )
 
-        # ====================================================
-        # 9. VERIFY VALID STATUS
-        # ====================================================
-
         if entry_pass.status != "valid":
+            db.session.rollback()
 
             return (
                 False,
                 "This ticket is not valid.",
-                entry_pass,
+                None,
             )
 
         # ====================================================
-        # 10. CHECK EXISTING CHECK-IN HISTORY
-        # ====================================================
+        # 10. BLOCK ACTIVE REFUND REQUESTS
+        # ========================================================
         #
-        # A ticket with an existing CheckIn record
-        # must not be admitted again, even if its
-        # status was accidentally reset to valid.
+        # A ticket can still have status="valid"
+        # while Paystack processes a refund.
+        #
+        # It must not be admitted during that period.
+        #
+        # Terminal failed/cancelled refunds do not
+        # automatically block admission.
+        # ========================================================
+
+        active_refund_statuses = (
+            "requested",
+            "submitted",
+            "pending",
+            "processing",
+            "succeeded",
+        )
+
+        active_refund = (
+            db.session.query(TicketRefund.id)
+            .join(
+                TicketRefundItem,
+                TicketRefundItem.refund_id
+                == TicketRefund.id,
+            )
+            .filter(
+                TicketRefund.order_id == order.id,
+                TicketRefundItem.entry_pass_id
+                == entry_pass.id,
+                TicketRefund.status.in_(
+                    active_refund_statuses
+                ),
+            )
+            .first()
+        )
+
+        if active_refund is not None:
+            db.session.rollback()
+
+            return (
+                False,
+                (
+                    "This ticket cannot be checked in "
+                    "because a refund is pending "
+                    "or has been completed."
+                ),
+                None,
+            )
+
         # ====================================================
+        # 11. CHECK EXISTING CHECK-IN HISTORY
+        # ========================================================
 
         existing_checkin = (
             db.session.query(CheckIn.id)
@@ -35480,22 +35486,17 @@ def perform_ticket_checkin(
         )
 
         if existing_checkin is not None:
+            db.session.rollback()
 
             return (
                 False,
                 "This ticket has already been checked in.",
-                entry_pass,
+                None,
             )
 
         # ====================================================
-        # 11. ATOMIC STATE TRANSITION
+        # 12. ATOMIC STATE TRANSITION
         # ========================================================
-        #
-        # The conditional UPDATE is a second protection
-        # against duplicate admissions.
-        #
-        # Only an unused valid pass can be updated.
-        # ====================================================
 
         now = datetime.utcnow()
 
@@ -35516,7 +35517,6 @@ def perform_ticket_checkin(
         )
 
         if updated != 1:
-
             db.session.rollback()
 
             return (
@@ -35529,7 +35529,7 @@ def perform_ticket_checkin(
             )
 
         # ====================================================
-        # 12. CREATE CHECK-IN RECORD
+        # 13. CREATE CHECK-IN AUDIT RECORD
         # ========================================================
 
         checkin = CheckIn(
@@ -35542,23 +35542,10 @@ def perform_ticket_checkin(
         db.session.add(checkin)
 
         # ====================================================
-        # 13. COMMIT ATOMICALLY
+        # 14. COMMIT CHECK-IN ATOMICALLY
         # ========================================================
-        #
-        # Both changes must succeed together:
-        #
-        #   EntryPass.status = used
-        #   CheckIn record created
-        #
-        # If the database commit fails,
-        # neither change should persist.
-        # ====================================================
 
         db.session.commit()
-
-        # ====================================================
-        # 14. RELOAD ENTRY PASS
-        # ====================================================
 
         entry_pass = db.session.get(
             EntryPass,
@@ -35567,24 +35554,20 @@ def perform_ticket_checkin(
 
         # ====================================================
         # 15. AUDIT LOG
-        # ====================================================
+        # ========================================================
 
         current_app.logger.info(
             (
                 "[Ticketing Check-In] "
-                "Ticket checked in successfully "
+                "Ticket checked in "
                 "pass_id=%s organizer_id=%s "
-                "staff_account_id=%s checked_in_by=%s"
+                "staff_account_id=%s operator=%s"
             ),
             pass_id,
             organizer_id,
             staff_account_id,
             checked_in_by,
         )
-
-        # ====================================================
-        # 16. SUCCESS RESPONSE
-        # ====================================================
 
         return (
             True,
@@ -35599,7 +35582,7 @@ def perform_ticket_checkin(
         current_app.logger.exception(
             (
                 "[Ticketing Check-In] "
-                "Check-in transaction failed "
+                "Check-in failed "
                 "pass_id=%s organizer_id=%s "
                 "staff_account_id=%s"
             ),
@@ -35608,8 +35591,16 @@ def perform_ticket_checkin(
             staff_account_id,
         )
 
-        raise
+        return (
+            False,
+            "Ticket check-in failed. Please try again.",
+            None,
+        )
 
+
+# ============================================================
+# ATOMIC TICKET CHECK-IN
+# ============================================================
 
 def register_ticket_refund_routes(app, *, db, TicketOrder, TicketOrderItem,
                                   TicketRefund, TicketRefundItem, EntryPass,
