@@ -31574,7 +31574,25 @@ def admin_dashboard():
     organizer = get_current_organizer()
     if organizer is None:
         return redirect(url_for('organizer_login'))
+    # ============================================================
+# TEMPORARY ORGANIZER APPROVAL DIAGNOSTIC
+# ============================================================
 
+    current_app.logger.warning(
+      "[KALXA APPROVAL DEBUG] "
+      "organizer_id=%s "
+      "account_type=%s "
+      "active=%s "
+      "approval_status=%s "
+      "approved_at=%s "
+      "can_manage_events=%s",
+      organizer.id,
+      organizer.account_type,
+      organizer.active,
+      organizer.approval_status,
+      organizer.approved_at,
+      organizer.can_manage_events,
+    )
     approval_status = str(
         getattr(organizer, 'approval_status', None) or 'pending'
     ).strip().lower()
