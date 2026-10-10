@@ -720,6 +720,44 @@ def paystack_api_request(
     path,
     payload=None,
 ):
+    """
+    Make an authenticated request to the Paystack API.
+
+    Used by KALXA Ticketing for:
+
+        - Ticket payment initialization
+        - Ticket payment verification
+        - Restaurant subscription payments
+        - Legacy subscription payments
+        - Event boost payments
+        - Featured listing payments
+        - Paystack account integration
+
+    Security:
+        - Requires a configured Paystack secret key.
+        - Allows only supported HTTP methods.
+        - Rejects external URLs and unsafe paths.
+        - Uses HTTPS.
+        - Does not expose the secret key in errors.
+        - Validates Paystack's JSON response.
+
+    Reliability:
+        - Uses separate connection/read timeouts.
+        - Handles network failures.
+        - Does not automatically retry POST requests.
+        - Preserves Paystack's original response format.
+
+    IMPORTANT:
+        This helper does not calculate commission,
+        issue tickets, or perform settlement.
+
+        Commission accounting is handled by
+        finalize_paystack_ticket_order().
+    """
+
+    # ========================================================
+    # 1. VALIDATE PAYSTACK CONFIGURATION
+    # ========================================================
 
     if not paystack_is_configured():
 
@@ -727,140 +765,385 @@ def paystack_api_request(
             "PAYSTACK_SECRET_KEY is not configured."
         )
 
+    secret_key = str(
+        PAYSTACK_SECRET_KEY or ""
+    ).strip()
 
-    url = (
-        f"{PAYSTACK_BASE_URL}{path}"
-    )
+    if not secret_key:
 
+        raise RuntimeError(
+            "PAYSTACK_SECRET_KEY is missing."
+        )
 
-    headers = {
-        "Authorization":
-            f"Bearer {PAYSTACK_SECRET_KEY}",
+    # ========================================================
+    # 2. VALIDATE HTTP METHOD
+    # ========================================================
 
-        "Accept":
-            "application/json",
+    if not isinstance(method, str):
 
-        "Content-Type":
-            "application/json",
+        raise ValueError(
+            "Invalid Paystack HTTP method."
+        )
 
-        # Avoid Python urllib's default HTTP signature,
-        # which Cloudflare can classify as a banned
-        # browser/bot signature on api.paystack.co.
-        "User-Agent":
-            "Kalxa-Ticketing/1.0",
+    method = method.strip().upper()
+
+    allowed_methods = {
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
     }
 
+    if method not in allowed_methods:
+
+        raise ValueError(
+            "Unsupported Paystack HTTP method."
+        )
+
+    # ========================================================
+    # 3. VALIDATE API PATH
+    # ========================================================
+    #
+    # Only relative Paystack API paths are accepted.
+    #
+    # Examples:
+    #
+    # /transaction/initialize
+    # /transaction/verify/REFERENCE
+    # /subaccount
+    #
+    # Full external URLs are rejected.
+    # ========================================================
+
+    if not isinstance(path, str):
+
+        raise ValueError(
+            "Invalid Paystack API path."
+        )
+
+    path = path.strip()
+
+    if (
+        not path
+        or not path.startswith("/")
+        or path.startswith("//")
+        or "://" in path
+        or "\\" in path
+        or any(
+            ord(character) < 32
+            or ord(character) == 127
+            for character in path
+        )
+    ):
+
+        raise ValueError(
+            "Invalid Paystack API path."
+        )
+
+    # Prevent URL fragments from being passed into
+    # requests for API operations.
+
+    if "#" in path:
+
+        raise ValueError(
+            "Paystack API paths cannot contain fragments."
+        )
+
+    # ========================================================
+    # 4. VALIDATE BASE URL
+    # ========================================================
+
+    base_url = str(
+        PAYSTACK_BASE_URL or ""
+    ).strip().rstrip("/")
+
+    parsed_base = urllib.parse.urlsplit(
+        base_url
+    )
+
+    if (
+        parsed_base.scheme != "https"
+        or not parsed_base.hostname
+        or parsed_base.username is not None
+        or parsed_base.password is not None
+        or parsed_base.query
+        or parsed_base.fragment
+    ):
+
+        raise RuntimeError(
+            "Invalid Paystack API base URL configuration."
+        )
+
+    # ========================================================
+    # 5. BUILD PAYSTACK URL
+    # ========================================================
+
+    url = f"{base_url}{path}"
+
+    # ========================================================
+    # 6. PREPARE REQUEST HEADERS
+    # ========================================================
+
+    headers = {
+        "Authorization": (
+            f"Bearer {secret_key}"
+        ),
+
+        "Accept": (
+            "application/json"
+        ),
+
+        "Content-Type": (
+            "application/json"
+        ),
+
+        "User-Agent": (
+            "Kalxa-Ticketing/1.0"
+        ),
+    }
+
+    # ========================================================
+    # 7. VALIDATE REQUEST PAYLOAD
+    # ========================================================
+
+    if method == "GET" and payload is not None:
+
+        raise ValueError(
+            "GET requests must not contain a JSON payload."
+        )
+
+    if payload is not None and not isinstance(
+        payload,
+        (dict, list),
+    ):
+
+        raise ValueError(
+            "Paystack request payload must be JSON-compatible."
+        )
+
+    # ========================================================
+    # 8. SEND REQUEST
+    # ========================================================
+    #
+    # Connection timeout: 5 seconds
+    # Read timeout:       20 seconds
+    #
+    # Do not automatically retry POST requests.
+    #
+    # A timeout does not prove a payment initialization
+    # failed; Paystack may have processed the request.
+    # ========================================================
 
     try:
 
         response = requests.request(
-            method=
-                method.upper(),
-
-            url=
-                url,
-
-            json=(
-                payload
-                if payload is not None
-                else None
-            ),
-
-            headers=
-                headers,
-
-            timeout=
-                20,
+            method=method,
+            url=url,
+            json=payload,
+            headers=headers,
+            timeout=(5, 20),
+            allow_redirects=False,
         )
 
+    except requests.Timeout as error:
+
+        current_app.logger.warning(
+            (
+                "[Paystack API] "
+                "Request timed out "
+                "method=%s path=%s"
+            ),
+            method,
+            path,
+        )
+
+        raise RuntimeError(
+            "Paystack is taking too long to respond. "
+            "Please check the payment status before retrying."
+        ) from error
+
+    except requests.ConnectionError as error:
+
+        current_app.logger.warning(
+            (
+                "[Paystack API] "
+                "Connection failed "
+                "method=%s path=%s"
+            ),
+            method,
+            path,
+        )
+
+        raise RuntimeError(
+            "Could not connect to Paystack. "
+            "Please try again shortly."
+        ) from error
 
     except requests.RequestException as error:
 
-        raise RuntimeError(
+        current_app.logger.exception(
             (
-                "Could not connect to Paystack. "
-                "Please try again."
-            )
+                "[Paystack API] "
+                "Request failed "
+                "method=%s path=%s"
+            ),
+            method,
+            path,
+        )
+
+        raise RuntimeError(
+            "Paystack request could not be completed."
         ) from error
 
+    # ========================================================
+    # 9. REJECT REDIRECTS
+    # ========================================================
+    #
+    # Paystack API responses should not redirect to
+    # another domain.
+    #
+    # Prevent Authorization headers from being forwarded.
+    # ========================================================
+
+    if 300 <= response.status_code < 400:
+
+        raise RuntimeError(
+            "Unexpected redirect from Paystack API."
+        )
+
+    # ========================================================
+    # 10. PARSE JSON RESPONSE
+    # ========================================================
 
     try:
 
-        result = (
-            response.json()
+        result = response.json()
+
+    except ValueError as error:
+
+        current_app.logger.error(
+            (
+                "[Paystack API] "
+                "Invalid JSON response "
+                "method=%s path=%s status=%s"
+            ),
+            method,
+            path,
+            response.status_code,
         )
 
+        raise RuntimeError(
+            "Paystack returned an invalid response."
+        ) from error
 
-    except ValueError:
+    # ========================================================
+    # 11. VALIDATE RESPONSE STRUCTURE
+    # ========================================================
 
-        result = {
-            "status":
-                False,
+    if not isinstance(result, dict):
 
-            "message":
-                (
-                    response.text
-                    or (
-                        "Paystack returned an "
-                        "invalid response."
-                    )
-                ),
-        }
+        raise RuntimeError(
+            "Paystack returned an unexpected response format."
+        )
 
+    # ========================================================
+    # 12. HANDLE HTTP ERRORS
+    # ========================================================
 
     if not response.ok:
 
-        message = (
-            result.get(
-                "message"
-            )
-            if isinstance(
-                result,
-                dict,
-            )
-            else None
+        message = result.get(
+            "message"
         )
 
+        current_app.logger.warning(
+            (
+                "[Paystack API] "
+                "HTTP error "
+                "method=%s path=%s "
+                "status=%s"
+            ),
+            method,
+            path,
+            response.status_code,
+        )
 
-        if not message:
+        if (
+            not isinstance(message, str)
+            or not message.strip()
+        ):
 
             message = (
-                response.text
-                or (
-                    f"HTTP {response.status_code}"
-                )
+                "Paystack could not process this request."
             )
-
 
         raise RuntimeError(
             f"Paystack: {message}"
         )
 
+    # ========================================================
+    # 13. VALIDATE PAYSTACK SUCCESS STATUS
+    # ========================================================
 
-    if not isinstance(
-        result,
-        dict,
-    ):
+    if result.get("status") is not True:
 
-        raise RuntimeError(
-            "Paystack returned an invalid response."
+        message = result.get(
+            "message"
         )
 
+        if (
+            not isinstance(message, str)
+            or not message.strip()
+        ):
 
-    if not result.get(
-        "status"
-    ):
-
-        raise RuntimeError(
-            result.get(
-                "message"
+            message = (
+                "Paystack request was unsuccessful."
             )
-            or "Paystack request failed."
+
+        current_app.logger.warning(
+            (
+                "[Paystack API] "
+                "Unsuccessful API response "
+                "method=%s path=%s"
+            ),
+            method,
+            path,
         )
 
+        raise RuntimeError(
+            f"Paystack: {message}"
+        )
+
+    # ========================================================
+    # 14. RETURN VERIFIED API RESPONSE
+    # ========================================================
+    #
+    # Example:
+    #
+    # {
+    #     "status": True,
+    #     "message": "Verification successful",
+    #     "data": {
+    #         "status": "success",
+    #         "reference": "...",
+    #         "amount": 20000,
+    #         "currency": "ZAR"
+    #     }
+    # }
+    #
+    # IMPORTANT:
+    #
+    # result["status"] == True means the API request
+    # succeeded.
+    #
+    # It does NOT necessarily mean the customer paid.
+    #
+    # Payment success must still be checked using:
+    #
+    # result["data"]["status"] == "success"
+    # ========================================================
 
     return result
-
 
 # ============================================================
 # STORIES CONVERSION ANALYTICS API
@@ -27626,62 +27909,245 @@ def reserve_ticket(event_id):
 # PAYSTACK TICKET CALLBACK
 # ============================================================
 
-@app.route("/payments/paystack/callback")
+@app.route(
+    "/payments/paystack/callback",
+    methods=["GET"],
+)
 def paystack_ticket_callback():
-    reference = request.args.get("reference", "").strip()
-    if not reference:
-        abort(400)
-    order = TicketOrder.query.filter_by(payment_reference=reference).first_or_404()
-    try:
-        result = paystack_api_request(
-            "GET", "/transaction/verify/" + urllib.parse.quote(reference, safe="")
-        )
-        data = result.get("data") or {}
+    """
+    Handle the customer's return from Paystack.
 
-        # Never trust a callback URL alone. Verify identity, status,
-        # amount and currency before calling the existing finalizer.
+    SECURITY:
+        A callback URL does not prove payment.
+
+        Always verify the transaction directly
+        with Paystack before finalising the order.
+
+    COMMISSION:
+        finalize_paystack_ticket_order()
+        records KALXA's 4% commission.
+
+    IDEMPOTENCY:
+        Repeated callbacks must not create
+        duplicate tickets or commission records.
+    """
+
+    # ========================================================
+    # PAYMENT REFERENCE
+    # ========================================================
+
+    reference = (
+        request.args.get(
+            "reference",
+            "",
+        )
+        .strip()
+    )
+
+    if not reference:
+
+        abort(400)
+
+    # ========================================================
+    # FIND TICKET ORDER
+    # ========================================================
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=reference,
+        )
+        .first_or_404()
+    )
+
+    # ========================================================
+    # VERIFY TRANSACTION WITH PAYSTACK
+    # ========================================================
+
+    try:
+
+        result = paystack_api_request(
+            "GET",
+            (
+                "/transaction/verify/"
+                + urllib.parse.quote(
+                    reference,
+                    safe="",
+                )
+            ),
+        )
+
+        if not isinstance(result, dict):
+
+            raise RuntimeError(
+                "Invalid Paystack verification response."
+            )
+
+        if result.get("status") is not True:
+
+            raise RuntimeError(
+                "Paystack verification request was unsuccessful."
+            )
+
+        transaction_data = result.get("data")
+
+        if not isinstance(transaction_data, dict):
+
+            raise RuntimeError(
+                "Paystack verification returned invalid data."
+            )
+
+        # ====================================================
+        # VALIDATE VERIFIED TRANSACTION
+        # ====================================================
+
+        if transaction_data.get("reference") != reference:
+
+            raise RuntimeError(
+                "Paystack transaction reference mismatch."
+            )
+
+        if transaction_data.get("status") != "success":
+
+            raise RuntimeError(
+                "Paystack transaction is not successful."
+            )
+
+        if transaction_data.get("currency") != "ZAR":
+
+            raise RuntimeError(
+                "Unexpected Paystack payment currency."
+            )
+
+        # ====================================================
+        # EXPECTED CHECKOUT AMOUNT
+        # ====================================================
+
+        checkout_value = (
+            order.checkout_amount
+            if order.checkout_amount is not None
+            else order.total_amount
+        )
+
+        if checkout_value is None:
+
+            raise RuntimeError(
+                "Ticket order has no checkout amount."
+            )
+
         expected_amount = int(
-            (Decimal(str(order.checkout_amount)) * 100).quantize(
-                Decimal("1"), rounding=ROUND_UP
+            (
+                Decimal(str(checkout_value))
+                * Decimal("100")
+            ).quantize(
+                Decimal("1"),
+                rounding=ROUND_UP,
             )
         )
-        verified_amount = data.get("amount")
+
+        verified_amount = transaction_data.get("amount")
+
         if (
-            data.get("reference") != reference
-            or data.get("status") != "success"
-            or data.get("currency") != "ZAR"
-            or isinstance(verified_amount, bool)
+            isinstance(verified_amount, bool)
             or not isinstance(verified_amount, int)
             or verified_amount != expected_amount
         ):
-            raise ValueError("Paystack transaction verification did not match the order.")
 
-        # This existing function must be idempotent and safe on repeated
-        # callbacks/webhooks; it must not issue tickets twice.
-        finalize_paystack_ticket_order(order, data)
-        flash("Payment confirmed. Your Kalxa ticket is ready.", "success")
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Paystack Callback] Verification failed reference=%s", reference
+            raise RuntimeError(
+                "Paystack amount does not match the ticket order."
+            )
+
+        # ====================================================
+        # FINALISE PAYMENT
+        # ====================================================
+        #
+        # The finaliser:
+        #
+        # - Locks the order
+        # - Confirms payment details
+        # - Records the 4% commission
+        # - Generates entry passes
+        # - Commits all changes atomically
+        # ====================================================
+
+        finalize_paystack_ticket_order(
+            order,
+            transaction_data,
         )
-        flash("Your payment is still being verified. Refresh this page shortly.", "error")
 
-    return redirect(url_for("booking_status", reference=reference))
+        flash(
+            "Payment confirmed. Your Kalxa ticket is ready.",
+            "success",
+        )
 
+    except Exception:
 
+        db.session.rollback()
 
+        current_app.logger.exception(
+            (
+                "[Paystack Callback] "
+                "Payment verification/finalisation failed "
+                "reference=%s"
+            ),
+            reference,
+        )
+
+        flash(
+            (
+                "Your payment could not be confirmed yet. "
+                "Please check your booking status shortly."
+            ),
+            "warning",
+        )
+
+    # ========================================================
+    # BOOKING STATUS
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "booking_status",
+            reference=reference,
+        )
+    )
 # ============================================================
 # PAYSTACK TICKET WEBHOOK
 # ============================================================
 
 @app.route(
     "/payments/paystack/webhook",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
 def paystack_ticket_webhook():
+    """
+    Receive Paystack payment notifications.
+
+    Supported payment categories:
+
+        1. Event ticket orders
+        2. Restaurant subscriptions
+        3. Legacy organiser subscriptions
+        4. Event boosts
+        5. Featured listings
+
+    Security:
+
+        - Verify Paystack webhook signature.
+        - Parse the signed payload.
+        - Verify successful payments with Paystack API.
+        - Confirm transaction reference.
+        - Preserve product-specific finalisation.
+        - Retry temporary failures through HTTP 500.
+
+    Ticket commission:
+
+        The ticket finaliser records KALXA's
+        4% commission after successful verification.
+
+    This webhook does not initiate settlement,
+    transfers, or Paystack payment splits.
+    """
 
     # ========================================================
     # PAYSTACK CONFIGURATION
@@ -27689,29 +28155,20 @@ def paystack_ticket_webhook():
 
     if not PAYSTACK_SECRET_KEY:
 
+        current_app.logger.error(
+            "[Paystack Webhook] Missing Paystack secret key."
+        )
+
         abort(503)
 
-
     # ========================================================
-    # RAW WEBHOOK BODY
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # The exact raw body received from Paystack must be used
-    # when calculating the webhook signature.
-    #
-    # Do not JSON-decode and then re-encode the payload before
-    # calculating the HMAC.
+    # READ RAW WEBHOOK BODY
     # ========================================================
 
-    raw_body = (
-        request.get_data()
-    )
-
+    raw_body = request.get_data()
 
     # ========================================================
-    # VERIFY PAYSTACK SIGNATURE
+    # VERIFY WEBHOOK SIGNATURE
     # ========================================================
 
     received_signature = (
@@ -27722,15 +28179,11 @@ def paystack_ticket_webhook():
         .strip()
     )
 
-
     expected_signature = hmac.new(
-        PAYSTACK_SECRET_KEY.encode(
-            "utf-8"
-        ),
+        PAYSTACK_SECRET_KEY.encode("utf-8"),
         raw_body,
         hashlib.sha512,
     ).hexdigest()
-
 
     if (
         not received_signature
@@ -27741,205 +28194,230 @@ def paystack_ticket_webhook():
     ):
 
         current_app.logger.warning(
-            (
-                "[Paystack Webhook] "
-                "Rejected webhook with invalid signature."
-            )
+            "[Paystack Webhook] Invalid webhook signature."
         )
 
         abort(400)
 
-
     # ========================================================
-    # PARSE PAYSTACK PAYLOAD
+    # PARSE WEBHOOK PAYLOAD
     # ========================================================
 
     try:
 
         payload = json.loads(
-            raw_body.decode(
-                "utf-8"
-            )
+            raw_body.decode("utf-8")
         )
 
-
-    except Exception as error:
+    except (ValueError, UnicodeDecodeError):
 
         current_app.logger.warning(
-            (
-                "[Paystack Webhook] "
-                "Unable to parse webhook payload "
-                "error=%s"
-            ),
-            error,
+            "[Paystack Webhook] Invalid JSON payload."
         )
 
         abort(400)
 
+    if not isinstance(payload, dict):
+
+        abort(400)
 
     # ========================================================
-    # ONLY PROCESS SUCCESSFUL CHARGES
+    # CHECK EVENT TYPE
     # ========================================================
 
-    event_type = (
-        payload.get(
-            "event"
-        )
-    )
-
+    event_type = payload.get("event")
 
     if event_type != "charge.success":
 
-        return (
-            "",
-            200,
-        )
-
+        return "", 200
 
     # ========================================================
-    # TRANSACTION DATA
+    # EXTRACT PAYMENT REFERENCE
     # ========================================================
 
-    transaction_data = (
-        payload.get(
-            "data"
-        )
-        or {}
-    )
+    webhook_data = payload.get("data")
 
-
-    # ========================================================
-    # PAYMENT REFERENCE
-    # ========================================================
-
-    reference = (
-        str(
-            transaction_data.get(
-                "reference",
-                "",
-            )
-        )
-        .strip()
-    )
-
-
-    if not reference:
+    if not isinstance(webhook_data, dict):
 
         current_app.logger.warning(
+            "[Paystack Webhook] Missing transaction data."
+        )
+
+        abort(400)
+
+    reference = webhook_data.get("reference")
+
+    if (
+        not isinstance(reference, str)
+        or not reference.strip()
+    ):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Missing payment reference."
+        )
+
+        abort(400)
+
+    reference = reference.strip()
+
+    # ========================================================
+    # VERIFY TRANSACTION DIRECTLY WITH PAYSTACK
+    # ========================================================
+
+    try:
+
+        verification_result = paystack_api_request(
+            "GET",
+            (
+                "/transaction/verify/"
+                + urllib.parse.quote(
+                    reference,
+                    safe="",
+                )
+            ),
+        )
+
+        if not isinstance(verification_result, dict):
+
+            raise RuntimeError(
+                "Invalid Paystack verification response."
+            )
+
+        if verification_result.get("status") is not True:
+
+            raise RuntimeError(
+                "Paystack verification request failed."
+            )
+
+        transaction_data = verification_result.get("data")
+
+        if not isinstance(transaction_data, dict):
+
+            raise RuntimeError(
+                "Invalid verified transaction data."
+            )
+
+        if transaction_data.get("reference") != reference:
+
+            raise RuntimeError(
+                "Verified transaction reference mismatch."
+            )
+
+        if transaction_data.get("status") != "success":
+
+            raise RuntimeError(
+                "Verified transaction is not successful."
+            )
+
+        if transaction_data.get("currency") != "ZAR":
+
+            raise RuntimeError(
+                "Unexpected Paystack transaction currency."
+            )
+
+        verified_amount = transaction_data.get("amount")
+
+        if (
+            isinstance(verified_amount, bool)
+            or not isinstance(verified_amount, int)
+            or verified_amount <= 0
+        ):
+
+            raise RuntimeError(
+                "Invalid verified Paystack amount."
+            )
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
             (
                 "[Paystack Webhook] "
-                "charge.success received without "
-                "a payment reference."
-            )
+                "Transaction verification failed "
+                "reference=%s"
+            ),
+            reference,
         )
 
-        return (
-            "",
-            200,
-        )
-
+        # Temporary verification failures should be retried.
+        return "", 500
 
     # ========================================================
-    # 1. TICKET ORDER
-    # ========================================================
-    #
-    # Customer pays for event tickets.
-    #
-    # Money may be settled to the organizer through the
-    # organizer's Paystack subaccount.
+    # 1. EVENT TICKET ORDER
     # ========================================================
 
     order = (
         TicketOrder.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference,
         )
         .first()
     )
 
-
     if order:
 
         try:
+
+            # =================================================
+            # FINALISE TICKET PAYMENT
+            # =================================================
+            #
+            # This function:
+            #
+            # - Validates the verified transaction
+            # - Prevents duplicate finalisation
+            # - Records the 4% commission
+            # - Generates attendee passes
+            # - Commits the database transaction
+            # =================================================
 
             finalize_paystack_ticket_order(
                 order,
                 transaction_data,
             )
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
-
 
             current_app.logger.exception(
                 (
                     "[Paystack Ticket Webhook] "
-                    "Failed "
-                    "reference=%s "
-                    "order_id=%s "
-                    "error=%s"
+                    "Finalisation failed "
+                    "reference=%s order_id=%s"
                 ),
                 reference,
                 order.id,
-                error,
             )
 
+            return "", 500
 
-            return (
-                "",
-                500,
-            )
-
-
-        return (
-            "",
-            200,
-        )
-
+        return "", 200
 
     # ========================================================
     # 2. RESTAURANT SUBSCRIPTION PAYMENT
     # ========================================================
     #
-    # Restaurant owner pays Kalxa for:
+    # Restaurant subscription payments remain separate
+    # from event organiser approval.
     #
-    #     Standard
-    #         R219
-    #
-    #     Premium
-    #         R299
-    #
-    # This is completely separate from the legacy Organizer
-    # SaaS subscription.
+    # Standard: R219
+    # Premium:  R299
     # ========================================================
 
     restaurant_subscription_payment = (
         RestaurantSubscriptionPayment.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference,
         )
         .first()
     )
-
 
     if restaurant_subscription_payment:
 
         # ====================================================
         # CANCELLED RESTAURANT PAYMENT
-        # ====================================================
-        #
-        # An old checkout may have been cancelled because:
-        #
-        #     price changed
-        #     owner selected another plan
-        #     checkout was replaced
-        #
-        # If the old Paystack checkout somehow succeeds later,
-        # acknowledge it but DO NOT activate the restaurant.
         # ====================================================
 
         if (
@@ -27950,29 +28428,21 @@ def paystack_ticket_webhook():
             current_app.logger.warning(
                 (
                     "[Restaurant Subscription Webhook] "
-                    "Ignoring successful transaction for "
-                    "cancelled payment "
-                    "reference=%s "
-                    "restaurant_id=%s "
-                    "organizer_id=%s "
+                    "Verified payment received for "
+                    "cancelled checkout "
+                    "reference=%s restaurant_id=%s "
                     "payment_id=%s"
                 ),
                 reference,
                 restaurant_subscription_payment.restaurant_advert_id,
-                restaurant_subscription_payment.organizer_id,
                 restaurant_subscription_payment.id,
             )
 
+            # Do not activate a cancelled subscription.
+            # A successful payment still requires
+            # manual financial reconciliation.
 
-            return (
-                "",
-                200,
-            )
-
-
-        # ====================================================
-        # FINALIZE RESTAURANT SUBSCRIPTION
-        # ====================================================
+            return "", 200
 
         try:
 
@@ -27981,103 +28451,60 @@ def paystack_ticket_webhook():
                 transaction_data,
             )
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
-
 
             current_app.logger.exception(
                 (
                     "[Restaurant Subscription Webhook] "
-                    "Finalization failed "
-                    "reference=%s "
-                    "restaurant_id=%s "
-                    "payment_id=%s "
-                    "error=%s"
+                    "Finalisation failed "
+                    "reference=%s restaurant_id=%s "
+                    "payment_id=%s"
                 ),
                 reference,
                 restaurant_subscription_payment.restaurant_advert_id,
                 restaurant_subscription_payment.id,
-                error,
             )
 
+            return "", 500
 
-            return (
-                "",
-                500,
-            )
-
-
-        return (
-            "",
-            200,
-        )
-
+        return "", 200
 
     # ========================================================
-    # 3. LEGACY / ORGANIZER SUBSCRIPTION PAYMENT
+    # 3. LEGACY ORGANISER SUBSCRIPTION PAYMENT
     # ========================================================
     #
-    # This is the existing SubscriptionPayment table.
+    # Historical subscription processing is retained.
     #
-    # IMPORTANT:
-    #
-    # This activates Organizer SaaS access.
-    #
-    # It does NOT control:
-    #
-    #     RestaurantAdvert.subscription_tier
-    #
-    # Restaurant Standard/Premium payments are handled by the
-    # RestaurantSubscriptionPayment branch above.
+    # Event organiser approval must not depend on
+    # this subscription's payment status.
     # ========================================================
 
     subscription_payment = (
         SubscriptionPayment.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference,
         )
         .first()
     )
 
-
     if subscription_payment:
 
-        # ====================================================
-        # CANCELLED ORGANIZER SUBSCRIPTION PAYMENT
-        # ====================================================
-
-        if (
-            subscription_payment.payment_status
-            == "cancelled"
-        ):
+        if subscription_payment.payment_status == "cancelled":
 
             current_app.logger.warning(
                 (
                     "[Paystack Subscription Webhook] "
-                    "Ignoring successful transaction for "
-                    "cancelled organizer subscription "
-                    "reference=%s "
-                    "organizer_id=%s "
+                    "Verified payment for cancelled "
+                    "subscription reference=%s "
                     "payment_id=%s"
                 ),
                 reference,
-                subscription_payment.organizer_id,
                 subscription_payment.id,
             )
 
-
-            return (
-                "",
-                200,
-            )
-
-
-        # ====================================================
-        # FINALIZE ORGANIZER SUBSCRIPTION
-        # ====================================================
+            return "", 200
 
         try:
 
@@ -28086,39 +28513,23 @@ def paystack_ticket_webhook():
                 transaction_data,
             )
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
-
 
             current_app.logger.exception(
                 (
                     "[Paystack Subscription Webhook] "
-                    "Finalization failed "
-                    "reference=%s "
-                    "organizer_id=%s "
-                    "payment_id=%s "
-                    "error=%s"
+                    "Finalisation failed "
+                    "reference=%s payment_id=%s"
                 ),
                 reference,
-                subscription_payment.organizer_id,
                 subscription_payment.id,
-                error,
             )
 
+            return "", 500
 
-            return (
-                "",
-                500,
-            )
-
-
-        return (
-            "",
-            200,
-        )
-
+        return "", 200
 
     # ========================================================
     # 4. EVENT BOOST
@@ -28127,12 +28538,10 @@ def paystack_ticket_webhook():
     boost = (
         EventBoost.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference,
         )
         .first()
     )
-
 
     if boost:
 
@@ -28143,37 +28552,23 @@ def paystack_ticket_webhook():
                 transaction_data,
             )
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
-
 
             current_app.logger.exception(
                 (
                     "[Paystack Event Boost Webhook] "
-                    "Finalization failed "
-                    "reference=%s "
-                    "boost_id=%s "
-                    "error=%s"
+                    "Finalisation failed "
+                    "reference=%s boost_id=%s"
                 ),
                 reference,
                 boost.id,
-                error,
             )
 
+            return "", 500
 
-            return (
-                "",
-                500,
-            )
-
-
-        return (
-            "",
-            200,
-        )
-
+        return "", 200
 
     # ========================================================
     # 5. FEATURED LISTING
@@ -28182,12 +28577,10 @@ def paystack_ticket_webhook():
     featured_listing = (
         FeaturedListing.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference,
         )
         .first()
     )
-
 
     if featured_listing:
 
@@ -28198,63 +28591,49 @@ def paystack_ticket_webhook():
                 transaction_data,
             )
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
-
 
             current_app.logger.exception(
                 (
                     "[Paystack Featured Listing Webhook] "
-                    "Finalization failed "
-                    "reference=%s "
-                    "featured_listing_id=%s "
-                    "error=%s"
+                    "Finalisation failed "
+                    "reference=%s featured_listing_id=%s"
                 ),
                 reference,
                 featured_listing.id,
-                error,
             )
 
+            return "", 500
 
-            return (
-                "",
-                500,
-            )
-
-
-        return (
-            "",
-            200,
-        )
-
+        return "", 200
 
     # ========================================================
     # UNKNOWN PAYMENT REFERENCE
     # ========================================================
-    #
-    # The webhook is valid and signed by Paystack, but Kalxa
-    # does not currently have a matching payment record.
-    #
-    # We return 200 so Paystack does not repeatedly resend a
-    # transaction that Kalxa cannot associate with a record.
-    # ========================================================
 
-    current_app.logger.warning(
+    current_app.logger.error(
         (
             "[Paystack Webhook] "
-            "No Kalxa payment record found "
-            "for reference=%s"
+            "Verified payment has no matching "
+            "KALXA payment record reference=%s "
+            "transaction_id=%s amount=%s"
         ),
         reference,
+        transaction_data.get("id"),
+        transaction_data.get("amount"),
     )
 
+    # An unknown reference must be investigated.
+    #
+    # Returning 200 prevents repeated retries for a
+    # payment that cannot currently be matched.
+    #
+    # Make sure your operations process captures
+    # these cases for reconciliation.
 
-    return (
-        "",
-        200,
-    )
+    return "", 200
 
 
 # ============================================================
