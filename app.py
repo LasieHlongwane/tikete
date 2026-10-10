@@ -9144,63 +9144,6 @@ def normalize_attendee_phone(
 # CURRENT ORGANIZER
 # ============================================================
 
-def get_current_organizer():
-
-    organizer_id = (
-        session.get(
-            ORGANIZER_SESSION_KEY
-        )
-    )
-
-
-    if not organizer_id:
-
-        return None
-
-
-    try:
-
-        organizer_id = int(
-            organizer_id
-        )
-
-
-    except (
-        TypeError,
-        ValueError,
-    ):
-
-        session.pop(
-            ORGANIZER_SESSION_KEY,
-            None,
-        )
-
-        return None
-
-
-    organizer = (
-        db.session.get(
-            Organizer,
-            organizer_id,
-        )
-    )
-
-
-    if (
-        not organizer
-        or not organizer.active
-    ):
-
-        session.pop(
-            ORGANIZER_SESSION_KEY,
-            None,
-        )
-
-        return None
-
-
-    return organizer
-
 
 # ============================================================
 # REQUIRE ORGANIZER
@@ -23417,39 +23360,31 @@ def organizer_signup():
 
 
 
+# ============================================================
+# KALXA TICKETING - ORGANIZER ACCESS HELPERS
+# ============================================================
+
 def get_current_organizer():
 
     # ========================================================
     # ORGANIZER SESSION ID
     # ========================================================
 
-    organizer_id = (
-        session.get(
-            ORGANIZER_SESSION_KEY
-        )
+    organizer_id = session.get(
+        ORGANIZER_SESSION_KEY
     )
 
-
     if not organizer_id:
-
         return None
-
 
     # ========================================================
     # VALIDATE ORGANIZER ID
     # ========================================================
 
     try:
+        organizer_id = int(organizer_id)
 
-        organizer_id = int(
-            organizer_id
-        )
-
-
-    except (
-        TypeError,
-        ValueError,
-    ):
+    except (TypeError, ValueError):
 
         session.pop(
             ORGANIZER_SESSION_KEY,
@@ -23457,28 +23392,17 @@ def get_current_organizer():
         )
 
         return None
-
 
     # ========================================================
     # LOAD ORGANIZER
     # ========================================================
 
-    organizer = (
-        db.session.get(
-            Organizer,
-            organizer_id,
-        )
+    organizer = db.session.get(
+        Organizer,
+        organizer_id,
     )
 
-
-    # ========================================================
-    # VALIDATE ORGANIZER
-    # ========================================================
-
-    if (
-        not organizer
-        or not organizer.active
-    ):
+    if not organizer:
 
         session.pop(
             ORGANIZER_SESSION_KEY,
@@ -23487,60 +23411,294 @@ def get_current_organizer():
 
         return None
 
-
     # ========================================================
     # NORMALIZE ACCOUNT TYPE
     # ========================================================
-    #
-    # Existing database records may pre-date restaurant
-    # accounts or contain inconsistent capitalization /
-    # whitespace.
-    #
-    # Valid application values:
-    #
-    # event
-    # restaurant
-    #
-    # IMPORTANT:
-    # We do NOT automatically convert "event" to "restaurant".
-    # That decision must come from the stored account record.
-    # ========================================================
-
-    account_type = (
-        getattr(
-            organizer,
-            "account_type",
-            None,
-        )
-        or "event"
-    )
-
 
     account_type = (
         str(
-            account_type
+            getattr(
+                organizer,
+                "account_type",
+                None,
+            )
+            or "event"
         )
         .strip()
         .lower()
     )
 
-
     if account_type not in {
         "event",
         "restaurant",
     }:
+        account_type = "event"
 
-        account_type = (
-            "event"
-        )
+    # ========================================================
+    # RESTAURANT ACCOUNTS
+    # ========================================================
+    #
+    # Preserve the existing active-account requirement.
+    #
+    # Restaurant subscriptions remain separate from event
+    # organiser approval.
+    # ========================================================
+
+    if account_type == "restaurant":
+
+        if not organizer.active:
+
+            session.pop(
+                ORGANIZER_SESSION_KEY,
+                None,
+            )
+
+            return None
+
+    # ========================================================
+    # EVENT ORGANISER ACCOUNTS
+    # ========================================================
+    #
+    # Pending and rejected event organisers can remain
+    # authenticated so they can view their application status.
+    #
+    # Approval and suspension are enforced by permission
+    # checks, not by logging out pending applicants.
+    # ========================================================
+
+    return organizer
 
 
-    organizer.account_type = (
-        account_type
+# ============================================================
+# REQUIRE AUTHENTICATED ORGANIZER
+# ============================================================
+
+def require_ticketing_organizer():
+
+    organizer = get_current_organizer()
+
+    if organizer:
+        return None
+
+    flash(
+        "Please sign in to your "
+        "Kalxa Ticketing organiser account.",
+        "error",
+    )
+
+    return redirect(
+        url_for("organizer_login")
     )
 
 
-    return organizer
+# ============================================================
+# REQUIRE APPROVED EVENT ORGANIZER
+# ============================================================
+#
+# Replaces the old mandatory subscription requirement for
+# event management.
+#
+# IMPORTANT:
+# This function is for event management actions, not
+# general dashboard access.
+# ============================================================
+
+def require_approved_event_organizer():
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if organizer.account_type != "event":
+
+        flash(
+            "This feature is available only "
+            "to event organisers.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_restaurants")
+        )
+
+    approval_status = (
+        organizer.approval_status
+        or "pending"
+    ).strip().lower()
+
+    if (
+        approval_status == "approved"
+        and organizer.active
+    ):
+        return None
+
+    if approval_status == "pending":
+
+        message = (
+            "Your event organiser application is "
+            "pending KALXA administrator approval."
+        )
+
+    elif approval_status == "rejected":
+
+        message = (
+            "Your event organiser application "
+            "has been rejected."
+        )
+
+    elif approval_status == "suspended":
+
+        message = (
+            "Your event organiser account "
+            "is currently suspended."
+        )
+
+    else:
+
+        message = (
+            "Your event organiser account "
+            "is not approved for event management."
+        )
+
+    flash(
+        message,
+        "error",
+    )
+
+    return redirect(
+        url_for("admin_dashboard")
+    )
+
+
+# ============================================================
+# LEGACY SUBSCRIPTION GUARD - COMPATIBILITY
+# ============================================================
+#
+# Existing event routes may still call:
+#
+# require_active_subscription(organizer)
+#
+# Keep this function temporarily to prevent those routes
+# from breaking during the transition.
+#
+# It now checks event approval instead of subscription expiry.
+#
+# IMPORTANT:
+# Replace calls with require_approved_event_organizer()
+# as we review each event route.
+# ============================================================
+
+def require_active_subscription(organizer):
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    current_organizer = get_current_organizer()
+
+    if (
+        not organizer
+        or not current_organizer
+        or organizer.id != current_organizer.id
+    ):
+
+        flash(
+            "Unable to verify your organiser account.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
+
+    return require_approved_event_organizer()
+
+
+# ============================================================
+# ORGANIZER HOME ENDPOINT
+# ============================================================
+
+def organizer_home_endpoint(organizer):
+
+    if (
+        organizer
+        and organizer.account_type == "restaurant"
+    ):
+        return "admin_restaurants"
+
+    return "admin_dashboard"
+
+
+# ============================================================
+# REQUIRE RESTAURANT ORGANIZER
+# ============================================================
+
+def require_restaurant_organizer():
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if (
+        not organizer
+        or organizer.account_type != "restaurant"
+    ):
+
+        flash(
+            "This area is for restaurant advertisers.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_dashboard")
+        )
+
+    return None
+
+
+# ============================================================
+# REQUIRE EVENT ORGANIZER
+# ============================================================
+#
+# Allows event organisers to view their dashboard even when
+# approval is pending.
+#
+# For event creation, editing, publishing and paid features,
+# use require_approved_event_organizer() instead.
+# ============================================================
+
+def require_event_organizer():
+
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if (
+        not organizer
+        or organizer.account_type != "event"
+    ):
+
+        flash(
+            "This area is for event organisers.",
+            "error",
+        )
+
+        return redirect(
+            url_for("admin_restaurants")
+        )
+
+    return None
+
 # ============================================================
 # ORGANIZER LOGIN
 # ============================================================
