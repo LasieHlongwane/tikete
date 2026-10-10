@@ -715,152 +715,58 @@ def paystack_is_configured():
     return bool(PAYSTACK_SECRET_KEY)
 
 
-def paystack_api_request(
-    method,
-    path,
-    payload=None,
-):
+def paystack_api_request(method, path, payload=None, *, json=None):
+    """Perform an authenticated Paystack API request.
+
+    `payload` is the existing calling convention; `json` is a compatible alias
+    for refund service callers. Never supply both.
+
+    A successful API response is NOT proof of a successful payment, refund,
+    transfer or settlement. Verify the resource's own status and identifiers.
     """
-    Make an authenticated request to the Paystack API.
-
-    Used by KALXA Ticketing for:
-
-        - Ticket payment initialization
-        - Ticket payment verification
-        - Restaurant subscription payments
-        - Legacy subscription payments
-        - Event boost payments
-        - Featured listing payments
-        - Paystack account integration
-
-    Security:
-        - Requires a configured Paystack secret key.
-        - Allows only supported HTTP methods.
-        - Rejects external URLs and unsafe paths.
-        - Uses HTTPS.
-        - Does not expose the secret key in errors.
-        - Validates Paystack's JSON response.
-
-    Reliability:
-        - Uses separate connection/read timeouts.
-        - Handles network failures.
-        - Does not automatically retry POST requests.
-        - Preserves Paystack's original response format.
-
-    IMPORTANT:
-        This helper does not calculate commission,
-        issue tickets, or perform settlement.
-
-        Commission accounting is handled by
-        finalize_paystack_ticket_order().
-    """
-
-    # ========================================================
-    # 1. VALIDATE PAYSTACK CONFIGURATION
-    # ========================================================
-
     if not paystack_is_configured():
+        raise RuntimeError("PAYSTACK_SECRET_KEY is not configured.")
 
-        raise RuntimeError(
-            "PAYSTACK_SECRET_KEY is not configured."
-        )
-
-    secret_key = str(
-        PAYSTACK_SECRET_KEY or ""
-    ).strip()
-
+    secret_key = str(PAYSTACK_SECRET_KEY or "").strip()
     if not secret_key:
-
-        raise RuntimeError(
-            "PAYSTACK_SECRET_KEY is missing."
-        )
-
-    # ========================================================
-    # 2. VALIDATE HTTP METHOD
-    # ========================================================
+        raise RuntimeError("PAYSTACK_SECRET_KEY is missing.")
 
     if not isinstance(method, str):
-
-        raise ValueError(
-            "Invalid Paystack HTTP method."
-        )
-
+        raise ValueError("Invalid Paystack HTTP method.")
     method = method.strip().upper()
-
-    allowed_methods = {
-        "GET",
-        "POST",
-        "PUT",
-        "DELETE",
-    }
-
-    if method not in allowed_methods:
-
-        raise ValueError(
-            "Unsupported Paystack HTTP method."
-        )
-
-    # ========================================================
-    # 3. VALIDATE API PATH
-    # ========================================================
-    #
-    # Only relative Paystack API paths are accepted.
-    #
-    # Examples:
-    #
-    # /transaction/initialize
-    # /transaction/verify/REFERENCE
-    # /subaccount
-    #
-    # Full external URLs are rejected.
-    # ========================================================
+    if method not in {"GET", "POST", "PUT", "DELETE"}:
+        raise ValueError("Unsupported Paystack HTTP method.")
 
     if not isinstance(path, str):
-
-        raise ValueError(
-            "Invalid Paystack API path."
-        )
-
+        raise ValueError("Invalid Paystack API path.")
     path = path.strip()
-
     if (
         not path
         or not path.startswith("/")
         or path.startswith("//")
         or "://" in path
         or "\\" in path
-        or any(
-            ord(character) < 32
-            or ord(character) == 127
-            for character in path
-        )
+        or "#" in path
+        or any(ord(c) < 32 or ord(c) == 127 for c in path)
     ):
+        raise ValueError("Invalid Paystack API path.")
 
-        raise ValueError(
-            "Invalid Paystack API path."
-        )
+    # Disallow dot-segment traversal and encoded path separators, including
+    # encoded forms that can be decoded by intermediate proxies.
+    decoded_path = path
+    for _ in range(3):
+        decoded_path = urllib.parse.unquote(decoded_path)
+        if (
+            decoded_path.startswith("//")
+            or "\\" in decoded_path
+            or any(ord(c) < 32 or ord(c) == 127 for c in decoded_path)
+        ):
+            raise ValueError("Invalid Paystack API path.")
+        if any(segment in {".", ".."} for segment in decoded_path.split("?", 1)[0].split("/")):
+            raise ValueError("Paystack API path contains unsafe segments.")
 
-    # Prevent URL fragments from being passed into
-    # requests for API operations.
-
-    if "#" in path:
-
-        raise ValueError(
-            "Paystack API paths cannot contain fragments."
-        )
-
-    # ========================================================
-    # 4. VALIDATE BASE URL
-    # ========================================================
-
-    base_url = str(
-        PAYSTACK_BASE_URL or ""
-    ).strip().rstrip("/")
-
-    parsed_base = urllib.parse.urlsplit(
-        base_url
-    )
-
+    base_url = str(PAYSTACK_BASE_URL or "").strip().rstrip("/")
+    parsed_base = urllib.parse.urlsplit(base_url)
     if (
         parsed_base.scheme != "https"
         or not parsed_base.hostname
@@ -868,282 +774,72 @@ def paystack_api_request(
         or parsed_base.password is not None
         or parsed_base.query
         or parsed_base.fragment
+        or parsed_base.path not in {"", "/"}
     ):
+        raise RuntimeError("Invalid Paystack API base URL configuration.")
 
-        raise RuntimeError(
-            "Invalid Paystack API base URL configuration."
-        )
-
-    # ========================================================
-    # 5. BUILD PAYSTACK URL
-    # ========================================================
-
-    url = f"{base_url}{path}"
-
-    # ========================================================
-    # 6. PREPARE REQUEST HEADERS
-    # ========================================================
+    if payload is not None and json is not None:
+        raise ValueError("Provide either payload or json, not both.")
+    request_payload = payload if json is None else json
+    if method == "GET" and request_payload is not None:
+        raise ValueError("GET requests must not contain a JSON payload.")
+    if request_payload is not None and not isinstance(request_payload, (dict, list)):
+        raise ValueError("Paystack request payload must be a JSON object or list.")
 
     headers = {
-        "Authorization": (
-            f"Bearer {secret_key}"
-        ),
-
-        "Accept": (
-            "application/json"
-        ),
-
-        "Content-Type": (
-            "application/json"
-        ),
-
-        "User-Agent": (
-            "Kalxa-Ticketing/1.0"
-        ),
+        "Authorization": f"Bearer {secret_key}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "Kalxa-Ticketing/1.0",
     }
-
-    # ========================================================
-    # 7. VALIDATE REQUEST PAYLOAD
-    # ========================================================
-
-    if method == "GET" and payload is not None:
-
-        raise ValueError(
-            "GET requests must not contain a JSON payload."
-        )
-
-    if payload is not None and not isinstance(
-        payload,
-        (dict, list),
-    ):
-
-        raise ValueError(
-            "Paystack request payload must be JSON-compatible."
-        )
-
-    # ========================================================
-    # 8. SEND REQUEST
-    # ========================================================
-    #
-    # Connection timeout: 5 seconds
-    # Read timeout:       20 seconds
-    #
-    # Do not automatically retry POST requests.
-    #
-    # A timeout does not prove a payment initialization
-    # failed; Paystack may have processed the request.
-    # ========================================================
-
     try:
-
         response = requests.request(
             method=method,
-            url=url,
-            json=payload,
+            url=f"{base_url}{path}",
+            json=request_payload,
             headers=headers,
             timeout=(5, 20),
             allow_redirects=False,
         )
-
     except requests.Timeout as error:
-
-        current_app.logger.warning(
-            (
-                "[Paystack API] "
-                "Request timed out "
-                "method=%s path=%s"
-            ),
-            method,
-            path,
-        )
-
+        current_app.logger.warning("[Paystack API] Timeout method=%s", method)
         raise RuntimeError(
-            "Paystack is taking too long to respond. "
-            "Please check the payment status before retrying."
+            "Paystack timed out. Check the transaction or refund status before retrying."
         ) from error
-
     except requests.ConnectionError as error:
-
-        current_app.logger.warning(
-            (
-                "[Paystack API] "
-                "Connection failed "
-                "method=%s path=%s"
-            ),
-            method,
-            path,
-        )
-
+        current_app.logger.warning("[Paystack API] Connection failure method=%s", method)
         raise RuntimeError(
-            "Could not connect to Paystack. "
-            "Please try again shortly."
+            "Could not connect to Paystack. Check the operation status before retrying."
         ) from error
-
     except requests.RequestException as error:
-
-        current_app.logger.exception(
-            (
-                "[Paystack API] "
-                "Request failed "
-                "method=%s path=%s"
-            ),
-            method,
-            path,
-        )
-
-        raise RuntimeError(
-            "Paystack request could not be completed."
-        ) from error
-
-    # ========================================================
-    # 9. REJECT REDIRECTS
-    # ========================================================
-    #
-    # Paystack API responses should not redirect to
-    # another domain.
-    #
-    # Prevent Authorization headers from being forwarded.
-    # ========================================================
+        current_app.logger.exception("[Paystack API] Request failure method=%s", method)
+        raise RuntimeError("Paystack request could not be completed.") from error
 
     if 300 <= response.status_code < 400:
-
-        raise RuntimeError(
-            "Unexpected redirect from Paystack API."
-        )
-
-    # ========================================================
-    # 10. PARSE JSON RESPONSE
-    # ========================================================
+        raise RuntimeError("Unexpected redirect from Paystack API.")
 
     try:
-
         result = response.json()
-
     except ValueError as error:
-
         current_app.logger.error(
-            (
-                "[Paystack API] "
-                "Invalid JSON response "
-                "method=%s path=%s status=%s"
-            ),
-            method,
-            path,
-            response.status_code,
+            "[Paystack API] Invalid JSON method=%s http_status=%s",
+            method, response.status_code,
         )
-
-        raise RuntimeError(
-            "Paystack returned an invalid response."
-        ) from error
-
-    # ========================================================
-    # 11. VALIDATE RESPONSE STRUCTURE
-    # ========================================================
+        raise RuntimeError("Paystack returned an invalid response.") from error
 
     if not isinstance(result, dict):
+        raise RuntimeError("Paystack returned an unexpected response format.")
 
-        raise RuntimeError(
-            "Paystack returned an unexpected response format."
-        )
-
-    # ========================================================
-    # 12. HANDLE HTTP ERRORS
-    # ========================================================
-
-    if not response.ok:
-
-        message = result.get(
-            "message"
-        )
-
+    if not response.ok or result.get("status") is not True:
         current_app.logger.warning(
-            (
-                "[Paystack API] "
-                "HTTP error "
-                "method=%s path=%s "
-                "status=%s"
-            ),
-            method,
-            path,
-            response.status_code,
+            "[Paystack API] Unsuccessful response method=%s http_status=%s",
+            method, response.status_code,
         )
-
-        if (
-            not isinstance(message, str)
-            or not message.strip()
-        ):
-
-            message = (
-                "Paystack could not process this request."
-            )
-
-        raise RuntimeError(
-            f"Paystack: {message}"
-        )
-
-    # ========================================================
-    # 13. VALIDATE PAYSTACK SUCCESS STATUS
-    # ========================================================
-
-    if result.get("status") is not True:
-
-        message = result.get(
-            "message"
-        )
-
-        if (
-            not isinstance(message, str)
-            or not message.strip()
-        ):
-
-            message = (
-                "Paystack request was unsuccessful."
-            )
-
-        current_app.logger.warning(
-            (
-                "[Paystack API] "
-                "Unsuccessful API response "
-                "method=%s path=%s"
-            ),
-            method,
-            path,
-        )
-
-        raise RuntimeError(
-            f"Paystack: {message}"
-        )
-
-    # ========================================================
-    # 14. RETURN VERIFIED API RESPONSE
-    # ========================================================
-    #
-    # Example:
-    #
-    # {
-    #     "status": True,
-    #     "message": "Verification successful",
-    #     "data": {
-    #         "status": "success",
-    #         "reference": "...",
-    #         "amount": 20000,
-    #         "currency": "ZAR"
-    #     }
-    # }
-    #
-    # IMPORTANT:
-    #
-    # result["status"] == True means the API request
-    # succeeded.
-    #
-    # It does NOT necessarily mean the customer paid.
-    #
-    # Payment success must still be checked using:
-    #
-    # result["data"]["status"] == "success"
-    # ========================================================
+        # Avoid propagating arbitrary upstream text to end users or logs.
+        raise RuntimeError("Paystack could not process this request. Check its status before retrying.")
 
     return result
+
 
 # ============================================================
 # STORIES CONVERSION ANALYTICS API
