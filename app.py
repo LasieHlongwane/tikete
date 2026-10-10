@@ -1282,88 +1282,6 @@ def process_yoco_subscription_payment(event):
 
 
 
-@app.route(
-    "/admin/restaurants/<int:advert_id>/subscription/reconcile/<int:payment_id>",
-    methods=["POST"],
-)
-def admin_reconcile_yoco_restaurant_subscription(
-    advert_id,
-    payment_id,
-):
-    auth = require_ticketing_organizer()
-
-    if auth:
-        return auth
-
-    organizer = get_current_organizer()
-
-    if organizer is None:
-        return redirect(url_for("organizer_login"))
-
-    payment = (
-        RestaurantSubscriptionPayment.query
-        .filter_by(
-            id=payment_id,
-            restaurant_advert_id=advert_id,
-            organizer_id=organizer.id,
-            payment_method="yoco",
-        )
-        .first_or_404()
-    )
-
-    try:
-        result = verify_and_activate_yoco_subscription(
-            kind="restaurant",
-            payment_id=payment.id,
-            source="reconciliation",
-        )
-
-    except Exception:
-        db.session.rollback()
-
-        current_app.logger.exception(
-            "[Yoco] Restaurant reconciliation failed."
-        )
-
-        flash(
-            "Could not verify your payment. "
-            "Please try again later.",
-            "error",
-        )
-
-    else:
-        if result == "activated":
-            flash(
-                "Your restaurant subscription is active.",
-                "success",
-            )
-
-        elif result == "already_processed":
-            flash(
-                "This payment was already confirmed.",
-                "info",
-            )
-
-        elif result == "pending":
-            flash(
-                "Yoco has not completed this checkout.",
-                "info",
-            )
-
-        else:
-            flash(
-                "Payment verification was unsuccessful.",
-                "error",
-            )
-
-    return redirect(
-        url_for(
-            "admin_manage_restaurant",
-            advert_id=advert_id,
-        )
-    )
-
-
 
 
 
@@ -10683,6 +10601,90 @@ def superadmin_create_partner():
     return render_template(
         "superadmin/partner_form.html"
     )
+
+
+
+@app.route(
+    "/admin/restaurants/<int:advert_id>/subscription/reconcile/<int:payment_id>",
+    methods=["POST"],
+)
+def admin_reconcile_yoco_restaurant_subscription(
+    advert_id,
+    payment_id,
+):
+    auth = require_ticketing_organizer()
+
+    if auth:
+        return auth
+
+    organizer = get_current_organizer()
+
+    if organizer is None:
+        return redirect(url_for("organizer_login"))
+
+    payment = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            id=payment_id,
+            restaurant_advert_id=advert_id,
+            organizer_id=organizer.id,
+            payment_method="yoco",
+        )
+        .first_or_404()
+    )
+
+    try:
+        result = verify_and_activate_yoco_subscription(
+            kind="restaurant",
+            payment_id=payment.id,
+            source="reconciliation",
+        )
+
+    except Exception:
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Yoco] Restaurant reconciliation failed."
+        )
+
+        flash(
+            "Could not verify your payment. "
+            "Please try again later.",
+            "error",
+        )
+
+    else:
+        if result == "activated":
+            flash(
+                "Your restaurant subscription is active.",
+                "success",
+            )
+
+        elif result == "already_processed":
+            flash(
+                "This payment was already confirmed.",
+                "info",
+            )
+
+        elif result == "pending":
+            flash(
+                "Yoco has not completed this checkout.",
+                "info",
+            )
+
+        else:
+            flash(
+                "Payment verification was unsuccessful.",
+                "error",
+            )
+
+    return redirect(
+        url_for(
+            "admin_manage_restaurant",
+            advert_id=advert_id,
+        )
+    )
+
 
 
 # ============================================================
