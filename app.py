@@ -10104,50 +10104,99 @@ def generate_partner_temporary_password():
 # ============================================================
 
 def generate_entry_code():
+    """
+    Generate a unique, cryptographically secure
+    KALXA ticket entry code.
+
+    Format:
+        KX-XXXXXXXX-XXXXXXXX
+
+    Example:
+        KX-A7B2C9D4-E5F6G8H9
+
+    Security:
+        - Uses Python's secrets module.
+        - Uses uppercase letters and numbers.
+        - Checks existing database records.
+        - Limits collision retries.
+
+    IMPORTANT:
+        The EntryPass.entry_code database UNIQUE
+        constraint is the final protection against
+        duplicate codes.
+
+        This function does not reserve a code.
+        Concurrent transactions must still handle
+        database uniqueness errors.
+    """
+
+    # ========================================================
+    # CODE ALPHABET
+    # ========================================================
 
     alphabet = (
         string.ascii_uppercase
-        +
-        string.digits
+        + string.digits
     )
 
+    # ========================================================
+    # MAXIMUM GENERATION ATTEMPTS
+    # ========================================================
 
-    while True:
+    max_attempts = 10
+
+    # ========================================================
+    # GENERATE UNIQUE ENTRY CODE
+    # ========================================================
+
+    for _ in range(max_attempts):
 
         part_one = "".join(
-            secrets.choice(
-                alphabet
-            )
-            for _ in range(4)
+            secrets.choice(alphabet)
+            for _ in range(8)
         )
-
 
         part_two = "".join(
-            secrets.choice(
-                alphabet
-            )
-            for _ in range(4)
+            secrets.choice(alphabet)
+            for _ in range(8)
         )
-
 
         code = (
             f"KX-{part_one}-{part_two}"
         )
 
+        # ====================================================
+        # CHECK DATABASE
+        # ====================================================
 
         exists = (
-            EntryPass.query
-            .filter_by(
-                entry_code=code
+            db.session.query(EntryPass.id)
+            .filter(
+                EntryPass.entry_code == code
             )
             .first()
         )
 
-
-        if not exists:
+        if exists is None:
 
             return code
 
+    # ========================================================
+    # COLLISION LIMIT EXCEEDED
+    # ========================================================
+
+    current_app.logger.error(
+        (
+            "[EntryPass] "
+            "Unable to generate unique entry code "
+            "after %s attempts."
+        ),
+        max_attempts,
+    )
+
+    raise RuntimeError(
+        "Unable to generate a unique ticket code."
+    )
 
 # ============================================================
 # SUPER ADMIN LOGIN
