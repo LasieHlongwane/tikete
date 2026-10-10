@@ -2407,12 +2407,18 @@ class TicketOrder(db.Model):
 
     __tablename__ = "ticket_orders"
 
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
+    # ========================================================
+    # EVENT RELATIONSHIP
+    # ========================================================
 
     event_id = db.Column(
         db.Integer,
@@ -2424,6 +2430,9 @@ class TicketOrder(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # CUSTOMER DETAILS
+    # ========================================================
 
     customer_name = db.Column(
         db.String(150),
@@ -2440,6 +2449,9 @@ class TicketOrder(db.Model):
         nullable=True,
     )
 
+    # ========================================================
+    # TICKET SUMMARY
+    # ========================================================
 
     quantity = db.Column(
         db.Integer,
@@ -2448,21 +2460,25 @@ class TicketOrder(db.Model):
     )
 
     ticket_price = db.Column(
-        db.Numeric(
-            10,
-            2,
-        ),
+        db.Numeric(10, 2),
         nullable=False,
     )
+
+    # Ticket face value before payment processing fees.
+    #
+    # Example:
+    # 2 tickets × R200 = R400
+    #
+    # This amount is the basis for KALXA's commission.
 
     total_amount = db.Column(
-        db.Numeric(
-            10,
-            2,
-        ),
+        db.Numeric(10, 2),
         nullable=False,
     )
 
+    # ========================================================
+    # PAYMENT DETAILS
+    # ========================================================
 
     payment_reference = db.Column(
         db.String(50),
@@ -2483,7 +2499,6 @@ class TicketOrder(db.Model):
         nullable=True,
     )
 
-
     # ========================================================
     # PAYSTACK PAYMENT AUDIT
     # ========================================================
@@ -2496,19 +2511,13 @@ class TicketOrder(db.Model):
     )
 
     processing_fee = db.Column(
-        db.Numeric(
-            10,
-            2,
-        ),
+        db.Numeric(10, 2),
         nullable=False,
         default=0,
     )
 
     checkout_amount = db.Column(
-        db.Numeric(
-            10,
-            2,
-        ),
+        db.Numeric(10, 2),
         nullable=True,
     )
 
@@ -2539,6 +2548,86 @@ class TicketOrder(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # KALXA COMMISSION ACCOUNTING
+    # ========================================================
+    #
+    # Business model:
+    #
+    # Event organisers register for free.
+    #
+    # KALXA earns 4% of successful ticket sales.
+    #
+    # The commission is deducted from ticket revenue.
+    #
+    # Example:
+    #
+    # Ticket face value: R200.00
+    # KALXA commission:   R8.00
+    # Organiser share:  R192.00
+    #
+    # Processing fees and actual settlement are separate.
+    #
+    # These fields are snapshots recorded after payment
+    # verification. Historical commission rates must not
+    # change when KALXA changes its pricing in the future.
+    # ========================================================
+
+    commission_rate = db.Column(
+        db.Numeric(6, 4),
+        nullable=True,
+    )
+
+    commission_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=True,
+    )
+
+    organizer_gross_share = db.Column(
+        db.Numeric(10, 2),
+        nullable=True,
+    )
+
+    commission_recorded_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    # ========================================================
+    # REFUND / COMMISSION REVERSAL ACCOUNTING
+    # ========================================================
+    #
+    # These fields record financial adjustments.
+    #
+    # They do not initiate Paystack refunds.
+    #
+    # Partial refunds must reverse commission
+    # proportionally to the refunded ticket face value.
+    # ========================================================
+
+    refunded_face_value = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    commission_reversed_amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    refunded_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
 
     created_at = db.Column(
         db.DateTime,
@@ -2554,6 +2643,9 @@ class TicketOrder(db.Model):
         onupdate=datetime.utcnow,
     )
 
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
 
     event = db.relationship(
         "TicketEvent",
@@ -2567,7 +2659,6 @@ class TicketOrder(db.Model):
         cascade="all, delete-orphan",
     )
 
-
     order_items = db.relationship(
         "TicketOrderItem",
         back_populates="order",
@@ -2576,6 +2667,9 @@ class TicketOrder(db.Model):
         order_by="TicketOrderItem.id.asc()",
     )
 
+    # ========================================================
+    # ORGANISER HELPERS
+    # ========================================================
 
     @property
     def organizer_id(self):
@@ -2584,7 +2678,6 @@ class TicketOrder(db.Model):
             return None
 
         return self.event.organizer_id
-
 
     def belongs_to_organizer(
         self,
@@ -2598,33 +2691,180 @@ class TicketOrder(db.Model):
             organizer_id
         )
 
+    # ========================================================
+    # PAYMENT STATUS HELPERS
+    # ========================================================
 
     @property
     def is_paid(self):
 
         return (
-            self.payment_status
-            == "paid"
+            self.payment_status == "paid"
         )
-
 
     @property
     def is_pending(self):
 
         return (
-            self.payment_status
-            == "pending"
+            self.payment_status == "pending"
         )
-
 
     @property
     def is_cancelled(self):
 
         return (
-            self.payment_status
-            == "cancelled"
+            self.payment_status == "cancelled"
         )
 
+    # ========================================================
+    # COMMISSION CALCULATION HELPERS
+    # ========================================================
+
+    @staticmethod
+    def calculate_commission(
+        face_value,
+        rate=Decimal("0.04"),
+    ):
+
+        amount = Decimal(
+            str(face_value)
+        )
+
+        rate = Decimal(
+            str(rate)
+        )
+
+        if amount < 0:
+            raise ValueError(
+                "Ticket face value cannot be negative."
+            )
+
+        if rate < 0 or rate > 1:
+            raise ValueError(
+                "Commission rate must be between 0 and 1."
+            )
+
+        return (
+            amount * rate
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+
+    def record_commission(
+        self,
+        rate=Decimal("0.04"),
+    ):
+        """
+        Record the commission snapshot for a verified,
+        successfully paid ticket order.
+
+        Call this inside the same database transaction
+        that marks the order as paid.
+
+        Do not call it when creating a pending order.
+        """
+
+        if self.payment_status != "paid":
+
+            raise ValueError(
+                "Commission can only be recorded for paid orders."
+            )
+
+        if self.commission_recorded_at is not None:
+
+            return
+
+        if (
+            self.commission_amount is not None
+            or self.organizer_gross_share is not None
+        ):
+
+            raise ValueError(
+                "Commission fields are partially populated."
+            )
+
+        face_value = Decimal(
+            str(self.total_amount)
+        )
+
+        commission_rate = Decimal(
+            str(rate)
+        )
+
+        commission = self.calculate_commission(
+            face_value,
+            commission_rate,
+        )
+
+        organizer_share = (
+            face_value - commission
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+
+        self.commission_rate = commission_rate
+
+        self.commission_amount = commission
+
+        self.organizer_gross_share = organizer_share
+
+        self.commission_recorded_at = (
+            datetime.utcnow()
+        )
+
+    # ========================================================
+    # FINANCIAL SUMMARY HELPERS
+    # ========================================================
+
+    @property
+    def net_commission_amount(self):
+
+        if self.commission_amount is None:
+            return Decimal("0.00")
+
+        return (
+            Decimal(str(self.commission_amount))
+            - Decimal(
+                str(
+                    self.commission_reversed_amount
+                    or 0
+                )
+            )
+        ).quantize(
+            Decimal("0.01")
+        )
+
+    @property
+    def organizer_share_after_refunds(self):
+
+        if self.organizer_gross_share is None:
+            return Decimal("0.00")
+
+        gross_share = Decimal(
+            str(self.organizer_gross_share)
+        )
+
+        refunded_face_value = Decimal(
+            str(self.refunded_face_value or 0)
+        )
+
+        reversed_commission = Decimal(
+            str(self.commission_reversed_amount or 0)
+        )
+
+        return (
+            gross_share
+            - refunded_face_value
+            + reversed_commission
+        ).quantize(
+            Decimal("0.01")
+        )
+
+    # ========================================================
+    # REPRESENTATION
+    # ========================================================
 
     def __repr__(self):
 
@@ -2632,24 +2872,32 @@ class TicketOrder(db.Model):
             "<TicketOrder "
             f"id={self.id} "
             f"event_id={self.event_id} "
-            f"payment_status={self.payment_status}>"
+            f"payment_status={self.payment_status} "
+            f"commission={self.commission_amount}>"
         )
-
-
-# ============================================================
-# TICKET ORDER ITEM
-# ============================================================
-
-class TicketOrderItem(db.Model):
+        
+        
+        
+        
+        
+        
+        
+ class TicketOrderItem(db.Model):
 
     __tablename__ = "ticket_order_items"
 
+    # ========================================================
+    # PRIMARY KEY
+    # ========================================================
 
     id = db.Column(
         db.Integer,
         primary_key=True,
     )
 
+    # ========================================================
+    # ORDER RELATIONSHIP
+    # ========================================================
 
     order_id = db.Column(
         db.Integer,
@@ -2661,6 +2909,10 @@ class TicketOrderItem(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # TICKET TYPE RELATIONSHIP
+    # ========================================================
+
     ticket_type_id = db.Column(
         db.Integer,
         db.ForeignKey(
@@ -2671,15 +2923,39 @@ class TicketOrderItem(db.Model):
         index=True,
     )
 
+    # ========================================================
+    # SALE PHASE RELATIONSHIP
+    # ========================================================
+
     sale_phase_id = db.Column(
         db.Integer,
-        db.ForeignKey("ticket_sale_phases.id", ondelete="SET NULL"),
+        db.ForeignKey(
+            "ticket_sale_phases.id",
+            ondelete="SET NULL",
+        ),
         nullable=True,
         index=True,
     )
 
-    sale_phase_name = db.Column(db.String(100), nullable=True)
+    sale_phase_name = db.Column(
+        db.String(100),
+        nullable=True,
+    )
 
+    # ========================================================
+    # TICKET SNAPSHOT
+    # ========================================================
+    #
+    # Preserve ticket pricing at purchase time.
+    #
+    # Example:
+    #
+    # Early Bird: R150
+    # General:    R200
+    # VIP:        R350
+    #
+    # Later price changes must not modify historical orders.
+    # ========================================================
 
     ticket_name = db.Column(
         db.String(100),
@@ -2695,18 +2971,20 @@ class TicketOrderItem(db.Model):
         db.Integer,
         nullable=False,
     )
-    
+
     attendee_names = db.Column(
         db.JSON,
         nullable=True,
     )
-
 
     line_total = db.Column(
         db.Numeric(10, 2),
         nullable=False,
     )
 
+    # ========================================================
+    # TIMESTAMPS
+    # ========================================================
 
     created_at = db.Column(
         db.DateTime,
@@ -2714,6 +2992,9 @@ class TicketOrderItem(db.Model):
         default=datetime.utcnow,
     )
 
+    # ========================================================
+    # RELATIONSHIPS
+    # ========================================================
 
     order = db.relationship(
         "TicketOrder",
@@ -2736,6 +3017,24 @@ class TicketOrderItem(db.Model):
         lazy=True,
     )
 
+    # ========================================================
+    # FINANCIAL HELPERS
+    # ========================================================
+
+    @property
+    def calculated_line_total(self):
+
+        return (
+            Decimal(str(self.unit_price))
+            * Decimal(str(self.quantity))
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+
+    # ========================================================
+    # REPRESENTATION
+    # ========================================================
 
     def __repr__(self):
 
@@ -2746,8 +3045,6 @@ class TicketOrderItem(db.Model):
             f"ticket_name={self.ticket_name} "
             f"quantity={self.quantity}>"
         )
-
-
 # ============================================================
 # ENTRY PASS
 # ============================================================
