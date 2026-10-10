@@ -806,6 +806,31 @@ def initiate_ticket_refund(
         raise
 
 
+def register_ticket_refund_routes(app, *, db, TicketOrder, TicketOrderItem,
+                                  TicketRefund, TicketRefundItem, EntryPass,
+                                  paystack_api_request, superadmin_guard):
+    if not callable(superadmin_guard):
+        raise ValueError('A verified super-admin authorization guard is required.')
+
+    def admin_identity():
+        identity = superadmin_guard()
+        if not identity:
+            abort(403)
+        return str(identity)
+
+    def require_csrf():
+        expected = session.get('kalxa_refund_csrf_token')
+        supplied = request.headers.get('X-CSRF-Token', '')
+        if not isinstance(expected, str) or not expected or not hmac.compare_digest(expected, supplied):
+            abort(403, description='Invalid refund CSRF token.')
+        # Reject cross-site browser requests when Origin is supplied.
+        origin = request.headers.get('Origin')
+        if origin:
+            from urllib.parse import urlsplit
+            parsed = urlsplit(origin)
+            if parsed.scheme != 'https' or parsed.netloc != request.host:
+                abort(403, description='Invalid refund request origin.')
+
 def reconcile_ticket_refund(*, refund_id, db, TicketOrder, TicketOrderItem,
                             TicketRefund, TicketRefundItem, EntryPass,
                             paystack_api_request):
