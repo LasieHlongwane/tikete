@@ -33340,90 +33340,222 @@ def admin_purchase_event_boost(
 # PAYSTACK EVENT BOOST CALLBACK
 # ============================================================
 
+
 @app.route(
-    "/payments/paystack/boost/callback"
+    "/payments/paystack/boost/callback",
+    methods=["GET"],
 )
 def paystack_event_boost_callback():
+    """
+    Handle the customer's return from Paystack
+    after purchasing an Event Boost.
 
-    reference = (
-        request.args.get(
-            "reference",
-            "",
-        )
-        .strip()
-    )
+    SECURITY:
+        The callback URL is not proof of payment.
+        Verify directly with Paystack.
 
+    IDEMPOTENCY:
+        The boost finaliser must prevent duplicate
+        payment activation.
+
+        The reminder processor must prevent duplicate
+        notifications across repeated callbacks.
+
+    REMINDERS:
+        Attempt immediate processing after successful
+        finalisation.
+
+        A background processor may retry pending work.
+
+    This callback does not initiate settlements,
+    refunds, or organiser transfers.
+    """
+
+    # ========================================================
+    # EXTRACT PAYMENT REFERENCE
+    # ========================================================
+
+    reference = request.args.get("reference", "")
+
+    if not isinstance(reference, str):
+        abort(400)
+
+    reference = reference.strip()
 
     if not reference:
+        abort(400)
 
-        abort(
-            400
-        )
-
+    # ========================================================
+    # FIND EVENT BOOST
+    # ========================================================
 
     boost = (
         EventBoost.query
         .filter_by(
-            payment_reference=
-                reference
+            payment_reference=reference,
         )
         .first_or_404()
     )
 
+    # ========================================================
+    # VERIFY PAYMENT DIRECTLY WITH PAYSTACK
+    # ========================================================
 
     try:
 
-        result = (
-            paystack_api_request(
-                "GET",
-                (
-                    "/transaction/verify/"
-                    + urllib.parse.quote(
-                        reference,
-                        safe="",
-                    )
-                ),
-            )
+        result = paystack_api_request(
+            "GET",
+            (
+                "/transaction/verify/"
+                + urllib.parse.quote(
+                    reference,
+                    safe="",
+                )
+            ),
         )
 
-
-        transaction_data = (
-            result.get(
-                "data"
+        if (
+            not isinstance(result, dict)
+            or result.get("status") is not True
+        ):
+            raise RuntimeError(
+                "Paystack verification request failed."
             )
-            or {}
-        )
 
+        transaction_data = result.get("data")
+
+        if not isinstance(transaction_data, dict):
+            raise RuntimeError(
+                "Paystack returned invalid transaction data."
+            )
+
+        # ====================================================
+        # VERIFY TRANSACTION REFERENCE
+        # ====================================================
+
+        if transaction_data.get("reference") != reference:
+            raise RuntimeError(
+                "Paystack transaction reference mismatch."
+            )
+
+        # ====================================================
+        # VERIFY PAYMENT STATUS
+        # ====================================================
+
+        if transaction_data.get("status") != "success":
+            raise RuntimeError(
+                "Event Boost payment is not successful."
+            )
+
+        # ====================================================
+        # VERIFY CURRENCY
+        # ====================================================
+
+        if transaction_data.get("currency") != "ZAR":
+            raise RuntimeError(
+                "Unexpected Paystack payment currency."
+            )
+
+        # ====================================================
+        # VERIFY PAYMENT AMOUNT FORMAT
+        # ========================================================
+        #
+        # The product-specific finaliser must compare
+        # this amount with the stored Boost price.
+        # ====================================================
+
+        verified_amount = transaction_data.get("amount")
+
+        if (
+            isinstance(verified_amount, bool)
+            or not isinstance(verified_amount, int)
+            or verified_amount <= 0
+        ):
+            raise RuntimeError(
+                "Invalid Paystack transaction amount."
+            )
+
+        # ====================================================
+        # VERIFY TRANSACTION ID
+        # ====================================================
+
+        transaction_id = transaction_data.get("id")
+
+        if (
+            isinstance(transaction_id, bool)
+            or not isinstance(transaction_id, (int, str))
+            or not str(transaction_id).strip()
+        ):
+            raise RuntimeError(
+                "Missing Paystack transaction ID."
+            )
+
+        # ====================================================
+        # FINALISE EVENT BOOST PAYMENT
+        # ========================================================
+        #
+        # This service must:
+        #
+        # - Verify the expected Boost price.
+        # - Prevent duplicate payment activation.
+        # - Commit the successful purchase.
+        # ====================================================
 
         finalize_event_boost_payment(
             boost,
             transaction_data,
         )
 
+        current_app.logger.info(
+            (
+                "[Event Boost Callback] "
+                "Payment confirmed "
+                "reference=%s boost_id=%s "
+                "transaction_id=%s"
+            ),
+            reference,
+            boost.id,
+            transaction_id,
+        )
 
-        # Launch campaigns are due immediately.
-        # If sending fails here, the cron processor can retry
-        # pending future work without duplicating sent reminders.
+        # ====================================================
+        # PROCESS IMMEDIATE EVENT BOOST REMINDERS
+        # ========================================================
+        #
+        # Reminder processing is intentionally separate
+        # from payment finalisation.
+        #
+        # A reminder-processing failure must not undo
+        # a successfully verified payment.
+        #
+        # This processor must be idempotent because
+        # the customer may reload the callback URL.
+        # ====================================================
+
         try:
 
             process_due_event_boost_reminders(
-                boost_id=
-                    boost.id,
-                limit=
-                    4,
+                boost_id=boost.id,
+                limit=4,
             )
-
 
         except Exception:
 
+            db.session.rollback()
+
             current_app.logger.exception(
                 (
-                    "[Event Boost] Immediate launch processing "
-                    "failed boost_id=%s"
+                    "[Event Boost Callback] "
+                    "Immediate reminder processing failed "
+                    "boost_id=%s reference=%s"
                 ),
                 boost.id,
+                reference,
             )
 
+        # ====================================================
+        # SUCCESS MESSAGE
+        # ====================================================
 
         flash(
             (
@@ -33433,39 +33565,39 @@ def paystack_event_boost_callback():
             "success",
         )
 
-
-    except Exception as error:
+    except Exception:
 
         db.session.rollback()
 
-
         current_app.logger.exception(
             (
-                "[Event Boost Paystack Callback] "
-                "Verification failed reference=%s error=%s"
+                "[Event Boost Callback] "
+                "Payment verification or finalisation "
+                "failed reference=%s boost_id=%s"
             ),
             reference,
-            error,
+            boost.id,
         )
-
 
         flash(
             (
-                "Your Event Boost payment is still being "
-                "verified. Please refresh shortly."
+                "Your Event Boost payment could not "
+                "be confirmed yet. Please check its "
+                "status shortly."
             ),
-            "error",
+            "warning",
         )
 
+    # ========================================================
+    # RETURN TO EVENT BOOST PAGE
+    # ========================================================
 
     return redirect(
         url_for(
             "admin_event_boost",
-            event_id=
-                boost.event_id,
+            event_id=boost.event_id,
         )
     )
-
 
 # ============================================================
 # EVENT BOOST TRAFFIC-BASED FALLBACK
