@@ -1148,6 +1148,27 @@ def paystack_api_request(
 # ============================================================
 # STORIES CONVERSION ANALYTICS API
 # ============================================================
+def _kalxa_verified_paystack_transaction(reference):
+    """Fetch a verified successful ZAR transaction from Paystack."""
+    if not isinstance(reference, str) or not reference.strip():
+        raise RuntimeError("Missing Paystack payment reference.")
+    reference = reference.strip()
+    result = paystack_api_request(
+        "GET", "/transaction/verify/" + urllib.parse.quote(reference, safe="")
+    )
+    if not isinstance(result, dict) or result.get("status") is not True:
+        raise RuntimeError("Paystack verification request failed.")
+    data = result.get("data")
+    if not isinstance(data, dict):
+        raise RuntimeError("Paystack returned invalid transaction data.")
+    if data.get("reference") != reference:
+        raise RuntimeError("Verified Paystack reference mismatch.")
+    if data.get("status") != "success" or data.get("currency") != "ZAR":
+        raise RuntimeError("Paystack transaction is not a successful ZAR payment.")
+    amount = data.get("amount")
+    if isinstance(amount, bool) or not isinstance(amount, int) or amount <= 0:
+        raise RuntimeError("Invalid verified Paystack amount.")
+    return data
 
 
 # ============================================================
