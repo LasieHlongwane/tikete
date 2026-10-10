@@ -27565,28 +27565,6 @@ def reserve_ticket(event_id):
 # PAYSTACK TICKET CALLBACK
 # ============================================================
 
-@app.route("/payments/paystack/callback", methods=["GET"])
-def paystack_ticket_callback():
-    """Customer return URL; always verify payment server-side."""
-    reference = (request.args.get("reference") or "").strip()
-    if not reference:
-        abort(400)
-    order = TicketOrder.query.filter_by(payment_reference=reference).first_or_404()
-    try:
-        transaction_data = _kalxa_verified_paystack_transaction(reference)
-        finalize_paystack_ticket_order(order, transaction_data)
-        flash("Payment confirmed. Your Kalxa ticket is ready.", "success")
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Paystack Ticket Callback] Verification/finalisation failed reference=%s",
-            reference,
-        )
-        flash(
-            "Your payment could not be confirmed yet. Please check your booking status shortly.",
-            "warning",
-        )
-    return redirect(url_for("booking_status", reference=reference))
 
 
 @app.route("/payments/paystack/webhook", methods=["POST"])
@@ -30922,43 +30900,6 @@ def paystack_restaurant_subscription_callback():
 # PAYSTACK SUBSCRIPTION CALLBACK
 # ============================================================
 
-@app.route("/payments/paystack/subscription/callback", methods=["GET"])
-def paystack_subscription_callback():
-    """Legacy organiser subscription return URL; not organiser approval."""
-    reference = (request.args.get("reference") or "").strip()
-    if not reference:
-        abort(400)
-    payment = SubscriptionPayment.query.filter_by(
-        payment_reference=reference
-    ).first_or_404()
-
-    if payment.payment_status == "cancelled":
-        current_app.logger.warning(
-            "[Legacy Subscription Callback] Cancelled payment needs manual "
-            "reconciliation reference=%s payment_id=%s",
-            reference, payment.id,
-        )
-        flash("This checkout was cancelled. Contact support if you were charged.", "warning")
-        return redirect(url_for("admin_subscription"))
-
-    try:
-        transaction_data = _kalxa_verified_paystack_transaction(reference)
-        finalize_paystack_subscription_payment(payment, transaction_data)
-        flash(
-            "Subscription payment confirmed. Event organiser approval is managed separately.",
-            "success",
-        )
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Legacy Subscription Callback] Verification failed reference=%s",
-            reference,
-        )
-        flash(
-            "Your subscription payment is still being verified. Please check again shortly.",
-            "warning",
-        )
-    return redirect(url_for("admin_subscription"))
 
 # ============================================================
 # ORGANIZER PAYSTACK SETUP
@@ -34929,28 +34870,6 @@ def _kalxa_verified_paystack_transaction(reference):
     return data
 
 
-@app.route("/payments/paystack/callback", methods=["GET"])
-def paystack_ticket_callback():
-    """Customer return URL; always verify payment server-side."""
-    reference = (request.args.get("reference") or "").strip()
-    if not reference:
-        abort(400)
-    order = TicketOrder.query.filter_by(payment_reference=reference).first_or_404()
-    try:
-        transaction_data = _kalxa_verified_paystack_transaction(reference)
-        finalize_paystack_ticket_order(order, transaction_data)
-        flash("Payment confirmed. Your Kalxa ticket is ready.", "success")
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Paystack Ticket Callback] Verification/finalisation failed reference=%s",
-            reference,
-        )
-        flash(
-            "Your payment could not be confirmed yet. Please check your booking status shortly.",
-            "warning",
-        )
-    return redirect(url_for("booking_status", reference=reference))
 
 
 @app.route("/payments/paystack/webhook", methods=["POST"])
@@ -35119,58 +35038,257 @@ def paystack_ticket_webhook():
     return "", 200
 
 
-@app.route("/payments/paystack/subscription/callback", methods=["GET"])
-def paystack_subscription_callback():
-    """Legacy organiser subscription return URL; not organiser approval."""
-    reference = (request.args.get("reference") or "").strip()
+# ============================================================
+# PAYSTACK TICKET PAYMENT CALLBACK
+# ============================================================
+
+@app.route(
+    "/payments/paystack/callback",
+    methods=["GET"],
+)
+def paystack_ticket_callback():
+    """
+    Customer return URL after Paystack checkout.
+
+    Security:
+        - Require payment reference.
+        - Find the matching ticket order.
+        - Verify payment directly with Paystack.
+        - Finalize the ticket order only after verification.
+        - Preserve KALXA's 4% commission accounting.
+        - Never trust callback parameters as proof of payment.
+    """
+
+    # ========================================================
+    # 1. GET PAYMENT REFERENCE
+    # ========================================================
+
+    reference = (
+        request.args.get("reference") or ""
+    ).strip()
+
     if not reference:
         abort(400)
-    payment = SubscriptionPayment.query.filter_by(
-        payment_reference=reference
-    ).first_or_404()
 
-    if payment.payment_status == "cancelled":
-        current_app.logger.warning(
-            "[Legacy Subscription Callback] Cancelled payment needs manual "
-            "reconciliation reference=%s payment_id=%s",
-            reference, payment.id,
+    # ========================================================
+    # 2. FIND TICKET ORDER
+    # ========================================================
+
+    order = (
+        TicketOrder.query
+        .filter_by(
+            payment_reference=reference
         )
-        flash("This checkout was cancelled. Contact support if you were charged.", "warning")
-        return redirect(url_for("admin_subscription"))
+        .first_or_404()
+    )
+
+    # ========================================================
+    # 3. VERIFY PAYMENT WITH PAYSTACK
+    # ========================================================
 
     try:
-        transaction_data = _kalxa_verified_paystack_transaction(reference)
-        finalize_paystack_subscription_payment(payment, transaction_data)
+
+        transaction_data = (
+            _kalxa_verified_paystack_transaction(
+                reference
+            )
+        )
+
+        # ====================================================
+        # 4. FINALIZE VERIFIED PAYMENT
+        # ====================================================
+        #
+        # Your existing finalization function handles:
+        #
+        # - Payment verification
+        # - Order payment status
+        # - KALXA 4% commission recording
+        # - Entry-pass generation
+        # - Database commit
+        #
+        # Do not calculate commission again here.
+        # ====================================================
+
+        finalize_paystack_ticket_order(
+            order,
+            transaction_data,
+        )
+
         flash(
-            "Subscription payment confirmed. Event organiser approval is managed separately.",
+            (
+                "Payment confirmed. "
+                "Your Kalxa ticket is ready."
+            ),
             "success",
         )
+
     except Exception:
+
         db.session.rollback()
+
         current_app.logger.exception(
-            "[Legacy Subscription Callback] Verification failed reference=%s",
+            (
+                "[Paystack Ticket Callback] "
+                "Verification/finalisation failed "
+                "reference=%s"
+            ),
             reference,
         )
+
         flash(
-            "Your subscription payment is still being verified. Please check again shortly.",
+            (
+                "Your payment could not be confirmed yet. "
+                "Please check your booking status shortly."
+            ),
             "warning",
         )
-    return redirect(url_for("admin_subscription"))
 
+    # ========================================================
+    # 5. REDIRECT TO BOOKING STATUS
+    # ========================================================
+
+    return redirect(
+        url_for(
+            "booking_status",
+            reference=reference,
+        )
+    )
+    
+    
+ # ============================================================
+# PAYSTACK LEGACY ORGANISER SUBSCRIPTION CALLBACK
 # ============================================================
-# TICKET PAYMENT POLICY
-# ============================================================
-#
-# Ticket payments are Paystack-only.
-#
-# There is intentionally no organizer "mark paid" route.
-# A ticket order becomes paid only after:
-#   1. Paystack callback verification,
-#   2. signed Paystack webhook confirmation, or
-#   3. organizer-triggered server-side Paystack verification.
-#
-# This prevents manual payment confirmation from bypassing
-# Paystack's reference / amount / currency checks.
+
+@app.route(
+    "/payments/paystack/subscription/callback",
+    methods=["GET"],
+)
+def paystack_subscription_callback():
+    """
+    Legacy organiser subscription payment callback.
+
+    IMPORTANT:
+        Subscription payment does not automatically
+        approve an event organiser.
+
+        Organiser approval remains controlled
+        by the KALXA super-admin.
+    """
+
+    # ========================================================
+    # 1. GET PAYMENT REFERENCE
+    # ========================================================
+
+    reference = (
+        request.args.get("reference") or ""
+    ).strip()
+
+    if not reference:
+        abort(400)
+
+    # ========================================================
+    # 2. FIND SUBSCRIPTION PAYMENT
+    # ========================================================
+
+    payment = (
+        SubscriptionPayment.query
+        .filter_by(
+            payment_reference=reference
+        )
+        .first_or_404()
+    )
+
+    # ========================================================
+    # 3. HANDLE CANCELLED CHECKOUT
+    # ========================================================
+
+    if payment.payment_status == "cancelled":
+
+        current_app.logger.warning(
+            (
+                "[Legacy Subscription Callback] "
+                "Cancelled payment requires "
+                "manual reconciliation "
+                "reference=%s payment_id=%s"
+            ),
+            reference,
+            payment.id,
+        )
+
+        flash(
+            (
+                "This checkout was cancelled. "
+                "Contact support if you were charged."
+            ),
+            "warning",
+        )
+
+        return redirect(
+            url_for("admin_subscription")
+        )
+
+    # ========================================================
+    # 4. VERIFY SUBSCRIPTION PAYMENT
+    # ========================================================
+
+    try:
+
+        transaction_data = (
+            _kalxa_verified_paystack_transaction(
+                reference
+            )
+        )
+
+        # ====================================================
+        # 5. FINALIZE VERIFIED SUBSCRIPTION
+        # ====================================================
+
+        finalize_paystack_subscription_payment(
+            payment,
+            transaction_data,
+        )
+
+        flash(
+            (
+                "Subscription payment confirmed. "
+                "Event organiser approval is "
+                "managed separately."
+            ),
+            "success",
+        )
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Legacy Subscription Callback] "
+                "Verification failed reference=%s"
+            ),
+            reference,
+        )
+
+        flash(
+            (
+                "Your subscription payment is still "
+                "being verified. "
+                "Please check again shortly."
+            ),
+            "warning",
+        )
+
+    # ========================================================
+    # 6. REDIRECT
+    # ========================================================
+
+    return redirect(
+        url_for("admin_subscription")
+    )
+    
+ # ============================================================
+# KALXA TICKETING
+# SECURE EVENT TICKET CHECK-IN
 # ============================================================
 
 def perform_ticket_checkin(
@@ -35204,9 +35322,10 @@ def perform_ticket_checkin(
             entry_pass: EntryPass | None,
         )
 
-    The caller must authenticate the operator and
-    derive organiser/staff/event permissions from
-    trusted server-side state.
+    IMPORTANT:
+        The caller must authenticate the operator and
+        derive organiser/staff/event permissions from
+        trusted server-side state.
     """
 
     # ========================================================
@@ -35252,6 +35371,7 @@ def perform_ticket_checkin(
     # ========================================================
 
     if staff_account_id is not None:
+
         if (
             isinstance(staff_account_id, bool)
             or not isinstance(staff_account_id, int)
@@ -35273,6 +35393,7 @@ def perform_ticket_checkin(
             allowed_event_ids = list(
                 allowed_event_ids
             )
+
         except TypeError:
             return (
                 False,
@@ -35322,12 +35443,20 @@ def perform_ticket_checkin(
         )
 
         if allowed_event_ids is not None:
+
             query = query.filter(
-                TicketEvent.id.in_(allowed_event_ids)
+                TicketEvent.id.in_(
+                    allowed_event_ids
+                )
             )
 
         # ====================================================
         # 5. LOCK ENTRY PASS
+        # ========================================================
+        #
+        # PostgreSQL SELECT FOR UPDATE prevents another
+        # transaction from modifying this entry pass
+        # while the current check-in is being processed.
         # ========================================================
 
         entry_pass = (
@@ -35340,6 +35469,7 @@ def perform_ticket_checkin(
         )
 
         if entry_pass is None:
+
             db.session.rollback()
 
             return (
@@ -35354,7 +35484,11 @@ def perform_ticket_checkin(
 
         order = entry_pass.order
 
-        if order is None or order.event is None:
+        if (
+            order is None
+            or order.event is None
+        ):
+
             db.session.rollback()
 
             return (
@@ -35368,6 +35502,7 @@ def perform_ticket_checkin(
         # ========================================================
 
         if order.payment_status != "paid":
+
             db.session.rollback()
 
             return (
@@ -35384,6 +35519,7 @@ def perform_ticket_checkin(
         # ========================================================
 
         if entry_pass.status == "cancelled":
+
             db.session.rollback()
 
             return (
@@ -35393,6 +35529,7 @@ def perform_ticket_checkin(
             )
 
         if entry_pass.status == "refunded":
+
             db.session.rollback()
 
             return (
@@ -35409,6 +35546,7 @@ def perform_ticket_checkin(
             entry_pass.status == "used"
             or entry_pass.checked_in_at is not None
         ):
+
             db.session.rollback()
 
             return (
@@ -35418,6 +35556,7 @@ def perform_ticket_checkin(
             )
 
         if entry_pass.status != "valid":
+
             db.session.rollback()
 
             return (
@@ -35427,16 +35566,16 @@ def perform_ticket_checkin(
             )
 
         # ====================================================
-        # 10. BLOCK ACTIVE REFUND REQUESTS
+        # 10. BLOCK ACTIVE OR COMPLETED REFUNDS
         # ========================================================
         #
-        # A ticket can still have status="valid"
+        # A ticket may still have status="valid"
         # while Paystack processes a refund.
         #
-        # It must not be admitted during that period.
+        # It must not be admitted during this period.
         #
-        # Terminal failed/cancelled refunds do not
-        # automatically block admission.
+        # Failed/cancelled refund attempts do not
+        # automatically prevent admission.
         # ========================================================
 
         active_refund_statuses = (
@@ -35448,7 +35587,9 @@ def perform_ticket_checkin(
         )
 
         active_refund = (
-            db.session.query(TicketRefund.id)
+            db.session.query(
+                TicketRefund.id
+            )
             .join(
                 TicketRefundItem,
                 TicketRefundItem.refund_id
@@ -35466,7 +35607,18 @@ def perform_ticket_checkin(
         )
 
         if active_refund is not None:
+
             db.session.rollback()
+
+            current_app.logger.warning(
+                (
+                    "[Ticketing Check-In] "
+                    "Blocked refunded/refunding ticket "
+                    "pass_id=%s order_id=%s"
+                ),
+                entry_pass.id,
+                order.id,
+            )
 
             return (
                 False,
@@ -35483,14 +35635,18 @@ def perform_ticket_checkin(
         # ========================================================
 
         existing_checkin = (
-            db.session.query(CheckIn.id)
+            db.session.query(
+                CheckIn.id
+            )
             .filter(
-                CheckIn.entry_pass_id == entry_pass.id
+                CheckIn.entry_pass_id
+                == entry_pass.id
             )
             .first()
         )
 
         if existing_checkin is not None:
+
             db.session.rollback()
 
             return (
@@ -35506,7 +35662,9 @@ def perform_ticket_checkin(
         now = datetime.utcnow()
 
         updated = (
-            db.session.query(EntryPass)
+            db.session.query(
+                EntryPass
+            )
             .filter(
                 EntryPass.id == entry_pass.id,
                 EntryPass.status == "valid",
@@ -35522,6 +35680,7 @@ def perform_ticket_checkin(
         )
 
         if updated != 1:
+
             db.session.rollback()
 
             return (
@@ -35544,7 +35703,9 @@ def perform_ticket_checkin(
             staff_account_id=staff_account_id,
         )
 
-        db.session.add(checkin)
+        db.session.add(
+            checkin
+        )
 
         # ====================================================
         # 14. COMMIT CHECK-IN ATOMICALLY
@@ -35564,9 +35725,11 @@ def perform_ticket_checkin(
         current_app.logger.info(
             (
                 "[Ticketing Check-In] "
-                "Ticket checked in "
-                "pass_id=%s organizer_id=%s "
-                "staff_account_id=%s operator=%s"
+                "Ticket checked in successfully "
+                "pass_id=%s "
+                "organizer_id=%s "
+                "staff_account_id=%s "
+                "operator=%s"
             ),
             pass_id,
             organizer_id,
@@ -35588,7 +35751,8 @@ def perform_ticket_checkin(
             (
                 "[Ticketing Check-In] "
                 "Check-in failed "
-                "pass_id=%s organizer_id=%s "
+                "pass_id=%s "
+                "organizer_id=%s "
                 "staff_account_id=%s"
             ),
             pass_id,
@@ -35601,8 +35765,6 @@ def perform_ticket_checkin(
             "Ticket check-in failed. Please try again.",
             None,
         )
-
-
 # ============================================================
 # ATOMIC TICKET CHECK-IN
 # ============================================================
