@@ -23706,12 +23706,10 @@ def require_event_organizer():
 # ORGANIZER LOGIN
 # ============================================================
 
+
 @app.route(
     "/organizer/login",
-    methods=[
-        "GET",
-        "POST",
-    ],
+    methods=["GET", "POST"],
 )
 def organizer_login():
 
@@ -23719,10 +23717,7 @@ def organizer_login():
     # ALREADY LOGGED IN
     # ========================================================
 
-    existing_organizer = (
-        get_current_organizer()
-    )
-
+    existing_organizer = get_current_organizer()
 
     if existing_organizer:
 
@@ -23734,30 +23729,23 @@ def organizer_login():
             )
         )
 
-
     # ========================================================
     # LOGIN
     # ========================================================
 
     if request.method == "POST":
 
-        email = (
-            normalize_email(
-                request.form.get(
-                    "email",
-                    "",
-                )
-            )
-        )
-
-
-        password = (
+        email = normalize_email(
             request.form.get(
-                "password",
+                "email",
                 "",
             )
         )
 
+        password = request.form.get(
+            "password",
+            "",
+        )
 
         # ====================================================
         # FIND ORGANIZER
@@ -23765,29 +23753,9 @@ def organizer_login():
 
         organizer = (
             Organizer.query
-            .filter_by(
-                email=email
-            )
+            .filter_by(email=email)
             .first()
         )
-
-
-        # ====================================================
-        # SAFE ACCOUNT TYPE
-        #
-        # Existing deployments/accounts that do not yet expose
-        # account_type are treated as event accounts.
-        # ====================================================
-
-        account_type = (
-            getattr(
-                organizer,
-                "account_type",
-                None,
-            )
-            or "event"
-        )
-
 
         # ====================================================
         # VERIFY PASSWORD
@@ -23795,189 +23763,240 @@ def organizer_login():
 
         password_ok = (
             organizer is not None
-            and organizer.active
-            and organizer.check_password(
-                password
-            )
+            and organizer.check_password(password)
         )
-
-
-        current_app.logger.info(
-            (
-                "[Organizer Login] attempt "
-                "email=%s "
-                "found=%s "
-                "active=%s "
-                "account_type=%s "
-                "password_ok=%s"
-            ),
-            email,
-            organizer is not None,
-            (
-                organizer.active
-                if organizer
-                else None
-            ),
-            account_type,
-            password_ok,
-        )
-
-
-        # ====================================================
-        # INVALID LOGIN
-        # ====================================================
 
         if not password_ok:
+
+            current_app.logger.warning(
+                "[Organizer Login] Invalid credentials"
+            )
 
             flash(
                 "Invalid email or password.",
                 "error",
             )
 
+            return render_template(
+                "organizer/login.html"
+            )
+
+        # ====================================================
+        # ACCOUNT TYPE
+        # ====================================================
+
+        account_type = (
+            str(
+                organizer.account_type
+                or "event"
+            )
+            .strip()
+            .lower()
+        )
+
+        if account_type not in {
+            "event",
+            "restaurant",
+        }:
+            account_type = "event"
+
+        # ====================================================
+        # RESTAURANT ACCOUNT STATUS
+        # ====================================================
+        #
+        # Preserve existing restaurant access rules.
+        # ====================================================
+
+        if (
+            account_type == "restaurant"
+            and not organizer.active
+        ):
+
+            flash(
+                "Your restaurant account is inactive. "
+                "Please contact KALXA support.",
+                "error",
+            )
 
             return render_template(
                 "organizer/login.html"
             )
 
-
         # ====================================================
-        # PRESERVE EXISTING KALXA BRIDGE SESSION VALUES
+        # EVENT ACCOUNT APPROVAL STATUS
         # ====================================================
 
-        pending_kalxa_organizer_id = (
-            session.get(
-                "pending_kalxa_organizer_id"
+        approval_status = (
+            str(
+                organizer.approval_status
+                or "pending"
             )
+            .strip()
+            .lower()
         )
 
+        # ====================================================
+        # PRESERVE KALXA DISCOVERY BRIDGE VALUES
+        # ====================================================
 
-        pending_content_item_id = (
-            session.get(
-                "pending_kalxa_content_item_id"
-            )
+        pending_kalxa_organizer_id = session.get(
+            "pending_kalxa_organizer_id"
         )
 
+        pending_content_item_id = session.get(
+            "pending_kalxa_content_item_id"
+        )
 
         # ====================================================
-        # START CLEAN ORGANIZER SESSION
+        # CREATE ORGANIZER SESSION
         # ====================================================
 
         session.clear()
-
 
         session[
             ORGANIZER_SESSION_KEY
         ] = organizer.id
 
-
         session.permanent = True
 
-
-        current_app.logger.info(
-            (
-                "[Organizer Login] authenticated "
-                "organizer_id=%s "
-                "account_type=%s "
-                "session_key=%s"
-            ),
-            organizer.id,
-            account_type,
-            session.get(
-                ORGANIZER_SESSION_KEY
-            ),
-        )
-
-
         # ====================================================
-        # RESTORE BRIDGE SESSION VALUES
+        # RESTORE KALXA BRIDGE VALUES
         # ====================================================
 
         if pending_kalxa_organizer_id:
 
             session[
                 "kalxa_organizer_id"
-            ] = (
-                pending_kalxa_organizer_id
-            )
-
+            ] = pending_kalxa_organizer_id
 
         if pending_content_item_id:
 
             session[
                 "kalxa_content_item_id"
-            ] = (
-                pending_content_item_id
+            ] = pending_content_item_id
+
+        # ====================================================
+        # LINK DISCOVERY ORGANIZER
+        # ========================================================
+        #
+        # Preserve the existing integration.
+        #
+        # Only approved event organisers or active restaurant
+        # accounts may establish the permanent account link.
+        # ========================================================
+
+        can_link_discovery = (
+            account_type == "restaurant"
+            or (
+                account_type == "event"
+                and approval_status == "approved"
+                and organizer.active
             )
-
-
-        # ====================================================
-        # CONNECT DISCOVERY ORGANIZER WHEN NEEDED
-        # ====================================================
+        )
 
         if (
-            pending_kalxa_organizer_id
-            and organizer.kalxa_discovery_organizer_id
-            is None
+            can_link_discovery
+            and pending_kalxa_organizer_id
+            and organizer.kalxa_discovery_organizer_id is None
         ):
-
-            organizer.kalxa_discovery_organizer_id = (
-                int(
-                    pending_kalxa_organizer_id
-                )
-            )
-
 
             try:
 
+                discovery_id = int(
+                    pending_kalxa_organizer_id
+                )
+
+                organizer.kalxa_discovery_organizer_id = (
+                    discovery_id
+                )
+
                 db.session.commit()
 
-
-            except Exception as error:
+            except (TypeError, ValueError):
 
                 db.session.rollback()
 
-
-                current_app.logger.exception(
-                    (
-                        "[Organizer Login] "
-                        "Unable to connect discovery "
-                        "organizer_id=%s error=%s"
-                    ),
-                    organizer.id,
-                    error,
+                current_app.logger.warning(
+                    "[Organizer Login] Invalid Discovery ID"
                 )
 
+            except Exception:
+
+                db.session.rollback()
+
+                current_app.logger.exception(
+                    "[Organizer Login] Discovery link failed"
+                )
 
         # ====================================================
         # SUCCESS MESSAGE
         # ====================================================
 
-        if (
-            account_type
-            == "restaurant"
-        ):
+        if account_type == "restaurant":
 
             flash(
-                (
-                    "Welcome back to your "
-                    "Kalxa Restaurant dashboard."
-                ),
+                "Welcome back to your "
+                "Kalxa Restaurant dashboard.",
+                "success",
+            )
+
+        elif approval_status == "pending":
+
+            flash(
+                "You have signed in successfully. "
+                "Your event organiser application "
+                "is awaiting KALXA approval.",
+                "info",
+            )
+
+        elif approval_status == "rejected":
+
+            flash(
+                "Your event organiser application "
+                "was rejected. Please review "
+                "your application status.",
+                "warning",
+            )
+
+        elif approval_status == "suspended":
+
+            flash(
+                "Your event organiser account "
+                "is currently suspended.",
+                "warning",
+            )
+
+        elif organizer.active:
+
+            flash(
+                "Welcome back to your "
+                "Kalxa Event dashboard.",
                 "success",
             )
 
         else:
 
             flash(
-                (
-                    "Welcome back to your "
-                    "Kalxa Event dashboard."
-                ),
-                "success",
+                "Your event organiser account "
+                "is currently inactive.",
+                "warning",
             )
 
+        # ====================================================
+        # LOG SUCCESS
+        # ====================================================
+
+        current_app.logger.info(
+            "[Organizer Login] authenticated "
+            "organizer_id=%s account_type=%s "
+            "approval_status=%s",
+            organizer.id,
+            account_type,
+            approval_status,
+        )
 
         # ====================================================
-        # ACCOUNT-TYPE REDIRECT
+        # REDIRECT
         # ====================================================
 
         return redirect(
@@ -23988,7 +24007,6 @@ def organizer_login():
             )
         )
 
-
     # ========================================================
     # GET
     # ========================================================
@@ -23996,8 +24014,6 @@ def organizer_login():
     return render_template(
         "organizer/login.html"
     )
-
-
 
 
 # ============================================================
