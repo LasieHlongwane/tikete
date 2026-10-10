@@ -1598,141 +1598,220 @@ def finalize_paystack_ticket_order(
     order,
     transaction_data,
 ):
+    """
+    Finalise a verified Paystack ticket payment.
 
-    if (
-        order.payment_status
-        == "paid"
+    Responsibilities:
+        1. Validate the Paystack transaction.
+        2. Verify payment reference, amount and currency.
+        3. Prevent duplicate payment finalisation.
+        4. Mark the order as paid.
+        5. Generate attendee entry passes.
+        6. Preserve legacy single-price ticket support.
+
+    IMPORTANT:
+        This function does not perform Paystack settlement
+        or deduct KALXA's 4% commission.
+
+        Commission accounting will be added separately
+        after reviewing the TicketOrder model.
+    """
+
+    # ========================================================
+    # VALIDATE TRANSACTION DATA
+    # ========================================================
+
+    if not isinstance(
+        transaction_data,
+        dict,
     ):
 
-        return order
-
-
-    if (
-        not isinstance(
-            transaction_data,
-            dict,
+        raise RuntimeError(
+            "Invalid Paystack transaction data."
         )
-        or transaction_data.get(
-            "status"
-        )
-        != "success"
-    ):
+
+    if transaction_data.get("status") != "success":
 
         raise RuntimeError(
             "Paystack transaction is not successful."
         )
 
+    # ========================================================
+    # VALIDATE PAYMENT REFERENCE
+    # ========================================================
 
-    reference = (
-        str(
-            transaction_data.get(
-                "reference",
-                "",
-            )
-        )
-        .strip()
+    reference = transaction_data.get(
+        "reference"
     )
 
-
     if (
-        reference
-        != order.payment_reference
+        not isinstance(reference, str)
+        or reference.strip() != order.payment_reference
     ):
 
         raise RuntimeError(
             "Paystack reference does not match this order."
         )
 
+    # ========================================================
+    # VALIDATE CURRENCY
+    # ========================================================
+
+    currency = transaction_data.get(
+        "currency"
+    )
+
+    if currency != "ZAR":
+
+        raise RuntimeError(
+            "Unexpected or missing Paystack payment currency."
+        )
+
+    # ========================================================
+    # VALIDATE PAYMENT AMOUNT
+    # ========================================================
 
     expected_amount = int(
         (
             Decimal(
                 str(
                     order.checkout_amount
-                    or order.total_amount
+                    if order.checkout_amount is not None
+                    else order.total_amount
                 )
             )
-            * 100
-        )
-        .quantize(
+            * Decimal("100")
+        ).quantize(
             Decimal("1"),
-            rounding=
-                ROUND_UP,
+            rounding=ROUND_UP,
         )
     )
 
-
-    actual_amount = int(
-        transaction_data.get(
-            "amount"
-        )
-        or 0
+    actual_amount = transaction_data.get(
+        "amount"
     )
-
 
     if (
-        actual_amount
-        != expected_amount
+        isinstance(actual_amount, bool)
+        or not isinstance(actual_amount, int)
+        or actual_amount != expected_amount
     ):
 
         raise RuntimeError(
             "Paystack amount does not match this order."
         )
 
+    # ========================================================
+    # VALIDATE PAYSTACK TRANSACTION ID
+    # ========================================================
 
-    currency = (
-        str(
-            transaction_data.get(
-                "currency",
-                "",
-            )
-        )
-        .strip()
-        .upper()
+    transaction_id = transaction_data.get(
+        "id"
     )
 
-
     if (
-        currency
-        and currency != "ZAR"
+        isinstance(transaction_id, bool)
+        or not isinstance(transaction_id, (int, str))
+        or not str(transaction_id).strip()
     ):
 
         raise RuntimeError(
-            "Unexpected Paystack payment currency."
+            "Paystack transaction ID is missing or invalid."
         )
 
+    transaction_id = str(
+        transaction_id
+    ).strip()
 
-    order.payment_status = (
-        "paid"
+    # ========================================================
+    # LOCK ORDER FOR PAYMENT FINALISATION
+    # ========================================================
+    #
+    # PostgreSQL row locking prevents two callbacks from
+    # finalising the same order simultaneously.
+    #
+    # The lock must be acquired before checking whether
+    # the order is already paid.
+    # ========================================================
+
+    locked_order = (
+        TicketOrder.query
+        .filter_by(
+            id=order.id,
+        )
+        .with_for_update()
+        .first()
     )
 
-    order.paid_at = (
-        datetime.utcnow()
-    )
+    if locked_order is None:
 
-    order.payment_verified_at = (
-        datetime.utcnow()
-    )
+        raise RuntimeError(
+            "Ticket order no longer exists."
+        )
+
+    order = locked_order
+
+    # ========================================================
+    # IDEMPOTENCY
+    # ========================================================
+
+    if order.payment_status == "paid":
+
+        existing_transaction_id = (
+            order.paystack_transaction_id
+        )
+
+        if (
+            existing_transaction_id
+            and str(existing_transaction_id)
+            != transaction_id
+        ):
+
+            raise RuntimeError(
+                "Order was already paid using a different transaction."
+            )
+
+        return order
+
+    if order.payment_status not in {
+        "pending",
+        "processing",
+    }:
+
+        raise RuntimeError(
+            "Order is not eligible for payment finalisation."
+        )
+
+    # ========================================================
+    # MARK ORDER AS PAID
+    # ========================================================
+
+    now = datetime.utcnow()
+
+    order.payment_status = "paid"
+
+    order.paid_at = now
+
+    order.payment_verified_at = now
 
     order.paystack_transaction_id = (
-        str(
-            transaction_data.get(
-                "id",
-                "",
-            )
-        )
-        or None
+        transaction_id
     )
 
     order.payment_channel = (
-        transaction_data.get(
-            "channel"
-        )
+        transaction_data.get("channel")
         or None
     )
 
+    # ========================================================
+    # GENERATE ENTRY PASSES
+    # ========================================================
 
     if order.order_items:
+
+        # ----------------------------------------------------
+        # MULTIPLE TICKET TYPES
+        # ----------------------------------------------------
 
         for item in order.order_items:
 
@@ -1765,11 +1844,8 @@ def finalize_paystack_ticket_order(
                 )
 
                 attendee_name = (
-                    attendee_names[
-                        attendee_index
-                    ]
-                    if attendee_index
-                    < len(attendee_names)
+                    attendee_names[attendee_index]
+                    if attendee_index < len(attendee_names)
                     else order.customer_name
                 )
 
@@ -1781,17 +1857,17 @@ def finalize_paystack_ticket_order(
                             attendee_name
                             or order.customer_name
                         ),
-                        entry_code=
-                            generate_entry_code(),
+                        entry_code=generate_entry_code(),
                         status="valid",
                     )
                 )
 
-
-
     else:
 
-        # Backward compatibility for legacy single-price orders.
+        # ----------------------------------------------------
+        # LEGACY SINGLE-PRICE ORDERS
+        # ----------------------------------------------------
+
         existing_pass_count = len(
             order.entry_passes
         )
@@ -1802,30 +1878,61 @@ def finalize_paystack_ticket_order(
             - existing_pass_count,
         )
 
-
         for _ in range(
             passes_to_create
         ):
 
             db.session.add(
                 EntryPass(
-                    order_id=
-                        order.id,
-
-                    entry_code=
-                        generate_entry_code(),
-
-                    status=
-                        "valid",
+                    order_id=order.id,
+                    entry_code=generate_entry_code(),
+                    status="valid",
                 )
             )
 
+    # ========================================================
+    # COMMIT PAYMENT AND ENTRY PASSES TOGETHER
+    # ========================================================
+    #
+    # Both changes are committed in one database transaction.
+    #
+    # If the commit fails, neither the payment confirmation
+    # nor newly generated passes should be persisted.
+    # ========================================================
 
-    db.session.commit()
+    try:
 
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Paystack Finalisation] "
+                "Failed to finalise order_id=%s "
+                "reference=%s"
+            ),
+            order.id,
+            order.payment_reference,
+        )
+
+        raise
+
+    current_app.logger.info(
+        (
+            "[Paystack Finalisation] "
+            "Order confirmed "
+            "order_id=%s reference=%s "
+            "transaction_id=%s"
+        ),
+        order.id,
+        order.payment_reference,
+        transaction_id,
+    )
 
     return order
-
 
 # ============================================================
 # PASSWORD RESET EMAIL
