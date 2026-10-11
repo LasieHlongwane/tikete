@@ -15540,16 +15540,27 @@ def _ledger_empty_account(organizer):
 
     return {
         "organizer": organizer,
+
         "paid_orders": 0,
+
         "face_value": Decimal("0.00"),
+
         "commission": Decimal("0.00"),
+
         "gross_entitlement": Decimal("0.00"),
+
         "refunded_face_value": Decimal("0.00"),
+
         "commission_reversed": Decimal("0.00"),
+
         "net_entitlement": Decimal("0.00"),
+
         "settled_entitlement": Decimal("0.00"),
+
         "unsettled_entitlement": Decimal("0.00"),
+
         "has_accounting_exceptions": False,
+
         "exceptions": 0,
     }
 
