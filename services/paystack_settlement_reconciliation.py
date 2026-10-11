@@ -109,6 +109,10 @@ def _utc_naive(value):
 # PAYSTACK PAGINATION
 # ============================================================
 
+# ============================================================
+# PAYSTACK PAGINATION — UPDATED
+# ============================================================
+
 def _pages(
     api_request,
     path,
@@ -116,25 +120,60 @@ def _pages(
     per_page=50,
     max_pages=20,
 ):
+    """
+    Fetch Paystack paginated results.
 
-    if not 1 <= per_page <= 100:
-        raise ValueError("Invalid per_page.")
+    Supports:
+        - Empty settlement listings
+        - Standard Paystack pagination
+        - Missing pageCount when total is available
 
-    if not 1 <= max_pages <= 100:
-        raise ValueError("Invalid max_pages.")
+    Rejects:
+        - Malformed responses
+        - Invalid page numbers
+        - Incomplete pagination
+        - Duplicate records caused by repeated pages
+
+    Never assumes missing settlement transactions
+    represent successful reconciliation.
+    """
+
+    if (
+        isinstance(per_page, bool)
+        or not isinstance(per_page, int)
+        or not 1 <= per_page <= 100
+    ):
+        raise ValueError(
+            "Invalid per_page."
+        )
+
+    if (
+        isinstance(max_pages, bool)
+        or not isinstance(max_pages, int)
+        or not 1 <= max_pages <= 100
+    ):
+        raise ValueError(
+            "Invalid max_pages."
+        )
 
     all_rows = []
+
     expected_total = None
 
     for page in range(1, max_pages + 1):
 
-        separator = "&" if "?" in path else "?"
+        separator = (
+            "&"
+            if "?" in path
+            else "?"
+        )
 
         response = api_request(
             "GET",
             (
                 f"{path}{separator}"
-                f"page={page}&perPage={per_page}"
+                f"page={page}"
+                f"&perPage={per_page}"
             ),
         )
 
@@ -147,6 +186,7 @@ def _pages(
             )
 
         rows = response.get("data")
+
         meta = response.get("meta")
 
         if not isinstance(rows, list):
@@ -154,40 +194,32 @@ def _pages(
                 "Invalid Paystack listing data."
             )
 
-        if not isinstance(meta, dict):
-            raise SettlementReconciliationError(
-                "Missing pagination metadata."
-            )
-
-        if any(not isinstance(row, dict) for row in rows):
+        if any(
+            not isinstance(row, dict)
+            for row in rows
+        ):
             raise SettlementReconciliationError(
                 "Malformed Paystack listing entry."
             )
 
-        page_count = meta.get("pageCount")
-        current_page = meta.get("page")
+        if not isinstance(meta, dict):
+            raise SettlementReconciliationError(
+                "Missing Paystack pagination metadata."
+            )
+
+        # ====================================================
+        # VALIDATE TOTAL
+        # ====================================================
+
         total = meta.get("total")
 
-        if any(
-            isinstance(value, bool)
-            or not isinstance(value, int)
-            for value in (
-                page_count,
-                current_page,
-                total,
-            )
-        ):
-            raise SettlementReconciliationError(
-                "Invalid pagination metadata."
-            )
-
         if (
-            current_page != page
-            or page_count < 1
+            isinstance(total, bool)
+            or not isinstance(total, int)
             or total < 0
         ):
             raise SettlementReconciliationError(
-                "Inconsistent pagination metadata."
+                "Invalid Paystack pagination total."
             )
 
         if expected_total is None:
@@ -198,21 +230,111 @@ def _pages(
                 "Paystack listing changed during pagination."
             )
 
+        # ====================================================
+        # VALIDATE CURRENT PAGE
+        # ====================================================
+
+        current_page = meta.get("page")
+
+        if current_page is not None:
+
+            if (
+                isinstance(current_page, bool)
+                or not isinstance(current_page, int)
+                or current_page != page
+            ):
+                raise SettlementReconciliationError(
+                    "Unexpected Paystack page number."
+                )
+
+        # ====================================================
+        # VALIDATE PAGE COUNT
+        # ====================================================
+
+        page_count = meta.get("pageCount")
+
+        if page_count is not None:
+
+            if (
+                isinstance(page_count, bool)
+                or not isinstance(page_count, int)
+                or page_count < 0
+            ):
+                raise SettlementReconciliationError(
+                    "Invalid Paystack page count."
+                )
+
+        # ====================================================
+        # EMPTY LIST
+        # ====================================================
+
+        if total == 0:
+
+            if rows:
+                raise SettlementReconciliationError(
+                    "Paystack returned records despite "
+                    "reporting zero total."
+                )
+
+            if page_count not in (None, 0, 1):
+                raise SettlementReconciliationError(
+                    "Inconsistent empty-list pagination."
+                )
+
+            return []
+
+        # ====================================================
+        # COLLECT RECORDS
+        # ====================================================
+
+        if not rows:
+            raise SettlementReconciliationError(
+                "Paystack returned an empty page "
+                "before the listing was complete."
+            )
+
         all_rows.extend(rows)
 
-        if page >= page_count:
+        if len(all_rows) > expected_total:
+            raise SettlementReconciliationError(
+                "Paystack returned more records "
+                "than the pagination total."
+            )
 
-            if len(all_rows) != expected_total:
+        # ====================================================
+        # COMPLETE LIST
+        # ====================================================
+
+        if len(all_rows) == expected_total:
+
+            if (
+                page_count is not None
+                and page_count > page
+            ):
                 raise SettlementReconciliationError(
-                    "Incomplete Paystack listing."
+                    "Paystack reports additional pages "
+                    "after all records were collected."
                 )
 
             return all_rows
 
-    raise SettlementReconciliationError(
-        "Pagination limit reached."
-    )
+        # ====================================================
+        # INCOMPLETE LIST
+        # ====================================================
 
+        if (
+            page_count is not None
+            and page >= page_count
+        ):
+            raise SettlementReconciliationError(
+                "Paystack pagination ended before "
+                "all records were retrieved."
+            )
+
+    raise SettlementReconciliationError(
+        "Paystack pagination limit reached "
+        "before all records were retrieved."
+    )
 
 # ============================================================
 # VALIDATE SETTLEMENT HEADER
