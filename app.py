@@ -15582,7 +15582,11 @@ def superadmin_organiser_payout_ledger():
 
     orders = (
         TicketOrder.query
-        .filter(TicketOrder.payment_status == "paid")
+        .filter(
+            TicketOrder.payment_status == "paid",
+            TicketOrder.payment_provider == "paystack",
+        )
+             
         .all()
     )
 
