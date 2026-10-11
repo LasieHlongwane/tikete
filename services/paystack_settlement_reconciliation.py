@@ -443,10 +443,11 @@ def reconcile_paystack_settlements(
             # A previously reconciled record is immutable
             # except through a separately reviewed correction.
             if record.status == "reconciled":
-                raise SettlementReconciliationError(
-                    "Settlement was already reconciled; "
-                    "existing records are not modified."
-                )
+               # raise SettlementReconciliationError(
+                #    "Settlement was already reconciled; "
+               #     "existing records are not modified."
+               # )
+                continue
 
             record.currency = "ZAR"
             record.gross_amount = _money(gross)
