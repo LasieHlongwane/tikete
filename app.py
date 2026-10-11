@@ -15631,34 +15631,19 @@ def _ledger_empty_account(organizer):
 # VALIDATE REFUND ACCOUNTING
 # ============================================================
 
+# ============================================================
+# STAGE 6B.1 — REFUND ACCOUNTING VALIDATION
+# ============================================================
+
 def _ledger_validate_refunds(order):
     """
-    Validate the relationship between:
+    Validate TicketOrder refund snapshots against
+    individual TicketRefund records.
 
-        TicketOrder cumulative refund snapshots
+    READ ONLY.
 
-    and:
-
-        TicketRefund records.
-
-    Only refunds with:
-
-        status == "succeeded"
-        accounting_applied_at != None
-
-    contribute to the order's cumulative refund totals.
-
-    This function does not modify any records.
-
-    Returns:
-
-        {
-            "valid": bool,
-            "refunded_face_value": Decimal,
-            "commission_reversed": Decimal,
-            "pending_refunds": int,
-        }
-
+    Only succeeded refunds with accounting_applied_at
+    contribute to cumulative order refund accounting.
     """
 
     result = {
@@ -15683,6 +15668,8 @@ def _ledger_validate_refunds(order):
     if (
         order_refunded is None
         or order_commission_reversed is None
+        or order_refunded < 0
+        or order_commission_reversed < 0
     ):
         return result
 
@@ -15690,14 +15677,13 @@ def _ledger_validate_refunds(order):
     # REFUND RECORDS
     # ========================================================
 
-    refund_records = order.refunds
-
     applied_face_value = _LEDGER_ZERO
+
     applied_commission_reversal = _LEDGER_ZERO
 
     pending_refunds = 0
 
-    for refund in refund_records:
+    for refund in order.refunds:
 
         refund_status = (
             refund.status or ""
@@ -15727,16 +15713,12 @@ def _ledger_validate_refunds(order):
             return result
 
         # ====================================================
-        # SUCCESSFUL AND ACCOUNTING-APPLIED REFUNDS
+        # SUCCESSFUL REFUNDS
         # ====================================================
 
         if refund_status == "succeeded":
 
             if refund.accounting_applied_at is None:
-                # A successful refund has not yet been
-                # applied to order accounting.
-                #
-                # Do not silently ignore this inconsistency.
                 return result
 
             applied_face_value += face_value
@@ -15746,7 +15728,7 @@ def _ledger_validate_refunds(order):
             )
 
         # ====================================================
-        # NON-SUCCESSFUL REFUNDS
+        # PENDING REFUNDS
         # ====================================================
 
         elif refund_status in {
@@ -15758,10 +15740,12 @@ def _ledger_validate_refunds(order):
 
             pending_refunds += 1
 
-            # Pending refunds must not already have been
-            # applied to the order's financial snapshots.
             if refund.accounting_applied_at is not None:
                 return result
+
+        # ====================================================
+        # FAILED OR CANCELLED REFUNDS
+        # ====================================================
 
         elif refund_status in {
             "failed",
@@ -15772,11 +15756,10 @@ def _ledger_validate_refunds(order):
                 return result
 
         else:
-            # Unknown status must be reviewed.
             return result
 
     # ========================================================
-    # VERIFY SNAPSHOT TOTALS
+    # RECONCILE REFUND SNAPSHOTS
     # ========================================================
 
     if (
@@ -15800,18 +15783,27 @@ def _ledger_validate_refunds(order):
 
     return result
 
-
 # ============================================================
 # VALIDATE ORIGINAL ORDER ACCOUNTING
+# ============================================================
+
+# ============================================================
+# STAGE 6B.1 — ORDER FINANCIAL VALIDATION
 # ============================================================
 
 def _ledger_validate_order(order):
     """
     Validate original commission accounting and
-    independently reconciled refund snapshots.
+    refund-adjusted organiser entitlement.
 
-    Returns a validated financial dictionary or None.
+    Returns validated financial values or None.
+
+    READ ONLY.
     """
+
+    # ========================================================
+    # ORIGINAL ACCOUNTING
+    # ========================================================
 
     face_value = _ledger_money(
         order.total_amount
@@ -15825,49 +15817,25 @@ def _ledger_validate_order(order):
         order.organizer_gross_share
     )
 
-    commission_rate = (
-        order.commission_rate
-    )
-
     if (
         face_value is None
         or commission is None
         or gross_share is None
-        or commission_rate is None
         or order.commission_recorded_at is None
     ):
         return None
 
     if (
-        face_value < 0
+        face_value <= 0
         or commission < 0
         or gross_share < 0
+        or commission > face_value
         or face_value - commission != gross_share
     ):
         return None
 
-    try:
-
-        rate = Decimal(
-            str(commission_rate)
-        )
-
-        if (
-            not rate.is_finite()
-            or rate < 0
-            or rate > 1
-        ):
-            return None
-
-    except (
-        InvalidOperation,
-        ValueError,
-        TypeError,
-    ):
-        return None
-
     # ========================================================
-    # REFUND VALIDATION
+    # REFUND ACCOUNTING
     # ========================================================
 
     refunds = _ledger_validate_refunds(
@@ -15919,55 +15887,489 @@ def _ledger_validate_order(order):
         return None
 
     # ========================================================
-    # RETURN VERIFIED ACCOUNTING
+    # VERIFIED ACCOUNTING
     # ========================================================
 
     return {
-
         "face_value": face_value,
-
         "commission": commission,
-
         "gross_entitlement": gross_share,
-
-        "refunded_face_value": (
-            refunded_face_value
-        ),
-
-        "commission_reversed": (
-            commission_reversed
-        ),
-
-        "net_ticket_sales": (
-            net_ticket_sales
-        ),
-
-        "net_commission": (
-            net_commission
-        ),
-
-        "net_entitlement": (
-            net_entitlement
-        ),
-
-        "pending_refunds": (
-            refunds["pending_refunds"]
-        ),
-
+        "refunded_face_value": refunded_face_value,
+        "commission_reversed": commission_reversed,
+        "net_ticket_sales": net_ticket_sales,
+        "net_commission": net_commission,
+        "net_entitlement": net_entitlement,
+        "pending_refunds": refunds["pending_refunds"],
         "is_fully_refunded": (
             refunded_face_value == face_value
             and refunded_face_value > 0
         ),
-
         "is_partially_refunded": (
             refunded_face_value > 0
             and refunded_face_value < face_value
         ),
     }
 
+# ============================================================
+# STAGE 6B.1 — ACCOUNTING EXCEPTIONS INSPECTOR
+# ============================================================
+#
+# PURPOSE:
+#
+# Identify why a paid Paystack ticket order fails
+# organiser ledger validation.
+#
+# READ-ONLY:
+#
+# - No database writes
+# - No commission backfills
+# - No refund changes
+# - No settlement modifications
+# - No payout execution
+#
+# ============================================================
+
 
 # ============================================================
+# STAGE 6B.1 — ACCOUNTING EXCEPTIONS DIAGNOSTIC
+# ============================================================
+
+def _ledger_diagnose_order(order):
+    """
+    Diagnose financial accounting problems for a
+    paid Paystack ticket order.
+
+    Returns a list of human-readable issues.
+
+    READ ONLY.
+    """
+
+    issues = []
+
+    # ========================================================
+    # ORGANISER OWNERSHIP
+    # ========================================================
+
+    event = order.event
+
+    if event is None:
+
+        issues.append(
+            "Ticket event is missing."
+        )
+
+    elif event.organizer_id is None:
+
+        issues.append(
+            "Ticket event has no organiser assigned."
+        )
+
+    elif db.session.get(
+        Organizer,
+        event.organizer_id,
+    ) is None:
+
+        issues.append(
+            "Assigned organiser does not exist."
+        )
+
+    # ========================================================
+    # ORIGINAL FINANCIAL VALUES
+    # ========================================================
+
+    face_value = _ledger_money(
+        order.total_amount
+    )
+
+    commission = _ledger_money(
+        order.commission_amount
+    )
+
+    gross_share = _ledger_money(
+        order.organizer_gross_share
+    )
+
+    # ========================================================
+    # FACE VALUE
+    # ========================================================
+
+    if face_value is None:
+
+        issues.append(
+            "Ticket face value is missing or invalid."
+        )
+
+    elif face_value <= 0:
+
+        issues.append(
+            "Paid ticket order has a non-positive face value."
+        )
+
+    # ========================================================
+    # COMMISSION
+    # ========================================================
+
+    if commission is None:
+
+        issues.append(
+            "KALXA commission is missing or invalid."
+        )
+
+    elif commission < 0:
+
+        issues.append(
+            "KALXA commission is negative."
+        )
+
+    # ========================================================
+    # ORGANISER SHARE
+    # ========================================================
+
+    if gross_share is None:
+
+        issues.append(
+            "Organiser gross share is missing or invalid."
+        )
+
+    elif gross_share < 0:
+
+        issues.append(
+            "Organiser gross share is negative."
+        )
+
+    # ========================================================
+    # COMMISSION RECORDING
+    # ========================================================
+
+    if order.commission_recorded_at is None:
+
+        issues.append(
+            "Commission recording timestamp is missing."
+        )
+
+    # ========================================================
+    # ORIGINAL ACCOUNTING EQUATION
+    # ========================================================
+
+    if all(
+        value is not None
+        for value in (
+            face_value,
+            commission,
+            gross_share,
+        )
+    ):
+
+        if commission > face_value:
+
+            issues.append(
+                "KALXA commission exceeds ticket face value."
+            )
+
+        if (
+            face_value - commission
+            != gross_share
+        ):
+
+            issues.append(
+                "Ticket face value minus KALXA commission "
+                "does not equal organiser gross share."
+            )
+
+        # ----------------------------------------------------
+        # HISTORICAL COMMISSION INDICATOR
+        # ----------------------------------------------------
+        #
+        # This is a diagnostic hint only.
+        #
+        # It does not automatically classify the order
+        # as a verified legacy test transaction.
+        #
+        # ----------------------------------------------------
+
+        if (
+            face_value > 0
+            and commission == 0
+            and gross_share == 0
+        ):
+
+            issues.append(
+                "Possible historical pre-commission order: "
+                "positive ticket face value with zero "
+                "commission and zero organiser share. "
+                "Historical test status requires verification."
+            )
+
+    # ========================================================
+    # REFUND SNAPSHOTS
+    # ========================================================
+
+    refunded_face_value = _ledger_money(
+        order.refunded_face_value
+    )
+
+    commission_reversed = _ledger_money(
+        order.commission_reversed_amount
+    )
+
+    if refunded_face_value is None:
+
+        issues.append(
+            "Refunded ticket value is missing or invalid."
+        )
+
+    elif refunded_face_value < 0:
+
+        issues.append(
+            "Refunded ticket value is negative."
+        )
+
+    if commission_reversed is None:
+
+        issues.append(
+            "Commission reversal amount is missing or invalid."
+        )
+
+    elif commission_reversed < 0:
+
+        issues.append(
+            "Commission reversal amount is negative."
+        )
+
+    # ========================================================
+    # REFUND LIMITS
+    # ========================================================
+
+    if (
+        face_value is not None
+        and refunded_face_value is not None
+        and refunded_face_value > face_value
+    ):
+
+        issues.append(
+            "Refunded ticket value exceeds original face value."
+        )
+
+    if (
+        commission is not None
+        and commission_reversed is not None
+        and commission_reversed > commission
+    ):
+
+        issues.append(
+            "Commission reversal exceeds original commission."
+        )
+
+    # ========================================================
+    # INDIVIDUAL REFUND RECORDS
+    # ========================================================
+
+    applied_refunds = _LEDGER_ZERO
+
+    applied_reversals = _LEDGER_ZERO
+
+    for refund in order.refunds:
+
+        status = (
+            refund.status or ""
+        ).strip().lower()
+
+        reference = (
+            refund.refund_reference
+            or f"Refund #{refund.id}"
+        )
+
+        refund_face_value = _ledger_money(
+            refund.face_value_amount
+        )
+
+        provider_amount = _ledger_money(
+            refund.provider_refund_amount
+        )
+
+        reversal = _ledger_money(
+            refund.commission_reversal_amount
+        )
+
+        if (
+            refund_face_value is None
+            or provider_amount is None
+            or reversal is None
+        ):
+
+            issues.append(
+                f"{reference}: invalid refund financial values."
+            )
+
+            continue
+
+        if (
+            refund_face_value < 0
+            or provider_amount < 0
+            or reversal < 0
+            or reversal > refund_face_value
+        ):
+
+            issues.append(
+                f"{reference}: refund amounts are inconsistent."
+            )
+
+        if status == "succeeded":
+
+            if refund.accounting_applied_at is None:
+
+                issues.append(
+                    f"{reference}: successful refund has "
+                    "not been applied to order accounting."
+                )
+
+            else:
+
+                applied_refunds += refund_face_value
+
+                applied_reversals += reversal
+
+        elif status in {
+            "requested",
+            "submitted",
+            "pending",
+            "processing",
+            "failed",
+            "cancelled",
+        }:
+
+            if refund.accounting_applied_at is not None:
+
+                issues.append(
+                    f"{reference}: non-successful refund "
+                    "was marked as accounting-applied."
+                )
+
+        else:
+
+            issues.append(
+                f"{reference}: unknown refund status '{status}'."
+            )
+
+    # ========================================================
+    # REFUND SNAPSHOT RECONCILIATION
+    # ========================================================
+
+    if (
+        refunded_face_value is not None
+        and applied_refunds != refunded_face_value
+    ):
+
+        issues.append(
+            "Order refunded ticket value does not match "
+            "successfully applied refund records."
+        )
+
+    if (
+        commission_reversed is not None
+        and applied_reversals != commission_reversed
+    ):
+
+        issues.append(
+            "Order commission reversal total does not match "
+            "successfully applied refund records."
+        )
+
+    # ========================================================
+    # NET ENTITLEMENT
+    # ========================================================
+
+    if all(
+        value is not None
+        for value in (
+            face_value,
+            commission,
+            gross_share,
+            refunded_face_value,
+            commission_reversed,
+        )
+    ):
+
+        net_ticket_sales = (
+            face_value - refunded_face_value
+        )
+
+        net_commission = (
+            commission - commission_reversed
+        )
+
+        net_entitlement = (
+            gross_share
+            - refunded_face_value
+            + commission_reversed
+        )
+
+        if net_ticket_sales < 0:
+
+            issues.append(
+                "Net ticket sales are negative."
+            )
+
+        if net_commission < 0:
+
+            issues.append(
+                "Net KALXA commission is negative."
+            )
+
+        if net_entitlement < 0:
+
+            issues.append(
+                "Net organiser entitlement is negative."
+            )
+
+        if (
+            net_ticket_sales - net_commission
+            != net_entitlement
+        ):
+
+            issues.append(
+                "Net ticket sales minus net commission "
+                "does not equal net organiser entitlement."
+            )
+
+    return issues
+# ============================================================
 # SUPER ADMIN — ORGANISER PAYOUT LEDGER
+# ============================================================
+
+# ============================================================
+# STAGE 6B + 6B.1
+# KALXA ORGANISER PAYOUT LEDGER
+# ACCOUNTING EXCEPTIONS INSPECTOR
+# ============================================================
+#
+# PURPOSE:
+#
+# Provide Super Admin with a read-only financial overview
+# of organiser ticket sales, commissions, verified refunds,
+# settlement matching and accounting exceptions.
+#
+# SECURITY:
+#
+# - Super Admin access only.
+# - No database modifications.
+# - No commission backfills.
+# - No refund modifications.
+# - No settlement modifications.
+# - No Paystack transfer requests.
+# - No organiser payouts.
+#
+# IMPORTANT:
+#
+# Settlement matching does not prove bank receipt.
+#
+# Net organiser entitlement is not a withdrawable balance.
+#
+# ============================================================
+
+
+# ============================================================
+# STAGE 6B.1 — ORGANISER PAYOUT LEDGER
 # ============================================================
 
 @app.route(
@@ -16003,7 +16405,7 @@ def superadmin_organiser_payout_ledger():
     }
 
     # ========================================================
-    # LOAD PAID PAYSTACK TICKET ORDERS
+    # LOAD PAID PAYSTACK ORDERS
     # ========================================================
 
     orders = (
@@ -16019,18 +16421,7 @@ def superadmin_organiser_payout_ledger():
     )
 
     # ========================================================
-    # LOAD LOCAL RECONCILED SETTLEMENT ALLOCATIONS
-    # ========================================================
-    #
-    # A reconciled allocation is evidence of local
-    # Paystack settlement matching.
-    #
-    # It is not proof of:
-    #
-    # - Bank receipt
-    # - Payout eligibility
-    # - Organiser payout
-    #
+    # LOAD RECONCILED SETTLEMENT ALLOCATIONS
     # ========================================================
 
     reconciled_allocations = (
@@ -16054,35 +16445,73 @@ def superadmin_organiser_payout_ledger():
     }
 
     # ========================================================
-    # COUNTERS
+    # ACCOUNTING EXCEPTIONS
     # ========================================================
 
     unassigned_orders = 0
-    accounting_exceptions = 0
+
+    exception_records = []
 
     # ========================================================
-    # AGGREGATE ORGANISER FINANCIALS
+    # PROCESS PAID ORDERS
     # ========================================================
 
     for order in orders:
 
+        event = order.event
+
+        organizer_id = (
+            event.organizer_id
+            if event is not None
+            else None
+        )
+
         # ====================================================
-        # RESOLVE ORGANISER OWNERSHIP
+        # RESOLVE ORGANISER ACCOUNT
         # ====================================================
 
-        organizer_id = order.organizer_id
+        account = accounts.get(
+            organizer_id
+        )
 
-        if organizer_id not in accounts:
+        # ====================================================
+        # UNASSIGNED OR INVALID ORGANISER
+        # ====================================================
+
+        if account is None:
 
             unassigned_orders += 1
-            accounting_exceptions += 1
+
+            issues = _ledger_diagnose_order(
+                order
+            )
+
+            if not any(
+                "organiser" in issue.lower()
+                or "event" in issue.lower()
+                for issue in issues
+            ):
+
+                issues.insert(
+                    0,
+                    "Order does not belong to a valid organiser."
+                )
+
+            exception_records.append({
+                "order_id": order.id,
+                "payment_reference": order.payment_reference,
+                "organizer_name": "Unassigned",
+                "event_id": order.event_id,
+                "face_value": _ledger_money(
+                    order.total_amount
+                ),
+                "issues": issues,
+            })
 
             continue
 
-        account = accounts[organizer_id]
-
         # ====================================================
-        # VALIDATE ORDER FINANCIALS
+        # VALIDATE ORDER ACCOUNTING
         # ====================================================
 
         financials = _ledger_validate_order(
@@ -16092,13 +16521,41 @@ def superadmin_organiser_payout_ledger():
         if financials is None:
 
             account["has_accounting_exceptions"] = True
+
             account["exceptions"] += 1
-            accounting_exceptions += 1
+
+            issues = _ledger_diagnose_order(
+                order
+            )
+
+            if not issues:
+
+                issues = [
+                    "Order failed financial validation. "
+                    "Further investigation is required."
+                ]
+
+            exception_records.append({
+                "order_id": order.id,
+                "payment_reference": order.payment_reference,
+                "organizer_name": (
+                    getattr(
+                        account["organizer"],
+                        "display_name",
+                        f"Organiser #{organizer_id}",
+                    )
+                ),
+                "event_id": order.event_id,
+                "face_value": _ledger_money(
+                    order.total_amount
+                ),
+                "issues": issues,
+            })
 
             continue
 
         # ====================================================
-        # AGGREGATE ORIGINAL ACCOUNTING
+        # ORIGINAL ACCOUNTING
         # ====================================================
 
         account["paid_orders"] += 1
@@ -16116,7 +16573,7 @@ def superadmin_organiser_payout_ledger():
         )
 
         # ====================================================
-        # AGGREGATE VERIFIED REFUNDS
+        # REFUNDS
         # ====================================================
 
         account["refunded_face_value"] += (
@@ -16128,7 +16585,7 @@ def superadmin_organiser_payout_ledger():
         )
 
         # ====================================================
-        # AGGREGATE NET FINANCIALS
+        # NET ACCOUNTING
         # ====================================================
 
         account["net_ticket_sales"] += (
@@ -16160,17 +16617,7 @@ def superadmin_organiser_payout_ledger():
             account["pending_refund_orders"] += 1
 
         # ====================================================
-        # SETTLEMENT CLASSIFICATION
-        # ====================================================
-        #
-        # IMPORTANT:
-        #
-        # Settlement-matched entitlement is calculated
-        # using current refund-adjusted accounting.
-        #
-        # It is NOT the historical settlement amount
-        # received by KALXA.
-        #
+        # SETTLEMENT MATCHING
         # ====================================================
 
         if order.id in settled_order_ids:
@@ -16199,7 +16646,7 @@ def superadmin_organiser_payout_ledger():
     ]
 
     # ========================================================
-    # PLATFORM TOTALS
+    # FINANCIAL TOTALS
     # ========================================================
 
     money_fields = (
@@ -16224,9 +16671,13 @@ def superadmin_organiser_payout_ledger():
 
     totals = {
         "organizers": len(ledger_accounts),
-        "accounting_exceptions": accounting_exceptions,
+        "total_paid_orders": len(orders),
         "unassigned_orders": unassigned_orders,
     }
+
+    # ========================================================
+    # FINANCIAL AGGREGATION
+    # ========================================================
 
     for field in money_fields:
 
@@ -16246,7 +16697,57 @@ def superadmin_organiser_payout_ledger():
         )
 
     # ========================================================
-    # SORT BY NET ENTITLEMENT
+    # EXCEPTION TOTALS
+    # ========================================================
+
+    totals["accounting_exceptions"] = len(
+        exception_records
+    )
+
+    totals["validated_orders"] = (
+        totals["paid_orders"]
+    )
+
+    totals["organizers_with_valid_orders"] = sum(
+        1
+        for account in ledger_accounts
+        if account["paid_orders"] > 0
+    )
+
+    totals["organizers_under_review"] = sum(
+        1
+        for account in ledger_accounts
+        if account["exceptions"] > 0
+    )
+
+    # ========================================================
+    # FINANCIAL CONSISTENCY CHECK
+    # ========================================================
+
+    if (
+        totals["validated_orders"]
+        + totals["accounting_exceptions"]
+        != totals["total_paid_orders"]
+    ):
+
+        app.logger.error(
+            "KALXA LEDGER INCONSISTENCY: "
+            "paid=%s validated=%s exceptions=%s",
+            totals["total_paid_orders"],
+            totals["validated_orders"],
+            totals["accounting_exceptions"],
+        )
+
+        # Do not show an apparently complete financial
+        # report if the order counts are inconsistent.
+
+        raise RuntimeError(
+            "Organiser ledger accounting counts "
+            "are inconsistent."
+        )
+
+    # ========================================================
+    # SORT ACCOUNTS
     # ========================================================
 
     ledger_accounts.sort(
@@ -16257,13 +16758,22 @@ def superadmin_organiser_payout_ledger():
     )
 
     # ========================================================
-    # RENDER READ-ONLY LEDGER
+    # SORT EXCEPTIONS
+    # ========================================================
+
+    exception_records.sort(
+        key=lambda record: record["order_id"]
+    )
+
+    # ========================================================
+    # RENDER TEMPLATE
     # ========================================================
 
     return render_template(
         "superadmin/organiser_payout_ledger.html",
         accounts=ledger_accounts,
         totals=totals,
+        exception_records=exception_records,
         payouts_enabled=False,
     )
 # ============================================================
