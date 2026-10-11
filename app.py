@@ -1603,38 +1603,44 @@ def verify_and_activate_yoco_subscription(
     source="reconciliation",
 ):
     """
-    Verify an existing Yoco checkout and atomically
-    activate its associated subscription.
+    Independently verify an existing Yoco checkout and
+    atomically activate the associated Kalxa subscription.
 
     Supported subscription types:
-        organizer
-        restaurant
+        - organizer
+        - restaurant
 
-    Supported sources:
-        webhook
-        reconciliation
+    Supported verification sources:
+        - webhook
+        - reconciliation
 
     Returns:
-        activated
-        already_processed
-        pending
-        invalid
-        unmatched
+        - activated
+        - already_processed
+        - pending
+        - invalid
+        - unmatched
 
     SECURITY:
-        Never activate subscriptions using webhook
-        information alone.
-
-        Always retrieve the checkout independently
-        from Yoco.
+        - Never trust a browser redirect as payment proof.
+        - Never activate using webhook data alone.
+        - Retrieve checkout details directly from Yoco.
+        - Verify checkout ID, amount, currency and metadata.
+        - Require a verified Yoco payment identifier.
+        - Reject mismatched subscription ownership.
+        - Reject reuse of a payment identifier.
 
     IDEMPOTENCY:
-        A successful payment must never extend the
-        same subscription twice.
+        A successfully processed payment must never
+        extend the same subscription twice.
+
+    TRANSACTIONS:
+        Payment status and subscription activation are
+        committed in one database transaction.
     """
 
     # ========================================================
-    # VALIDATE SUBSCRIPTION TYPE
+    # 1. VALIDATE SUBSCRIPTION TYPE
     # ========================================================
 
     if kind not in (
@@ -1644,7 +1650,7 @@ def verify_and_activate_yoco_subscription(
         return "invalid"
 
     # ========================================================
-    # VALIDATE VERIFICATION SOURCE
+    # 2. VALIDATE VERIFICATION SOURCE
     # ========================================================
 
     if source not in (
@@ -1654,7 +1660,7 @@ def verify_and_activate_yoco_subscription(
         return "invalid"
 
     # ========================================================
-    # SELECT PAYMENT MODEL
+    # 3. SELECT PAYMENT MODEL
     # ========================================================
 
     model = (
@@ -1664,7 +1670,7 @@ def verify_and_activate_yoco_subscription(
     )
 
     # ========================================================
-    # INITIAL LOCAL PAYMENT LOOKUP
+    # 4. INITIAL PAYMENT LOOKUP
     # ========================================================
 
     initial = db.session.get(
@@ -1673,34 +1679,70 @@ def verify_and_activate_yoco_subscription(
     )
 
     if initial is None:
+
         db.session.rollback()
+
         return "unmatched"
 
     if initial.payment_method != "yoco":
+
         db.session.rollback()
+
         return "invalid"
 
     # ========================================================
-    # SNAPSHOT PAYMENT IDENTIFIERS
+    # 5. SNAPSHOT IDENTIFIERS
     # ========================================================
 
-    checkout_id = initial.yoco_checkout_id
+    checkout_id = (
+        initial.yoco_checkout_id
+    )
 
-    organizer_id = initial.organizer_id
+    organizer_id = (
+        initial.organizer_id
+    )
+
+    initial_payment_status = (
+        initial.payment_status
+    )
+
+    initial_yoco_payment_id = (
+        initial.yoco_payment_id
+    )
 
     if not checkout_id:
+
         db.session.rollback()
+
+        current_app.logger.warning(
+            (
+                "[Yoco] Payment record has no checkout ID. "
+                "kind=%s payment_id=%s"
+            ),
+            kind,
+            payment_id,
+        )
+
         return "invalid"
 
     # ========================================================
-    # END INITIAL DATABASE TRANSACTION
+    # 6. END INITIAL LOOKUP TRANSACTION
     # ========================================================
 
     db.session.rollback()
 
     # ========================================================
-    # FETCH CHECKOUT DIRECTLY FROM YOCO
+    # 7. RETRIEVE CHECKOUT DIRECTLY FROM YOCO
     # ========================================================
+
+    # YocoError is intentionally allowed to propagate.
+    #
+    # The webhook route should return HTTP 500 when Yoco
+    # verification is temporarily unavailable, allowing
+    # the webhook provider to retry delivery.
+    #
+    # The customer return route should catch YocoError
+    # and display a temporary verification message.
 
     checkout = get_yoco_checkout(
         checkout_id
@@ -1709,13 +1751,39 @@ def verify_and_activate_yoco_subscription(
     if not isinstance(checkout, dict):
 
         current_app.logger.warning(
-            "[Yoco] Checkout response is invalid."
+            (
+                "[Yoco] Invalid checkout response. "
+                "kind=%s payment_id=%s"
+            ),
+            kind,
+            payment_id,
         )
 
         return "invalid"
 
     # ========================================================
-    # CHECK PAYMENT STATUS
+    # 8. VALIDATE CHECKOUT ID
+    # ========================================================
+
+    returned_checkout_id = (
+        checkout.get("id")
+    )
+
+    if returned_checkout_id != checkout_id:
+
+        current_app.logger.warning(
+            (
+                "[Yoco] Checkout ID mismatch. "
+                "kind=%s payment_id=%s"
+            ),
+            kind,
+            payment_id,
+        )
+
+        return "invalid"
+
+    # ========================================================
+    # 9. VALIDATE CHECKOUT STATUS
     # ========================================================
 
     checkout_status = str(
@@ -1725,8 +1793,10 @@ def verify_and_activate_yoco_subscription(
     if checkout_status != "completed":
 
         current_app.logger.info(
-            "[Yoco] Checkout not completed: "
-            "kind=%s payment_record=%s status=%s",
+            (
+                "[Yoco] Checkout not completed. "
+                "kind=%s payment_id=%s status=%s"
+            ),
             kind,
             payment_id,
             checkout_status,
@@ -1735,17 +1805,15 @@ def verify_and_activate_yoco_subscription(
         return "pending"
 
     # ========================================================
-    # VERIFY YOCO ENVIRONMENT
+    # 10. VERIFY PAYMENT ENVIRONMENT
     # ========================================================
     #
-    # Current KALXA environment:
-    #     TEST MODE
+    # KALXA CURRENT CONFIGURATION:
+    # TEST MODE ONLY.
     #
-    # This deliberately prevents live payments from being
-    # processed using the current test-only configuration.
-    #
-    # Before launching real subscriptions, replace this
-    # with explicit configured environment validation.
+    # Do not remove this restriction until the live
+    # payment configuration has been deliberately enabled
+    # and tested.
     # ========================================================
 
     processing_mode = str(
@@ -1755,30 +1823,48 @@ def verify_and_activate_yoco_subscription(
     if processing_mode != "test":
 
         current_app.logger.warning(
-            "[Yoco] Checkout processing mode rejected: %s",
+            (
+                "[Yoco] Checkout processing mode rejected. "
+                "kind=%s payment_id=%s mode=%s"
+            ),
+            kind,
+            payment_id,
             processing_mode,
         )
 
         return "invalid"
 
     # ========================================================
-    # VALIDATE CHECKOUT ID
+    # 11. VALIDATE VERIFIED PAYMENT ID
     # ========================================================
 
-    returned_checkout_id = checkout.get(
-        "id"
+    yoco_payment_id = (
+        checkout.get("paymentId")
     )
 
-    if returned_checkout_id != checkout_id:
+    if (
+        not isinstance(yoco_payment_id, str)
+        or not yoco_payment_id.strip()
+    ):
 
         current_app.logger.warning(
-            "[Yoco] Checkout ID mismatch."
+            (
+                "[Yoco] Completed checkout has no "
+                "valid payment ID. "
+                "kind=%s payment_id=%s"
+            ),
+            kind,
+            payment_id,
         )
 
         return "invalid"
 
+    yoco_payment_id = (
+        yoco_payment_id.strip()
+    )
+
     # ========================================================
-    # DATABASE ACTIVATION TRANSACTION
+    # 12. BEGIN DATABASE ACTIVATION TRANSACTION
     # ========================================================
 
     try:
@@ -1787,12 +1873,14 @@ def verify_and_activate_yoco_subscription(
         # LOCK ORGANIZER
         # ====================================================
         #
-        # This serializes subscription activation for
-        # payments belonging to the same organizer.
+        # Locking the organizer serializes subscription
+        # updates for payments owned by that organizer.
         # ====================================================
 
         organizer = (
-            db.session.query(Organizer)
+            db.session.query(
+                Organizer
+            )
             .filter(
                 Organizer.id == organizer_id
             )
@@ -1801,24 +1889,30 @@ def verify_and_activate_yoco_subscription(
         )
 
         if organizer is None:
+
             db.session.rollback()
+
             return "invalid"
 
         # ====================================================
         # LOCK PAYMENT RECORD
         # ====================================================
 
-        payment = _yoco_lock_subscription_payment(
-            kind,
-            payment_id,
+        payment = (
+            _yoco_lock_subscription_payment(
+                kind,
+                payment_id,
+            )
         )
 
         if payment is None:
+
             db.session.rollback()
+
             return "unmatched"
 
         # ====================================================
-        # VERIFY PAYMENT OWNERSHIP
+        # 13. RECHECK OWNERSHIP UNDER LOCK
         # ====================================================
 
         if (
@@ -1828,10 +1922,20 @@ def verify_and_activate_yoco_subscription(
         ):
 
             db.session.rollback()
+
+            current_app.logger.warning(
+                (
+                    "[Yoco] Payment ownership mismatch. "
+                    "kind=%s payment_id=%s"
+                ),
+                kind,
+                payment_id,
+            )
+
             return "invalid"
 
         # ====================================================
-        # VERIFY CHECKOUT AGAINST PAYMENT
+        # 14. VERIFY CHECKOUT AGAINST LOCAL PAYMENT
         # ====================================================
 
         if not _yoco_checkout_matches_payment(
@@ -1843,8 +1947,10 @@ def verify_and_activate_yoco_subscription(
             db.session.rollback()
 
             current_app.logger.warning(
-                "[Yoco] Checkout verification mismatch: "
-                "kind=%s payment_record=%s",
+                (
+                    "[Yoco] Checkout verification mismatch. "
+                    "kind=%s payment_id=%s"
+                ),
                 kind,
                 payment_id,
             )
@@ -1852,27 +1958,7 @@ def verify_and_activate_yoco_subscription(
             return "invalid"
 
         # ====================================================
-        # EXTRACT VERIFIED YOCO PAYMENT ID
-        # ====================================================
-
-        yoco_payment_id = checkout.get(
-            "paymentId"
-        )
-
-        if (
-            not isinstance(yoco_payment_id, str)
-            or not yoco_payment_id.strip()
-        ):
-
-            db.session.rollback()
-            return "invalid"
-
-        yoco_payment_id = (
-            yoco_payment_id.strip()
-        )
-
-        # ====================================================
-        # CHECK PAYMENT ID REUSE
+        # 15. PREVENT PAYMENT ID REUSE
         # ====================================================
 
         if _yoco_payment_used_elsewhere(
@@ -1884,40 +1970,57 @@ def verify_and_activate_yoco_subscription(
             db.session.rollback()
 
             current_app.logger.warning(
-                "[Yoco] Payment ID already belongs "
-                "to another subscription payment."
+                (
+                    "[Yoco] Payment ID already belongs "
+                    "to another subscription payment. "
+                    "kind=%s payment_id=%s"
+                ),
+                kind,
+                payment_id,
             )
 
             return "invalid"
 
         # ====================================================
-        # IDEMPOTENCY
+        # 16. IDEMPOTENCY
         # ====================================================
 
         if payment.payment_status == "paid":
 
-            result = (
-                "already_processed"
-                if payment.yoco_payment_id
+            if (
+                payment.yoco_payment_id
                 == yoco_payment_id
-                else "invalid"
-            )
+            ):
+
+                db.session.rollback()
+
+                current_app.logger.info(
+                    (
+                        "[Yoco] Payment already processed. "
+                        "kind=%s payment_id=%s"
+                    ),
+                    kind,
+                    payment_id,
+                )
+
+                return "already_processed"
 
             db.session.rollback()
 
-            return result
+            return "invalid"
 
         # ====================================================
-        # REQUIRE PENDING PAYMENT
+        # 17. REQUIRE PENDING PAYMENT
         # ====================================================
 
         if payment.payment_status != "pending":
 
             db.session.rollback()
+
             return "invalid"
 
         # ====================================================
-        # PREVENT PAYMENT ID REPLACEMENT
+        # 18. PREVENT PAYMENT ID REPLACEMENT
         # ====================================================
 
         if payment.yoco_payment_id not in (
@@ -1926,13 +2029,16 @@ def verify_and_activate_yoco_subscription(
         ):
 
             db.session.rollback()
+
             return "invalid"
 
         # ====================================================
-        # VALIDATE SUBSCRIPTION PERIOD
+        # 19. VALIDATE SUBSCRIPTION PERIOD
         # ====================================================
 
-        period_days = payment.period_days
+        period_days = (
+            payment.period_days
+        )
 
         if (
             isinstance(period_days, bool)
@@ -1941,37 +2047,57 @@ def verify_and_activate_yoco_subscription(
         ):
 
             db.session.rollback()
+
             return "invalid"
 
         # ====================================================
-        # CURRENT TIME
+        # 20. CURRENT TIME
         # ====================================================
 
         now = datetime.utcnow()
 
         # ====================================================
-        # ORGANIZER SUBSCRIPTION
+        # 21. ORGANIZER SUBSCRIPTION ACTIVATION
         # ====================================================
 
         if kind == "organizer":
 
+            # ================================================
+            # REJECT SUSPENDED ORGANIZERS
+            # ================================================
+
             if organizer.subscription_status == "suspended":
 
                 db.session.rollback()
+
                 return "invalid"
+
+            # ================================================
+            # EXISTING SUBSCRIPTION EXPIRY
+            # ================================================
 
             current_expiry = (
                 organizer.subscription_expires_at
             )
 
-            start = (
-                current_expiry
-                if (
-                    current_expiry
-                    and current_expiry > now
-                )
-                else now
-            )
+            # ================================================
+            # DETERMINE SUBSCRIPTION START
+            # ================================================
+
+            if (
+                current_expiry is not None
+                and current_expiry > now
+            ):
+
+                start = current_expiry
+
+            else:
+
+                start = now
+
+            # ================================================
+            # DETERMINE SUBSCRIPTION END
+            # ================================================
 
             end = (
                 start
@@ -1980,6 +2106,10 @@ def verify_and_activate_yoco_subscription(
                     days=period_days
                 )
             )
+
+            # ================================================
+            # ACTIVATE ORGANIZER
+            # ================================================
 
             organizer.active = True
 
@@ -1996,17 +2126,19 @@ def verify_and_activate_yoco_subscription(
             )
 
         # ====================================================
-        # RESTAURANT SUBSCRIPTION
+        # 22. RESTAURANT SUBSCRIPTION ACTIVATION
         # ====================================================
 
         else:
 
-            # =================================================
+            # ================================================
             # LOCK RESTAURANT
-            # =================================================
+            # ================================================
 
             advert = (
-                db.session.query(RestaurantAdvert)
+                db.session.query(
+                    RestaurantAdvert
+                )
                 .filter(
                     RestaurantAdvert.id
                     == payment.restaurant_advert_id,
@@ -2019,40 +2151,49 @@ def verify_and_activate_yoco_subscription(
             )
 
             if advert is None:
+
                 db.session.rollback()
+
                 return "invalid"
 
-            # =================================================
-            # VERIFY RESTAURANT OWNER
-            # =================================================
+            # ================================================
+            # VERIFY ORGANIZER STATUS
+            # ================================================
 
             if not organizer.active:
 
                 db.session.rollback()
+
                 return "invalid"
 
             if organizer.subscription_status == "suspended":
 
                 db.session.rollback()
+
                 return "invalid"
 
-            account_type = (
+            # ================================================
+            # VERIFY RESTAURANT ACCOUNT TYPE
+            # ================================================
+
+            account_type = str(
                 getattr(
                     organizer,
                     "account_type",
                     None,
                 )
                 or "event"
-            )
+            ).strip().lower()
 
             if account_type != "restaurant":
 
                 db.session.rollback()
+
                 return "invalid"
 
-            # =================================================
+            # ================================================
             # VALIDATE RESTAURANT PLAN
-            # =================================================
+            # ================================================
 
             plan_tier = str(
                 payment.plan_tier or ""
@@ -2061,11 +2202,58 @@ def verify_and_activate_yoco_subscription(
             if plan_tier not in RESTAURANT_PAYABLE_PLANS:
 
                 db.session.rollback()
+
                 return "invalid"
 
-            # =================================================
-            # EXISTING SUBSCRIPTION
-            # =================================================
+            # ================================================
+            # VALIDATE PLAN PRICE
+            # ================================================
+            #
+            # The checkout amount has already been compared
+            # against the local payment amount by
+            # _yoco_checkout_matches_payment().
+            #
+            # This additional check prevents an incorrectly
+            # priced local payment record from activating
+            # a paid plan.
+            # ================================================
+
+            configured_plan = (
+                RESTAURANT_PAYABLE_PLANS[
+                    plan_tier
+                ]
+            )
+
+            configured_price = Decimal(
+                str(
+                    configured_plan["price"]
+                )
+            )
+
+            payment_amount = Decimal(
+                str(
+                    payment.amount
+                )
+            )
+
+            if payment_amount != configured_price:
+
+                db.session.rollback()
+
+                current_app.logger.warning(
+                    (
+                        "[Yoco] Restaurant plan price mismatch. "
+                        "payment_id=%s plan=%s"
+                    ),
+                    payment_id,
+                    plan_tier,
+                )
+
+                return "invalid"
+
+            # ================================================
+            # EXISTING RESTAURANT SUBSCRIPTION
+            # ================================================
 
             current_tier = str(
                 advert.subscription_tier or "free"
@@ -2075,9 +2263,9 @@ def verify_and_activate_yoco_subscription(
                 advert.subscription_expires_at
             )
 
-            # =================================================
+            # ================================================
             # SAME ACTIVE PAID PLAN
-            # =================================================
+            # ================================================
 
             same_active_tier = (
                 current_tier == plan_tier
@@ -2085,19 +2273,21 @@ def verify_and_activate_yoco_subscription(
                 and current_expiry > now
             )
 
-            # =================================================
-            # SUBSCRIPTION START
-            # =================================================
+            # ================================================
+            # DETERMINE SUBSCRIPTION START
+            # ================================================
 
-            start = (
-                current_expiry
-                if same_active_tier
-                else now
-            )
+            if same_active_tier:
 
-            # =================================================
-            # SUBSCRIPTION END
-            # =================================================
+                start = current_expiry
+
+            else:
+
+                start = now
+
+            # ================================================
+            # DETERMINE SUBSCRIPTION END
+            # ================================================
 
             end = (
                 start
@@ -2107,9 +2297,9 @@ def verify_and_activate_yoco_subscription(
                 )
             )
 
-            # =================================================
-            # ACTIVATE RESTAURANT SUBSCRIPTION
-            # =================================================
+            # ================================================
+            # ACTIVATE RESTAURANT PLAN
+            # ================================================
 
             advert.subscription_tier = (
                 plan_tier
@@ -2128,7 +2318,7 @@ def verify_and_activate_yoco_subscription(
             )
 
         # ====================================================
-        # MARK PAYMENT VERIFIED
+        # 23. MARK PAYMENT VERIFIED
         # ====================================================
 
         payment.payment_status = (
@@ -2174,16 +2364,20 @@ def verify_and_activate_yoco_subscription(
         )
 
         # ====================================================
-        # COMMIT PAYMENT + SUBSCRIPTION TOGETHER
+        # 24. COMMIT PAYMENT AND SUBSCRIPTION TOGETHER
         # ====================================================
 
         db.session.commit()
 
+        # ====================================================
+        # 25. LOG SUCCESS
+        # ====================================================
+
         current_app.logger.info(
             (
-                "[Yoco] Subscription activated "
+                "[Yoco] Subscription activated. "
                 "kind=%s "
-                "payment_record=%s "
+                "payment_id=%s "
                 "source=%s "
                 "subscription_end=%s"
             ),
@@ -2195,12 +2389,21 @@ def verify_and_activate_yoco_subscription(
 
         return "activated"
 
+    # ========================================================
+    # 26. ERROR HANDLING
+    # ========================================================
+
     except Exception:
 
         db.session.rollback()
 
         current_app.logger.exception(
-            "[Yoco] Subscription activation failed."
+            (
+                "[Yoco] Subscription activation failed. "
+                "kind=%s payment_id=%s"
+            ),
+            kind,
+            payment_id,
         )
 
         raise
