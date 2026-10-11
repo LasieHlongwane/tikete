@@ -3,590 +3,537 @@
 
 <head>
 
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <meta
-        name="theme-color"
-        content="#111318"
-    >
-
-    <title>
-        Organiser Payout Ledger | KALXA
-    </title>
-
-    <style>
-
-        /* =====================================================
-           GLOBAL
-        ===================================================== */
-
-        * {
-            box-sizing: border-box;
-        }
-
-        :root {
-            --page-bg: #f4f5f7;
-            --surface: #ffffff;
-            --surface-soft: #f8fafc;
-            --text: #111827;
-            --muted: #64748b;
-            --border: #e5e7eb;
-            --black: #111318;
-            --green: #166534;
-            --amber: #92400e;
-            --red: #991b1b;
-            --blue: #1d4ed8;
-        }
-
-        body {
-            margin: 0;
-            background: var(--page-bg);
-            color: var(--text);
-            font-family:
-                Inter,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                Roboto,
-                Arial,
-                sans-serif;
-        }
-
-        a {
-            color: inherit;
-        }
-
-        .shell {
-            width: min(
-                1320px,
-                calc(100% - 28px)
-            );
-
-            margin: 0 auto;
-            padding: 22px 0 60px;
-        }
-
-        /* =====================================================
-           NAVIGATION
-        ===================================================== */
-
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-
-            padding: 15px 17px;
-            margin-bottom: 22px;
-
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-        }
-
-        .brand {
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: -.02em;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .nav-links a {
-            padding: 9px 12px;
-            border-radius: 9px;
-            color: #334155;
-            font-size: 12px;
-            font-weight: 750;
-            text-decoration: none;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-            background: #f1f5f9;
-        }
-
-        /* =====================================================
-           HERO
-        ===================================================== */
-
-        .hero {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 18px;
-
-            padding: 30px;
-            margin-bottom: 20px;
-
-            color: #fff;
-            background: var(--black);
-            border-radius: 20px;
-        }
-
-        .eyebrow {
-            margin: 0 0 8px;
-            color: #cbd5e1;
-            font-size: 10px;
-            font-weight: 850;
-            letter-spacing: .13em;
-        }
-
-        h1 {
-            margin: 0 0 10px;
-            font-size: clamp(
-                27px,
-                5vw,
-                42px
-            );
-            letter-spacing: -.04em;
-        }
-
-        .hero p {
-            margin: 0;
-            max-width: 700px;
-            color: #cbd5e1;
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-
-            padding: 8px 12px;
-            border-radius: 999px;
-
-            background: #fef3c7;
-            color: #92400e;
-
-            font-size: 10px;
-            font-weight: 900;
-            white-space: nowrap;
-        }
-
-        /* =====================================================
-           NOTICES
-        ===================================================== */
-
-        .notice {
-            padding: 16px;
-            margin-bottom: 18px;
-
-            border: 1px solid #fed7aa;
-            background: #fffaf5;
-            border-radius: 12px;
-
-            color: var(--amber);
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        .notice strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .notice.danger {
-            border-color: #fecaca;
-            background: #fef2f2;
-            color: var(--red);
-        }
-
-        /* =====================================================
-           METRICS
-        ===================================================== */
-
-        .metrics {
-            display: grid;
-            grid-template-columns:
-                repeat(4, minmax(0, 1fr));
-
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .metric {
-            padding: 19px;
-
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-
-            min-width: 0;
-        }
-
-        .metric span {
-            display: block;
-            color: var(--muted);
-            font-size: 11px;
-            font-weight: 800;
-            line-height: 1.5;
-        }
-
-        .metric strong {
-            display: block;
-            margin-top: 9px;
-            font-size: clamp(
-                20px,
-                2.3vw,
-                27px
-            );
-            font-weight: 900;
-            letter-spacing: -.04em;
-            overflow-wrap: anywhere;
-        }
-
-        .metric small {
-            display: block;
-            margin-top: 8px;
-            color: var(--muted);
-            font-size: 10px;
-            line-height: 1.5;
-        }
-
-        .metric.highlight {
-            background: #ecfdf5;
-            border-color: #bbf7d0;
-        }
-
-        .metric.highlight strong {
-            color: var(--green);
-        }
-
-        .metric.warning {
-            background: #fffbeb;
-            border-color: #fde68a;
-        }
-
-        .metric.warning strong {
-            color: var(--amber);
-        }
-
-        .metric.danger {
-            background: #fef2f2;
-            border-color: #fecaca;
-        }
-
-        .metric.danger strong {
-            color: var(--red);
-        }
-
-        .metric.locked-metric {
-            background: #f8fafc;
-        }
-
-        /* =====================================================
-           SECTIONS
-        ===================================================== */
-
-        .section {
-            padding: 23px;
-            margin-bottom: 18px;
-
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-        }
-
-        .section-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-
-            margin-bottom: 18px;
-        }
-
-        h2 {
-            margin: 0;
-            font-size: 19px;
-            letter-spacing: -.02em;
-        }
-
-        .muted {
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        /* =====================================================
-           TABLES
-        ===================================================== */
-
-        .table-wrap {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            min-width: 1250px;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 14px 11px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-            font-size: 12px;
-            vertical-align: middle;
-        }
-
-        th {
-            color: var(--muted);
-            font-size: 10px;
-            font-weight: 850;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-            white-space: nowrap;
-        }
-
-        td {
-            white-space: nowrap;
-        }
-
-        td strong {
-            font-weight: 850;
-        }
-
-        tbody tr:hover {
-            background: #f8fafc;
-        }
-
-        .money {
-            font-variant-numeric: tabular-nums;
-        }
-
-        .money.positive {
-            color: var(--green);
-            font-weight: 850;
-        }
-
-        .money.refund {
-            color: var(--red);
-        }
-
-        /* =====================================================
-           STATUS BADGES
-        ===================================================== */
-
-        .status {
-            display: inline-flex;
-            align-items: center;
-
-            padding: 6px 9px;
-            border-radius: 999px;
-
-            font-size: 10px;
-            font-weight: 850;
-            white-space: nowrap;
-        }
-
-        .status.pending {
-            background: #fef3c7;
-            color: var(--amber);
-        }
-
-        .status.partial {
-            background: #dbeafe;
-            color: var(--blue);
-        }
-
-        .status.reconciled {
-            background: #dcfce7;
-            color: var(--green);
-        }
-
-        .status.exception {
-            background: #fee2e2;
-            color: var(--red);
-        }
-
-        .status.neutral {
-            background: #f1f5f9;
-            color: #475569;
-        }
-
-        /* =====================================================
-           ACCOUNTING EXCEPTIONS INSPECTOR
-        ===================================================== */
-
-        .inspector-table {
-            min-width: 1000px;
-        }
-
-        .exception-reference {
-            font-weight: 850;
-            color: #111827;
-        }
-
-        .exception-list {
-            margin: 0;
-            padding-left: 18px;
-            color: var(--red);
-            font-size: 11px;
-            line-height: 1.8;
-        }
-
-        .exception-list li {
-            margin-bottom: 5px;
-        }
-
-        .exception-count {
-            display: inline-flex;
-            align-items: center;
-
-            padding: 7px 11px;
-            border-radius: 999px;
-
-            background: #fee2e2;
-            color: var(--red);
-
-            font-size: 11px;
-            font-weight: 850;
-            white-space: nowrap;
-        }
-
-        .exception-row {
-            background: #fffafa;
-        }
-
-        .exception-row:hover {
-            background: #fff1f2;
-        }
-
-        .exception-row td {
-            vertical-align: top;
-        }
-
-        .exception-row td:last-child {
-            min-width: 320px;
-            white-space: normal;
-        }
-
-        .inspector-note {
-            margin-top: 16px;
-            padding: 15px;
-
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 11px;
-
-            color: var(--muted);
-            font-size: 11px;
-            line-height: 1.8;
-        }
-
-        .inspector-note strong {
-            display: block;
-            color: var(--text);
-            font-size: 12px;
-        }
-
-        /* =====================================================
-           EMPTY STATE
-        ===================================================== */
-
-        .empty {
-            padding: 22px;
-
-            background: var(--surface-soft);
-            border: 1px dashed #cbd5e1;
-            border-radius: 12px;
-
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.7;
-        }
-
-        /* =====================================================
-           PAYOUT LOCK
-        ===================================================== */
-
-        .locked {
-            padding: 23px;
-
-            background: #111827;
-            color: #fff;
-            border-radius: 14px;
-        }
-
-        .locked strong {
-            display: block;
-            margin-bottom: 9px;
-            font-size: 16px;
-        }
-
-        .locked p {
-            margin: 0;
-            color: #cbd5e1;
-            font-size: 12px;
-            line-height: 1.8;
-        }
-
-        /* =====================================================
-           RESPONSIVE
-        ===================================================== */
-
-        @media (max-width: 1050px) {
-
-            .metrics {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-            }
-
-        }
-
-        @media (max-width: 620px) {
-
-            .shell {
-                width: calc(100% - 20px);
-                padding-top: 12px;
-            }
-
-            .metrics {
-                grid-template-columns: 1fr;
-            }
-
-            .hero {
-                padding: 22px;
-            }
-
-            .section {
-                padding: 16px;
-            }
-
-            .metric {
-                padding: 17px;
-            }
-
-            .nav {
-                padding: 13px;
-            }
-
-            .exception-count {
-                white-space: normal;
-            }
-
-        }
-
-    </style>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+
+<meta
+    name="theme-color"
+    content="#111318"
+>
+
+<title>Organiser Payout Ledger | KALXA</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --page-bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-soft: #f8fafc;
+    --text: #111827;
+    --muted: #64748b;
+    --border: #e5e7eb;
+    --black: #111318;
+    --green: #166534;
+    --amber: #92400e;
+    --red: #991b1b;
+    --blue: #1d4ed8;
+}
+
+body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text);
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+}
+
+a {
+    color: inherit;
+}
+
+.shell {
+    width: min(1320px, calc(100% - 28px));
+    margin: 0 auto;
+    padding: 22px 0 60px;
+}
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 15px 17px;
+    margin-bottom: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.brand {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: -.02em;
+}
+
+.nav-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    padding: 9px 12px;
+    border-radius: 9px;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    background: #f1f5f9;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 30px;
+    margin-bottom: 20px;
+    color: #fff;
+    background: var(--black);
+    border-radius: 20px;
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: #cbd5e1;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .13em;
+}
+
+h1 {
+    margin: 0 0 10px;
+    font-size: clamp(27px, 5vw, 42px);
+    letter-spacing: -.04em;
+}
+
+.hero p {
+    margin: 0;
+    max-width: 700px;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+/* =====================================================
+   NOTICES
+===================================================== */
+
+.notice {
+    padding: 16px;
+    margin-bottom: 18px;
+    border: 1px solid #fed7aa;
+    background: #fffaf5;
+    border-radius: 12px;
+    color: var(--amber);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.notice strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.notice.danger {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: var(--red);
+}
+
+/* =====================================================
+   METRICS
+===================================================== */
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.metric {
+    padding: 19px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    min-width: 0;
+}
+
+.metric span {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.5;
+}
+
+.metric strong {
+    display: block;
+    margin-top: 9px;
+    font-size: clamp(20px, 2.3vw, 27px);
+    font-weight: 900;
+    letter-spacing: -.04em;
+    overflow-wrap: anywhere;
+}
+
+.metric small {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.metric.highlight {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+}
+
+.metric.highlight strong {
+    color: var(--green);
+}
+
+.metric.warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.metric.warning strong {
+    color: var(--amber);
+}
+
+.metric.danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.metric.danger strong {
+    color: var(--red);
+}
+
+.metric.locked-metric {
+    background: #f8fafc;
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.section {
+    padding: 23px;
+    margin-bottom: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+h2 {
+    margin: 0;
+    font-size: 19px;
+    letter-spacing: -.02em;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* =====================================================
+   TABLES
+===================================================== */
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    min-width: 1250px;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 14px 11px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+th {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
+}
+
+td {
+    white-space: nowrap;
+}
+
+td strong {
+    font-weight: 850;
+}
+
+tbody tr:hover {
+    background: #f8fafc;
+}
+
+.money {
+    font-variant-numeric: tabular-nums;
+}
+
+.money.positive {
+    color: var(--green);
+    font-weight: 850;
+}
+
+.money.refund {
+    color: var(--red);
+}
+
+/* =====================================================
+   STATUS BADGES
+===================================================== */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 9px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.status.pending {
+    background: #fef3c7;
+    color: var(--amber);
+}
+
+.status.partial {
+    background: #dbeafe;
+    color: var(--blue);
+}
+
+.status.reconciled {
+    background: #dcfce7;
+    color: var(--green);
+}
+
+.status.exception {
+    background: #fee2e2;
+    color: var(--red);
+}
+
+.status.neutral {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* =====================================================
+   ACCOUNTING EXCEPTIONS INSPECTOR
+===================================================== */
+
+.inspector-table {
+    min-width: 1000px;
+}
+
+.exception-reference {
+    font-weight: 850;
+    color: #111827;
+}
+
+.exception-list {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--red);
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.exception-list li {
+    margin-bottom: 5px;
+}
+
+.exception-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.exception-row {
+    background: #fffafa;
+}
+
+.exception-row:hover {
+    background: #fff1f2;
+}
+
+.exception-row td {
+    vertical-align: top;
+}
+
+.exception-row td:last-child {
+    min-width: 320px;
+    white-space: normal;
+}
+
+.inspector-note {
+    margin-top: 16px;
+    padding: 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.inspector-note strong {
+    display: block;
+    color: var(--text);
+    font-size: 12px;
+}
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.empty {
+    padding: 22px;
+    background: var(--surface-soft);
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* =====================================================
+   PAYOUT LOCK
+===================================================== */
+
+.locked {
+    padding: 23px;
+    background: #111827;
+    color: #fff;
+    border-radius: 14px;
+}
+
+.locked strong {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 16px;
+}
+
+.locked p {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1050px) {
+    .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .shell {
+        width: calc(100% - 20px);
+        padding-top: 12px;
+    }
+
+    .metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        padding: 22px;
+    }
+
+    .section {
+        padding: 16px;
+    }
+
+    .metric {
+        padding: 17px;
+    }
+
+    .nav {
+        padding: 13px;
+    }
+}
+
+</style>
 
 </head>
 
@@ -703,12 +650,12 @@
                 order(s)
             </strong>
 
-            One or more paid Paystack ticket orders
-            contain inconsistent commission accounting,
-            refund records or organiser ownership.
+            Some paid Paystack ticket orders contain
+            incomplete commission accounting, refund
+            inconsistencies or invalid organiser ownership.
 
-            These orders are excluded from the
-            financial totals shown below.
+            These orders have been excluded from the
+            validated financial totals.
 
             <br><br>
 
@@ -717,306 +664,126 @@
                 {{ totals.unassigned_orders }}
             </strong>
 
+            <br><br>
+
+            <a href="#accounting-exceptions">
+                View accounting exceptions ↓
+            </a>
+
         </div>
 
     {% endif %}
 
     <!-- =====================================================
-         ACCOUNTING SUMMARY
+         FINANCIAL METRICS
     ===================================================== -->
 
     <div class="metrics">
 
-        <!-- TOTAL PAID ORDERS -->
-
         <div class="metric">
-
-            <span>
-                Total Paid Paystack Orders
-            </span>
-
-            <strong>
-                {{ totals.total_paid_orders }}
-            </strong>
-
+            <span>Total Paid Paystack Orders</span>
+            <strong>{{ totals.total_paid_orders }}</strong>
         </div>
-
-        <!-- VALIDATED ORDERS -->
 
         <div class="metric highlight">
-
-            <span>
-                Validated Paid Orders
-            </span>
-
-            <strong>
-                {{ totals.validated_orders }}
-            </strong>
-
+            <span>Validated Paid Orders</span>
+            <strong>{{ totals.validated_orders }}</strong>
         </div>
-
-        <!-- ACCOUNTING EXCEPTIONS -->
 
         <div class="metric danger">
-
-            <span>
-                Accounting Exceptions
-            </span>
-
-            <strong>
-                {{ totals.accounting_exceptions }}
-            </strong>
-
+            <span>Accounting Exceptions</span>
+            <strong>{{ totals.accounting_exceptions }}</strong>
         </div>
-
-        <!-- UNASSIGNED ORDERS -->
 
         <div class="metric warning">
-
-            <span>
-                Unassigned Orders
-            </span>
-
-            <strong>
-                {{ totals.unassigned_orders }}
-            </strong>
-
+            <span>Unassigned Orders</span>
+            <strong>{{ totals.unassigned_orders }}</strong>
         </div>
-
-        <!-- ORGANISERS WITH VALID ORDERS -->
 
         <div class="metric">
-
-            <span>
-                Organisers With Valid Orders
-            </span>
-
-            <strong>
-                {{ totals.organizers_with_valid_orders }}
-            </strong>
-
+            <span>Organisers With Valid Orders</span>
+            <strong>{{ totals.organizers_with_valid_orders }}</strong>
         </div>
-
-        <!-- ORGANISERS UNDER REVIEW -->
 
         <div class="metric warning">
-
-            <span>
-                Organisers Under Review
-            </span>
-
-            <strong>
-                {{ totals.organizers_under_review }}
-            </strong>
-
+            <span>Organisers Under Review</span>
+            <strong>{{ totals.organizers_under_review }}</strong>
         </div>
-
-        <!-- ORIGINAL FACE VALUE -->
 
         <div class="metric">
-
-            <span>
-                Original Ticket Face Value
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.face_value) }}
-            </strong>
-
+            <span>Original Ticket Face Value</span>
+            <strong>R{{ "%.2f"|format(totals.face_value) }}</strong>
         </div>
-
-        <!-- ORIGINAL COMMISSION -->
 
         <div class="metric">
-
-            <span>
-                Original KALXA Commission
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.commission) }}
-            </strong>
-
+            <span>Original KALXA Commission</span>
+            <strong>R{{ "%.2f"|format(totals.commission) }}</strong>
         </div>
-
-        <!-- REFUNDED FACE VALUE -->
 
         <div class="metric warning">
-
-            <span>
-                Verified Refunded Ticket Value
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.refunded_face_value) }}
-            </strong>
-
-            <small>
-                Successful refunds applied to order accounting.
-            </small>
-
+            <span>Verified Refunded Ticket Value</span>
+            <strong>R{{ "%.2f"|format(totals.refunded_face_value) }}</strong>
+            <small>Successful refunds applied to order accounting.</small>
         </div>
-
-        <!-- COMMISSION REVERSALS -->
 
         <div class="metric">
-
-            <span>
-                Reversed KALXA Commission
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.commission_reversed) }}
-            </strong>
-
+            <span>Reversed KALXA Commission</span>
+            <strong>R{{ "%.2f"|format(totals.commission_reversed) }}</strong>
         </div>
-
-        <!-- NET TICKET SALES -->
 
         <div class="metric">
-
-            <span>
-                Net Ticket Sales
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.net_ticket_sales) }}
-            </strong>
-
+            <span>Net Ticket Sales</span>
+            <strong>R{{ "%.2f"|format(totals.net_ticket_sales) }}</strong>
         </div>
-
-        <!-- NET COMMISSION -->
 
         <div class="metric">
-
-            <span>
-                Net KALXA Commission
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.net_commission) }}
-            </strong>
-
+            <span>Net KALXA Commission</span>
+            <strong>R{{ "%.2f"|format(totals.net_commission) }}</strong>
         </div>
-
-        <!-- ORIGINAL ORGANISER ENTITLEMENT -->
 
         <div class="metric">
-
-            <span>
-                Original Organiser Gross Entitlement
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.gross_entitlement) }}
-            </strong>
-
+            <span>Original Organiser Gross Entitlement</span>
+            <strong>R{{ "%.2f"|format(totals.gross_entitlement) }}</strong>
         </div>
-
-        <!-- NET ORGANISER ENTITLEMENT -->
 
         <div class="metric highlight">
-
-            <span>
-                Net Organiser Entitlement
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.net_entitlement) }}
-            </strong>
-
-            <small>
-                After recorded successful refunds.
-            </small>
-
+            <span>Net Organiser Entitlement</span>
+            <strong>R{{ "%.2f"|format(totals.net_entitlement) }}</strong>
+            <small>After recorded successful refunds.</small>
         </div>
-
-        <!-- SETTLEMENT-MATCHED -->
 
         <div class="metric">
-
-            <span>
-                Settlement-Matched Entitlement
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.settled_entitlement) }}
-            </strong>
-
-            <small>
-                Local Paystack settlement matching only.
-            </small>
-
+            <span>Settlement-Matched Entitlement</span>
+            <strong>R{{ "%.2f"|format(totals.settled_entitlement) }}</strong>
+            <small>Local Paystack settlement matching only.</small>
         </div>
-
-        <!-- UNSETTLED -->
 
         <div class="metric warning">
-
-            <span>
-                Unsettled Net Entitlement
-            </span>
-
-            <strong>
-                R{{ "%.2f"|format(totals.unsettled_entitlement) }}
-            </strong>
-
-        </div>
-
-        <!-- REFUND COUNTS -->
-
-        <div class="metric">
-
-            <span>
-                Fully Refunded Orders
-            </span>
-
-            <strong>
-                {{ totals.refunded_orders }}
-            </strong>
-
+            <span>Unsettled Net Entitlement</span>
+            <strong>R{{ "%.2f"|format(totals.unsettled_entitlement) }}</strong>
         </div>
 
         <div class="metric">
-
-            <span>
-                Partially Refunded Orders
-            </span>
-
-            <strong>
-                {{ totals.partially_refunded_orders }}
-            </strong>
-
+            <span>Fully Refunded Orders</span>
+            <strong>{{ totals.refunded_orders }}</strong>
         </div>
 
         <div class="metric">
-
-            <span>
-                Orders With Pending Refunds
-            </span>
-
-            <strong>
-                {{ totals.pending_refund_orders }}
-            </strong>
-
+            <span>Partially Refunded Orders</span>
+            <strong>{{ totals.partially_refunded_orders }}</strong>
         </div>
 
-        <!-- PAYOUT ELIGIBILITY -->
+        <div class="metric">
+            <span>Orders With Pending Refunds</span>
+            <strong>{{ totals.pending_refund_orders }}</strong>
+        </div>
 
         <div class="metric locked-metric">
-
-            <span>
-                Verified Payable Balance
-            </span>
-
+            <span>Verified Payable Balance</span>
             <strong style="font-size:18px;">
                 Not established
             </strong>
-
-            <small>
-                Payout execution remains disabled.
-            </small>
-
+            <small>Payout execution remains disabled.</small>
         </div>
 
     </div>
@@ -1031,15 +798,12 @@
 
             <div>
 
-                <h2>
-                    Organiser Accounts
-                </h2>
+                <h2>Organiser Accounts</h2>
 
                 <p class="muted">
-                    Paystack ticket orders with internally
-                    validated commission and refund accounting.
-                    Scroll horizontally to view all financial
-                    columns on mobile devices.
+                    Financially validated Paystack ticket orders.
+                    Scroll horizontally to view all columns
+                    on mobile devices.
                 </p>
 
             </div>
@@ -1053,7 +817,6 @@
                 <table>
 
                     <thead>
-
                         <tr>
                             <th>Organiser</th>
                             <th>Paid Orders</th>
@@ -1067,7 +830,6 @@
                             <th>Unsettled</th>
                             <th>Status</th>
                         </tr>
-
                     </thead>
 
                     <tbody>
@@ -1076,75 +838,47 @@
 
                             <tr>
 
-                                <!-- ORGANISER -->
-
                                 <td>
-
                                     <strong>
                                         {{ account.organizer.display_name }}
                                     </strong>
-
                                 </td>
 
-                                <!-- PAID ORDERS -->
-
-                                <td>
-                                    {{ account.paid_orders }}
-                                </td>
-
-                                <!-- FACE VALUE -->
+                                <td>{{ account.paid_orders }}</td>
 
                                 <td class="money">
                                     R{{ "%.2f"|format(account.face_value) }}
                                 </td>
 
-                                <!-- COMMISSION -->
-
                                 <td class="money">
                                     R{{ "%.2f"|format(account.commission) }}
                                 </td>
-
-                                <!-- REFUNDS -->
 
                                 <td class="money refund">
                                     R{{ "%.2f"|format(account.refunded_face_value) }}
                                 </td>
 
-                                <!-- COMMISSION REVERSAL -->
-
                                 <td class="money">
                                     R{{ "%.2f"|format(account.commission_reversed) }}
                                 </td>
-
-                                <!-- GROSS ENTITLEMENT -->
 
                                 <td class="money">
                                     R{{ "%.2f"|format(account.gross_entitlement) }}
                                 </td>
 
-                                <!-- NET ENTITLEMENT -->
-
                                 <td class="money positive">
-
                                     <strong>
                                         R{{ "%.2f"|format(account.net_entitlement) }}
                                     </strong>
-
                                 </td>
-
-                                <!-- SETTLEMENT-MATCHED -->
 
                                 <td class="money">
                                     R{{ "%.2f"|format(account.settled_entitlement) }}
                                 </td>
 
-                                <!-- UNSETTLED -->
-
                                 <td class="money">
                                     R{{ "%.2f"|format(account.unsettled_entitlement) }}
                                 </td>
-
-                                <!-- STATUS -->
 
                                 <td>
 
@@ -1195,14 +929,8 @@
         {% else %}
 
             <div class="empty">
-
-                No eligible paid Paystack ticket orders
-                have been recorded yet.
-
-                Once customers successfully purchase
-                tickets and KALXA records the commission,
-                their organiser accounting will appear here.
-
+                No validated paid Paystack ticket orders
+                are currently available.
             </div>
 
         {% endif %}
@@ -1210,7 +938,7 @@
     </section>
 
     <!-- =====================================================
-         STAGE 6B.1 — ACCOUNTING EXCEPTIONS INSPECTOR
+         ACCOUNTING EXCEPTIONS INSPECTOR
     ===================================================== -->
 
     <section class="section" id="accounting-exceptions">
@@ -1219,14 +947,11 @@
 
             <div>
 
-                <h2>
-                    Accounting Exceptions Inspector
-                </h2>
+                <h2>Accounting Exceptions Inspector</h2>
 
                 <p class="muted">
-                    Identify exactly why paid Paystack ticket
-                    orders were excluded from the organiser
-                    financial ledger.
+                    Paid Paystack ticket orders excluded from
+                    validated organiser financial totals.
                 </p>
 
             </div>
@@ -1249,7 +974,6 @@
                 <table class="inspector-table">
 
                     <thead>
-
                         <tr>
                             <th>Order Reference</th>
                             <th>Order ID</th>
@@ -1258,7 +982,6 @@
                             <th>Ticket Face Value</th>
                             <th>Detected Problems</th>
                         </tr>
-
                     </thead>
 
                     <tbody>
@@ -1267,35 +990,27 @@
 
                             <tr class="exception-row">
 
-                                <!-- PAYMENT REFERENCE -->
-
                                 <td>
-
                                     <span class="exception-reference">
-                                        {{ record.payment_reference }}
+                                        {{ record.payment_reference or "Unavailable" }}
                                     </span>
-
                                 </td>
-
-                                <!-- ORDER ID -->
 
                                 <td>
                                     #{{ record.order_id }}
                                 </td>
 
-                                <!-- EVENT ID -->
-
                                 <td>
-                                    #{{ record.event_id }}
+                                    {% if record.event_id is not none %}
+                                        #{{ record.event_id }}
+                                    {% else %}
+                                        Missing
+                                    {% endif %}
                                 </td>
-
-                                <!-- ORGANISER -->
 
                                 <td>
                                     {{ record.organizer_name }}
                                 </td>
-
-                                <!-- FACE VALUE -->
 
                                 <td class="money">
 
@@ -1311,17 +1026,13 @@
 
                                 </td>
 
-                                <!-- ACCOUNTING ISSUES -->
-
                                 <td>
 
                                     <ul class="exception-list">
 
                                         {% for issue in record.issues %}
 
-                                            <li>
-                                                {{ issue }}
-                                            </li>
+                                            <li>{{ issue }}</li>
 
                                         {% endfor %}
 
@@ -1345,29 +1056,42 @@
                     Read-only financial diagnostic
                 </strong>
 
-                These records have not been automatically
-                corrected or modified.
+                These orders remain excluded from validated
+                financial totals.
 
-                The inspector checks organiser ownership,
-                commission recording, refund snapshots
-                and refund accounting consistency.
+                Historical test orders are not automatically
+                reclassified or financially corrected.
 
-                Any financial correction must be independently
-                verified and recorded through an auditable
-                reconciliation process.
+                No commission, refund, settlement or payout
+                records have been modified by this page.
 
-                Organiser payouts remain disabled.
+            </div>
+
+        {% elif totals.accounting_exceptions > 0 %}
+
+            <div class="notice danger">
+
+                <strong>
+                    Accounting inspector data unavailable
+                </strong>
+
+                The ledger reports
+                {{ totals.accounting_exceptions }}
+                accounting exception(s), but no diagnostic
+                records were supplied to this template.
+
+                Check the deployed Python route and
+                application logs.
+
+                Do not treat this as a clean ledger.
 
             </div>
 
         {% else %}
 
             <div class="empty">
-
                 No accounting exceptions were detected
-                among the paid Paystack ticket orders
-                included in this ledger.
-
+                among the paid Paystack ticket orders.
             </div>
 
         {% endif %}
@@ -1400,9 +1124,7 @@
 
         <div class="notice" style="margin-bottom:0;">
 
-            <strong>
-                Net organiser entitlement
-            </strong>
+            <strong>Net organiser entitlement</strong>
 
             Original organiser gross share
             − successfully refunded ticket face value
@@ -1410,32 +1132,21 @@
 
             <br><br>
 
-            <strong>
-                Example
-            </strong>
+            <strong>Example</strong>
 
-            Original ticket sale:
-            R100.00
-
+            Original ticket sale: R100.00
             <br>
 
-            KALXA commission:
-            R4.00
-
+            KALXA commission: R4.00
             <br>
 
-            Original organiser share:
-            R96.00
-
+            Original organiser share: R96.00
             <br>
 
-            Successfully refunded face value:
-            R50.00
-
+            Successfully refunded face value: R50.00
             <br>
 
-            Reversed KALXA commission:
-            R2.00
+            Reversed KALXA commission: R2.00
 
             <br><br>
 
@@ -1461,9 +1172,7 @@
 
             <div>
 
-                <h2>
-                    Organiser Payout Controls
-                </h2>
+                <h2>Organiser Payout Controls</h2>
 
                 <p class="muted">
                     Payment execution is intentionally unavailable.
