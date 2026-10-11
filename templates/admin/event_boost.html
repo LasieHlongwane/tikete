@@ -10,20 +10,43 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
     <title>
         Event Boost | {{ event.title }} | Kalxa
     </title>
 
     <style>
 
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
         * {
             box-sizing: border-box;
         }
 
+        :root {
+            --background: #f5f6f8;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --text: #111827;
+            --text-soft: #374151;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --dark: #111827;
+            --green: #047857;
+            --orange: #c2410c;
+            --red: #b91c1c;
+        }
+
         body {
             margin: 0;
-            background: #f5f6f8;
-            color: #111827;
+            background: var(--background);
+            color: var(--text);
             font-family:
                 Inter,
                 system-ui,
@@ -38,12 +61,50 @@
                 1050px,
                 calc(100% - 28px)
             );
+
             margin: 0 auto;
+
             padding:
                 28px
                 0
                 64px;
         }
+
+        a {
+            color: inherit;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+
+            font-size:
+                clamp(
+                    30px,
+                    6vw,
+                    48px
+                );
+
+            line-height: 1.04;
+        }
+
+        h2 {
+            line-height: 1.2;
+        }
+
+        .muted {
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
 
         .topbar {
             display: flex;
@@ -54,20 +115,29 @@
         }
 
         .back {
-            color: #111827;
+            color: var(--text);
             text-decoration: none;
             font-weight: 850;
         }
 
+        .back:hover {
+            text-decoration: underline;
+        }
+
         .brand {
             font-weight: 950;
+            white-space: nowrap;
         }
+
+        /* =====================================================
+           HERO
+        ===================================================== */
 
         .hero {
             padding: 26px;
             border-radius: 22px;
-            background: #111827;
-            color: #fff;
+            background: var(--dark);
+            color: #ffffff;
             margin-bottom: 18px;
         }
 
@@ -81,51 +151,33 @@
             text-transform: uppercase;
         }
 
-        h1,
-        h2,
-        h3 {
-            margin-top: 0;
-        }
-
-        h1 {
-            margin-bottom: 10px;
-            font-size:
-                clamp(
-                    30px,
-                    6vw,
-                    48px
-                );
-            line-height: 1.04;
-        }
-
-        .muted {
-            color: #6b7280;
-            line-height: 1.55;
-        }
-
         .hero .muted {
             color: #d1d5db;
         }
 
+        /* =====================================================
+           METRICS
+        ===================================================== */
+
         .audience {
             display: grid;
+
             grid-template-columns:
                 repeat(
                     3,
-                    minmax(
-                        0,
-                        1fr
-                    )
+                    minmax(0, 1fr)
                 );
+
             gap: 12px;
             margin-top: 20px;
         }
 
         .metric {
+            min-width: 0;
             padding: 16px;
             border-radius: 15px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
+            background: var(--surface);
+            border: 1px solid var(--border);
         }
 
         .hero .metric {
@@ -135,7 +187,7 @@
 
         .metric span {
             display: block;
-            color: #6b7280;
+            color: var(--muted);
             font-size: .73rem;
             font-weight: 850;
             text-transform: uppercase;
@@ -149,25 +201,29 @@
             display: block;
             margin-top: 6px;
             font-size: 1.55rem;
+            overflow-wrap: anywhere;
         }
+
+        /* =====================================================
+           CARDS AND PLANS
+        ===================================================== */
 
         .plans {
             display: grid;
+
             grid-template-columns:
                 repeat(
                     2,
-                    minmax(
-                        0,
-                        1fr
-                    )
+                    minmax(0, 1fr)
                 );
+
             gap: 16px;
             margin-bottom: 18px;
         }
 
         .card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 20px;
             padding: 22px;
             margin-bottom: 16px;
@@ -177,10 +233,11 @@
             display: flex;
             flex-direction: column;
             min-height: 100%;
+            margin-bottom: 0;
         }
 
         .pro {
-            border: 2px solid #111827;
+            border: 2px solid var(--dark);
         }
 
         .price {
@@ -200,7 +257,8 @@
         .features li {
             padding-left: 24px;
             position: relative;
-            color: #374151;
+            color: var(--text-soft);
+            line-height: 1.45;
         }
 
         .features li::before {
@@ -208,7 +266,12 @@
             position: absolute;
             left: 0;
             font-weight: 950;
+            color: var(--green);
         }
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
 
         .button {
             width: 100%;
@@ -217,26 +280,48 @@
             border: 0;
             border-radius: 12px;
             padding: 11px 15px;
-            background: #111827;
-            color: #fff;
+            background: var(--dark);
+            color: #ffffff;
             font: inherit;
             font-weight: 900;
             cursor: pointer;
             text-decoration: none;
+
             display: inline-flex;
             justify-content: center;
             align-items: center;
+            text-align: center;
+        }
+
+        .button:hover:not(:disabled) {
+            background: #1f2937;
         }
 
         .button-secondary {
             background: #eef2f7;
-            color: #111827;
+            color: var(--text);
         }
 
-        .button[disabled] {
+        .button-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .button:disabled {
             opacity: .5;
             cursor: not-allowed;
         }
+
+        .purchase-form {
+            margin-top: auto;
+        }
+
+        .purchase-form .button {
+            margin-top: 0;
+        }
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
 
         .flash {
             margin-bottom: 12px;
@@ -244,16 +329,90 @@
             border-radius: 11px;
             background: #eef2ff;
             color: #3730a3;
+            line-height: 1.5;
         }
+
+        .flash-success {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .flash-error,
+        .flash-danger {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .flash-warning {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        /* =====================================================
+           NOTICES
+        ===================================================== */
+
+        .notice {
+            padding: 15px 16px;
+            border-radius: 13px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            line-height: 1.55;
+        }
+
+        .notice strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .notice p {
+            margin: 0;
+        }
+
+        .notice-warning {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #9a3412;
+        }
+
+        .notice-success {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+
+        .notice-info {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .plan-note {
+            margin: 12px 0 0;
+            padding: 12px;
+            border-radius: 10px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-size: .88rem;
+            line-height: 1.5;
+        }
+
+        /* =====================================================
+           STATUS BADGES
+        ===================================================== */
 
         .status {
             display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 7px 10px;
             border-radius: 999px;
             background: #eef2f7;
             font-size: .75rem;
             font-weight: 900;
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .status-active,
@@ -273,6 +432,10 @@
             color: #b91c1c;
         }
 
+        /* =====================================================
+           SCHEDULE
+        ===================================================== */
+
         .schedule {
             display: grid;
             gap: 10px;
@@ -280,13 +443,11 @@
 
         .schedule-row {
             display: grid;
-            grid-template-columns:
-                1fr
-                auto;
+            grid-template-columns: 1fr auto;
             gap: 14px;
             align-items: center;
             padding: 14px;
-            background: #f8fafc;
+            background: var(--surface-soft);
             border-radius: 12px;
         }
 
@@ -297,16 +458,71 @@
 
         .schedule-row small {
             margin-top: 4px;
-            color: #6b7280;
+            color: var(--muted);
+            line-height: 1.45;
         }
 
-        @media (
-            max-width: 760px
-        ) {
+        /* =====================================================
+           PAYMENT STATUS
+        ===================================================== */
+
+        .payment-summary {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 13px;
+            background: var(--surface-soft);
+        }
+
+        .payment-summary p {
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .payment-summary p + p {
+            margin-top: 8px;
+        }
+
+        .payment-summary .button {
+            margin-top: 16px;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 760px) {
 
             .plans,
             .audience {
                 grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 22px;
+            }
+
+            .card {
+                padding: 19px;
+            }
+
+            .schedule-row {
+                grid-template-columns: 1fr;
+            }
+
+            .schedule-row .status {
+                justify-self: start;
+            }
+        }
+
+        @media (max-width: 420px) {
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .price {
+                font-size: 2.2rem;
             }
         }
 
@@ -318,6 +534,9 @@
 
     <main class="page">
 
+        <!-- =================================================
+             TOPBAR
+        ================================================= -->
 
         <div class="topbar">
 
@@ -338,11 +557,18 @@
         </div>
 
 
+        <!-- =================================================
+             FLASH MESSAGES
+        ================================================= -->
+
         {% with messages = get_flashed_messages(with_categories=true) %}
 
             {% for category, message in messages %}
 
-                <div class="flash">
+                <div
+                    class="flash flash-{{ category|e }}"
+                    role="alert"
+                >
                     {{ message }}
                 </div>
 
@@ -350,6 +576,10 @@
 
         {% endwith %}
 
+
+        <!-- =================================================
+             HERO
+        ================================================= -->
 
         <section class="hero">
 
@@ -367,24 +597,42 @@
                 from attendee ticket settlements.
             </p>
 
-
             <div class="audience">
 
                 <div class="metric">
-                    <span>Local Audience Now</span>
-                    <strong>{{ audience_count }}</strong>
+
+                    <span>
+                        Local Audience Now
+                    </span>
+
+                    <strong>
+                        {{ audience_count }}
+                    </strong>
+
                 </div>
 
                 <div class="metric">
-                    <span>Target Radius</span>
-                    <strong>{{ "%.0f"|format(radius_km) }} km</strong>
+
+                    <span>
+                        Target Radius
+                    </span>
+
+                    <strong>
+                        {{ "%.0f"|format(radius_km) }} km
+                    </strong>
+
                 </div>
 
                 <div class="metric">
-                    <span>Event Area</span>
+
+                    <span>
+                        Event Area
+                    </span>
+
                     <strong style="font-size:1.05rem;">
                         {{ event.notification_area or 'Not set' }}
                     </strong>
+
                 </div>
 
             </div>
@@ -392,10 +640,164 @@
         </section>
 
 
+        <!-- =================================================
+             EVENT ELIGIBILITY
+        ================================================= -->
+
+        {% set event_is_published = (
+            event.status == 'published'
+            and event.active
+        ) %}
+
+        {% set event_has_location = (
+            event.notification_latitude is not none
+            and event.notification_longitude is not none
+        ) %}
+
+        {% set event_is_not_past = (
+            not event.event_date
+            or event.event_date >= today
+        ) %}
+
+        {% set has_local_audience = (
+            audience_count > 0
+        ) %}
+
+        {% set basic_eligible = (
+            event_is_published
+            and event_has_location
+            and event_is_not_past
+            and has_local_audience
+        ) %}
+
+        {% set pro_eligible = (
+            basic_eligible
+            and event.event_date
+            and event.event_time
+        ) %}
+
+
+        <!-- =================================================
+             ELIGIBILITY NOTICES
+        ================================================= -->
+
+        {% if not boost %}
+
+            {% if not event_is_published %}
+
+                <div
+                    class="notice notice-warning"
+                    role="status"
+                >
+
+                    <strong>
+                        Event not published
+                    </strong>
+
+                    <p>
+                        Publish and activate this event from the
+                        Event Control Centre before purchasing
+                        an Event Boost.
+                    </p>
+
+                </div>
+
+            {% elif not event_has_location %}
+
+                <div
+                    class="notice notice-warning"
+                    role="status"
+                >
+
+                    <strong>
+                        Event Area required
+                    </strong>
+
+                    <p>
+                        Edit the event and save its Event Area /
+                        Town before purchasing an Event Boost.
+                    </p>
+
+                </div>
+
+            {% elif not event_is_not_past %}
+
+                <div
+                    class="notice notice-warning"
+                    role="status"
+                >
+
+                    <strong>
+                        This event has already passed
+                    </strong>
+
+                    <p>
+                        Past events cannot be boosted.
+                        Create or select an upcoming event.
+                    </p>
+
+                </div>
+
+            {% elif not has_local_audience %}
+
+                <div
+                    class="notice notice-info"
+                    role="status"
+                >
+
+                    <strong>
+                        No local audience yet
+                    </strong>
+
+                    <p>
+                        Kalxa currently has no opted-in users
+                        within the configured
+                        {{ "%.0f"|format(radius_km) }} km radius.
+
+                        You will not be charged for a new boost
+                        while the eligible audience is zero.
+                    </p>
+
+                </div>
+
+            {% else %}
+
+                <div
+                    class="notice notice-success"
+                    role="status"
+                >
+
+                    <strong>
+                        Event eligible for boosting
+                    </strong>
+
+                    <p>
+                        Your event meets the current requirements
+                        for Basic Boost.
+
+                        Select a package below to continue
+                        to Paystack Checkout.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        {% endif %}
+
+
+        <!-- =================================================
+             BOOST PLANS
+        ================================================= -->
+
         {% if not boost %}
 
             <div class="plans">
 
+
+                <!-- =========================================
+                     BASIC BOOST
+                ========================================= -->
 
                 <section class="card plan">
 
@@ -412,10 +814,25 @@
                     </div>
 
                     <ul class="features">
-                        <li>Push notification to nearby opted-in users</li>
-                        <li>{{ "%.0f"|format(radius_km) }} km targeting</li>
-                        <li>One launch campaign</li>
-                        <li>Audience count before payment</li>
+
+                        <li>
+                            Push notification to nearby
+                            opted-in users
+                        </li>
+
+                        <li>
+                            {{ "%.0f"|format(radius_km) }} km
+                            targeting
+                        </li>
+
+                        <li>
+                            One launch campaign
+                        </li>
+
+                        <li>
+                            Audience count before payment
+                        </li>
+
                     </ul>
 
 
@@ -426,20 +843,60 @@
                             event_id=event.id,
                             plan_code='basic'
                         ) }}"
+                        class="purchase-form"
                     >
 
                         <button
                             type="submit"
                             class="button"
-                            {% if audience_count == 0 %}disabled{% endif %}
+                            {% if not basic_eligible %}
+                                disabled
+                            {% endif %}
                         >
-                            Buy Basic Boost — R{{ "%.2f"|format(basic_price) }}
+                            Buy Basic Boost —
+                            R{{ "%.2f"|format(basic_price) }}
                         </button>
 
                     </form>
 
+
+                    {% if not basic_eligible %}
+
+                        <p class="plan-note">
+
+                            {% if not event_is_published %}
+
+                                Publish and activate your event
+                                before purchasing Basic Boost.
+
+                            {% elif not event_has_location %}
+
+                                Set the Event Area / Town
+                                before purchasing Basic Boost.
+
+                            {% elif not event_is_not_past %}
+
+                                Basic Boost is unavailable
+                                for past events.
+
+                            {% elif not has_local_audience %}
+
+                                Basic Boost is unavailable
+                                until at least one nearby user
+                                has opted in to notifications.
+
+                            {% endif %}
+
+                        </p>
+
+                    {% endif %}
+
                 </section>
 
+
+                <!-- =========================================
+                     BOOST PRO
+                ========================================= -->
 
                 <section class="card plan pro">
 
@@ -456,24 +913,36 @@
                     </div>
 
                     <ul class="features">
-                        <li>Launch notification</li>
-                        <li>3-days-to-go reminder</li>
-                        <li>Tomorrow reminder</li>
-                        <li>Tonight / Today reminder</li>
-                        <li>Happening Now notification</li>
-                        <li>Local audience analytics</li>
-                        <li>Campaign performance</li>
+
+                        <li>
+                            Launch notification
+                        </li>
+
+                        <li>
+                            3-days-to-go reminder
+                        </li>
+
+                        <li>
+                            Tomorrow reminder
+                        </li>
+
+                        <li>
+                            Tonight / Today reminder
+                        </li>
+
+                        <li>
+                            Happening Now notification
+                        </li>
+
+                        <li>
+                            Local audience analytics
+                        </li>
+
+                        <li>
+                            Campaign performance
+                        </li>
+
                     </ul>
-
-
-                    {% if not event.event_date or not event.event_time %}
-
-                        <p class="muted">
-                            Add both an event date and event time
-                            before buying Pro.
-                        </p>
-
-                    {% endif %}
 
 
                     <form
@@ -483,28 +952,69 @@
                             event_id=event.id,
                             plan_code='pro'
                         ) }}"
+                        class="purchase-form"
                     >
 
                         <button
                             type="submit"
                             class="button"
-                            {% if
-                                audience_count == 0
-                                or not event.event_date
-                                or not event.event_time
-                            %}
+                            {% if not pro_eligible %}
                                 disabled
                             {% endif %}
                         >
-                            Buy Boost Pro — R{{ "%.2f"|format(pro_price) }}
+                            Buy Boost Pro —
+                            R{{ "%.2f"|format(pro_price) }}
                         </button>
 
                     </form>
 
+
+                    {% if not pro_eligible %}
+
+                        <p class="plan-note">
+
+                            {% if not event_is_published %}
+
+                                Publish and activate your event
+                                before purchasing Boost Pro.
+
+                            {% elif not event_has_location %}
+
+                                Set the Event Area / Town
+                                before purchasing Boost Pro.
+
+                            {% elif not event_is_not_past %}
+
+                                Boost Pro is unavailable
+                                for past events.
+
+                            {% elif not has_local_audience %}
+
+                                Boost Pro is unavailable
+                                until at least one nearby user
+                                has opted in to notifications.
+
+                            {% elif not event.event_date
+                                or not event.event_time %}
+
+                                Add both an event date and
+                                event time before purchasing
+                                Boost Pro.
+
+                            {% endif %}
+
+                        </p>
+
+                    {% endif %}
+
                 </section>
 
-
             </div>
+
+
+        <!-- =================================================
+             EXISTING BOOST
+        ================================================= -->
 
         {% else %}
 
@@ -522,48 +1032,129 @@
                 <div class="audience">
 
                     <div class="metric">
-                        <span>Status</span>
+
+                        <span>
+                            Status
+                        </span>
+
                         <strong>
                             {{ boost.status|upper }}
                         </strong>
+
                     </div>
 
                     <div class="metric">
-                        <span>Paid</span>
+
+                        <span>
+                            {% if boost.is_paid %}
+                                Amount Paid
+                            {% else %}
+                                Amount Due
+                            {% endif %}
+                        </span>
+
                         <strong>
                             R{{ "%.2f"|format(boost.price) }}
                         </strong>
+
                     </div>
 
                     <div class="metric">
-                        <span>Audience at Purchase</span>
+
+                        <span>
+                            Audience at Purchase
+                        </span>
+
                         <strong>
                             {{ boost.audience_count_at_purchase }}
                         </strong>
+
                     </div>
 
                 </div>
 
 
-                {% if
-                    boost.status == 'pending'
-                    and boost.paystack_authorization_url
-                %}
+                <!-- =========================================
+                     PENDING PAYMENT
+                ========================================= -->
 
-                    <a
-                        href="{{ boost.paystack_authorization_url }}"
-                        class="button"
-                        style="margin-top:18px;"
-                    >
-                        Continue Paystack Payment
-                    </a>
+                {% if boost.status == 'pending' %}
+
+                    <div class="payment-summary">
+
+                        <p>
+                            <strong>
+                                Payment pending
+                            </strong>
+                        </p>
+
+                        <p class="muted">
+                            Your Event Boost has not been
+                            activated because payment has
+                            not yet been confirmed.
+                        </p>
+
+                        {% if boost.paystack_authorization_url %}
+
+                            <a
+                                href="{{ boost.paystack_authorization_url }}"
+                                class="button"
+                            >
+                                Continue Paystack Payment
+                            </a>
+
+                        {% else %}
+
+                            <p class="muted">
+                                A Paystack checkout link
+                                is not currently available.
+                                Please contact Kalxa support
+                                if this continues.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- =========================================
+                     ACTIVE PAYMENT
+                ========================================= -->
+
+                {% if boost.status == 'active' %}
+
+                    <div class="notice notice-success"
+                         style="margin-top:20px; margin-bottom:0;">
+
+                        <strong>
+                            Event Boost activated
+                        </strong>
+
+                        <p>
+                            Your payment has been verified
+                            and your Event Boost campaign
+                            is active.
+                        </p>
+
+                    </div>
 
                 {% endif %}
 
             </section>
 
 
+            <!-- =================================================
+                 ACTIVE BOOST ANALYTICS
+            ================================================= -->
+
             {% if boost.status == 'active' %}
+
+
+                <!-- =========================================
+                     CAMPAIGN SCHEDULE
+                ========================================= -->
 
                 <section class="card">
 
@@ -587,17 +1178,29 @@
                                 <div>
 
                                     <strong>
+
                                         {% if reminder.reminder_type == 'launch' %}
+
                                             Launch Notification
+
                                         {% elif reminder.reminder_type == 'three_days' %}
+
                                             3 Days To Go
+
                                         {% elif reminder.reminder_type == 'tomorrow' %}
+
                                             Tomorrow
+
                                         {% elif reminder.reminder_type == 'tonight' %}
+
                                             Tonight / Today
+
                                         {% else %}
+
                                             Happening Now
+
                                         {% endif %}
+
                                     </strong>
 
                                     <small>
@@ -605,21 +1208,33 @@
                                     </small>
 
                                     {% if row.campaign %}
+
                                         <small>
                                             {{ row.success_count }} delivered
                                             · {{ row.failure_count }} failed
-                                            · {{ "%.1f"|format(row.delivery_rate) }}% delivery
+                                            · {{ "%.1f"|format(row.delivery_rate) }}%
+                                            delivery
                                         </small>
+
                                     {% endif %}
 
                                 </div>
 
 
-                                <span class="status status-{{ reminder.status }}">
+                                <span
+                                    class="status status-{{ reminder.status }}"
+                                >
                                     {{ reminder.status }}
                                 </span>
 
                             </div>
+
+                        {% else %}
+
+                            <p class="muted">
+                                No campaign reminders
+                                are currently scheduled.
+                            </p>
 
                         {% endfor %}
 
@@ -627,6 +1242,10 @@
 
                 </section>
 
+
+                <!-- =========================================
+                     LOCAL AUDIENCE ANALYTICS
+                ========================================= -->
 
                 <section class="card">
 
@@ -642,32 +1261,63 @@
                     <div class="audience">
 
                         <div class="metric">
-                            <span>Current Local Audience</span>
+
+                            <span>
+                                Current Local Audience
+                            </span>
+
                             <strong>
                                 {{ audience_analytics.total }}
                             </strong>
+
                         </div>
 
                         <div class="metric">
-                            <span>Average Distance</span>
+
+                            <span>
+                                Average Distance
+                            </span>
+
                             <strong>
+
                                 {% if audience_analytics.average_distance_km is not none %}
-                                    {{ "%.1f"|format(audience_analytics.average_distance_km) }} km
+
+                                    {{ "%.1f"|format(
+                                        audience_analytics.average_distance_km
+                                    ) }} km
+
                                 {% else %}
+
                                     —
+
                                 {% endif %}
+
                             </strong>
+
                         </div>
 
                         <div class="metric">
-                            <span>Farthest Eligible User Area</span>
+
+                            <span>
+                                Farthest Eligible User Area
+                            </span>
+
                             <strong>
+
                                 {% if audience_analytics.farthest_distance_km is not none %}
-                                    {{ "%.1f"|format(audience_analytics.farthest_distance_km) }} km
+
+                                    {{ "%.1f"|format(
+                                        audience_analytics.farthest_distance_km
+                                    ) }} km
+
                                 {% else %}
+
                                     —
+
                                 {% endif %}
+
                             </strong>
+
                         </div>
 
                     </div>
@@ -686,16 +1336,26 @@
                                 <div class="schedule-row">
 
                                     <div>
-                                        <strong>{{ area.name }}</strong>
+
+                                        <strong>
+                                            {{ area.name }}
+                                        </strong>
+
                                         <small>
                                             Average distance:
-                                            {{ "%.1f"|format(area.average_distance_km) }} km
+                                            {{ "%.1f"|format(
+                                                area.average_distance_km
+                                            ) }} km
                                         </small>
+
                                     </div>
 
                                     <span class="status">
+
                                         {{ area.count }}
+
                                         subscriber{% if area.count != 1 %}s{% endif %}
+
                                     </span>
 
                                 </div>
@@ -708,6 +1368,10 @@
 
                 </section>
 
+
+                <!-- =========================================
+                     CAMPAIGN PERFORMANCE
+                ========================================= -->
 
                 <section class="card">
 
@@ -723,38 +1387,63 @@
                     <div class="audience">
 
                         <div class="metric">
-                            <span>Campaigns Sent</span>
+
+                            <span>
+                                Campaigns Sent
+                            </span>
+
                             <strong>
                                 {{ performance.campaigns_sent }}
                             </strong>
+
                         </div>
 
                         <div class="metric">
-                            <span>Total Delivery Attempts</span>
+
+                            <span>
+                                Total Delivery Attempts
+                            </span>
+
                             <strong>
                                 {{ performance.recipients }}
                             </strong>
+
                         </div>
 
                         <div class="metric">
-                            <span>Successful Pushes</span>
+
+                            <span>
+                                Successful Pushes
+                            </span>
+
                             <strong>
                                 {{ performance.success }}
                             </strong>
+
                         </div>
 
                         <div class="metric">
-                            <span>Failed Pushes</span>
+
+                            <span>
+                                Failed Pushes
+                            </span>
+
                             <strong>
                                 {{ performance.failed }}
                             </strong>
+
                         </div>
 
                         <div class="metric">
-                            <span>Delivery Rate</span>
+
+                            <span>
+                                Delivery Rate
+                            </span>
+
                             <strong>
                                 {{ "%.1f"|format(performance.delivery_rate) }}%
                             </strong>
+
                         </div>
 
                     </div>
@@ -775,17 +1464,22 @@
                                     <div class="schedule-row">
 
                                         <div>
+
                                             <strong>
                                                 {{ row.campaign.title }}
                                             </strong>
+
                                             <small>
                                                 {{ row.success_count }} delivered
                                                 · {{ row.failure_count }} failed
                                                 · {{ row.recipient_count }} targeted
                                             </small>
+
                                         </div>
 
-                                        <span class="status status-{% if row.delivery_rate >= 90 %}sent{% elif row.delivery_rate > 0 %}pending{% else %}failed{% endif %}">
+                                        <span
+                                            class="status status-{% if row.delivery_rate >= 90 %}sent{% elif row.delivery_rate > 0 %}pending{% else %}failed{% endif %}"
+                                        >
                                             {{ "%.1f"|format(row.delivery_rate) }}%
                                         </span>
 
@@ -806,24 +1500,35 @@
         {% endif %}
 
 
-        {% if audience_count == 0 %}
+        <!-- =================================================
+             PAYMENT INFORMATION
+        ================================================= -->
 
-            <section class="card">
+        <section class="card">
 
-                <h3>
-                    No local audience yet
-                </h3>
+            <span class="eyebrow">
+                PAYMENT INFORMATION
+            </span>
 
-                <p class="muted">
-                    Kalxa will not charge the organizer for a
-                    new boost while the event currently has zero
-                    opted-in users within the configured radius.
-                </p>
+            <h3>
+                Secure Event Boost Checkout
+            </h3>
 
-            </section>
+            <p class="muted">
+                Event Boost purchases are processed through
+                Paystack.
 
-        {% endif %}
+                Boost payments belong to Kalxa and are
+                separate from ticket sales, organiser earnings,
+                and attendee ticket settlements.
+            </p>
 
+            <p class="muted" style="margin-bottom:0;">
+                Your Event Boost will only activate after
+                Kalxa verifies a successful payment.
+            </p>
+
+        </section>
 
     </main>
 
