@@ -34314,6 +34314,9 @@ def admin_event_boost(
         audience_analytics=
             audience_analytics,
 
+        today=
+            date.today(),
+
         performance=
             performance,
 
