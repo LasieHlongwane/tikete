@@ -15503,6 +15503,237 @@ def upload_restaurant_gallery_image(
         "file_bytes": file_bytes,
     }
 
+
+
+# ============================================================
+# STAGE 6B — ORGANISER PAYOUT LEDGER
+# READ-ONLY / NO PAYOUT EXECUTION
+# ============================================================
+
+from collections import defaultdict
+from decimal import Decimal, InvalidOperation
+
+from flask import render_template
+
+
+def _ledger_money(value):
+    """
+    Convert existing database monetary values safely.
+    Never silently replace missing financial values with zero.
+    """
+    if value is None:
+        return None
+
+    try:
+        amount = Decimal(str(value))
+
+        if not amount.is_finite():
+            return None
+
+        return amount.quantize(Decimal("0.01"))
+
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+
+
+def _ledger_empty_account(organizer):
+    return {
+        "organizer": organizer,
+        "paid_orders": 0,
+        "face_value": Decimal("0.00"),
+        "commission": Decimal("0.00"),
+        "gross_entitlement": Decimal("0.00"),
+        "settled_entitlement": Decimal("0.00"),
+        "unsettled_entitlement": Decimal("0.00"),
+        "has_accounting_exceptions": False,
+        "exceptions": 0,
+    }
+
+
+@app.route(
+    "/superadmin/organiser-payout-ledger",
+    methods=["GET"],
+)
+def superadmin_organiser_payout_ledger():
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    # ========================================================
+    # LOAD ORGANISERS
+    # ========================================================
+
+    organizers = (
+        Organizer.query
+        .order_by(Organizer.id.asc())
+        .all()
+    )
+
+    accounts = {
+        organizer.id: _ledger_empty_account(organizer)
+        for organizer in organizers
+    }
+
+    # ========================================================
+    # LOAD PAID TICKET ORDERS
+    # ========================================================
+
+    orders = (
+        TicketOrder.query
+        .filter(TicketOrder.payment_status == "paid")
+        .all()
+    )
+
+    # ========================================================
+    # LOAD VERIFIED LOCAL SETTLEMENT ALLOCATIONS
+    # ========================================================
+
+    reconciled_allocations = (
+        db.session.query(TicketSettlementAllocation)
+        .join(
+            PaystackSettlement,
+            TicketSettlementAllocation.settlement_id
+            == PaystackSettlement.id,
+        )
+        .filter(
+            PaystackSettlement.status == "reconciled"
+        )
+        .all()
+    )
+
+    settled_order_ids = {
+        allocation.order_id
+        for allocation in reconciled_allocations
+    }
+
+    # ========================================================
+    # AGGREGATE ORGANISER ENTITLEMENTS
+    # ========================================================
+
+    unassigned_orders = 0
+    accounting_exceptions = 0
+
+    for order in orders:
+
+        event = getattr(order, "event", None)
+
+        if event is None:
+            unassigned_orders += 1
+            accounting_exceptions += 1
+            continue
+
+        organizer_id = getattr(
+            event,
+            "organizer_id",
+            None,
+        )
+
+        if organizer_id not in accounts:
+            unassigned_orders += 1
+            accounting_exceptions += 1
+            continue
+
+        account = accounts[organizer_id]
+
+        # These are the established KALXA fields.
+        face_value = _ledger_money(
+            getattr(order, "ticket_face_value", None)
+        )
+
+        commission = _ledger_money(
+            getattr(order, "kalxa_commission", None)
+        )
+
+        gross_share = _ledger_money(
+            getattr(order, "organizer_gross_share", None)
+        )
+
+        commission_recorded = getattr(
+            order,
+            "commission_recorded_at",
+            None,
+        )
+
+        if (
+            face_value is None
+            or commission is None
+            or gross_share is None
+            or commission_recorded is None
+            or face_value < 0
+            or commission < 0
+            or gross_share < 0
+            or face_value - commission != gross_share
+        ):
+            account["has_accounting_exceptions"] = True
+            account["exceptions"] += 1
+            accounting_exceptions += 1
+            continue
+
+        account["paid_orders"] += 1
+        account["face_value"] += face_value
+        account["commission"] += commission
+        account["gross_entitlement"] += gross_share
+
+        if order.id in settled_order_ids:
+            account["settled_entitlement"] += gross_share
+        else:
+            account["unsettled_entitlement"] += gross_share
+
+    # ========================================================
+    # TOTALS
+    # ========================================================
+
+    ledger_accounts = [
+        account
+        for account in accounts.values()
+        if account["paid_orders"] > 0
+        or account["exceptions"] > 0
+    ]
+
+    totals = {
+        "organizers": len(ledger_accounts),
+        "paid_orders": sum(
+            a["paid_orders"] for a in ledger_accounts
+        ),
+        "face_value": sum(
+            (a["face_value"] for a in ledger_accounts),
+            Decimal("0.00"),
+        ),
+        "commission": sum(
+            (a["commission"] for a in ledger_accounts),
+            Decimal("0.00"),
+        ),
+        "gross_entitlement": sum(
+            (a["gross_entitlement"] for a in ledger_accounts),
+            Decimal("0.00"),
+        ),
+        "settled_entitlement": sum(
+            (a["settled_entitlement"] for a in ledger_accounts),
+            Decimal("0.00"),
+        ),
+        "unsettled_entitlement": sum(
+            (a["unsettled_entitlement"] for a in ledger_accounts),
+            Decimal("0.00"),
+        ),
+        "accounting_exceptions": accounting_exceptions,
+        "unassigned_orders": unassigned_orders,
+    }
+
+    ledger_accounts.sort(
+        key=lambda a: (
+            -a["gross_entitlement"],
+            a["organizer"].id,
+        )
+    )
+
+    return render_template(
+        "superadmin/organiser_payout_ledger.html",
+        accounts=ledger_accounts,
+        totals=totals,
+        payouts_enabled=False,
+    )
 # ============================================================
 # PUBLIC EVENT POSTER
 # ============================================================
