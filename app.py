@@ -122,7 +122,8 @@ from models import (
     RESTAURANT_PLAN_NAMES,
     RESTAURANT_PLAN_FEATURES,
     RESTAURANT_SUBSCRIPTION_GRACE_DAYS,
-   
+    PaystackSettlement,
+    TicketSettlementAllocation,   
 )
 
 
