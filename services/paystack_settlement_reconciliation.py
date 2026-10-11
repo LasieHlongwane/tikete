@@ -335,7 +335,24 @@ def _pages(
         "Paystack pagination limit reached "
         "before all records were retrieved."
     )
+meta = response.get("meta")
+from flask import current_app
 
+if isinstance(meta, dict):
+
+    current_app.logger.info(
+        "[KALXA SETTLEMENT PAGINATION] "
+        "requested_page=%s "
+        "returned_page=%s "
+        "page_count=%s "
+        "total=%s "
+        "rows=%s",
+        page,
+        meta.get("page"),
+        meta.get("pageCount"),
+        meta.get("total"),
+        len(rows) if isinstance(rows, list) else "invalid",
+    )
 # ============================================================
 # VALIDATE SETTLEMENT HEADER
 # ============================================================
