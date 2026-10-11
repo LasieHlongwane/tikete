@@ -15672,11 +15672,21 @@ def superadmin_organiser_payout_ledger():
             face_value is None
             or commission is None
             or gross_share is None
+            or refunded_face_value is None
+            or commission_reversed is None
             or commission_recorded is None
             or face_value < 0
             or commission < 0
             or gross_share < 0
+            or refunded_face_value < 0
+            or commission_reversed < 0
             or face_value - commission != gross_share
+            or refunded_face_value > face_value
+            or commission_reversed > commission
+            or (
+                refunded_face_value
+                - commission_reversed
+                ) > gross_share
         ):
             account["has_accounting_exceptions"] = True
             account["exceptions"] += 1
