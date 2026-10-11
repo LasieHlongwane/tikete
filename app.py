@@ -8264,141 +8264,232 @@ def finalize_event_boost_payment(
     boost,
     transaction_data,
 ):
+    """
+    Finalise a verified Paystack Event Boost payment.
 
-    if boost.status == "active":
+    SECURITY:
+        - Requires successful Paystack transaction.
+        - Requires exact payment reference.
+        - Requires exact amount in cents.
+        - Requires ZAR currency.
+        - Requires a valid transaction ID.
+        - Rejects transaction ID reuse across boosts.
 
-        return boost
+    IDEMPOTENCY:
+        - Repeated verification of the same payment
+          must not create duplicate reminders.
 
+    IMPORTANT:
+        This function must only receive transaction
+        data retrieved directly from Paystack's
+        transaction verification endpoint.
 
-    if (
-        not isinstance(
-            transaction_data,
-            dict,
+        Never trust payment data submitted by a browser.
+    """
+
+    # ========================================================
+    # VALIDATE BOOST
+    # ========================================================
+
+    if boost is None:
+
+        raise ValueError(
+            "Event Boost record is required."
         )
-        or transaction_data.get(
-            "status"
-        )
-        != "success"
+
+    # ========================================================
+    # VALIDATE PAYSTACK RESPONSE
+    # ========================================================
+
+    if not isinstance(
+        transaction_data,
+        dict,
     ):
+
+        raise RuntimeError(
+            "Invalid Paystack transaction data."
+        )
+
+    if transaction_data.get("status") != "success":
 
         raise RuntimeError(
             "Paystack boost transaction is not successful."
         )
 
+    # ========================================================
+    # VALIDATE REFERENCE
+    # ========================================================
 
-    reference = str(
-        transaction_data.get(
-            "reference",
-            "",
-        )
-    ).strip()
-
-
-    if reference != boost.payment_reference:
-
-        raise RuntimeError(
-            "Paystack boost reference does not match."
-        )
-
-
-    expected_amount = int(
-        (
-            Decimal(
-                str(
-                    boost.price
-                )
-            )
-            * 100
-        )
-        .quantize(
-            Decimal("1"),
-            rounding=
-                ROUND_UP,
-        )
+    reference = transaction_data.get(
+        "reference"
     )
-
-
-    actual_amount = int(
-        transaction_data.get(
-            "amount"
-        )
-        or 0
-    )
-
-
-    if actual_amount != expected_amount:
-
-        raise RuntimeError(
-            "Paystack boost amount does not match."
-        )
-
-
-    currency = str(
-        transaction_data.get(
-            "currency",
-            "",
-        )
-    ).strip().upper()
-
 
     if (
-        currency
-        and currency != "ZAR"
+        not isinstance(reference, str)
+        or reference.strip()
+        != boost.payment_reference
     ):
 
         raise RuntimeError(
-            "Unexpected boost payment currency."
+            "Paystack boost payment reference mismatch."
         )
 
+    # ========================================================
+    # VALIDATE CURRENCY
+    # ========================================================
+
+    if transaction_data.get("currency") != "ZAR":
+
+        raise RuntimeError(
+            "Event Boost payment currency must be ZAR."
+        )
+
+    # ========================================================
+    # VALIDATE AMOUNT
+    # ========================================================
+
+    expected_amount = int(
+        (
+            Decimal(str(boost.price))
+            * Decimal("100")
+        ).quantize(
+            Decimal("1"),
+            rounding=ROUND_UP,
+        )
+    )
+
+    actual_amount = transaction_data.get(
+        "amount"
+    )
+
+    if (
+        isinstance(actual_amount, bool)
+        or not isinstance(actual_amount, int)
+        or actual_amount != expected_amount
+    ):
+
+        raise RuntimeError(
+            "Paystack Event Boost amount mismatch."
+        )
+
+    # ========================================================
+    # VALIDATE TRANSACTION ID
+    # ========================================================
+
+    transaction_id = transaction_data.get(
+        "id"
+    )
+
+    if (
+        isinstance(transaction_id, bool)
+        or not isinstance(transaction_id, (str, int))
+        or not str(transaction_id).strip()
+    ):
+
+        raise RuntimeError(
+            "Invalid Paystack transaction ID."
+        )
+
+    transaction_id = str(
+        transaction_id
+    ).strip()
+
+    # ========================================================
+    # CHECK TRANSACTION REUSE
+    # ========================================================
+
+    existing_boost = (
+        EventBoost.query
+        .filter(
+            EventBoost.paystack_transaction_id
+            == transaction_id,
+
+            EventBoost.id
+            != boost.id,
+        )
+        .first()
+    )
+
+    if existing_boost is not None:
+
+        raise RuntimeError(
+            "Paystack transaction is already assigned "
+            "to another Event Boost."
+        )
+
+    # ========================================================
+    # IDEMPOTENCY
+    # ========================================================
+
+    if boost.status == "active":
+
+        if (
+            boost.paystack_transaction_id
+            != transaction_id
+        ):
+
+            raise RuntimeError(
+                "Active boost payment transaction mismatch."
+            )
+
+        return boost
+
+    if boost.status != "pending":
+
+        raise RuntimeError(
+            "Event Boost is not awaiting payment."
+        )
+
+    # ========================================================
+    # ACTIVATE BOOST
+    # ========================================================
 
     now = datetime.utcnow()
 
+    boost.status = "active"
 
-    boost.status = (
-        "active"
-    )
+    boost.paid_at = now
 
-    boost.paid_at = (
-        now
-    )
+    boost.activated_at = now
 
-    boost.activated_at = (
-        now
-    )
-
-    boost.payment_verified_at = (
-        now
-    )
+    boost.payment_verified_at = now
 
     boost.paystack_transaction_id = (
-        str(
-            transaction_data.get(
-                "id",
-                "",
-            )
-        )
-        or None
+        transaction_id
     )
 
     boost.payment_channel = (
-        transaction_data.get(
-            "channel"
-        )
+        transaction_data.get("channel")
         or None
     )
 
+    # ========================================================
+    # CREATE REMINDER SCHEDULE
+    # ========================================================
 
     build_event_boost_schedule(
         boost
     )
 
+    # ========================================================
+    # SAVE
+    # ========================================================
 
     db.session.commit()
 
+    current_app.logger.info(
+        (
+            "[Event Boost] Payment finalised "
+            "boost_id=%s reference=%s "
+            "transaction_id=%s plan=%s"
+        ),
+        boost.id,
+        boost.payment_reference,
+        transaction_id,
+        boost.plan_code,
+    )
 
     return boost
-
-
 # ============================================================
 # ORGANIZER SESSION
 # ============================================================
