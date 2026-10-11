@@ -275,6 +275,15 @@
             color: var(--amber);
         }
 
+        .metric.danger {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .metric.danger strong {
+            color: var(--red);
+        }
+
         .metric.locked-metric {
             background: #f8fafc;
         }
@@ -415,6 +424,82 @@
         }
 
         /* =====================================================
+           ACCOUNTING EXCEPTIONS INSPECTOR
+        ===================================================== */
+
+        .inspector-table {
+            min-width: 1000px;
+        }
+
+        .exception-reference {
+            font-weight: 850;
+            color: #111827;
+        }
+
+        .exception-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--red);
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .exception-list li {
+            margin-bottom: 5px;
+        }
+
+        .exception-count {
+            display: inline-flex;
+            align-items: center;
+
+            padding: 7px 11px;
+            border-radius: 999px;
+
+            background: #fee2e2;
+            color: var(--red);
+
+            font-size: 11px;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .exception-row {
+            background: #fffafa;
+        }
+
+        .exception-row:hover {
+            background: #fff1f2;
+        }
+
+        .exception-row td {
+            vertical-align: top;
+        }
+
+        .exception-row td:last-child {
+            min-width: 320px;
+            white-space: normal;
+        }
+
+        .inspector-note {
+            margin-top: 16px;
+            padding: 15px;
+
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 11px;
+
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        .inspector-note strong {
+            display: block;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        /* =====================================================
            EMPTY STATE
         ===================================================== */
 
@@ -495,6 +580,10 @@
                 padding: 13px;
             }
 
+            .exception-count {
+                white-space: normal;
+            }
+
         }
 
     </style>
@@ -554,7 +643,7 @@
         <div>
 
             <p class="eyebrow">
-                STAGE 6B · FINANCIAL OPERATIONS
+                STAGE 6B.1 · FINANCIAL OPERATIONS
             </p>
 
             <h1>
@@ -563,8 +652,9 @@
 
             <p>
                 Monitor paid ticket revenue, KALXA commissions,
-                verified refunds, organiser entitlements and
-                local settlement reconciliation.
+                verified refunds, organiser entitlements,
+                settlement reconciliation and accounting
+                exceptions.
             </p>
 
         </div>
@@ -600,7 +690,7 @@
     </div>
 
     <!-- =====================================================
-         ACCOUNTING EXCEPTIONS
+         ACCOUNTING EXCEPTION WARNING
     ===================================================== -->
 
     {% if totals.accounting_exceptions > 0 %}
@@ -613,12 +703,12 @@
                 order(s)
             </strong>
 
-            One or more paid ticket orders contain
-            inconsistent commission accounting,
+            One or more paid Paystack ticket orders
+            contain inconsistent commission accounting,
             refund records or organiser ownership.
 
-            These orders have been excluded from
-            the displayed financial totals.
+            These orders are excluded from the
+            financial totals shown below.
 
             <br><br>
 
@@ -632,35 +722,91 @@
     {% endif %}
 
     <!-- =====================================================
-         FINANCIAL METRICS
+         ACCOUNTING SUMMARY
     ===================================================== -->
 
     <div class="metrics">
 
-        <!-- ORGANISERS -->
+        <!-- TOTAL PAID ORDERS -->
 
         <div class="metric">
 
             <span>
-                Organisers With Orders
+                Total Paid Paystack Orders
             </span>
 
             <strong>
-                {{ totals.organizers }}
+                {{ totals.total_paid_orders }}
             </strong>
 
         </div>
 
-        <!-- PAID ORDERS -->
+        <!-- VALIDATED ORDERS -->
+
+        <div class="metric highlight">
+
+            <span>
+                Validated Paid Orders
+            </span>
+
+            <strong>
+                {{ totals.validated_orders }}
+            </strong>
+
+        </div>
+
+        <!-- ACCOUNTING EXCEPTIONS -->
+
+        <div class="metric danger">
+
+            <span>
+                Accounting Exceptions
+            </span>
+
+            <strong>
+                {{ totals.accounting_exceptions }}
+            </strong>
+
+        </div>
+
+        <!-- UNASSIGNED ORDERS -->
+
+        <div class="metric warning">
+
+            <span>
+                Unassigned Orders
+            </span>
+
+            <strong>
+                {{ totals.unassigned_orders }}
+            </strong>
+
+        </div>
+
+        <!-- ORGANISERS WITH VALID ORDERS -->
 
         <div class="metric">
 
             <span>
-                Paid Ticket Orders
+                Organisers With Valid Orders
             </span>
 
             <strong>
-                {{ totals.paid_orders }}
+                {{ totals.organizers_with_valid_orders }}
+            </strong>
+
+        </div>
+
+        <!-- ORGANISERS UNDER REVIEW -->
+
+        <div class="metric warning">
+
+            <span>
+                Organisers Under Review
+            </span>
+
+            <strong>
+                {{ totals.organizers_under_review }}
             </strong>
 
         </div>
@@ -737,10 +883,6 @@
                 R{{ "%.2f"|format(totals.net_ticket_sales) }}
             </strong>
 
-            <small>
-                Original face value minus recorded refunds.
-            </small>
-
         </div>
 
         <!-- NET COMMISSION -->
@@ -757,7 +899,7 @@
 
         </div>
 
-        <!-- ORIGINAL ORGANISER SHARE -->
+        <!-- ORIGINAL ORGANISER ENTITLEMENT -->
 
         <div class="metric">
 
@@ -784,7 +926,7 @@
             </strong>
 
             <small>
-                After successful refunds and commission reversals.
+                After recorded successful refunds.
             </small>
 
         </div>
@@ -1060,6 +1202,171 @@
                 Once customers successfully purchase
                 tickets and KALXA records the commission,
                 their organiser accounting will appear here.
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+    <!-- =====================================================
+         STAGE 6B.1 — ACCOUNTING EXCEPTIONS INSPECTOR
+    ===================================================== -->
+
+    <section class="section" id="accounting-exceptions">
+
+        <div class="section-head">
+
+            <div>
+
+                <h2>
+                    Accounting Exceptions Inspector
+                </h2>
+
+                <p class="muted">
+                    Identify exactly why paid Paystack ticket
+                    orders were excluded from the organiser
+                    financial ledger.
+                </p>
+
+            </div>
+
+            {% if exception_records %}
+
+                <span class="exception-count">
+                    {{ exception_records|length }}
+                    order(s) require review
+                </span>
+
+            {% endif %}
+
+        </div>
+
+        {% if exception_records %}
+
+            <div class="table-wrap">
+
+                <table class="inspector-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Order Reference</th>
+                            <th>Order ID</th>
+                            <th>Event ID</th>
+                            <th>Organiser</th>
+                            <th>Ticket Face Value</th>
+                            <th>Detected Problems</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for record in exception_records %}
+
+                            <tr class="exception-row">
+
+                                <!-- PAYMENT REFERENCE -->
+
+                                <td>
+
+                                    <span class="exception-reference">
+                                        {{ record.payment_reference }}
+                                    </span>
+
+                                </td>
+
+                                <!-- ORDER ID -->
+
+                                <td>
+                                    #{{ record.order_id }}
+                                </td>
+
+                                <!-- EVENT ID -->
+
+                                <td>
+                                    #{{ record.event_id }}
+                                </td>
+
+                                <!-- ORGANISER -->
+
+                                <td>
+                                    {{ record.organizer_name }}
+                                </td>
+
+                                <!-- FACE VALUE -->
+
+                                <td class="money">
+
+                                    {% if record.face_value is not none %}
+
+                                        R{{ "%.2f"|format(record.face_value) }}
+
+                                    {% else %}
+
+                                        Invalid
+
+                                    {% endif %}
+
+                                </td>
+
+                                <!-- ACCOUNTING ISSUES -->
+
+                                <td>
+
+                                    <ul class="exception-list">
+
+                                        {% for issue in record.issues %}
+
+                                            <li>
+                                                {{ issue }}
+                                            </li>
+
+                                        {% endfor %}
+
+                                    </ul>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="inspector-note">
+
+                <strong>
+                    Read-only financial diagnostic
+                </strong>
+
+                These records have not been automatically
+                corrected or modified.
+
+                The inspector checks organiser ownership,
+                commission recording, refund snapshots
+                and refund accounting consistency.
+
+                Any financial correction must be independently
+                verified and recorded through an auditable
+                reconciliation process.
+
+                Organiser payouts remain disabled.
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+
+                No accounting exceptions were detected
+                among the paid Paystack ticket orders
+                included in this ledger.
 
             </div>
 
