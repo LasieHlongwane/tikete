@@ -15643,15 +15643,23 @@ def superadmin_organiser_payout_ledger():
 
         # These are the established KALXA fields.
         face_value = _ledger_money(
-            getattr(order, "ticket_face_value", None)
+            order.total_amount
         )
 
         commission = _ledger_money(
-            getattr(order, "kalxa_commission", None)
+            order.commission_amount
         )
 
         gross_share = _ledger_money(
-            getattr(order, "organizer_gross_share", None)
+            order.organizer_gross_share
+        )
+
+        refunded_face_value = _ledger_money(
+            order.refunded_face_value
+        )
+
+        commission_reversed = _ledger_money(
+            order.commission_reversed_amount
         )
 
         commission_recorded = getattr(
