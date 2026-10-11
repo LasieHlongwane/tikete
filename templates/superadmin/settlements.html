@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Settlement Reconciliation | Kalxa
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 22px 0 60px;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+
+        .brand {
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 8px 11px;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 750;
+            text-decoration: none;
+            border-radius: 9px;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: #f1f5f9;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 28px;
+            margin-bottom: 20px;
+            background: #111;
+            color: #fff;
+            border-radius: 20px;
+        }
+
+        .eyebrow {
+            margin: 0 0 7px;
+            color: #cbd5e1;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(27px, 5vw, 40px);
+            letter-spacing: -.04em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 42px;
+            padding: 10px 14px;
+            background: #111;
+            color: #fff;
+            border: 1px solid #111;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 850;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button-light {
+            background: #fff;
+            color: #111;
+            border-color: #fff;
+        }
+
+        .button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric,
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+
+        .metric {
+            padding: 18px;
+        }
+
+        .metric span {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 7px;
+            font-size: 27px;
+            letter-spacing: -.04em;
+        }
+
+        .section {
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .muted {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .notice {
+            padding: 14px;
+            margin-bottom: 18px;
+            border: 1px solid #fed7aa;
+            background: #fffaf5;
+            border-radius: 12px;
+            color: #92400e;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .notice.success {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .notice.error {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .status {
+            display: inline-flex;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .status.reconciled {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.pending,
+        .status.discovered,
+        .status.unreconciled {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.exception {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 680px;
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        td {
+            vertical-align: middle;
+        }
+
+        .reference {
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .empty {
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .report {
+            margin-bottom: 18px;
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .report strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .report ul {
+            margin: 8px 0 0;
+            padding-left: 18px;
+        }
+
+        .report li {
+            margin-bottom: 6px;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 900px) {
+            .metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 22px;
+            }
+
+            .section {
+                padding: 16px;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="shell">
+
+    <nav class="nav">
+
+        <div class="brand">
+            KALXA TICKETING · SUPER ADMIN
+        </div>
+
+        <div class="nav-links">
+
+            <a href="{{ url_for('superadmin_dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('superadmin_organizers') }}">
+                Organizers
+            </a>
+
+            <a href="{{ url_for('superadmin_create_partner') }}">
+                Partners
+            </a>
+
+            <a href="{{ url_for('superadmin_notifications') }}">
+                Notifications
+            </a>
+
+            <a
+                href="{{ url_for('superadmin_settlements') }}"
+                class="active"
+            >
+                Settlements
+            </a>
+
+            <a href="{{ url_for('superadmin_logout') }}">
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+    <header class="hero">
+
+        <div>
+            <p class="eyebrow">
+                FINANCIAL OPERATIONS
+            </p>
+
+            <h1>
+                Settlement Reconciliation
+            </h1>
+
+            <p>
+                Review Paystack settlements, match ticket
+                transactions and identify discrepancies.
+            </p>
+        </div>
+
+        <div>
+            <span class="status {% if test_mode %}reconciled{% else %}exception{% endif %}">
+                {% if test_mode %}
+                    PAYSTACK TEST MODE
+                {% else %}
+                    LIVE MODE — RUN DISABLED
+                {% endif %}
+            </span>
+        </div>
+
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="notice {% if category == 'success' %}success{% elif category == 'error' %}error{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="notice">
+        Settlement reconciliation does not pay organisers.
+        Recorded KALXA commissions and organiser shares
+        remain separate from confirmed settlement and payout activity.
+    </div>
+
+    <div class="metrics">
+
+        <div class="metric">
+            <span>Total Settlements</span>
+            <strong>{{ total_settlements }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Reconciled</span>
+            <strong>{{ reconciled_count }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Pending</span>
+            <strong>{{ pending_count }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Exceptions</span>
+            <strong>{{ exception_count }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Unreconciled Ticket Orders</span>
+            <strong>{{ unreconciled_orders_count }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Reconciled Net Settlements</span>
+            <strong>
+                R{{ "%.2f"|format(reconciled_net or 0) }}
+            </strong>
+        </div>
+
+    </div>
+
+    <section class="section">
+
+        <div class="section-head">
+
+            <div>
+                <h2>Manual Reconciliation</h2>
+
+                <p class="muted">
+                    Fetch Paystack settlement data and reconcile
+                    eligible ticket transactions against KALXA records.
+                </p>
+            </div>
+
+            <form
+                method="POST"
+                action="{{ url_for('superadmin_run_settlement_reconciliation') }}"
+                id="reconciliation-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ settlement_csrf_token }}"
+                >
+
+                <button
+                    type="submit"
+                    class="button"
+                    id="run-button"
+                    {% if not test_mode %}disabled{% endif %}
+                >
+                    Run Reconciliation
+                </button>
+
+            </form>
+
+        </div>
+
+        <p class="muted">
+            This action reads settlement data from Paystack
+            and updates local reconciliation records.
+            It does not initiate money transfers.
+        </p>
+
+    </section>
+
+    {% if last_report %}
+
+        <section class="section">
+
+            <h2>Last Reconciliation Run</h2>
+
+            <div class="report">
+
+                <strong>
+                    Discovered: {{ last_report.discovered }}
+                    · Reconciled: {{ last_report.reconciled }}
+                    · Pending: {{ last_report.pending }}
+                    · Exceptions: {{ last_report.exceptions }}
+                </strong>
+
+                {% if last_report.details %}
+
+                    <ul>
+                        {% for detail in last_report.details %}
+                            <li>
+                                Settlement {{ detail.settlement_id }}:
+                                {{ detail.reason }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+    {% endif %}
+
+    <section class="section">
+
+        <div class="section-head">
+            <div>
+                <h2>Paystack Settlements</h2>
+
+                <p class="muted">
+                    Latest settlement records stored in KALXA.
+                </p>
+            </div>
+        </div>
+
+        {% if recent_settlements %}
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Settlement ID</th>
+                            <th>Gross</th>
+                            <th>Fees</th>
+                            <th>Net</th>
+                            <th>Status</th>
+                            <th>Settlement Date</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for settlement in recent_settlements %}
+
+                            <tr>
+
+                                <td class="reference">
+                                    {{ settlement.paystack_settlement_id }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(settlement.gross_amount or 0) }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(settlement.processing_fees or 0) }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(settlement.net_amount or 0) }}
+                                </td>
+
+                                <td>
+                                    <span class="status {{ settlement.status }}">
+                                        {{ settlement.status }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {% if settlement.settlement_date %}
+                                        {{ settlement.settlement_date.strftime('%d %b %Y') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p class="empty">
+                No Paystack settlements have been imported yet.
+                Use Run Reconciliation in Test Mode to check
+                for available settlement records.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+    <section class="section">
+
+        <div class="section-head">
+
+            <div>
+                <h2>Unreconciled Ticket Orders</h2>
+
+                <p class="muted">
+                    Paid Paystack ticket orders awaiting settlement reconciliation.
+                </p>
+            </div>
+
+        </div>
+
+        {% if recent_unreconciled_orders %}
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Face Value</th>
+                            <th>KALXA Commission</th>
+                            <th>Organiser Share</th>
+                            <th>Settlement</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for order in recent_unreconciled_orders %}
+
+                            <tr>
+
+                                <td class="reference">
+                                    {{ order.payment_reference }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(order.total_amount or 0) }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(order.commission_amount or 0) }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(order.organizer_gross_share or 0) }}
+                                </td>
+
+                                <td>
+                                    <span class="status unreconciled">
+                                        {{ order.settlement_status }}
+                                    </span>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p class="empty">
+                No unreconciled paid Paystack ticket orders were found.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+<script>
+    const form = document.getElementById("reconciliation-form");
+    const button = document.getElementById("run-button");
+
+    if (form && button) {
+        form.addEventListener("submit", function () {
+            button.disabled = true;
+            button.textContent = "Reconciling...";
+        });
+    }
+</script>
+
+</body>
+</html>
