@@ -44,6 +44,10 @@ from firebase_admin import (
     messaging,
 )
 
+from services.paystack_settlement_reconciliation import (
+    reconcile_paystack_settlements,
+)
+
 
 from services.yoco_webhook import (
     verify_yoco_webhook,
@@ -10901,6 +10905,259 @@ def superadmin_dashboard():
             KALXA_SUBSCRIPTION_PRICE,
     )
 
+
+# ============================================================
+# SUPER ADMIN — SETTLEMENT RECONCILIATION
+# Add to app.py after superadmin_dashboard()
+# ============================================================
+
+# Prevent overlapping manual runs within one Python process.
+# Multiple Render/Gunicorn workers require an additional
+# database-level or distributed lock for full protection.
+_settlement_reconciliation_lock = threading.Lock()
+
+
+def _kalxa_settlement_csrf_token():
+    """
+    Session-bound token for this specific admin action.
+
+    If your app already has global Flask-WTF CSRF protection,
+    use its existing csrf_token() mechanism instead.
+    """
+    token = session.get("_settlement_reconciliation_csrf")
+
+    if not isinstance(token, str) or not token:
+        token = secrets.token_urlsafe(32)
+        session["_settlement_reconciliation_csrf"] = token
+
+    return token
+
+
+def _kalxa_verify_settlement_csrf():
+    expected = session.get("_settlement_reconciliation_csrf")
+    supplied = request.form.get("csrf_token", "")
+
+    if (
+        not isinstance(expected, str)
+        or not isinstance(supplied, str)
+        or not expected
+        or not hmac.compare_digest(expected, supplied)
+    ):
+        abort(400, description="Invalid reconciliation request.")
+
+
+def _kalxa_settlement_test_mode():
+    """
+    Never expose or log the secret key.
+
+    Test-mode processing requires a Paystack test secret.
+    """
+    key = str(PAYSTACK_SECRET_KEY or "").strip()
+    return key.startswith("sk_test_")
+
+
+# ============================================================
+# SETTLEMENT DASHBOARD
+# ============================================================
+
+@app.route(
+    "/superadmin/settlements",
+    methods=["GET"],
+)
+def superadmin_settlements():
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    from sqlalchemy import func
+
+    total_settlements = PaystackSettlement.query.count()
+
+    reconciled_count = (
+        PaystackSettlement.query
+        .filter_by(status="reconciled")
+        .count()
+    )
+
+    pending_count = (
+        PaystackSettlement.query
+        .filter(
+            PaystackSettlement.status.in_(
+                ["discovered", "pending"]
+            )
+        )
+        .count()
+    )
+
+    exception_count = (
+        PaystackSettlement.query
+        .filter_by(status="exception")
+        .count()
+    )
+
+    unreconciled_orders_count = (
+        TicketOrder.query
+        .filter(
+            TicketOrder.payment_status == "paid",
+            TicketOrder.payment_provider == "paystack",
+            TicketOrder.settlement_status != "reconciled",
+        )
+        .count()
+    )
+
+    recent_settlements = (
+        PaystackSettlement.query
+        .order_by(PaystackSettlement.created_at.desc())
+        .limit(50)
+        .all()
+    )
+
+    recent_unreconciled_orders = (
+        TicketOrder.query
+        .filter(
+            TicketOrder.payment_status == "paid",
+            TicketOrder.payment_provider == "paystack",
+            TicketOrder.settlement_status != "reconciled",
+        )
+        .order_by(TicketOrder.paid_at.desc())
+        .limit(20)
+        .all()
+    )
+
+    reconciled_net = (
+        db.session.query(
+            func.coalesce(
+                func.sum(PaystackSettlement.net_amount),
+                0,
+            )
+        )
+        .filter(PaystackSettlement.status == "reconciled")
+        .scalar()
+    )
+
+    return render_template(
+        "superadmin/settlements.html",
+        total_settlements=total_settlements,
+        reconciled_count=reconciled_count,
+        pending_count=pending_count,
+        exception_count=exception_count,
+        unreconciled_orders_count=unreconciled_orders_count,
+        recent_settlements=recent_settlements,
+        recent_unreconciled_orders=recent_unreconciled_orders,
+        reconciled_net=reconciled_net,
+        test_mode=_kalxa_settlement_test_mode(),
+        settlement_csrf_token=_kalxa_settlement_csrf_token(),
+        last_report=session.pop(
+            "_kalxa_settlement_last_report",
+            None,
+        ),
+    )
+
+
+# ============================================================
+# MANUAL RECONCILIATION ACTION
+# ============================================================
+
+@app.route(
+    "/superadmin/settlements/reconcile",
+    methods=["POST"],
+)
+def superadmin_run_settlement_reconciliation():
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    _kalxa_verify_settlement_csrf()
+
+    if not _kalxa_settlement_test_mode():
+        flash(
+            "Reconciliation is restricted to Paystack Test Mode. "
+            "Live processing has not been enabled.",
+            "error",
+        )
+        return redirect(url_for("superadmin_settlements"))
+
+    if not paystack_is_configured():
+        flash(
+            "Paystack is not configured.",
+            "error",
+        )
+        return redirect(url_for("superadmin_settlements"))
+
+    if not _settlement_reconciliation_lock.acquire(
+        blocking=False
+    ):
+        flash(
+            "A reconciliation run is already in progress "
+            "in this application process.",
+            "warning",
+        )
+        return redirect(url_for("superadmin_settlements"))
+
+    try:
+        report = reconcile_paystack_settlements(
+            api_request=paystack_api_request,
+            db=db,
+            TicketOrder=TicketOrder,
+            PaystackSettlement=PaystackSettlement,
+            TicketSettlementAllocation=TicketSettlementAllocation,
+            per_page=50,
+            max_pages=20,
+            max_settlements=20,
+            allow_live=False,
+        )
+
+        # Store only a small, non-sensitive summary.
+        session["_kalxa_settlement_last_report"] = {
+            "discovered": report.get("discovered", 0),
+            "reconciled": report.get("reconciled", 0),
+            "pending": report.get("pending", 0),
+            "exceptions": report.get("exceptions", 0),
+            "details": report.get("details", [])[:10],
+        }
+
+        current_app.logger.info(
+            "[Settlement Reconciliation] "
+            "discovered=%s reconciled=%s pending=%s exceptions=%s",
+            report.get("discovered", 0),
+            report.get("reconciled", 0),
+            report.get("pending", 0),
+            report.get("exceptions", 0),
+        )
+
+        if report.get("exceptions", 0):
+            flash(
+                "Reconciliation completed with exceptions. "
+                "Review the results before taking further action.",
+                "warning",
+            )
+        else:
+            flash(
+                "Settlement reconciliation run completed.",
+                "success",
+            )
+
+    except Exception:
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "[Settlement Reconciliation] Manual run failed"
+        )
+
+        flash(
+            "Reconciliation could not be completed. "
+            "Check the server logs and try again.",
+            "error",
+        )
+
+    finally:
+        _settlement_reconciliation_lock.release()
+
+    return redirect(url_for("superadmin_settlements"))
 # ============================================================
 # SUPER ADMIN - APPROVE EVENT ORGANIZER
 # ============================================================
