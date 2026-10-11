@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Organiser Payout Ledger | KALXA
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f6f7f9;
+            color: #111827;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 28px));
+            margin: 0 auto;
+            padding: 22px 0 60px;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+
+        .brand {
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 8px 11px;
+            border-radius: 9px;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: #f1f5f9;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 28px;
+            margin-bottom: 20px;
+            color: #fff;
+            background: #111;
+            border-radius: 20px;
+        }
+
+        .eyebrow {
+            margin: 0 0 7px;
+            color: #cbd5e1;
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .13em;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(28px, 5vw, 42px);
+            letter-spacing: -.04em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric,
+        .section {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+        }
+
+        .metric {
+            padding: 18px;
+        }
+
+        .metric span {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 7px;
+            font-size: 25px;
+            letter-spacing: -.04em;
+            overflow-wrap: anywhere;
+        }
+
+        .section {
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 19px;
+        }
+
+        .muted {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .notice {
+            padding: 15px;
+            margin-bottom: 18px;
+            border: 1px solid #fed7aa;
+            background: #fffaf5;
+            border-radius: 12px;
+            color: #92400e;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .notice.danger {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            min-width: 850px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 13px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        td strong {
+            font-weight: 850;
+        }
+
+        .status {
+            display: inline-flex;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 850;
+        }
+
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.partial {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status.reconciled {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.exception {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty {
+            padding: 18px;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .locked {
+            padding: 20px;
+            background: #111827;
+            color: #fff;
+            border-radius: 14px;
+        }
+
+        .locked strong {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 15px;
+        }
+
+        .locked p {
+            margin: 0;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 950px) {
+            .metrics {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 620px) {
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="shell">
+
+    <!-- NAVIGATION -->
+
+    <nav class="nav">
+
+        <div class="brand">
+            KALXA TICKETING · SUPER ADMIN
+        </div>
+
+        <div class="nav-links">
+
+            <a href="{{ url_for('superadmin_dashboard') }}">
+                Dashboard
+            </a>
+
+            <a href="{{ url_for('superadmin_organizers') }}">
+                Organizers
+            </a>
+
+            <a href="{{ url_for('superadmin_settlements') }}">
+                Settlements
+            </a>
+
+            <a
+                href="{{ url_for('superadmin_organiser_payout_ledger') }}"
+                class="active"
+            >
+                Payout Ledger
+            </a>
+
+            <a href="{{ url_for('superadmin_logout') }}">
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+    <!-- HERO -->
+
+    <header class="hero">
+
+        <div>
+
+            <p class="eyebrow">
+                STAGE 6B · FINANCIAL OPERATIONS
+            </p>
+
+            <h1>
+                Organiser Payout Ledger
+            </h1>
+
+            <p>
+                Track recorded organiser earnings,
+                KALXA commissions and settlement
+                reconciliation without transferring funds.
+            </p>
+
+        </div>
+
+        <span class="badge">
+            🔒 PAYOUTS DISABLED
+        </span>
+
+    </header>
+
+    <!-- WARNING -->
+
+    <div class="notice">
+
+        <strong>Accounting information only.</strong>
+
+        Gross organiser entitlement is not the same
+        as a payable or withdrawable balance.
+
+        Paystack settlement verification, refunds,
+        chargebacks, processing-fee responsibility
+        and prior payouts must be resolved before
+        any payout amount can be approved.
+
+    </div>
+
+    {% if totals.accounting_exceptions > 0 %}
+
+        <div class="notice danger">
+
+            <strong>
+                Accounting review required:
+                {{ totals.accounting_exceptions }}
+                order(s).
+            </strong>
+
+            These orders were excluded from financial
+            totals because their accounting fields
+            or organiser ownership could not be verified.
+
+            Unassigned orders:
+            {{ totals.unassigned_orders }}.
+
+        </div>
+
+    {% endif %}
+
+    <!-- METRICS -->
+
+    <div class="metrics">
+
+        <div class="metric">
+            <span>Organisers With Orders</span>
+            <strong>{{ totals.organizers }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Paid Ticket Orders</span>
+            <strong>{{ totals.paid_orders }}</strong>
+        </div>
+
+        <div class="metric">
+            <span>Ticket Face Value</span>
+            <strong>
+                R{{ "%.2f"|format(totals.face_value) }}
+            </strong>
+        </div>
+
+        <div class="metric">
+            <span>KALXA Commission</span>
+            <strong>
+                R{{ "%.2f"|format(totals.commission) }}
+            </strong>
+        </div>
+
+        <div class="metric">
+            <span>Organiser Gross Entitlement</span>
+            <strong>
+                R{{ "%.2f"|format(totals.gross_entitlement) }}
+            </strong>
+        </div>
+
+        <div class="metric">
+            <span>Settlement-Matched Entitlement</span>
+            <strong>
+                R{{ "%.2f"|format(totals.settled_entitlement) }}
+            </strong>
+        </div>
+
+        <div class="metric">
+            <span>Unsettled Gross Entitlement</span>
+            <strong>
+                R{{ "%.2f"|format(totals.unsettled_entitlement) }}
+            </strong>
+        </div>
+
+        <div class="metric">
+            <span>Verified Payable Balance</span>
+            <strong style="font-size:17px;">
+                Not established
+            </strong>
+        </div>
+
+    </div>
+
+    <!-- ORGANISER LEDGER -->
+
+    <section class="section">
+
+        <div class="section-head">
+
+            <div>
+
+                <h2>
+                    Organiser Accounts
+                </h2>
+
+                <p class="muted">
+                    Financial totals are calculated
+                    from paid ticket orders with
+                    complete commission accounting.
+                </p>
+
+            </div>
+
+        </div>
+
+        {% if accounts %}
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Organiser</th>
+                            <th>Paid Orders</th>
+                            <th>Face Value</th>
+                            <th>KALXA Commission</th>
+                            <th>Gross Entitlement</th>
+                            <th>Settlement-Matched</th>
+                            <th>Unsettled</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for account in accounts %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>
+                                        {{ account.organizer.display_name }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    {{ account.paid_orders }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(account.face_value) }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(account.commission) }}
+                                </td>
+
+                                <td>
+                                    <strong>
+                                        R{{ "%.2f"|format(account.gross_entitlement) }}
+                                    </strong>
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(account.settled_entitlement) }}
+                                </td>
+
+                                <td>
+                                    R{{ "%.2f"|format(account.unsettled_entitlement) }}
+                                </td>
+
+                                <td>
+
+                                    {% if account.has_accounting_exceptions %}
+
+                                        <span class="status exception">
+                                            Review required
+                                        </span>
+
+                                    {% elif account.gross_entitlement == 0 %}
+
+                                        <span class="status pending">
+                                            No entitlement
+                                        </span>
+
+                                    {% elif account.unsettled_entitlement == 0 %}
+
+                                        <span class="status reconciled">
+                                            Settlement matched
+                                        </span>
+
+                                    {% elif account.settled_entitlement > 0 %}
+
+                                        <span class="status partial">
+                                            Partially matched
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="status pending">
+                                            Unsettled
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p class="empty">
+                No eligible paid ticket orders
+                have been recorded yet.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+    <!-- PAYOUT CONTROL -->
+
+    <section class="section">
+
+        <div class="section-head">
+
+            <div>
+                <h2>
+                    Organiser Payout Controls
+                </h2>
+
+                <p class="muted">
+                    Payment execution is intentionally unavailable.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="locked">
+
+            <strong>
+                🔒 Payouts are disabled
+            </strong>
+
+            <p>
+                KALXA will not initiate Paystack
+                transfers, automated settlements,
+                bank payouts or payout approvals
+                until the settlement arrangement
+                has been confirmed and the required
+                financial controls are implemented.
+            </p>
+
+        </div>
+
+    </section>
+
+</div>
+
+</body>
+</html>
