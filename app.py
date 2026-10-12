@@ -29,7 +29,7 @@ from services.yoco_service import (
 )
 from email.message import EmailMessage
 from datetime import datetime, timedelta, date, timezone
-from decimal import Decimal, InvalidOperation, ROUND_UP
+from decimal import Decimal, InvalidOperation, ROUND_UP, ROUND_HALF_UP
 from zoneinfo import ZoneInfo
 import cloudinary
 import cloudinary.uploader
@@ -44,6 +44,8 @@ from firebase_admin import (
     credentials,
     messaging,
 )
+
+
 
 from services.paystack_settlement_reconciliation import (
     reconcile_paystack_settlements,
@@ -285,6 +287,34 @@ EVENT_BOOST_PLANS = {
     },
 }
 
+
+# ============================================================
+# KALXA PAYSTACK MARKETPLACE CONFIGURATION
+# ============================================================
+
+# Keep ticket sales disabled until:
+# - Organiser subaccounts are verified.
+# - Transaction splits are configured.
+# - Webhook and callback tests pass.
+# - Refund handling is verified.
+# - Production readiness checks are complete.
+
+KALXA_PAYSTACK_TICKET_CHECKOUT_ENABLED = (
+    os.getenv(
+        "KALXA_PAYSTACK_TICKET_CHECKOUT_ENABLED",
+        "false",
+    ).strip().lower() == "true"
+)
+
+# Enables split-based ticket checkout.
+# Never use platform-only checkout as an automatic fallback.
+
+KALXA_PAYSTACK_TICKET_SPLITS_ENABLED = (
+    os.getenv(
+        "KALXA_PAYSTACK_TICKET_SPLITS_ENABLED",
+        "false",
+    ).strip().lower() == "true"
+)
 # ============================================================
 # RESTAURANT ANALYTICS
 # ============================================================
@@ -737,36 +767,86 @@ def calculate_paystack_checkout_amount(
     )
 
 
-def paystack_is_configured():
-
-    return bool(PAYSTACK_SECRET_KEY)
-
-
-def paystack_api_request(method, path, payload=None, *, json=None):
-    """Perform an authenticated Paystack API request.
-
-    `payload` is the existing calling convention; `json` is a compatible alias
-    for refund service callers. Never supply both.
-
-    A successful API response is NOT proof of a successful payment, refund,
-    transfer or settlement. Verify the resource's own status and identifiers.
+def paystack_api_request(
+    method,
+    path,
+    payload=None,
+    *,
+    json=None,
+):
     """
-    if not paystack_is_configured():
-        raise RuntimeError("PAYSTACK_SECRET_KEY is not configured.")
+    Make an authenticated request to Paystack.
 
-    secret_key = str(PAYSTACK_SECRET_KEY or "").strip()
-    if not secret_key:
-        raise RuntimeError("PAYSTACK_SECRET_KEY is missing.")
+    Security:
+        - Requires a configured secret key.
+        - Uses HTTPS.
+        - Restricts the API hostname.
+        - Rejects unsafe paths.
+        - Disables HTTP redirects.
+        - Uses connection and read timeouts.
+        - Validates the response structure.
+        - Does not expose upstream errors to customers.
+
+    IMPORTANT:
+        A successful API request is not proof that
+        a payment, refund, transfer, or settlement
+        has succeeded.
+
+        The returned resource must be independently
+        checked by the relevant payment service.
+    """
+
+    # ========================================================
+    # 1. VALIDATE CONFIGURATION
+    # ========================================================
+
+    if not paystack_is_configured():
+
+        raise RuntimeError(
+            "Paystack secret key is not configured."
+        )
+
+    secret_key = str(
+        PAYSTACK_SECRET_KEY or ""
+    ).strip()
+
+    # ========================================================
+    # 2. VALIDATE HTTP METHOD
+    # ========================================================
 
     if not isinstance(method, str):
-        raise ValueError("Invalid Paystack HTTP method.")
+
+        raise ValueError(
+            "Invalid Paystack HTTP method."
+        )
+
     method = method.strip().upper()
-    if method not in {"GET", "POST", "PUT", "DELETE"}:
-        raise ValueError("Unsupported Paystack HTTP method.")
+
+    allowed_methods = {
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+    }
+
+    if method not in allowed_methods:
+
+        raise ValueError(
+            "Unsupported Paystack HTTP method."
+        )
+
+    # ========================================================
+    # 3. VALIDATE API PATH
+    # ========================================================
 
     if not isinstance(path, str):
-        raise ValueError("Invalid Paystack API path.")
+
+        raise ValueError(
+            "Invalid Paystack API path."
+        )
+
     path = path.strip()
+
     if (
         not path
         or not path.startswith("/")
@@ -774,126 +854,461 @@ def paystack_api_request(method, path, payload=None, *, json=None):
         or "://" in path
         or "\\" in path
         or "#" in path
-        or any(ord(c) < 32 or ord(c) == 127 for c in path)
+        or any(
+            ord(character) < 32
+            or ord(character) == 127
+            for character in path
+        )
     ):
-        raise ValueError("Invalid Paystack API path.")
 
-    # Disallow dot-segment traversal and encoded path separators, including
-    # encoded forms that can be decoded by intermediate proxies.
+        raise ValueError(
+            "Invalid Paystack API path."
+        )
+
     decoded_path = path
+
     for _ in range(3):
-        decoded_path = urllib.parse.unquote(decoded_path)
+
+        decoded_path = urllib.parse.unquote(
+            decoded_path
+        )
+
         if (
             decoded_path.startswith("//")
             or "\\" in decoded_path
-            or any(ord(c) < 32 or ord(c) == 127 for c in decoded_path)
+            or any(
+                ord(character) < 32
+                or ord(character) == 127
+                for character in decoded_path
+            )
         ):
-            raise ValueError("Invalid Paystack API path.")
-        if any(segment in {".", ".."} for segment in decoded_path.split("?", 1)[0].split("/")):
-            raise ValueError("Paystack API path contains unsafe segments.")
 
-    base_url = str(PAYSTACK_BASE_URL or "").strip().rstrip("/")
-    parsed_base = urllib.parse.urlsplit(base_url)
+            raise ValueError(
+                "Invalid Paystack API path."
+            )
+
+        path_without_query = (
+            decoded_path.split("?", 1)[0]
+        )
+
+        path_segments = (
+            path_without_query.split("/")
+        )
+
+        if any(
+            segment in {".", ".."}
+            for segment in path_segments
+        ):
+
+            raise ValueError(
+                "Unsafe Paystack API path."
+            )
+
+    # ========================================================
+    # 4. VALIDATE API BASE URL
+    # ========================================================
+
+    base_url = str(
+        PAYSTACK_BASE_URL or ""
+    ).strip().rstrip("/")
+
+    parsed_base = urllib.parse.urlsplit(
+        base_url
+    )
+
     if (
         parsed_base.scheme != "https"
-        or not parsed_base.hostname
+        or parsed_base.hostname
+        != "api.paystack.co"
+        or parsed_base.port not in (None, 443)
         or parsed_base.username is not None
         or parsed_base.password is not None
         or parsed_base.query
         or parsed_base.fragment
         or parsed_base.path not in {"", "/"}
     ):
-        raise RuntimeError("Invalid Paystack API base URL configuration.")
 
-    if payload is not None and json is not None:
-        raise ValueError("Provide either payload or json, not both.")
-    request_payload = payload if json is None else json
-    if method == "GET" and request_payload is not None:
-        raise ValueError("GET requests must not contain a JSON payload.")
-    if request_payload is not None and not isinstance(request_payload, (dict, list)):
-        raise ValueError("Paystack request payload must be a JSON object or list.")
+        raise RuntimeError(
+            "Invalid Paystack API base URL."
+        )
+
+    # ========================================================
+    # 5. VALIDATE REQUEST PAYLOAD
+    # ========================================================
+
+    if (
+        payload is not None
+        and json is not None
+    ):
+
+        raise ValueError(
+            "Provide either payload or json, not both."
+        )
+
+    request_payload = (
+        payload
+        if json is None
+        else json
+    )
+
+    if (
+        method == "GET"
+        and request_payload is not None
+    ):
+
+        raise ValueError(
+            "GET requests cannot contain a JSON payload."
+        )
+
+    if (
+        request_payload is not None
+        and not isinstance(
+            request_payload,
+            (dict, list),
+        )
+    ):
+
+        raise ValueError(
+            "Invalid Paystack request payload."
+        )
+
+    # ========================================================
+    # 6. PREPARE REQUEST
+    # ========================================================
 
     headers = {
-        "Authorization": f"Bearer {secret_key}",
+        "Authorization": (
+            f"Bearer {secret_key}"
+        ),
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "User-Agent": "Kalxa-Ticketing/1.0",
+        "User-Agent": (
+            "Kalxa-Ticketing/1.0"
+        ),
     }
+
+    api_url = (
+        f"{base_url}{path}"
+    )
+
+    # ========================================================
+    # 7. SEND REQUEST
+    # ========================================================
+
     try:
+
         response = requests.request(
             method=method,
-            url=f"{base_url}{path}",
+            url=api_url,
             json=request_payload,
             headers=headers,
             timeout=(5, 20),
             allow_redirects=False,
         )
-    except requests.Timeout as error:
-        current_app.logger.warning("[Paystack API] Timeout method=%s", method)
-        raise RuntimeError(
-            "Paystack timed out. Check the transaction or refund status before retrying."
-        ) from error
-    except requests.ConnectionError as error:
-        current_app.logger.warning("[Paystack API] Connection failure method=%s", method)
-        raise RuntimeError(
-            "Could not connect to Paystack. Check the operation status before retrying."
-        ) from error
-    except requests.RequestException as error:
-        current_app.logger.exception("[Paystack API] Request failure method=%s", method)
-        raise RuntimeError("Paystack request could not be completed.") from error
 
-    if 300 <= response.status_code < 400:
-        raise RuntimeError("Unexpected redirect from Paystack API.")
+    except requests.Timeout as error:
+
+        current_app.logger.warning(
+            "[Paystack API] Request timeout method=%s",
+            method,
+        )
+
+        raise RuntimeError(
+            "Paystack timed out. Check the operation status before retrying."
+        ) from error
+
+    except requests.ConnectionError as error:
+
+        current_app.logger.warning(
+            "[Paystack API] Connection failure method=%s",
+            method,
+        )
+
+        raise RuntimeError(
+            "Unable to connect to Paystack."
+        ) from error
+
+    except requests.RequestException as error:
+
+        current_app.logger.exception(
+            "[Paystack API] Request failure method=%s",
+            method,
+        )
+
+        raise RuntimeError(
+            "Paystack request failed."
+        ) from error
+
+    # ========================================================
+    # 8. REJECT REDIRECTS
+    # ========================================================
+
+    if (
+        300
+        <= response.status_code
+        < 400
+    ):
+
+        raise RuntimeError(
+            "Unexpected Paystack API redirect."
+        )
+
+    # ========================================================
+    # 9. PARSE RESPONSE
+    # ========================================================
 
     try:
+
         result = response.json()
+
     except ValueError as error:
+
         current_app.logger.error(
-            "[Paystack API] Invalid JSON method=%s http_status=%s",
-            method, response.status_code,
+            (
+                "[Paystack API] Invalid JSON "
+                "method=%s http_status=%s"
+            ),
+            method,
+            response.status_code,
         )
-        raise RuntimeError("Paystack returned an invalid response.") from error
 
-    if not isinstance(result, dict):
-        raise RuntimeError("Paystack returned an unexpected response format.")
+        raise RuntimeError(
+            "Invalid Paystack API response."
+        ) from error
 
-    if not response.ok or result.get("status") is not True:
+    if not isinstance(
+        result,
+        dict,
+    ):
+
+        raise RuntimeError(
+            "Unexpected Paystack response format."
+        )
+
+    # ========================================================
+    # 10. CHECK API REQUEST STATUS
+    # ========================================================
+
+    if (
+        not response.ok
+        or result.get("status") is not True
+    ):
+
         current_app.logger.warning(
-            "[Paystack API] Unsuccessful response method=%s http_status=%s",
-            method, response.status_code,
+            (
+                "[Paystack API] Request unsuccessful "
+                "method=%s http_status=%s"
+            ),
+            method,
+            response.status_code,
         )
-        # Avoid propagating arbitrary upstream text to end users or logs.
-        raise RuntimeError("Paystack could not process this request. Check its status before retrying.")
+
+        raise RuntimeError(
+            "Paystack could not process this request."
+        )
 
     return result
 
+def paystack_is_configured():
+    """
+    Check whether a Paystack secret key is configured.
 
+    This does not confirm that:
+        - The key is valid.
+        - The account is activated.
+        - The application is in live mode.
+        - Transaction Splits are configured.
+    """
+
+    secret_key = str(
+        PAYSTACK_SECRET_KEY or ""
+    ).strip()
+
+    return bool(
+        secret_key
+        and secret_key.startswith(
+            ("sk_test_", "sk_live_")
+        )
+    )
 # ============================================================
 # STORIES CONVERSION ANALYTICS API
 # ============================================================
-def _kalxa_verified_paystack_transaction(reference):
-    """Fetch a verified successful ZAR transaction from Paystack."""
-    if not isinstance(reference, str) or not reference.strip():
-        raise RuntimeError("Missing Paystack payment reference.")
+def _kalxa_verified_paystack_transaction(
+    reference,
+):
+    """
+    Independently verify a Paystack transaction.
+
+    Requirements:
+        - Valid payment reference.
+        - Successful Paystack API response.
+        - Matching transaction reference.
+        - Transaction status must be success.
+        - Currency must be ZAR.
+        - Amount must be a positive integer.
+        - Transaction ID must be valid.
+
+    IMPORTANT:
+        The caller must additionally verify:
+
+            - Expected order amount.
+            - Payment ownership.
+            - Expected payment product.
+            - Correct split configuration, where applicable.
+            - Idempotency.
+            - Ticket inventory.
+
+        This function alone must never activate
+        subscriptions or issue tickets.
+    """
+
+    # ========================================================
+    # 1. VALIDATE REFERENCE
+    # ========================================================
+
+    if (
+        not isinstance(reference, str)
+        or not reference.strip()
+    ):
+
+        raise RuntimeError(
+            "Missing Paystack payment reference."
+        )
+
     reference = reference.strip()
-    result = paystack_api_request(
-        "GET", "/transaction/verify/" + urllib.parse.quote(reference, safe="")
+
+    if len(reference) > 200:
+
+        raise RuntimeError(
+            "Invalid Paystack reference length."
+        )
+
+    # ========================================================
+    # 2. VERIFY TRANSACTION WITH PAYSTACK
+    # ========================================================
+
+    encoded_reference = urllib.parse.quote(
+        reference,
+        safe="",
     )
-    if not isinstance(result, dict) or result.get("status") is not True:
-        raise RuntimeError("Paystack verification request failed.")
-    data = result.get("data")
-    if not isinstance(data, dict):
-        raise RuntimeError("Paystack returned invalid transaction data.")
-    if data.get("reference") != reference:
-        raise RuntimeError("Verified Paystack reference mismatch.")
-    if data.get("status") != "success" or data.get("currency") != "ZAR":
-        raise RuntimeError("Paystack transaction is not a successful ZAR payment.")
-    amount = data.get("amount")
-    if isinstance(amount, bool) or not isinstance(amount, int) or amount <= 0:
-        raise RuntimeError("Invalid verified Paystack amount.")
-    return data
 
+    result = paystack_api_request(
+        "GET",
+        (
+            "/transaction/verify/"
+            f"{encoded_reference}"
+        ),
+    )
 
+    # ========================================================
+    # 3. VALIDATE API RESPONSE
+    # ========================================================
+
+    if (
+        not isinstance(result, dict)
+        or result.get("status") is not True
+    ):
+
+        raise RuntimeError(
+            "Paystack verification request failed."
+        )
+
+    transaction_data = result.get(
+        "data"
+    )
+
+    if not isinstance(
+        transaction_data,
+        dict,
+    ):
+
+        raise RuntimeError(
+            "Invalid Paystack transaction data."
+        )
+
+    # ========================================================
+    # 4. VERIFY PAYMENT REFERENCE
+    # ========================================================
+
+    verified_reference = (
+        transaction_data.get("reference")
+    )
+
+    if verified_reference != reference:
+
+        raise RuntimeError(
+            "Paystack transaction reference mismatch."
+        )
+
+    # ========================================================
+    # 5. VERIFY TRANSACTION STATUS
+    # ========================================================
+
+    transaction_status = (
+        transaction_data.get("status")
+    )
+
+    if transaction_status != "success":
+
+        raise RuntimeError(
+            "Paystack transaction is not successful."
+        )
+
+    # ========================================================
+    # 6. VERIFY CURRENCY
+    # ========================================================
+
+    currency = transaction_data.get(
+        "currency"
+    )
+
+    if currency != "ZAR":
+
+        raise RuntimeError(
+            "Unexpected Paystack transaction currency."
+        )
+
+    # ========================================================
+    # 7. VERIFY AMOUNT
+    # ========================================================
+
+    amount = transaction_data.get(
+        "amount"
+    )
+
+    if (
+        isinstance(amount, bool)
+        or not isinstance(amount, int)
+        or amount <= 0
+    ):
+
+        raise RuntimeError(
+            "Invalid verified Paystack amount."
+        )
+
+    # ========================================================
+    # 8. VERIFY TRANSACTION ID
+    # ========================================================
+
+    transaction_id = (
+        transaction_data.get("id")
+    )
+
+    if (
+        isinstance(transaction_id, bool)
+        or not isinstance(transaction_id, int)
+        or transaction_id <= 0
+    ):
+
+        raise RuntimeError(
+            "Invalid Paystack transaction ID."
+        )
+
+    # ========================================================
+    # 9. RETURN VERIFIED TRANSACTION
+    # ========================================================
+
+    return transaction_data
 # ============================================================
 # GET RESTAURANT ANALYTICS SESSION
 # ============================================================
@@ -2428,6 +2843,82 @@ def allowed_event_reel_filename(filename):
     )
 
 
+def get_verified_organizer_paystack_split(organizer):
+    """
+    Return the verified Paystack split code for an organiser.
+
+    This function deliberately fails closed.
+
+    A ticket checkout must not proceed unless:
+        - The organiser exists.
+        - The organiser is approved.
+        - Payout verification is complete.
+        - Payouts are enabled.
+        - A valid split code is configured.
+
+    IMPORTANT:
+        This helper checks local configuration only.
+
+        The onboarding process must separately verify
+        the organiser's subaccount and split configuration
+        against Paystack.
+    """
+
+    if organizer is None:
+        raise RuntimeError(
+            "Event organiser is missing."
+        )
+
+    if not event_organizer_is_approved(organizer):
+        raise RuntimeError(
+            "Event organiser is not approved."
+        )
+
+    verification_status = getattr(
+        organizer,
+        "payout_verification_status",
+        None,
+    )
+
+    payout_enabled = getattr(
+        organizer,
+        "payout_enabled",
+        False,
+    )
+
+    split_code = getattr(
+        organizer,
+        "paystack_split_code",
+        None,
+    )
+
+    if verification_status != "verified":
+        raise RuntimeError(
+            "Organiser payout verification is incomplete."
+        )
+
+    if payout_enabled is not True:
+        raise RuntimeError(
+            "Organiser payouts are not enabled."
+        )
+
+    if (
+        not isinstance(split_code, str)
+        or not split_code.strip()
+    ):
+        raise RuntimeError(
+            "Organiser Paystack split code is missing."
+        )
+
+    split_code = split_code.strip()
+
+    if not split_code.startswith("SPL_"):
+        raise RuntimeError(
+            "Invalid organiser Paystack split code."
+        )
+
+    return split_code
+
 # ============================================================
 # RECORD RESTAURANT ANALYTICS EVENT
 # ============================================================
@@ -2445,180 +2936,759 @@ from flask import current_app
 
 
 def finalize_paystack_ticket_order(order, transaction_data):
-    """Atomically verify and finalise one Paystack ticket order.
-
-    The caller must supply transaction_data from a trusted server-side
-    Paystack verification response, never an unverified webhook/browser body.
     """
+    Atomically verify and finalize one Paystack ticket order.
+
+    IMPORTANT:
+        transaction_data MUST come from a trusted, server-side
+        Paystack transaction verification response.
+
+        Never pass unverified webhook or browser data directly
+        into this function.
+
+    SECURITY:
+        - Validate transaction status and identifiers.
+        - Require ZAR currency.
+        - Verify exact payment amount.
+        - Lock the ticket order using PostgreSQL FOR UPDATE.
+        - Prevent transaction reuse across ticket orders.
+        - Prevent duplicate ticket issuance.
+        - Validate ticket quantities and existing passes.
+        - Preserve the 4% KALXA commission calculation.
+        - Commit payment and ticket issuance atomically.
+
+    MARKETPLACE:
+        This function records KALXA's 4% commission.
+
+        It does NOT create or verify Paystack Transaction
+        Splits. Those must be configured during payment
+        initialization and independently reconciled.
+    """
+
+    # ========================================================
+    # 1. VALIDATE VERIFIED PAYSTACK TRANSACTION
+    # ========================================================
+
     if not isinstance(transaction_data, dict):
-        raise RuntimeError("Invalid Paystack transaction data.")
+
+        raise RuntimeError(
+            "Invalid Paystack transaction data."
+        )
+
     if transaction_data.get("status") != "success":
-        raise RuntimeError("Paystack transaction is not successful.")
+
+        raise RuntimeError(
+            "Paystack transaction is not successful."
+        )
 
     reference = transaction_data.get("reference")
+
     currency = transaction_data.get("currency")
+
     actual_amount = transaction_data.get("amount")
+
     transaction_id = transaction_data.get("id")
 
-    if not isinstance(reference, str) or not reference.strip():
-        raise RuntimeError("Paystack payment reference is missing.")
+    # ========================================================
+    # 2. VALIDATE PAYMENT REFERENCE
+    # ========================================================
+
+    if (
+        not isinstance(reference, str)
+        or not reference.strip()
+    ):
+
+        raise RuntimeError(
+            "Paystack payment reference is missing."
+        )
+
     reference = reference.strip()
+
+    if len(reference) > 200:
+
+        raise RuntimeError(
+            "Invalid Paystack payment reference."
+        )
+
+    # ========================================================
+    # 3. VALIDATE CURRENCY
+    # ========================================================
+
     if currency != "ZAR":
-        raise RuntimeError("Unexpected or missing Paystack currency.")
-    if isinstance(actual_amount, bool) or not isinstance(actual_amount, int) or actual_amount <= 0:
-        raise RuntimeError("Invalid Paystack payment amount.")
-    if (isinstance(transaction_id, bool)
-            or not isinstance(transaction_id, (int, str))
-            or not str(transaction_id).strip()):
-        raise RuntimeError("Paystack transaction ID is missing.")
+
+        raise RuntimeError(
+            "Unexpected or missing Paystack currency."
+        )
+
+    # ========================================================
+    # 4. VALIDATE PAYMENT AMOUNT
+    # ========================================================
+
+    if (
+        isinstance(actual_amount, bool)
+        or not isinstance(actual_amount, int)
+        or actual_amount <= 0
+    ):
+
+        raise RuntimeError(
+            "Invalid Paystack payment amount."
+        )
+
+    # ========================================================
+    # 5. VALIDATE TRANSACTION ID
+    # ========================================================
+
+    if (
+        isinstance(transaction_id, bool)
+        or not isinstance(transaction_id, (int, str))
+        or not str(transaction_id).strip()
+    ):
+
+        raise RuntimeError(
+            "Paystack transaction ID is missing."
+        )
+
     transaction_id = str(transaction_id).strip()
 
-    order_id = getattr(order, "id", None)
+    # ========================================================
+    # 6. VALIDATE PERSISTED TICKET ORDER
+    # ========================================================
+
+    order_id = getattr(
+        order,
+        "id",
+        None,
+    )
+
     if order_id is None:
-        raise RuntimeError("A persisted ticket order is required.")
+
+        raise RuntimeError(
+            "A persisted ticket order is required."
+        )
 
     try:
-        # PostgreSQL serialises concurrent finalisation attempts on this row.
+
+        # ====================================================
+        # 7. LOCK TICKET ORDER
+        # ====================================================
+        #
+        # PostgreSQL serializes concurrent finalization
+        # attempts on this row.
+        #
+        # Both callback and webhook must use this same
+        # finalization function.
+        # ====================================================
+
         locked_order = (
             db.session.query(TicketOrder)
-            .filter(TicketOrder.id == order_id)
+            .filter(
+                TicketOrder.id == order_id
+            )
             .populate_existing()
             .with_for_update()
             .one_or_none()
         )
+
         if locked_order is None:
-            raise RuntimeError("Ticket order no longer exists.")
+
+            raise RuntimeError(
+                "Ticket order no longer exists."
+            )
+
         order = locked_order
 
+        # ====================================================
+        # 8. VALIDATE PAYMENT PROVIDER
+        # ====================================================
+
         if order.payment_provider != "paystack":
-            raise RuntimeError("Ticket order does not use Paystack.")
+
+            raise RuntimeError(
+                "Ticket order does not use Paystack."
+            )
+
+        # ====================================================
+        # 9. VERIFY ORDER PAYMENT REFERENCE
+        # ====================================================
+
         if reference != order.payment_reference:
-            raise RuntimeError("Paystack reference does not match this order.")
+
+            raise RuntimeError(
+                "Paystack reference does not match this order."
+            )
+
+        # ====================================================
+        # 10. CALCULATE EXPECTED CHECKOUT AMOUNT
+        # ====================================================
 
         checkout_value = (
             order.checkout_amount
             if order.checkout_amount is not None
             else order.total_amount
         )
+
         if checkout_value is None:
-            raise RuntimeError("Ticket order has no checkout amount.")
-        amount_decimal = Decimal(str(checkout_value))
-        if not amount_decimal.is_finite() or amount_decimal <= 0:
-            raise RuntimeError("Invalid ticket order checkout amount.")
-        cents = amount_decimal * Decimal("100")
+
+            raise RuntimeError(
+                "Ticket order has no checkout amount."
+            )
+
+        try:
+
+            amount_decimal = Decimal(
+                str(checkout_value)
+            )
+
+        except (
+            InvalidOperation,
+            ValueError,
+            TypeError,
+        ) as error:
+
+            raise RuntimeError(
+                "Invalid ticket order checkout amount."
+            ) from error
+
+        if (
+            not amount_decimal.is_finite()
+            or amount_decimal <= 0
+        ):
+
+            raise RuntimeError(
+                "Invalid ticket order checkout amount."
+            )
+
+        # ====================================================
+        # 11. CONVERT RAND TO CENTS
+        # ====================================================
+
+        cents = (
+            amount_decimal
+            * Decimal("100")
+        )
+
         if cents != cents.to_integral_value():
-            raise RuntimeError("Checkout amount contains fractional cents.")
+
+            raise RuntimeError(
+                "Checkout amount contains fractional cents."
+            )
+
         expected_amount = int(cents)
+
+        # ====================================================
+        # 12. VERIFY EXACT PAYMENT AMOUNT
+        # ====================================================
+
         if actual_amount != expected_amount:
-            raise RuntimeError("Paystack amount does not match this order.")
+
+            current_app.logger.error(
+                (
+                    "[Paystack Finalisation] "
+                    "Payment amount mismatch "
+                    "order_id=%s "
+                    "expected=%s "
+                    "actual=%s"
+                ),
+                order.id,
+                expected_amount,
+                actual_amount,
+            )
+
+            raise RuntimeError(
+                "Paystack amount does not match this order."
+            )
+
+        # ====================================================
+        # 13. PREVENT TRANSACTION REUSE
+        # ====================================================
 
         duplicate_order = (
-            db.session.query(TicketOrder.id)
+            db.session.query(
+                TicketOrder.id
+            )
             .filter(
-                TicketOrder.paystack_transaction_id == transaction_id,
+                TicketOrder.paystack_transaction_id
+                == transaction_id,
+
                 TicketOrder.id != order.id,
             )
             .first()
         )
+
         if duplicate_order is not None:
-            raise RuntimeError("Paystack transaction is already linked to another ticket order.")
+
+            raise RuntimeError(
+                (
+                    "Paystack transaction is already "
+                    "linked to another ticket order."
+                )
+            )
+
+        # ====================================================
+        # 14. HANDLE ALREADY-PAID ORDERS
+        # ====================================================
+        #
+        # Idempotency:
+        #
+        # If a webhook is delivered again, or the callback
+        # runs after the webhook, do not issue new tickets.
+        #
+        # The existing transaction ID must match exactly.
+        # ====================================================
 
         if order.payment_status == "paid":
-            # An existing payment must be bound to the same verified ID.
-            # Do not backfill historical commission or issue passes here.
-            existing_id = (
-                str(order.paystack_transaction_id).strip()
-                if order.paystack_transaction_id is not None
+
+            existing_transaction_id = (
+                str(
+                    order.paystack_transaction_id
+                ).strip()
+
+                if (
+                    order.paystack_transaction_id
+                    is not None
+                )
+
                 else None
             )
-            if existing_id != transaction_id:
+
+            if (
+                existing_transaction_id
+                != transaction_id
+            ):
+
                 raise RuntimeError(
-                    "Paid order has a missing or different Paystack transaction ID; "
-                    "manual reconciliation is required."
+                    (
+                        "Paid order has a missing or "
+                        "different Paystack transaction ID. "
+                        "Manual reconciliation is required."
+                    )
                 )
+
+            current_app.logger.info(
+                (
+                    "[Paystack Finalisation] "
+                    "Already processed "
+                    "order_id=%s "
+                    "reference=%s"
+                ),
+                order.id,
+                reference,
+            )
+
             db.session.commit()
+
             return order
 
-        if order.payment_status not in {"pending", "processing"}:
-            raise RuntimeError("Order is not eligible for finalisation.")
+        # ====================================================
+        # 15. VALIDATE PAYMENT STATUS
+        # ====================================================
 
-        # Validate ticket inventory before marking payment paid.
-        items = list(order.order_items)
+        if order.payment_status not in {
+            "pending",
+            "processing",
+        }:
+
+            raise RuntimeError(
+                "Order is not eligible for finalization."
+            )
+
+        # ====================================================
+        # 16. VALIDATE ORDER QUANTITY
+        # ====================================================
+
+        try:
+
+            order_quantity = int(
+                order.quantity
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ) as error:
+
+            raise RuntimeError(
+                "Invalid ticket order quantity."
+            ) from error
+
+        if order_quantity <= 0:
+
+            raise RuntimeError(
+                "Order quantity must be positive."
+            )
+
+        # ====================================================
+        # 17. LOAD ORDER ITEMS
+        # ====================================================
+
+        items = list(
+            order.order_items
+        )
+
+        item_quantities = {}
+
+        # ====================================================
+        # 18. VALIDATE MULTI-TICKET ORDERS
+        # ====================================================
+
         if items:
-            total_quantity = sum(int(item.quantity) for item in items)
-            if any(int(item.quantity) <= 0 for item in items):
-                raise RuntimeError("Order contains an invalid ticket quantity.")
-            if total_quantity != int(order.quantity):
-                raise RuntimeError("Order quantity does not match ticket line quantities.")
-            if any(p.order_item_id is None for p in order.entry_passes):
-                raise RuntimeError("Order has unassigned entry passes; manual reconciliation required.")
-        elif int(order.quantity) <= 0:
-            raise RuntimeError("Order has an invalid ticket quantity.")
+
+            total_quantity = 0
+
+            for item in items:
+
+                try:
+
+                    item_quantity = int(
+                        item.quantity
+                    )
+
+                except (
+                    TypeError,
+                    ValueError,
+                ) as error:
+
+                    raise RuntimeError(
+                        "Invalid ticket line quantity."
+                    ) from error
+
+                if item_quantity <= 0:
+
+                    raise RuntimeError(
+                        "Ticket line quantity must be positive."
+                    )
+
+                item_quantities[item.id] = (
+                    item_quantity
+                )
+
+                total_quantity += (
+                    item_quantity
+                )
+
+            if total_quantity != order_quantity:
+
+                raise RuntimeError(
+                    (
+                        "Order quantity does not match "
+                        "ticket line quantities."
+                    )
+                )
+
+            # =================================================
+            # 19. CHECK UNASSIGNED ENTRY PASSES
+            # =================================================
+
+            for entry_pass in order.entry_passes:
+
+                if entry_pass.order_item_id is None:
+
+                    raise RuntimeError(
+                        (
+                            "Order contains unassigned "
+                            "entry passes. Manual "
+                            "reconciliation is required."
+                        )
+                    )
+
+        # ====================================================
+        # 20. VALIDATE EXISTING ENTRY PASSES
+        # ====================================================
+
+        existing_passes = list(
+            order.entry_passes
+        )
+
+        if len(existing_passes) > order_quantity:
+
+            raise RuntimeError(
+                (
+                    "Order has more entry passes "
+                    "than purchased tickets."
+                )
+            )
+
+        # ====================================================
+        # 21. VERIFY ITEM PASS COUNTS
+        # ====================================================
+
+        if items:
+
+            valid_item_ids = {
+                item.id
+                for item in items
+            }
+
+            for entry_pass in existing_passes:
+
+                if (
+                    entry_pass.order_item_id
+                    not in valid_item_ids
+                ):
+
+                    raise RuntimeError(
+                        (
+                            "Entry pass references an "
+                            "invalid ticket order item."
+                        )
+                    )
+
+            for item in items:
+
+                item_quantity = (
+                    item_quantities[item.id]
+                )
+
+                existing_item_passes = (
+                    len(item.entry_passes)
+                )
+
+                if (
+                    existing_item_passes
+                    > item_quantity
+                ):
+
+                    raise RuntimeError(
+                        (
+                            "Order item has more "
+                            "entry passes than "
+                            "purchased tickets."
+                        )
+                    )
+
+        # ====================================================
+        # 22. RECORD VERIFIED PAYMENT
+        # ====================================================
 
         now = datetime.utcnow()
-        order.payment_status = "paid"
-        order.paid_at = now
-        order.payment_verified_at = now
-        order.paystack_transaction_id = transaction_id
-        channel = transaction_data.get("channel")
-        order.payment_channel = channel.strip() if isinstance(channel, str) and channel.strip() else None
 
-        # The commission snapshot is based on ticket face value, not fees.
-        order.record_commission(rate=Decimal("0.04"))
+        order.payment_status = "paid"
+
+        order.paid_at = now
+
+        order.payment_verified_at = now
+
+        order.paystack_transaction_id = (
+            transaction_id
+        )
+
+        # ====================================================
+        # 23. RECORD PAYMENT CHANNEL
+        # ====================================================
+
+        channel = transaction_data.get(
+            "channel"
+        )
+
+        order.payment_channel = (
+            channel.strip()
+
+            if (
+                isinstance(channel, str)
+                and channel.strip()
+            )
+
+            else None
+        )
+
+        # ====================================================
+        # 24. RECORD KALXA COMMISSION
+        # ====================================================
+        #
+        # KALXA earns 4% of ticket face value.
+        #
+        # This is accounting only.
+        #
+        # Actual Paystack Transaction Splits must
+        # be configured at payment initialization.
+        # ====================================================
+
+        order.record_commission(
+            rate=Decimal("0.04")
+        )
+
+        # ====================================================
+        # 25. GENERATE MULTI-TICKET ENTRY PASSES
+        # ====================================================
 
         if items:
+
             for item in items:
-                # Query from the identity map relationship; the order row is locked.
-                existing_item_passes = len(item.entry_passes)
-                if existing_item_passes > item.quantity:
-                    raise RuntimeError("Order item has more entry passes than purchased tickets.")
-                attendee_names = item.attendee_names if isinstance(item.attendee_names, list) else []
-                for attendee_index in range(existing_item_passes, int(item.quantity)):
+
+                item_quantity = (
+                    item_quantities[item.id]
+                )
+
+                existing_item_passes = (
+                    len(item.entry_passes)
+                )
+
+                attendee_names = (
+                    item.attendee_names
+
+                    if isinstance(
+                        item.attendee_names,
+                        list,
+                    )
+
+                    else []
+                )
+
+                for attendee_index in range(
+                    existing_item_passes,
+                    item_quantity,
+                ):
+
                     attendee_name = (
                         attendee_names[attendee_index]
-                        if attendee_index < len(attendee_names)
+
+                        if (
+                            attendee_index
+                            < len(attendee_names)
+                        )
+
                         else order.customer_name
                     )
-                    if not isinstance(attendee_name, str) or not attendee_name.strip():
-                        attendee_name = order.customer_name
+
+                    if (
+                        not isinstance(
+                            attendee_name,
+                            str,
+                        )
+                        or not attendee_name.strip()
+                    ):
+
+                        attendee_name = (
+                            order.customer_name
+                        )
+
+                    if (
+                        not isinstance(
+                            attendee_name,
+                            str,
+                        )
+                        or not attendee_name.strip()
+                    ):
+
+                        raise RuntimeError(
+                            "Missing attendee name."
+                        )
+
                     db.session.add(
                         EntryPass(
                             order_id=order.id,
                             order_item_id=item.id,
-                            attendee_name=attendee_name.strip(),
-                            entry_code=generate_entry_code(),
+                            attendee_name=(
+                                attendee_name.strip()
+                            ),
+                            entry_code=(
+                                generate_entry_code()
+                            ),
                             status="valid",
                         )
                     )
+
+        # ====================================================
+        # 26. GENERATE LEGACY ORDER ENTRY PASSES
+        # ====================================================
+
         else:
-            existing_pass_count = len(order.entry_passes)
-            if existing_pass_count > order.quantity:
-                raise RuntimeError("Order has more entry passes than purchased tickets.")
-            for _ in range(int(order.quantity) - existing_pass_count):
+
+            existing_pass_count = (
+                len(existing_passes)
+            )
+
+            if (
+                existing_pass_count
+                > order_quantity
+            ):
+
+                raise RuntimeError(
+                    (
+                        "Order has more entry passes "
+                        "than purchased tickets."
+                    )
+                )
+
+            customer_name = (
+                order.customer_name
+            )
+
+            if (
+                not isinstance(
+                    customer_name,
+                    str,
+                )
+                or not customer_name.strip()
+            ):
+
+                raise RuntimeError(
+                    "Missing customer name."
+                )
+
+            for _ in range(
+                order_quantity
+                - existing_pass_count
+            ):
+
                 db.session.add(
                     EntryPass(
                         order_id=order.id,
-                        attendee_name=order.customer_name,
-                        entry_code=generate_entry_code(),
+                        attendee_name=(
+                            customer_name.strip()
+                        ),
+                        entry_code=(
+                            generate_entry_code()
+                        ),
                         status="valid",
                     )
                 )
 
+        # ====================================================
+        # 27. COMMIT PAYMENT AND TICKETS ATOMICALLY
+        # ====================================================
+
         db.session.commit()
+
+        # ====================================================
+        # 28. LOG SUCCESS
+        # ====================================================
+
         current_app.logger.info(
-            "[Paystack Finalisation] Paid order_id=%s reference=%s transaction_id=%s commission=%s",
-            order.id, reference, transaction_id, order.commission_amount,
+            (
+                "[Paystack Finalisation] "
+                "Paid order_id=%s "
+                "reference=%s "
+                "transaction_id=%s "
+                "commission=%s"
+            ),
+            order.id,
+            reference,
+            transaction_id,
+            order.commission_amount,
         )
+
         return order
+
+    # ========================================================
+    # 29. ROLLBACK ON ERROR
+    # ========================================================
+
     except Exception:
+
         db.session.rollback()
+
         current_app.logger.exception(
-            "[Paystack Finalisation] Failed order_id=%s reference=%s",
-            order_id, reference,
+            (
+                "[Paystack Finalisation] "
+                "Failed order_id=%s "
+                "reference=%s"
+            ),
+            order_id,
+            reference,
         )
+
         raise
-
-
 
 
 # ============================================================
@@ -30131,116 +31201,667 @@ def love_restaurant_experience(
 # ============================================================
 # RESERVE TICKET
 # ============================================================
-@app.route("/event/<int:event_id>/reserve", methods=["GET", "POST"])
+@app.route(
+    "/event/<int:event_id>/reserve",
+    methods=["GET", "POST"],
+)
 def reserve_ticket(event_id):
-    event = TicketEvent.query.filter_by(
-        id=event_id, active=True, status="published", organizer_deleted=False
-    ).first_or_404()
+    """
+    Reserve event tickets and initialize Paystack checkout.
 
-    # Check approval for buyers on BOTH GET and POST.
-    # A suspended organiser must not be able to keep selling.
-    if not event_organizer_is_approved(event.organizer):
-        flash("Ticket purchases are unavailable for this event.", "error")
-        return redirect(url_for("event_page", event_id=event.id))
+    Supports:
+        - General tickets.
+        - Multiple ticket types.
+        - Ticket sale phases.
+        - Attendee names.
+        - Maximum 10 tickets per order.
+        - Paystack transaction initialization.
+        - Verified organiser transaction splits.
 
-    if not event.sales_open or event.is_closed:
-        flash("Ticket sales are currently paused for this event.", "error")
-        return redirect(url_for("event_page", event_id=event.id))
-    if event.is_sold_out:
-        flash("This event is sold out.", "error")
-        return redirect(url_for("event_page", event_id=event.id))
+    Security:
+        - Only approved organisers may sell.
+        - Event must be published and available.
+        - Prices are calculated server-side.
+        - Ticket quantities are validated.
+        - Checkout amounts are stored before payment.
+        - Customer cannot provide a split code.
+        - Live ticket checkout requires explicit activation.
+        - Missing organiser split configuration fails closed.
+
+    IMPORTANT:
+        This route creates a pending order.
+
+        It does not mark an order paid or issue tickets.
+
+        Those actions must happen only after independent
+        Paystack verification.
+    """
+
+    # ========================================================
+    # 1. LOAD EVENT
+    # ========================================================
+
+    event = (
+        TicketEvent.query
+        .filter_by(
+            id=event_id,
+            active=True,
+            status="published",
+            organizer_deleted=False,
+        )
+        .first_or_404()
+    )
 
     organizer = event.organizer
-    ticket_types = event.active_ticket_types
+
+    # ========================================================
+    # 2. CHECK ORGANISER APPROVAL
+    # ========================================================
+
+    if not event_organizer_is_approved(
+        organizer
+    ):
+
+        flash(
+            "Ticket purchases are unavailable for this event.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=event.id,
+            )
+        )
+
+    # ========================================================
+    # 3. CHECK EVENT SALES STATUS
+    # ========================================================
+
+    if (
+        not event.sales_open
+        or event.is_closed
+    ):
+
+        flash(
+            "Ticket sales are currently paused for this event.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=event.id,
+            )
+        )
+
+    if event.is_sold_out:
+
+        flash(
+            "This event is sold out.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=event.id,
+            )
+        )
+
+    ticket_types = (
+        event.active_ticket_types
+    )
+
+    # ========================================================
+    # 4. DISPLAY RESERVATION PAGE
+    # ========================================================
 
     if request.method == "GET":
-        return _reserve_page(event, ticket_types)
 
-    customer_name = request.form.get("customer_name", "").strip()
-    customer_phone = request.form.get("customer_phone", "").strip()
-    customer_email = request.form.get("customer_email", "").strip().lower()
-    if not all((customer_name, customer_phone, customer_email)):
-        flash("Name, phone number and email are required for secure checkout.", "error")
-        return _reserve_page(event, ticket_types)
-    if "@" not in customer_email:
-        flash("Enter a valid email address.", "error")
-        return _reserve_page(event, ticket_types)
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 5. CHECK TICKET CHECKOUT ACTIVATION
+    # ========================================================
+
+    if not KALXA_PAYSTACK_TICKET_CHECKOUT_ENABLED:
+
+        flash(
+            (
+                "Online ticket payments are temporarily "
+                "unavailable. Please try again later."
+            ),
+            "warning",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    if not KALXA_PAYSTACK_TICKET_SPLITS_ENABLED:
+
+        current_app.logger.warning(
+            (
+                "[Paystack Ticket Checkout] "
+                "Transaction Splits are disabled "
+                "event_id=%s"
+            ),
+            event.id,
+        )
+
+        flash(
+            "Ticket payments are not yet available for this event.",
+            "warning",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 6. VERIFY ORGANISER SPLIT CONFIGURATION
+    # ========================================================
+
+    try:
+
+        organizer_split_code = (
+            get_verified_organizer_paystack_split(
+                organizer
+            )
+        )
+
+    except RuntimeError:
+
+        current_app.logger.warning(
+            (
+                "[Paystack Ticket Checkout] "
+                "Organiser payout configuration "
+                "not ready organizer_id=%s event_id=%s"
+            ),
+            organizer.id,
+            event.id,
+        )
+
+        flash(
+            (
+                "Ticket payments are not yet available "
+                "for this event."
+            ),
+            "warning",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 7. READ CUSTOMER INFORMATION
+    # ========================================================
+
+    customer_name = (
+        request.form.get(
+            "customer_name",
+            "",
+        ).strip()
+    )
+
+    customer_phone = (
+        request.form.get(
+            "customer_phone",
+            "",
+        ).strip()
+    )
+
+    customer_email = (
+        request.form.get(
+            "customer_email",
+            "",
+        ).strip().lower()
+    )
+
+    if not all(
+        (
+            customer_name,
+            customer_phone,
+            customer_email,
+        )
+    ):
+
+        flash(
+            (
+                "Name, phone number and email "
+                "are required for secure checkout."
+            ),
+            "error",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    if (
+        "@" not in customer_email
+        or len(customer_email) > 254
+    ):
+
+        flash(
+            "Enter a valid email address.",
+            "error",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 8. BUILD TICKET BASKET
+    # ========================================================
 
     basket = []
+
     if ticket_types:
-        for t in ticket_types:
-            qty = request.form.get(f"qty_{t.id}", type=int)
-            if qty is None:
-                qty = 0
-            if qty < 0:
+
+        for ticket_type in ticket_types:
+
+            quantity = request.form.get(
+                f"qty_{ticket_type.id}",
+                type=int,
+            )
+
+            if quantity is None:
+                quantity = 0
+
+            if quantity < 0:
                 abort(400)
-            if not qty:
+
+            if quantity == 0:
                 continue
-            if t.capacity is not None and qty > t.remaining_quantity:
-                flash(f"Only {t.remaining_quantity} {t.name} ticket(s) remain.", "error")
-                return _reserve_page(event, ticket_types)
 
-            phase = t.current_sale_phase
-            if t.active_sale_phases and phase is None:
-                flash(f"{t.name} is not currently on sale.", "error")
-                return _reserve_page(event, ticket_types)
-            if phase and phase.remaining_quantity is not None and qty > phase.remaining_quantity:
-                flash(f"Only {phase.remaining_quantity} {t.name} ticket(s) remain in {phase.name}.", "error")
-                return _reserve_page(event, ticket_types)
+            # ================================================
+            # 9. CHECK TICKET TYPE CAPACITY
+            # ================================================
 
-            names = [
-                request.form.get(f"attendee_{t.id}_{i}", "").strip()
-                for i in range(1, qty + 1)
+            if (
+                ticket_type.capacity is not None
+                and quantity
+                > ticket_type.remaining_quantity
+            ):
+
+                flash(
+                    (
+                        f"Only {ticket_type.remaining_quantity} "
+                        f"{ticket_type.name} ticket(s) remain."
+                    ),
+                    "error",
+                )
+
+                return _reserve_page(
+                    event,
+                    ticket_types,
+                )
+
+            # ================================================
+            # 10. CHECK SALE PHASE
+            # ================================================
+
+            phase = (
+                ticket_type.current_sale_phase
+            )
+
+            if (
+                ticket_type.active_sale_phases
+                and phase is None
+            ):
+
+                flash(
+                    (
+                        f"{ticket_type.name} is not "
+                        "currently on sale."
+                    ),
+                    "error",
+                )
+
+                return _reserve_page(
+                    event,
+                    ticket_types,
+                )
+
+            if (
+                phase
+                and phase.remaining_quantity is not None
+                and quantity > phase.remaining_quantity
+            ):
+
+                flash(
+                    (
+                        f"Only {phase.remaining_quantity} "
+                        f"{ticket_type.name} ticket(s) "
+                        f"remain in {phase.name}."
+                    ),
+                    "error",
+                )
+
+                return _reserve_page(
+                    event,
+                    ticket_types,
+                )
+
+            # ================================================
+            # 11. READ ATTENDEE NAMES
+            # ================================================
+
+            attendee_names = [
+                request.form.get(
+                    f"attendee_{ticket_type.id}_{index}",
+                    "",
+                ).strip()
+
+                for index in range(
+                    1,
+                    quantity + 1,
+                )
             ]
-            if not all(names):
-                flash(f"Enter the attendee name for every {t.name} ticket.", "error")
-                return _reserve_page(event, ticket_types)
-            basket.append({
-                "ticket_type": t, "sale_phase": phase,
-                "name": t.name, "price": Decimal(str(phase.price if phase else t.price)),
-                "quantity": qty, "attendee_names": names,
-            })
+
+            if not all(
+                attendee_names
+            ):
+
+                flash(
+                    (
+                        "Enter the attendee name "
+                        f"for every {ticket_type.name} ticket."
+                    ),
+                    "error",
+                )
+
+                return _reserve_page(
+                    event,
+                    ticket_types,
+                )
+
+            # ================================================
+            # 12. CALCULATE SERVER-SIDE PRICE
+            # ================================================
+
+            unit_price = Decimal(
+                str(
+                    phase.price
+                    if phase
+                    else ticket_type.price
+                )
+            )
+
+            if (
+                not unit_price.is_finite()
+                or unit_price <= 0
+            ):
+
+                raise RuntimeError(
+                    "Invalid ticket price configuration."
+                )
+
+            basket.append(
+                {
+                    "ticket_type": ticket_type,
+                    "sale_phase": phase,
+                    "name": ticket_type.name,
+                    "price": unit_price,
+                    "quantity": quantity,
+                    "attendee_names": attendee_names,
+                }
+            )
+
+    # ========================================================
+    # 13. HANDLE GENERAL TICKETS
+    # ========================================================
+
     else:
-        qty = request.form.get("quantity", type=int)
-        if qty is None:
-            qty = 0
-        if qty < 0:
-            abort(400)
-        if qty:
-            if event.ticket_capacity is not None and qty > event.remaining_tickets:
-                flash("There are not enough tickets remaining.", "error")
-                return _reserve_page(event, [])
-            names = [
-                request.form.get(f"attendee_general_{i}", "").strip()
-                for i in range(1, qty + 1)
-            ]
-            if not all(names):
-                flash("Enter the attendee name for every General ticket.", "error")
-                return _reserve_page(event, [])
-            basket.append({
-                "ticket_type": None, "sale_phase": None,
-                "name": "General", "price": Decimal(str(event.ticket_price or 0)),
-                "quantity": qty, "attendee_names": names,
-            })
 
-    total_quantity = sum(item["quantity"] for item in basket)
+        quantity = request.form.get(
+            "quantity",
+            type=int,
+        )
+
+        if quantity is None:
+            quantity = 0
+
+        if quantity < 0:
+            abort(400)
+
+        if quantity:
+
+            if (
+                event.ticket_capacity is not None
+                and quantity > event.remaining_tickets
+            ):
+
+                flash(
+                    "There are not enough tickets remaining.",
+                    "error",
+                )
+
+                return _reserve_page(
+                    event,
+                    [],
+                )
+
+            attendee_names = [
+                request.form.get(
+                    f"attendee_general_{index}",
+                    "",
+                ).strip()
+
+                for index in range(
+                    1,
+                    quantity + 1,
+                )
+            ]
+
+            if not all(
+                attendee_names
+            ):
+
+                flash(
+                    (
+                        "Enter the attendee name "
+                        "for every General ticket."
+                    ),
+                    "error",
+                )
+
+                return _reserve_page(
+                    event,
+                    [],
+                )
+
+            unit_price = Decimal(
+                str(
+                    event.ticket_price or 0
+                )
+            )
+
+            if (
+                not unit_price.is_finite()
+                or unit_price <= 0
+            ):
+
+                raise RuntimeError(
+                    "Invalid event ticket price."
+                )
+
+            basket.append(
+                {
+                    "ticket_type": None,
+                    "sale_phase": None,
+                    "name": "General",
+                    "price": unit_price,
+                    "quantity": quantity,
+                    "attendee_names": attendee_names,
+                }
+            )
+
+    # ========================================================
+    # 14. VALIDATE TOTAL QUANTITY
+    # ========================================================
+
+    total_quantity = sum(
+        item["quantity"]
+        for item in basket
+    )
+
     if not 1 <= total_quantity <= 10:
-        flash("Choose between 1 and 10 tickets in total.", "error")
-        return _reserve_page(event, ticket_types)
+
+        flash(
+            "Choose between 1 and 10 tickets in total.",
+            "error",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 15. CALCULATE ORDER AMOUNT
+    # ========================================================
 
     total_amount = sum(
-        (item["price"] * item["quantity"] for item in basket),
-        Decimal("0"),
-    ).quantize(Decimal("0.01"))
-    checkout_amount, processing_fee = calculate_paystack_checkout_amount(total_amount)
-    reference = generate_payment_reference()
+        (
+            item["price"]
+            * item["quantity"]
 
-    # Recheck immediately before persisting a new order.
-    db.session.refresh(organizer)
-    db.session.refresh(event)
-    if not event_available_for_checkout(event):
-        flash("This event is no longer available for checkout.", "error")
-        return redirect(url_for("event_page", event_id=event.id))
+            for item in basket
+        ),
+        Decimal("0"),
+    ).quantize(
+        Decimal("0.01")
+    )
+
+    checkout_amount, processing_fee = (
+        calculate_paystack_checkout_amount(
+            total_amount
+        )
+    )
+
+    checkout_amount = Decimal(
+        str(checkout_amount)
+    )
+
+    processing_fee = Decimal(
+        str(processing_fee)
+    )
+
+    if (
+        not checkout_amount.is_finite()
+        or checkout_amount <= 0
+        or not processing_fee.is_finite()
+        or processing_fee < 0
+    ):
+
+        raise RuntimeError(
+            "Invalid checkout amount."
+        )
+
+    # ========================================================
+    # 16. CONVERT CHECKOUT AMOUNT TO CENTS
+    # ========================================================
+
+    checkout_cents = (
+        checkout_amount
+        * Decimal("100")
+    )
+
+    if (
+        checkout_cents
+        != checkout_cents.to_integral_value()
+    ):
+
+        raise RuntimeError(
+            "Checkout amount contains fractional cents."
+        )
+
+    checkout_cents = int(
+        checkout_cents
+    )
+
+    # ========================================================
+    # 17. GENERATE UNIQUE PAYMENT REFERENCE
+    # ========================================================
+
+    reference = (
+        generate_payment_reference()
+    )
+
+    # ========================================================
+    # 18. RECHECK EVENT AVAILABILITY
+    # ========================================================
+
+    db.session.refresh(
+        organizer
+    )
+
+    db.session.refresh(
+        event
+    )
+
+    if not event_available_for_checkout(
+        event
+    ):
+
+        flash(
+            (
+                "This event is no longer "
+                "available for checkout."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "event_page",
+                event_id=event.id,
+            )
+        )
+
+    # ========================================================
+    # 19. RECHECK VERIFIED SPLIT
+    # ========================================================
+
+    try:
+
+        organizer_split_code = (
+            get_verified_organizer_paystack_split(
+                organizer
+            )
+        )
+
+    except RuntimeError:
+
+        flash(
+            (
+                "Ticket payments are not yet "
+                "available for this event."
+            ),
+            "warning",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 20. CREATE PENDING TICKET ORDER
+    # ========================================================
 
     order = TicketOrder(
         event_id=event.id,
@@ -30248,7 +31869,12 @@ def reserve_ticket(event_id):
         customer_phone=customer_phone,
         customer_email=customer_email,
         quantity=total_quantity,
-        ticket_price=(total_amount / total_quantity).quantize(Decimal("0.01")),
+        ticket_price=(
+            total_amount
+            / total_quantity
+        ).quantize(
+            Decimal("0.01")
+        ),
         total_amount=total_amount,
         processing_fee=processing_fee,
         checkout_amount=checkout_amount,
@@ -30256,81 +31882,247 @@ def reserve_ticket(event_id):
         payment_reference=reference,
         payment_status="pending",
     )
+
     try:
-        db.session.add(order)
+
+        db.session.add(
+            order
+        )
+
         db.session.flush()
+
+        # ====================================================
+        # 21. CREATE ORDER ITEMS
+        # ====================================================
+
         for item in basket:
-            line_total = (item["price"] * item["quantity"]).quantize(Decimal("0.01"))
-            phase = item.get("sale_phase")
-            db.session.add(TicketOrderItem(
-                order_id=order.id,
-                ticket_type_id=item["ticket_type"].id if item["ticket_type"] else None,
-                sale_phase_id=phase.id if phase else None,
-                sale_phase_name=phase.name if phase else None,
-                ticket_name=item["name"],
-                unit_price=item["price"],
-                quantity=item["quantity"],
-                line_total=line_total,
-                attendee_names=item["attendee_names"],
-            ))
+
+            line_total = (
+                item["price"]
+                * item["quantity"]
+            ).quantize(
+                Decimal("0.01")
+            )
+
+            phase = item.get(
+                "sale_phase"
+            )
+
+            db.session.add(
+                TicketOrderItem(
+                    order_id=order.id,
+                    ticket_type_id=(
+                        item["ticket_type"].id
+
+                        if item["ticket_type"]
+
+                        else None
+                    ),
+                    sale_phase_id=(
+                        phase.id
+                        if phase
+                        else None
+                    ),
+                    sale_phase_name=(
+                        phase.name
+                        if phase
+                        else None
+                    ),
+                    ticket_name=item["name"],
+                    unit_price=item["price"],
+                    quantity=item["quantity"],
+                    line_total=line_total,
+                    attendee_names=item["attendee_names"],
+                )
+            )
+
+        # ====================================================
+        # 22. COMMIT PENDING ORDER
+        # ====================================================
+
         db.session.commit()
 
-        callback_url = url_for("paystack_ticket_callback", _external=True, _scheme="https")
-        cancel_url = url_for(
-            "booking_status", reference=reference, _external=True, _scheme="https"
+        # ====================================================
+        # 23. BUILD CALLBACK URL
+        # ====================================================
+
+        callback_url = url_for(
+            "paystack_ticket_callback",
+            _external=True,
+            _scheme="https",
         )
+
+        cancel_url = url_for(
+            "booking_status",
+            reference=reference,
+            _external=True,
+            _scheme="https",
+        )
+
+        # ====================================================
+        # 24. BUILD PAYMENT METADATA
+        # ====================================================
+
         metadata = {
+            "payment_type": "kalxa_event_ticket",
             "kalxa_order_id": order.id,
             "event_id": event.id,
-            "ticket_face_value": str(total_amount),
-            "processing_fee": str(processing_fee),
-            "ticket_types": [{
-                "name": item["name"],
-                "quantity": item["quantity"],
-                "unit_price": str(item["price"]),
-                "sale_phase": item["sale_phase"].name if item.get("sale_phase") else None,
-            } for item in basket],
+            "organizer_id": organizer.id,
+            "ticket_face_value": str(
+                total_amount
+            ),
+            "processing_fee": str(
+                processing_fee
+            ),
+            "kalxa_commission_rate": "0.04",
+            "ticket_types": [
+                {
+                    "name": item["name"],
+                    "quantity": item["quantity"],
+                    "unit_price": str(
+                        item["price"]
+                    ),
+                    "sale_phase": (
+                        item["sale_phase"].name
+
+                        if item.get(
+                            "sale_phase"
+                        )
+
+                        else None
+                    ),
+                }
+
+                for item in basket
+            ],
             "cancel_action": cancel_url,
         }
+
+        # ====================================================
+        # 25. BUILD PAYSTACK CHECKOUT PAYLOAD
+        # ====================================================
+
         payload = {
             "email": customer_email,
-            "amount": str(int(
-                (checkout_amount * 100).quantize(Decimal("1"), rounding=ROUND_UP)
-            )),
+            "amount": str(
+                checkout_cents
+            ),
             "currency": "ZAR",
             "reference": reference,
             "callback_url": callback_url,
-            "channels": ["eft", "capitec_pay"],
-            "metadata": json.dumps(metadata),
+            "channels": [
+                "eft",
+                "capitec_pay",
+            ],
+            "metadata": json.dumps(
+                metadata
+            ),
+
+            # ================================================
+            # VERIFIED MARKETPLACE TRANSACTION SPLIT
+            # ================================================
+            #
+            # This must be configured against the
+            # correct organiser's verified subaccount.
+            #
+            # Never accept this value from request.form.
+            # ================================================
+
+            "split_code": organizer_split_code,
         }
 
-        # IMPORTANT: NO organiser subaccount or bearer="subaccount".
-        # This is platform checkout only, pending Paystack's written approval
-        # of KALXA's merchant-of-record / settlement arrangements.
-        # Do not enable live payments until those arrangements are approved.
-        result = paystack_api_request("POST", "/transaction/initialize", payload)
-        data = result.get("data") or {}
-        authorization_url = data.get("authorization_url")
-        if not authorization_url:
-            raise RuntimeError("Paystack did not return a checkout URL.")
-        order.paystack_access_code = data.get("access_code") or None
-        order.paystack_authorization_url = authorization_url
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        current_app.logger.exception(
-            "[Paystack Ticket Checkout] Initialize failed event_id=%s reference=%s",
-            event.id, reference,
+        # ====================================================
+        # 26. INITIALIZE PAYSTACK TRANSACTION
+        # ====================================================
+
+        result = paystack_api_request(
+            "POST",
+            "/transaction/initialize",
+            payload,
         )
-        # Retain pending order for reconciliation; never delete it blindly:
-        # Paystack initialization may have succeeded before a local error.
-        flash("Secure checkout could not be started. Please try again.", "error")
-        return _reserve_page(event, ticket_types)
 
-    return redirect(authorization_url)
+        data = (
+            result.get("data")
+            or {}
+        )
 
+        authorization_url = (
+            data.get(
+                "authorization_url"
+            )
+        )
 
+        if (
+            not isinstance(
+                authorization_url,
+                str,
+            )
+            or not authorization_url.strip()
+        ):
 
+            raise RuntimeError(
+                "Paystack did not return a checkout URL."
+            )
+
+        # ====================================================
+        # 27. STORE PAYSTACK CHECKOUT DETAILS
+        # ====================================================
+
+        order.paystack_access_code = (
+            data.get(
+                "access_code"
+            )
+            or None
+        )
+
+        order.paystack_authorization_url = (
+            authorization_url
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Paystack Ticket Checkout] "
+                "Initialization failed "
+                "event_id=%s reference=%s"
+            ),
+            event.id,
+            reference,
+        )
+
+        # Preserve the pending order.
+        #
+        # Paystack may have initialized a transaction
+        # even if the local response or commit failed.
+        #
+        # Reconciliation is required before any
+        # potentially duplicated checkout is retried.
+
+        flash(
+            (
+                "Secure checkout could not be started. "
+                "Please try again."
+            ),
+            "error",
+        )
+
+        return _reserve_page(
+            event,
+            ticket_types,
+        )
+
+    # ========================================================
+    # 28. REDIRECT CUSTOMER TO PAYSTACK
+    # ========================================================
+
+    return redirect(
+        authorization_url
+    )
 
 # ============================================================
 # PAYSTACK TICKET CALLBACK
@@ -30349,53 +32141,83 @@ def reserve_ticket(event_id):
 )
 def paystack_ticket_webhook():
     """
-    Handle signed Paystack webhook notifications.
+    Handle authenticated Paystack webhook events.
 
-    Supported KALXA payment products:
-
-        1. Event ticket purchases
-        2. Restaurant subscriptions
-        3. Legacy organiser subscriptions
-        4. Event Boost payments
-        5. Featured Listing payments
-        6. Event ticket refunds
+    Supported products:
+        1. Event ticket purchases.
+        2. Restaurant subscriptions.
+        3. Legacy organiser subscriptions.
+        4. Event Boost payments.
+        5. Featured Listing payments.
+        6. Event ticket refunds.
 
     Security:
-
-        - Verify Paystack HMAC-SHA512 signature.
-        - Reject unsigned or incorrectly signed requests.
-        - Verify successful payments directly with Paystack.
-        - Reconcile refunds using the refund service.
-        - Preserve existing payment-product dispatch order.
-        - Do not process settlement accounting here.
+        - Requires configured Paystack credentials.
+        - Enforces webhook request-size limits.
+        - Verifies HMAC-SHA512 signatures.
+        - Parses authenticated JSON.
+        - Independently verifies successful transactions.
+        - Dispatches payments by local reference.
+        - Delegates refunds to the refund service.
+        - Does not update settlement accounting directly.
 
     IMPORTANT:
+        All finalization functions must be idempotent.
 
-        Refund accounting must only be applied after
-        independent provider verification inside
-        reconcile_ticket_refund().
-
-        Payment finalization functions must remain
-        idempotent.
+        Payment amount and ownership verification
+        must happen inside the relevant finalizer.
     """
 
     # ========================================================
-    # 1. VERIFY PAYSTACK CONFIGURATION
+    # 1. VERIFY CONFIGURATION
     # ========================================================
 
-    if not PAYSTACK_SECRET_KEY:
+    if not paystack_is_configured():
 
         current_app.logger.error(
-            "[Paystack Webhook] Missing Paystack secret key."
+            "[Paystack Webhook] Secret key not configured."
         )
 
         abort(503)
 
     # ========================================================
-    # 2. READ ORIGINAL REQUEST BODY
+    # 2. ENFORCE REQUEST SIZE LIMIT
     # ========================================================
 
-    raw_body = request.get_data()
+    MAX_PAYSTACK_WEBHOOK_BYTES = (
+        256 * 1024
+    )
+
+    if (
+        request.content_length is not None
+        and request.content_length
+        > MAX_PAYSTACK_WEBHOOK_BYTES
+    ):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Oversized request."
+        )
+
+        abort(413)
+
+    raw_body = request.get_data(
+        cache=False,
+    )
+
+    if (
+        len(raw_body)
+        > MAX_PAYSTACK_WEBHOOK_BYTES
+    ):
+
+        current_app.logger.warning(
+            "[Paystack Webhook] Payload exceeds limit."
+        )
+
+        abort(413)
+
+    # ========================================================
+    # 3. READ SIGNATURE
+    # ========================================================
 
     received_signature = (
         request.headers.get(
@@ -30404,7 +32226,7 @@ def paystack_ticket_webhook():
     ).strip()
 
     # ========================================================
-    # 3. CALCULATE EXPECTED SIGNATURE
+    # 4. CALCULATE EXPECTED SIGNATURE
     # ========================================================
 
     expected_signature = hmac.new(
@@ -30414,13 +32236,13 @@ def paystack_ticket_webhook():
     ).hexdigest()
 
     # ========================================================
-    # 4. VALIDATE SIGNATURE
+    # 5. VALIDATE SIGNATURE
     # ========================================================
 
     if (
-        not received_signature
+        len(received_signature) != 128
         or not hmac.compare_digest(
-            received_signature,
+            received_signature.lower(),
             expected_signature,
         )
     ):
@@ -30432,7 +32254,7 @@ def paystack_ticket_webhook():
         abort(400)
 
     # ========================================================
-    # 5. PARSE VERIFIED WEBHOOK PAYLOAD
+    # 6. PARSE VERIFIED PAYLOAD
     # ========================================================
 
     try:
@@ -30447,52 +32269,50 @@ def paystack_ticket_webhook():
     ):
 
         current_app.logger.warning(
-            "[Paystack Webhook] Invalid JSON payload."
+            "[Paystack Webhook] Invalid JSON."
         )
 
         abort(400)
 
-    if not isinstance(payload, dict):
+    if not isinstance(
+        payload,
+        dict,
+    ):
 
         current_app.logger.warning(
-            "[Paystack Webhook] Payload must be an object."
+            "[Paystack Webhook] Invalid payload format."
         )
 
         abort(400)
 
     # ========================================================
-    # 6. IDENTIFY EVENT TYPE
+    # 7. IDENTIFY EVENT
     # ========================================================
 
-    event_type = payload.get("event")
+    event_type = payload.get(
+        "event"
+    )
 
-    if not isinstance(event_type, str):
+    if (
+        not isinstance(event_type, str)
+        or not event_type.strip()
+    ):
 
         current_app.logger.warning(
-            "[Paystack Webhook] Missing or invalid event type."
+            "[Paystack Webhook] Invalid event type."
         )
 
         abort(400)
 
+    event_type = event_type.strip()
+
     # ========================================================
-    # 7. PROCESS TICKET REFUND EVENTS
-    # ========================================================
-    #
-    # Refunds are handled separately from charge.success.
-    #
-    # The refund handler must independently verify
-    # the refund against Paystack before applying:
-    #
-    # - Ticket refund status
-    # - EntryPass status
-    # - Refunded ticket face value
-    # - KALXA commission reversal
-    #
-    # Never calculate or apply refund accounting
-    # directly from webhook payload values.
+    # 8. HANDLE REFUND EVENTS
     # ========================================================
 
-    if event_type.startswith("refund."):
+    if event_type.startswith(
+        "refund."
+    ):
 
         from ticket_refund_routes import (
             handle_ticket_refund_webhook,
@@ -30500,15 +32320,17 @@ def paystack_ticket_webhook():
 
         try:
 
-            handled = handle_ticket_refund_webhook(
-                payload,
-                db=db,
-                TicketOrder=TicketOrder,
-                TicketOrderItem=TicketOrderItem,
-                TicketRefund=TicketRefund,
-                TicketRefundItem=TicketRefundItem,
-                EntryPass=EntryPass,
-                paystack_api_request=paystack_api_request,
+            handled = (
+                handle_ticket_refund_webhook(
+                    payload,
+                    db=db,
+                    TicketOrder=TicketOrder,
+                    TicketOrderItem=TicketOrderItem,
+                    TicketRefund=TicketRefund,
+                    TicketRefundItem=TicketRefundItem,
+                    EntryPass=EntryPass,
+                    paystack_api_request=paystack_api_request,
+                )
             )
 
             if not handled:
@@ -30516,7 +32338,7 @@ def paystack_ticket_webhook():
                 current_app.logger.warning(
                     (
                         "[Paystack Refund Webhook] "
-                        "Unrecognized refund event=%s"
+                        "Unrecognized event=%s"
                     ),
                     event_type,
                 )
@@ -30530,44 +32352,38 @@ def paystack_ticket_webhook():
             current_app.logger.exception(
                 (
                     "[Paystack Refund Webhook] "
-                    "Refund reconciliation failed "
-                    "event=%s"
+                    "Reconciliation failed event=%s"
                 ),
                 event_type,
             )
 
-            # Returning 500 allows Paystack to retry
-            # delivery according to its retry policy.
-            #
-            # The refund processor must be idempotent.
-
             return "", 500
 
     # ========================================================
-    # 8. HANDLE SETTLEMENT EVENTS
-    # ========================================================
-    #
-    # Settlement events require separate reconciliation.
-    #
-    # Do not update organiser payouts or refund
-    # accounting directly from these notifications.
+    # 9. HANDLE SETTLEMENT EVENTS
     # ========================================================
 
-    if event_type.startswith("settlement."):
+    if event_type.startswith(
+        "settlement."
+    ):
 
         current_app.logger.warning(
             (
                 "[Paystack Webhook] "
-                "Settlement event requires "
-                "separate reconciliation event=%s"
+                "Settlement event received "
+                "event=%s"
             ),
             event_type,
         )
 
+        # Settlement accounting must be handled
+        # by a separate verified reconciliation
+        # process.
+
         return "", 200
 
     # ========================================================
-    # 9. IGNORE OTHER NON-PAYMENT EVENTS
+    # 10. IGNORE UNSUPPORTED EVENTS
     # ========================================================
 
     if event_type != "charge.success":
@@ -30575,7 +32391,7 @@ def paystack_ticket_webhook():
         current_app.logger.info(
             (
                 "[Paystack Webhook] "
-                "Ignoring unsupported event=%s"
+                "Ignoring event=%s"
             ),
             event_type,
         )
@@ -30583,10 +32399,12 @@ def paystack_ticket_webhook():
         return "", 200
 
     # ========================================================
-    # 10. EXTRACT PAYMENT DATA
+    # 11. EXTRACT PAYMENT REFERENCE
     # ========================================================
 
-    webhook_data = payload.get("data")
+    webhook_data = payload.get(
+        "data"
+    )
 
     if not isinstance(
         webhook_data,
@@ -30594,7 +32412,7 @@ def paystack_ticket_webhook():
     ):
 
         current_app.logger.warning(
-            "[Paystack Webhook] Invalid payment data."
+            "[Paystack Webhook] Missing payment data."
         )
 
         abort(400)
@@ -30609,22 +32427,19 @@ def paystack_ticket_webhook():
     ):
 
         current_app.logger.warning(
-            "[Paystack Webhook] Missing payment reference."
+            "[Paystack Webhook] Missing reference."
         )
 
         abort(400)
 
     reference = reference.strip()
 
+    if len(reference) > 200:
+
+        abort(400)
+
     # ========================================================
-    # 11. VERIFY PAYMENT DIRECTLY WITH PAYSTACK
-    # ========================================================
-    #
-    # A signed webhook is not sufficient on its own
-    # to finalize a KALXA payment.
-    #
-    # The transaction must be verified using the
-    # existing Paystack verification helper.
+    # 12. VERIFY TRANSACTION WITH PAYSTACK
     # ========================================================
 
     try:
@@ -30651,7 +32466,7 @@ def paystack_ticket_webhook():
         return "", 500
 
     # ========================================================
-    # 12. EVENT TICKET PAYMENTS
+    # 13. EVENT TICKET PURCHASES
     # ========================================================
 
     order = (
@@ -30678,7 +32493,7 @@ def paystack_ticket_webhook():
             current_app.logger.exception(
                 (
                     "[Paystack Ticket Webhook] "
-                    "Finalisation failed "
+                    "Finalization failed "
                     "reference=%s order_id=%s"
                 ),
                 reference,
@@ -30690,7 +32505,7 @@ def paystack_ticket_webhook():
         return "", 200
 
     # ========================================================
-    # 13. RESTAURANT SUBSCRIPTION PAYMENTS
+    # 14. RESTAURANT SUBSCRIPTIONS
     # ========================================================
 
     restaurant_payment = (
@@ -30703,21 +32518,18 @@ def paystack_ticket_webhook():
 
     if restaurant_payment is not None:
 
-        # ----------------------------------------------------
-        # Prevent automatic reactivation of cancelled checkout
-        # ----------------------------------------------------
-
-        if restaurant_payment.payment_status == "cancelled":
+        if (
+            restaurant_payment.payment_status
+            == "cancelled"
+        ):
 
             current_app.logger.warning(
                 (
                     "[Restaurant Subscription Webhook] "
-                    "Paid cancelled checkout requires "
-                    "manual reconciliation "
-                    "reference=%s payment_id=%s"
+                    "Cancelled payment requires "
+                    "reconciliation reference=%s"
                 ),
                 reference,
-                restaurant_payment.id,
             )
 
             return "", 200
@@ -30736,7 +32548,7 @@ def paystack_ticket_webhook():
             current_app.logger.exception(
                 (
                     "[Restaurant Subscription Webhook] "
-                    "Finalisation failed "
+                    "Finalization failed "
                     "reference=%s payment_id=%s"
                 ),
                 reference,
@@ -30748,14 +32560,7 @@ def paystack_ticket_webhook():
         return "", 200
 
     # ========================================================
-    # 14. LEGACY ORGANISER SUBSCRIPTION PAYMENTS
-    # ========================================================
-    #
-    # Subscription payment does not automatically
-    # approve an event organiser.
-    #
-    # Organiser approval remains controlled by
-    # the KALXA super-admin.
+    # 15. LEGACY ORGANISER SUBSCRIPTIONS
     # ========================================================
 
     subscription_payment = (
@@ -30768,17 +32573,18 @@ def paystack_ticket_webhook():
 
     if subscription_payment is not None:
 
-        if subscription_payment.payment_status == "cancelled":
+        if (
+            subscription_payment.payment_status
+            == "cancelled"
+        ):
 
             current_app.logger.warning(
                 (
                     "[Legacy Subscription Webhook] "
-                    "Paid cancelled checkout requires "
-                    "manual reconciliation "
-                    "reference=%s payment_id=%s"
+                    "Cancelled payment requires "
+                    "reconciliation reference=%s"
                 ),
                 reference,
-                subscription_payment.id,
             )
 
             return "", 200
@@ -30797,7 +32603,7 @@ def paystack_ticket_webhook():
             current_app.logger.exception(
                 (
                     "[Legacy Subscription Webhook] "
-                    "Finalisation failed "
+                    "Finalization failed "
                     "reference=%s payment_id=%s"
                 ),
                 reference,
@@ -30809,7 +32615,7 @@ def paystack_ticket_webhook():
         return "", 200
 
     # ========================================================
-    # 15. EVENT BOOST PAYMENTS
+    # 16. EVENT BOOST PAYMENTS
     # ========================================================
 
     boost = (
@@ -30836,7 +32642,7 @@ def paystack_ticket_webhook():
             current_app.logger.exception(
                 (
                     "[Event Boost Webhook] "
-                    "Finalisation failed "
+                    "Finalization failed "
                     "reference=%s boost_id=%s"
                 ),
                 reference,
@@ -30848,7 +32654,7 @@ def paystack_ticket_webhook():
         return "", 200
 
     # ========================================================
-    # 16. FEATURED LISTING PAYMENTS
+    # 17. FEATURED LISTING PAYMENTS
     # ========================================================
 
     listing = (
@@ -30875,7 +32681,7 @@ def paystack_ticket_webhook():
             current_app.logger.exception(
                 (
                     "[Featured Listing Webhook] "
-                    "Finalisation failed "
+                    "Finalization failed "
                     "reference=%s listing_id=%s"
                 ),
                 reference,
@@ -30887,21 +32693,14 @@ def paystack_ticket_webhook():
         return "", 200
 
     # ========================================================
-    # 17. UNMATCHED VERIFIED PAYMENT
-    # ========================================================
-    #
-    # A successful Paystack transaction exists,
-    # but no matching KALXA payment record was found.
-    #
-    # Do not assign the payment to another product.
-    # Manual reconciliation is required.
+    # 18. UNMATCHED VERIFIED PAYMENT
     # ========================================================
 
     current_app.logger.error(
         (
             "[Paystack Webhook] "
-            "Unmatched verified payment requires "
-            "manual reconciliation "
+            "Unmatched verified payment "
+            "requires reconciliation "
             "reference=%s "
             "transaction_id=%s "
             "amount=%s"
@@ -30910,6 +32709,13 @@ def paystack_ticket_webhook():
         transaction_data.get("id"),
         transaction_data.get("amount"),
     )
+
+    # Returning 200 prevents endless retries.
+    #
+    # IMPORTANT:
+    # This does not itself guarantee reconciliation.
+    # Add a persistent reconciliation record and
+    # alerting before relying on this in production.
 
     return "", 200
 
@@ -35809,12 +37615,51 @@ def admin_purchase_featured_listing(
     event_id,
     plan_code,
 ):
+    """
+    Initialize a Paystack Featured Listing purchase.
 
-    auth = require_ticketing_organizer()
+    Payment model:
+        - The organiser purchases advertising.
+        - KALXA provides the advertising service.
+        - No marketplace Transaction Split is applied.
+
+    Security:
+        - Requires authenticated organiser.
+        - Requires active organiser subscription.
+        - Event must belong to organiser.
+        - Event must be published and active.
+        - Past events cannot be featured.
+        - Prevents duplicate active listings.
+        - Validates featured image requirements.
+        - Calculates amount server-side.
+        - Uses an existing pending payment when appropriate.
+        - Independently verifies payment before activation.
+
+    IMPORTANT:
+        This function only initializes payment.
+
+        Featured Listing activation must happen
+        after independent Paystack verification.
+    """
+
+    # ========================================================
+    # 1. AUTHENTICATE ORGANISER
+    # ========================================================
+
+    auth = (
+        require_ticketing_organizer()
+    )
+
     if auth:
         return auth
 
-    organizer = get_current_organizer()
+    organizer = (
+        get_current_organizer()
+    )
+
+    # ========================================================
+    # 2. CHECK ACTIVE SUBSCRIPTION
+    # ========================================================
 
     subscription_auth = (
         require_active_subscription(
@@ -35825,6 +37670,10 @@ def admin_purchase_featured_listing(
     if subscription_auth:
         return subscription_auth
 
+    # ========================================================
+    # 3. LOAD ORGANISER EVENT
+    # ========================================================
+
     event = (
         TicketEvent.query
         .filter_by(
@@ -35834,36 +37683,58 @@ def admin_purchase_featured_listing(
         .first_or_404()
     )
 
+    # ========================================================
+    # 4. VALIDATE FEATURED LISTING PLAN
+    # ========================================================
+
     try:
+
         plan = featured_listing_plan(
             plan_code
         )
+
     except ValueError:
+
         abort(400)
+
+    # ========================================================
+    # 5. VALIDATE EVENT STATUS
+    # ========================================================
 
     if (
         event.status != "published"
         or not event.active
     ):
+
         flash(
-            "Publish the event before buying a Featured Listing.",
+            (
+                "Publish the event before "
+                "buying a Featured Listing."
+            ),
             "error",
         )
+
         return redirect(
             url_for(
                 "admin_featured_listing",
                 event_id=event.id,
             )
         )
+
+    # ========================================================
+    # 6. CHECK EVENT DATE
+    # ========================================================
 
     if (
         event.event_date
         and event.event_date < date.today()
     ):
+
         flash(
             "Past events cannot be featured.",
             "error",
         )
+
         return redirect(
             url_for(
                 "admin_featured_listing",
@@ -35871,41 +37742,59 @@ def admin_purchase_featured_listing(
             )
         )
 
+    # ========================================================
+    # 7. PREVENT DUPLICATE ACTIVE LISTINGS
+    # ========================================================
+
     if get_active_featured_listing(
         event.id
     ):
+
         flash(
             (
-                "This event already has an active Featured Listing. "
-                "Buy another package after it expires."
+                "This event already has an active "
+                "Featured Listing. Buy another "
+                "package after it expires."
             ),
             "error",
         )
+
         return redirect(
             url_for(
                 "admin_featured_listing",
                 event_id=event.id,
             )
         )
+
+    # ========================================================
+    # 8. REQUIRE EVENT POSTER
+    # ========================================================
 
     if (
         not event.featured_images
         and not event.poster_image_mimetype
         and not event.image_url
     ):
+
         flash(
             (
-                "Upload at least one featured poster image "
-                "or add a normal event poster first."
+                "Upload at least one featured "
+                "poster image or add a normal "
+                "event poster first."
             ),
             "error",
         )
+
         return redirect(
             url_for(
                 "admin_featured_listing",
                 event_id=event.id,
             )
         )
+
+    # ========================================================
+    # 9. FIND EXISTING PENDING LISTING
+    # ========================================================
 
     pending = (
         FeaturedListing.query
@@ -35920,15 +37809,53 @@ def admin_purchase_featured_listing(
         .first()
     )
 
+    # ========================================================
+    # 10. HANDLE CHANGED PLAN
+    # ========================================================
+
     if (
         pending
         and pending.plan_code != plan_code
     ):
+
+        # Do not delete an existing checkout that
+        # might already have been paid.
+        #
+        # Instead, prevent silent replacement and
+        # require reconciliation.
+
+        if (
+            pending.paystack_authorization_url
+            or pending.paystack_access_code
+        ):
+
+            flash(
+                (
+                    "An earlier Featured Listing checkout "
+                    "exists. Please complete or reconcile "
+                    "that payment before changing plans."
+                ),
+                "warning",
+            )
+
+            return redirect(
+                url_for(
+                    "admin_featured_listing",
+                    event_id=event.id,
+                )
+            )
+
         db.session.delete(
             pending
         )
+
         db.session.commit()
+
         pending = None
+
+    # ========================================================
+    # 11. CREATE PENDING LISTING
+    # ========================================================
 
     if not pending:
 
@@ -35942,20 +37869,80 @@ def admin_purchase_featured_listing(
                 "duration_days"
             ],
             status="pending",
-            payment_reference=
-                generate_featured_listing_reference(),
+            payment_reference=(
+                generate_featured_listing_reference()
+            ),
             payment_provider="paystack",
         )
 
         db.session.add(
             pending
         )
+
         db.session.commit()
 
+    # ========================================================
+    # 12. REUSE EXISTING CHECKOUT
+    # ========================================================
+
     if pending.paystack_authorization_url:
+
         return redirect(
             pending.paystack_authorization_url
         )
+
+    # ========================================================
+    # 13. CALCULATE AMOUNT
+    # ========================================================
+
+    try:
+
+        price = Decimal(
+            str(
+                pending.price
+            )
+        )
+
+    except (
+        InvalidOperation,
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise RuntimeError(
+            "Invalid Featured Listing price."
+        ) from error
+
+    if (
+        not price.is_finite()
+        or price <= 0
+    ):
+
+        raise RuntimeError(
+            "Invalid Featured Listing price."
+        )
+
+    amount_cents = (
+        price
+        * Decimal("100")
+    )
+
+    if (
+        amount_cents
+        != amount_cents.to_integral_value()
+    ):
+
+        raise RuntimeError(
+            "Featured Listing price contains fractional cents."
+        )
+
+    amount_cents = int(
+        amount_cents
+    )
+
+    # ========================================================
+    # 14. BUILD CALLBACK URL
+    # ========================================================
 
     callback_url = url_for(
         "paystack_featured_listing_callback",
@@ -35963,46 +37950,51 @@ def admin_purchase_featured_listing(
         _scheme="https",
     )
 
+    # ========================================================
+    # 15. BUILD PAYMENT METADATA
+    # ========================================================
+
+    metadata = {
+        "payment_type": (
+            "kalxa_featured_listing"
+        ),
+        "featured_listing_id": pending.id,
+        "event_id": event.id,
+        "organizer_id": organizer.id,
+        "plan_code": pending.plan_code,
+    }
+
+    # ========================================================
+    # 16. BUILD PAYSTACK PAYMENT PAYLOAD
+    # ========================================================
+
     payload = {
         "email": organizer.email,
         "amount": str(
-            int(
-                (
-                    Decimal(
-                        str(pending.price)
-                    )
-                    * 100
-                )
-                .quantize(
-                    Decimal("1"),
-                    rounding=ROUND_UP,
-                )
-            )
+            amount_cents
         ),
         "currency": "ZAR",
-        "reference":
-            pending.payment_reference,
-        "callback_url":
-            callback_url,
+        "reference": (
+            pending.payment_reference
+        ),
+        "callback_url": callback_url,
         "channels": [
             "eft",
             "capitec_pay",
         ],
         "metadata": json.dumps(
-            {
-                "payment_type":
-                    "kalxa_featured_listing",
-                "featured_listing_id":
-                    pending.id,
-                "event_id":
-                    event.id,
-                "organizer_id":
-                    organizer.id,
-                "plan_code":
-                    pending.plan_code,
-            }
+            metadata
         ),
+
+        # No split_code.
+        #
+        # Featured Listings are KALXA platform
+        # advertising purchases.
     }
+
+    # ========================================================
+    # 17. INITIALIZE PAYSTACK CHECKOUT
+    # ========================================================
 
     try:
 
@@ -36012,21 +38004,40 @@ def admin_purchase_featured_listing(
             payload,
         )
 
-        data = result.get(
-            "data"
-        ) or {}
-
-        authorization_url = data.get(
-            "authorization_url"
+        data = (
+            result.get("data")
+            or {}
         )
 
-        if not authorization_url:
+        authorization_url = (
+            data.get(
+                "authorization_url"
+            )
+        )
+
+        if (
+            not isinstance(
+                authorization_url,
+                str,
+            )
+            or not authorization_url.strip()
+        ):
+
             raise RuntimeError(
-                "Paystack did not return a Featured Listing checkout URL."
+                (
+                    "Paystack did not return a "
+                    "Featured Listing checkout URL."
+                )
             )
 
+        # ====================================================
+        # 18. SAVE CHECKOUT DETAILS
+        # ====================================================
+
         pending.paystack_access_code = (
-            data.get("access_code")
+            data.get(
+                "access_code"
+            )
             or None
         )
 
@@ -36036,7 +38047,7 @@ def admin_purchase_featured_listing(
 
         db.session.commit()
 
-    except Exception as error:
+    except Exception:
 
         db.session.rollback()
 
@@ -36044,17 +38055,16 @@ def admin_purchase_featured_listing(
             (
                 "[Featured Listing Paystack] "
                 "Checkout initialization failed "
-                "listing_id=%s event_id=%s error=%s"
+                "listing_id=%s event_id=%s"
             ),
             pending.id,
             event.id,
-            error,
         )
 
         flash(
             (
-                "Featured Listing checkout could not be started. "
-                "Please try again."
+                "Featured Listing checkout could "
+                "not be started. Please try again."
             ),
             "error",
         )
@@ -36066,11 +38076,13 @@ def admin_purchase_featured_listing(
             )
         )
 
+    # ========================================================
+    # 19. REDIRECT TO PAYSTACK
+    # ========================================================
+
     return redirect(
         authorization_url
     )
-
-
 
 
 @app.route(
@@ -38684,14 +40696,19 @@ def paystack_ticket_callback():
 )
 def paystack_subscription_callback():
     """
-    Legacy organiser subscription payment callback.
+    Legacy organiser subscription callback.
+
+    Security:
+        - Requires a valid payment reference.
+        - Finds an existing local subscription payment.
+        - Independently verifies the transaction.
+        - Uses the existing finalization service.
+        - Does not automatically approve organisers.
 
     IMPORTANT:
-        Subscription payment does not automatically
-        approve an event organiser.
-
-        Organiser approval remains controlled
-        by the KALXA super-admin.
+        finalize_paystack_subscription_payment()
+        must enforce amount matching, ownership,
+        idempotency, and valid payment state.
     """
 
     # ========================================================
@@ -38702,11 +40719,15 @@ def paystack_subscription_callback():
         request.args.get("reference") or ""
     ).strip()
 
-    if not reference:
+    if (
+        not reference
+        or len(reference) > 200
+    ):
+
         abort(400)
 
     # ========================================================
-    # 2. FIND SUBSCRIPTION PAYMENT
+    # 2. FIND LOCAL PAYMENT
     # ========================================================
 
     payment = (
@@ -38747,7 +40768,7 @@ def paystack_subscription_callback():
         )
 
     # ========================================================
-    # 4. VERIFY SUBSCRIPTION PAYMENT
+    # 4. VERIFY PAYMENT
     # ========================================================
 
     try:
@@ -38767,6 +40788,16 @@ def paystack_subscription_callback():
             transaction_data,
         )
 
+        current_app.logger.info(
+            (
+                "[Legacy Subscription Callback] "
+                "Payment processed "
+                "reference=%s payment_id=%s"
+            ),
+            reference,
+            payment.id,
+        )
+
         flash(
             (
                 "Subscription payment confirmed. "
@@ -38783,7 +40814,8 @@ def paystack_subscription_callback():
         current_app.logger.exception(
             (
                 "[Legacy Subscription Callback] "
-                "Verification failed reference=%s"
+                "Verification or finalization failed "
+                "reference=%s"
             ),
             reference,
         )
