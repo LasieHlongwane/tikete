@@ -505,6 +505,30 @@ class Organizer(db.Model):
         index=True,
     )
 
+
+    # ============================================================
+# PAYSTACK MARKETPLACE TRANSACTION SPLITS
+# ============================================================
+
+    paystack_split_code = db.Column(
+        db.String(100),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    paystack_split_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    paystack_split_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="not_configured",
+        server_default="not_configured",
+        index=True,
+    )
     # ========================================================
     # PAYMENT CONNECTION HELPER
     # ========================================================
@@ -525,6 +549,32 @@ class Organizer(db.Model):
         return bool(
             self.payment_setup_status == "connected"
             and self.paystack_subaccount_code
+        )
+        
+        
+        
+        
+    @property
+    def can_receive_ticket_payments(self):
+    """
+    Determine whether an organiser has an approved
+    local Paystack marketplace configuration.
+
+    IMPORTANT:
+        This property does not contact Paystack.
+
+        Only trusted server-side onboarding logic
+        should mark a split as verified.
+    """
+
+        return bool(
+            self.is_approved_event_organizer
+            and self.payment_provider == "paystack"
+            and self.payment_setup_status == "connected"
+            and self.paystack_subaccount_code
+            and self.paystack_split_code
+            and self.paystack_split_status == "verified"
+            and self.paystack_split_verified_at is not None
         )
 
     # ========================================================
@@ -2543,6 +2593,46 @@ class TicketOrder(db.Model):
         db.DateTime,
         nullable=True,
         index=True,
+    )
+    
+    # ============================================================
+# PAYSTACK MARKETPLACE SPLIT SNAPSHOT
+# ============================================================
+
+    paystack_split_code = db.Column(
+        db.String(100),
+        nullable=True,
+        index=True,
+    )
+
+    paystack_subaccount_code = db.Column(
+        db.String(100),
+        nullable=True,
+    )
+
+    paystack_split_verified_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+# ============================================================
+# TICKET INVENTORY RESERVATION
+# ============================================================
+
+    reservation_expires_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    inventory_reserved_at = db.Column(
+        db.DateTime,
+        nullable=True,
+    )
+
+    inventory_released_at = db.Column(
+        db.DateTime,
+        nullable=True,
     )
 
     # ========================================================
