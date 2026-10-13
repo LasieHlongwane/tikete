@@ -556,16 +556,7 @@ class Organizer(db.Model):
         
     @property
     def can_receive_ticket_payments(self):
-    """
-    Determine whether an organiser has an approved
-    local Paystack marketplace configuration.
-
-    IMPORTANT:
-        This property does not contact Paystack.
-
-        Only trusted server-side onboarding logic
-        should mark a split as verified.
-    """
+    
 
         return bool(
             self.is_approved_event_organizer
