@@ -56,7 +56,7 @@ from services.paystack_settlement_reconciliation import (
     reconcile_paystack_settlements,
 )
 
-
+from flask import make_response
 from services.yoco_webhook import (
     verify_yoco_webhook,
     YocoWebhookError,
@@ -11970,7 +11970,6 @@ def kalxa_refund_superadmin_guard():
 # ============================================================
 # SUPER ADMIN - CREATE EVENT PARTNER ACCOUNT
 # ============================================================
-
 @app.route(
     "/superadmin/partners/new",
     methods=[
@@ -11993,27 +11992,42 @@ def superadmin_create_partner():
     # PARTNER CONFIGURATION
     # ========================================================
 
-    # Preserve the existing Event Organizer partner duration.
-    # The restaurant community-launch grant is 90 days.
+    # Event Organizer:
+    # Preserve the existing complimentary period.
+    #
+    # Restaurant:
+    # 90-day complimentary community-launch access.
+    #
+    # Neither partner type is automatically charged.
 
     partner_configs = {
 
         "event": {
+
             "days": KALXA_PARTNER_ACCESS_DAYS,
+
             "plan_name": KALXA_PARTNER_PLAN_NAME,
+
             "label": "Event Organizer",
+
         },
 
         "restaurant": {
+
             "days": 90,
-            "plan_name": "Kalxa Restaurant Community Partner",
+
+            "plan_name": (
+                "Kalxa Restaurant Community Partner"
+            ),
+
             "label": "Restaurant",
+
         },
 
     }
 
     # ========================================================
-    # GET SELECTED ACCOUNT TYPE
+    # GET REQUESTED ACCOUNT TYPE
     # ========================================================
 
     if request.method == "POST":
@@ -12039,7 +12053,7 @@ def superadmin_create_partner():
         )
 
     # ========================================================
-    # VALIDATE PARTNER TYPE
+    # VALIDATE ACCOUNT TYPE
     # ========================================================
 
     if requested_account_type not in partner_configs:
@@ -12109,18 +12123,26 @@ def superadmin_create_partner():
         )
 
         # ====================================================
-        # VALIDATION
+        # VALIDATE NAME
         # ====================================================
 
         if not name:
 
-            flash(
-                (
+            if account_type == "restaurant":
+
+                message = (
                     "Restaurant owner or manager "
                     "name is required."
-                    if account_type == "restaurant"
-                    else "Organizer name is required."
-                ),
+                )
+
+            else:
+
+                message = (
+                    "Organizer name is required."
+                )
+
+            flash(
+                message,
                 "error",
             )
 
@@ -12128,18 +12150,28 @@ def superadmin_create_partner():
                 "superadmin/partner_form.html",
                 account_type=account_type,
             )
+
+        # ====================================================
+        # VALIDATE BUSINESS NAME
+        # ====================================================
 
         if not business_name:
 
-            flash(
-                (
+            if account_type == "restaurant":
+
+                message = (
                     "Restaurant business name is required."
-                    if account_type == "restaurant"
-                    else (
-                        "Event business or brand "
-                        "name is required."
-                    )
-                ),
+                )
+
+            else:
+
+                message = (
+                    "Event business or brand "
+                    "name is required."
+                )
+
+            flash(
+                message,
                 "error",
             )
 
@@ -12147,6 +12179,10 @@ def superadmin_create_partner():
                 "superadmin/partner_form.html",
                 account_type=account_type,
             )
+
+        # ====================================================
+        # VALIDATE EMAIL
+        # ====================================================
 
         if not email:
 
@@ -12211,16 +12247,19 @@ def superadmin_create_partner():
         )
 
         # ====================================================
-        # CREATE PARTNER BUSINESS ACCOUNT
+        # CREATE PARTNER ACCOUNT
         # ====================================================
 
-        # The existing Organizer model supports both:
+        # IMPORTANT:
+        #
+        # Both Event Organizer and Restaurant accounts
+        # use the existing Organizer model.
         #
         # account_type="event"
         # account_type="restaurant"
         #
-        # This allows both partners to use the appropriate
-        # existing KALXA business dashboards.
+        # The existing authentication and dashboard
+        # logic must recognise these account types.
 
         organizer = Organizer(
 
@@ -12244,6 +12283,10 @@ def superadmin_create_partner():
 
         )
 
+        # ====================================================
+        # HASH TEMPORARY PASSWORD
+        # ====================================================
+
         organizer.set_password(
             temporary_password
         )
@@ -12255,34 +12298,48 @@ def superadmin_create_partner():
         try:
 
             # ================================================
-            # SAVE ORGANIZER
+            # SAVE PARTNER ACCOUNT
             # ================================================
 
             db.session.add(
                 organizer
             )
 
+            # Generate organizer.id before creating
+            # the subscription audit record.
+
             db.session.flush()
 
             # ================================================
-            # CREATE COMPLIMENTARY PARTNER GRANT
+            # GENERATE PARTNER GRANT REFERENCE
+            # ================================================
+
+            payment_reference = (
+                generate_subscription_payment_reference()
+            )
+
+            # ================================================
+            # CREATE COMPLIMENTARY SUBSCRIPTION RECORD
             # ================================================
 
             # IMPORTANT:
             #
-            # This is NOT an actual customer payment.
+            # A partner grant is not a real payment.
             #
-            # amount=0.00
-            # payment_method="partner_grant"
+            # amount = R0.00
+            # payment_method = "partner_grant"
             #
-            # The existing SubscriptionPayment record
-            # provides an audit trail for the granted
-            # subscription.
+            # payment_status="paid" is retained
+            # for compatibility with the existing
+            # subscription system.
             #
-            # payment_status="paid" is retained for
-            # compatibility with the existing subscription
-            # system. Reporting must exclude partner grants
-            # from actual cash revenue.
+            # Partner grants must be excluded from
+            # actual revenue calculations and from
+            # checks requiring a verified payment.
+            #
+            # A Restaurant Community Partner grant
+            # must not automatically qualify as a
+            # paid Premium Restaurant subscription.
 
             partner_payment = SubscriptionPayment(
 
@@ -12290,13 +12347,13 @@ def superadmin_create_partner():
 
                 plan_name=partner_plan_name,
 
-                amount=Decimal("0.00"),
+                amount=Decimal(
+                    "0.00"
+                ),
 
                 period_days=partner_days,
 
-                payment_reference=(
-                    generate_subscription_payment_reference()
-                ),
+                payment_reference=payment_reference,
 
                 payment_method="partner_grant",
 
@@ -12319,12 +12376,16 @@ def superadmin_create_partner():
             )
 
             # ================================================
-            # COMMIT
+            # COMMIT ACCOUNT AND PARTNER GRANT
             # ================================================
 
             db.session.commit()
 
         except Exception:
+
+            # ================================================
+            # ROLLBACK
+            # ================================================
 
             db.session.rollback()
 
@@ -12373,26 +12434,55 @@ def superadmin_create_partner():
         )
 
         # ====================================================
-        # SUCCESS PAGE
+        # SUCCESS CONFIRMATION PAGE
         # ====================================================
 
-        return render_template(
+        # This response contains a temporary password.
+        #
+        # Prevent the browser and intermediary caches
+        # from storing the confirmation page.
 
-            "superadmin/partner_created.html",
+        response = make_response(
+            render_template(
 
-            organizer=organizer,
+                "superadmin/partner_created.html",
 
-            temporary_password=temporary_password,
+                organizer=organizer,
 
-            subscription_end=subscription_end,
+                temporary_password=temporary_password,
 
-            account_type=account_type,
+                subscription_end=subscription_end,
 
-            partner_days=partner_days,
+                account_type=account_type,
 
-            partner_label=partner_label,
+                partner_days=partner_days,
 
+                partner_label=partner_label,
+
+            )
         )
+
+        # ====================================================
+        # SECURITY HEADERS
+        # ====================================================
+
+        response.headers["Cache-Control"] = (
+            "no-store, no-cache, max-age=0, must-revalidate"
+        )
+
+        response.headers["Pragma"] = "no-cache"
+
+        response.headers["Expires"] = "0"
+
+        response.headers["X-Content-Type-Options"] = (
+            "nosniff"
+        )
+
+        response.headers["Referrer-Policy"] = (
+            "no-referrer"
+        )
+
+        return response
 
     # ========================================================
     # GET REQUEST
@@ -12405,7 +12495,6 @@ def superadmin_create_partner():
         account_type=account_type,
 
     )
-
 
 @app.route(
     "/admin/restaurants/<int:advert_id>/subscription/reconcile/<int:payment_id>",
