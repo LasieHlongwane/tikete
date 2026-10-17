@@ -10,10 +10,14 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
     <title>
         Super Admin | Kalxa Ticketing
     </title>
-
 
     <style>
 
@@ -25,12 +29,30 @@
             box-sizing: border-box;
         }
 
+        :root {
+
+            --background: #f6f7f9;
+            --surface: #ffffff;
+
+            --text: #111827;
+            --muted: #64748b;
+
+            --border: #e5e7eb;
+
+            --black: #111111;
+            --dark: #111827;
+
+            --green: #166534;
+            --orange: #c2410c;
+
+        }
 
         body {
+
             margin: 0;
 
-            background: #f6f7f9;
-            color: #111827;
+            background: var(--background);
+            color: var(--text);
 
             font-family:
                 Inter,
@@ -43,28 +65,28 @@
                 sans-serif;
 
             -webkit-font-smoothing: antialiased;
+
         }
 
-
         .shell {
-            width:
-                min(
-                    1180px,
-                    calc(100% - 28px)
-                );
+
+            width: min(
+                1180px,
+                calc(100% - 28px)
+            );
 
             margin: 0 auto;
 
-            padding:
-                22px 0 60px;
-        }
+            padding: 22px 0 60px;
 
+        }
 
         /* =====================================================
            NAVIGATION
         ===================================================== */
 
         .nav {
+
             display: flex;
 
             justify-content: space-between;
@@ -78,29 +100,31 @@
 
             background: #ffffff;
 
-            border:
-                1px solid #e5e7eb;
+            border: 1px solid #e5e7eb;
 
             border-radius: 16px;
-        }
 
+        }
 
         .brand {
+
             font-size: 14px;
             font-weight: 900;
+
         }
 
-
         .nav-links {
+
             display: flex;
 
             gap: 8px;
 
             flex-wrap: wrap;
+
         }
 
-
         .nav-links a {
+
             padding: 8px 11px;
 
             border-radius: 9px;
@@ -111,20 +135,23 @@
 
             font-size: 12px;
             font-weight: 750;
-        }
 
+        }
 
         .nav-links a:hover {
-            background: #f1f5f9;
-        }
 
+            background: #f1f5f9;
+
+        }
 
         .nav-alert {
+
             position: relative;
+
         }
 
-
         .nav-count {
+
             display: inline-grid;
 
             place-items: center;
@@ -134,8 +161,7 @@
 
             margin-left: 4px;
 
-            padding:
-                0 5px;
+            padding: 0 5px;
 
             background: #dc2626;
             color: #ffffff;
@@ -144,14 +170,15 @@
 
             font-size: 9px;
             font-weight: 950;
-        }
 
+        }
 
         /* =====================================================
            HERO
         ===================================================== */
 
         .hero {
+
             display: flex;
 
             justify-content: space-between;
@@ -168,10 +195,11 @@
             background: #111111;
 
             border-radius: 20px;
+
         }
 
-
         .eyebrow {
+
             margin: 0 0 6px;
 
             color: #cbd5e1;
@@ -182,24 +210,25 @@
             letter-spacing: .13em;
 
             text-transform: uppercase;
-        }
 
+        }
 
         h1 {
+
             margin: 0 0 8px;
 
-            font-size:
-                clamp(
-                    30px,
-                    5vw,
-                    44px
-                );
+            font-size: clamp(
+                30px,
+                5vw,
+                44px
+            );
 
             letter-spacing: -.04em;
+
         }
 
-
         .hero p {
+
             margin: 0;
 
             color: #cbd5e1;
@@ -207,10 +236,11 @@
             font-size: 13px;
 
             line-height: 1.6;
+
         }
 
-
         .hero-actions {
+
             display: flex;
 
             gap: 8px;
@@ -218,18 +248,21 @@
             flex-wrap: wrap;
 
             flex-shrink: 0;
-        }
 
+        }
 
         /* =====================================================
            BUTTONS
         ===================================================== */
 
         .button {
+
             display: inline-flex;
 
             justify-content: center;
             align-items: center;
+
+            gap: 6px;
 
             min-height: 40px;
 
@@ -238,39 +271,75 @@
             background: #111111;
             color: #ffffff;
 
-            border:
-                1px solid #111111;
+            border: 1px solid #111111;
 
             border-radius: 10px;
 
             text-decoration: none;
 
+            text-align: center;
+
             font-size: 12px;
             font-weight: 850;
+
+            cursor: pointer;
+
+            transition:
+                background .2s,
+                transform .2s;
+
         }
 
+        .button:hover {
+
+            opacity: .9;
+
+            transform: translateY(-1px);
+
+        }
 
         .button-light {
+
             background: #ffffff;
             color: #111827;
 
             border-color: #ffffff;
+
         }
 
-
         .button-outline {
+
             background: transparent;
             color: #ffffff;
 
             border-color: #475569;
+
         }
 
+        .button-green {
+
+            background: #166534;
+            border-color: #166534;
+
+            color: #ffffff;
+
+        }
+
+        .button-orange {
+
+            background: #f59e0b;
+            border-color: #f59e0b;
+
+            color: #111827;
+
+        }
 
         /* =====================================================
            METRICS
         ===================================================== */
 
         .metrics {
+
             display: grid;
 
             grid-template-columns:
@@ -282,34 +351,37 @@
             gap: 12px;
 
             margin-bottom: 20px;
-        }
 
+        }
 
         .metric,
         .section {
+
             background: #ffffff;
 
-            border:
-                1px solid #e5e7eb;
+            border: 1px solid #e5e7eb;
 
             border-radius: 16px;
-        }
 
+        }
 
         .metric {
+
             padding: 18px;
+
         }
 
-
         .metric span {
+
             color: #64748b;
 
             font-size: 11px;
             font-weight: 800;
+
         }
 
-
         .metric strong {
+
             display: block;
 
             margin-top: 6px;
@@ -317,32 +389,37 @@
             font-size: 30px;
 
             letter-spacing: -.04em;
-        }
 
+        }
 
         .metric.attention {
-            border-color: #fed7aa;
-            background: #fffaf5;
-        }
 
+            border-color: #fed7aa;
+
+            background: #fffaf5;
+
+        }
 
         .metric.attention strong {
-            color: #c2410c;
-        }
 
+            color: #c2410c;
+
+        }
 
         /* =====================================================
            SECTION
         ===================================================== */
 
         .section {
+
             margin-bottom: 18px;
 
             padding: 22px;
+
         }
 
-
         .section-head {
+
             display: flex;
 
             justify-content: space-between;
@@ -351,22 +428,25 @@
             gap: 14px;
 
             margin-bottom: 16px;
-        }
 
+        }
 
         .section-head-copy {
+
             min-width: 0;
+
         }
 
-
         h2 {
+
             margin: 0;
 
             font-size: 20px;
+
         }
 
-
         .section-copy {
+
             margin: 5px 0 0;
 
             color: #64748b;
@@ -374,14 +454,364 @@
             font-size: 12px;
 
             line-height: 1.55;
+
         }
 
+        /* =====================================================
+           PARTNER MANAGEMENT
+        ===================================================== */
+
+        .partnership-section {
+
+            border-color: #cbd5e1;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffffff,
+                    #f8fafc
+                );
+
+        }
+
+        .partnership-header {
+
+            margin-bottom: 20px;
+
+        }
+
+        .partnership-header h2 {
+
+            font-size: 23px;
+
+            letter-spacing: -.03em;
+
+        }
+
+        .partnership-header p {
+
+            max-width: 720px;
+
+        }
+
+        .partnership-cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 14px;
+
+        }
+
+        .partnership-card {
+
+            display: flex;
+            flex-direction: column;
+
+            overflow: hidden;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 16px;
+
+            background: #ffffff;
+
+        }
+
+        .partnership-card.event {
+
+            border-top: 4px solid #2563eb;
+
+        }
+
+        .partnership-card.restaurant {
+
+            border-top: 4px solid #16a34a;
+
+        }
+
+        .partnership-card-content {
+
+            flex: 1;
+
+            padding: 20px;
+
+        }
+
+        .partnership-icon {
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            width: 48px;
+            height: 48px;
+
+            margin-bottom: 14px;
+
+            background: #f1f5f9;
+
+            border-radius: 13px;
+
+            font-size: 25px;
+
+        }
+
+        .partnership-card.event
+        .partnership-icon {
+
+            background: #eff6ff;
+
+        }
+
+        .partnership-card.restaurant
+        .partnership-icon {
+
+            background: #f0fdf4;
+
+        }
+
+        .partnership-badge {
+
+            display: inline-flex;
+
+            padding: 5px 9px;
+
+            margin-bottom: 12px;
+
+            border-radius: 999px;
+
+            background: #f1f5f9;
+
+            color: #334155;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+        }
+
+        .partnership-badge.event {
+
+            background: #eff6ff;
+            color: #1d4ed8;
+
+        }
+
+        .partnership-badge.restaurant {
+
+            background: #dcfce7;
+            color: #166534;
+
+        }
+
+        .partnership-card h3 {
+
+            margin: 0 0 8px;
+
+            font-size: 19px;
+
+            letter-spacing: -.03em;
+
+        }
+
+        .partnership-card p {
+
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 12px;
+
+            line-height: 1.65;
+
+        }
+
+        .partnership-features {
+
+            display: grid;
+
+            gap: 9px;
+
+            margin-top: 18px;
+
+        }
+
+        .partnership-feature {
+
+            display: flex;
+
+            align-items: flex-start;
+
+            gap: 9px;
+
+            color: #334155;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+
+        }
+
+        .partnership-feature-icon {
+
+            color: #16a34a;
+
+            font-weight: 950;
+
+        }
+
+        .partnership-card-footer {
+
+            padding: 15px 20px;
+
+            border-top: 1px solid #e5e7eb;
+
+            background: #fafafa;
+
+        }
+
+        .partnership-card-footer .button {
+
+            width: 100%;
+
+        }
+
+        .partnership-note {
+
+            margin-top: 16px;
+
+            padding: 14px;
+
+            background: #eff6ff;
+
+            border: 1px solid #bfdbfe;
+
+            border-radius: 12px;
+
+            color: #1e40af;
+
+            font-size: 11px;
+
+            line-height: 1.6;
+
+        }
+
+        /* =====================================================
+           PARTNER PROGRAM DETAILS
+        ===================================================== */
+
+        .partner-section {
+
+            overflow: hidden;
+
+            position: relative;
+
+            background: #111827;
+            color: #ffffff;
+
+            border-color: #111827;
+
+        }
+
+        .partner-section h2 {
+
+            color: #ffffff;
+
+        }
+
+        .partner-section .section-copy {
+
+            color: #cbd5e1;
+
+        }
+
+        .partner-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+
+            gap: 10px;
+
+            margin-top: 18px;
+
+        }
+
+        .partner-step {
+
+            padding: 14px;
+
+            background: rgba(
+                255,
+                255,
+                255,
+                .07
+            );
+
+            border: 1px solid rgba(
+                255,
+                255,
+                255,
+                .10
+            );
+
+            border-radius: 12px;
+
+        }
+
+        .partner-step-number {
+
+            color: #94a3b8;
+
+            font-size: 9px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+        }
+
+        .partner-step strong {
+
+            display: block;
+
+            margin-top: 5px;
+
+            color: #ffffff;
+
+            font-size: 13px;
+
+        }
+
+        .partner-step p {
+
+            margin: 5px 0 0;
+
+            color: #cbd5e1;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+
+        }
 
         /* =====================================================
            CUSTOMER EXPERIENCE MODERATION
         ===================================================== */
 
         .experience-section {
+
             border-color: #fed7aa;
 
             background:
@@ -390,41 +820,40 @@
                     #ffffff,
                     #fffaf5
                 );
+
         }
 
-
         .experience-grid {
+
             display: grid;
 
             grid-template-columns:
                 repeat(
                     auto-fit,
                     minmax(
-                        min(
-                            100%,
-                            250px
-                        ),
+                        min(100%, 250px),
                         1fr
                     )
                 );
 
             gap: 12px;
+
         }
 
-
         .experience-preview {
+
             overflow: hidden;
 
             background: #ffffff;
 
-            border:
-                1px solid #e5e7eb;
+            border: 1px solid #e5e7eb;
 
             border-radius: 14px;
+
         }
 
-
         .experience-media {
+
             position: relative;
 
             aspect-ratio: 16 / 9;
@@ -432,36 +861,36 @@
             overflow: hidden;
 
             background: #111827;
-        }
 
+        }
 
         .experience-media img,
         .experience-media video {
+
             width: 100%;
             height: 100%;
 
             display: block;
 
             object-fit: cover;
+
         }
 
-
         .experience-pending-badge {
+
             position: absolute;
 
             top: 8px;
             left: 8px;
 
-            padding:
-                5px 7px;
+            padding: 5px 7px;
 
-            background:
-                rgba(
-                    146,
-                    64,
-                    14,
-                    .92
-                );
+            background: rgba(
+                146,
+                64,
+                14,
+                .92
+            );
 
             color: #ffedd5;
 
@@ -473,24 +902,27 @@
             letter-spacing: .04em;
 
             text-transform: uppercase;
-        }
 
+        }
 
         .experience-copy {
+
             padding: 12px;
+
         }
 
-
         .experience-copy strong {
+
             display: block;
 
             color: #111827;
 
             font-size: 12px;
+
         }
 
-
         .experience-restaurant {
+
             display: block;
 
             margin-top: 3px;
@@ -499,10 +931,11 @@
 
             font-size: 10px;
             font-weight: 850;
+
         }
 
-
         .experience-text {
+
             display: -webkit-box;
 
             margin: 7px 0 0;
@@ -516,118 +949,23 @@
 
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 3;
+
         }
-
-
-        /* =====================================================
-           PARTNER PROGRAM
-        ===================================================== */
-
-        .partner-section {
-            overflow: hidden;
-
-            position: relative;
-
-            background: #111827;
-            color: #ffffff;
-
-            border-color: #111827;
-        }
-
-
-        .partner-section h2 {
-            color: #ffffff;
-        }
-
-
-        .partner-section .section-copy {
-            color: #cbd5e1;
-        }
-
-
-        .partner-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(
-                    3,
-                    minmax(0, 1fr)
-                );
-
-            gap: 10px;
-
-            margin-top: 18px;
-        }
-
-
-        .partner-step {
-            padding: 14px;
-
-            background:
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .07
-                );
-
-            border:
-                1px solid
-                rgba(
-                    255,
-                    255,
-                    255,
-                    .10
-                );
-
-            border-radius: 12px;
-        }
-
-
-        .partner-step-number {
-            color: #94a3b8;
-
-            font-size: 9px;
-            font-weight: 900;
-
-            text-transform: uppercase;
-        }
-
-
-        .partner-step strong {
-            display: block;
-
-            margin-top: 5px;
-
-            color: #ffffff;
-
-            font-size: 13px;
-        }
-
-
-        .partner-step p {
-            margin: 5px 0 0;
-
-            color: #cbd5e1;
-
-            font-size: 10px;
-
-            line-height: 1.5;
-        }
-
 
         /* =====================================================
            LIST
         ===================================================== */
 
         .list {
+
             display: grid;
 
             gap: 10px;
+
         }
 
-
         .row {
+
             display: flex;
 
             justify-content: space-between;
@@ -639,26 +977,28 @@
 
             background: #fafafa;
 
-            border:
-                1px solid #e8edf2;
+            border: 1px solid #e8edf2;
 
             border-radius: 12px;
-        }
 
+        }
 
         .row-main {
+
             min-width: 0;
+
         }
 
-
         .row strong {
+
             display: block;
 
             font-size: 14px;
+
         }
 
-
         .row small {
+
             display: block;
 
             margin-top: 3px;
@@ -668,10 +1008,11 @@
             font-size: 11px;
 
             line-height: 1.5;
+
         }
 
-
         .row-actions {
+
             display: flex;
 
             align-items: center;
@@ -679,14 +1020,15 @@
             gap: 8px;
 
             flex-wrap: wrap;
-        }
 
+        }
 
         /* =====================================================
            STATUS
         ===================================================== */
 
         .status {
+
             display: inline-flex;
 
             padding: 5px 8px;
@@ -697,53 +1039,58 @@
             font-weight: 900;
 
             text-transform: uppercase;
-        }
 
+        }
 
         .status.active {
+
             background: #dcfce7;
             color: #166534;
-        }
 
+        }
 
         .status.inactive,
         .status.expired {
+
             background: #fff7ed;
             color: #9a3412;
-        }
 
+        }
 
         .status.suspended {
+
             background: #fef2f2;
             color: #991b1b;
-        }
 
+        }
 
         .status.event-account {
+
             background: #eff6ff;
             color: #1d4ed8;
-        }
 
+        }
 
         .status.restaurant-account {
+
             background: #fef3c7;
             color: #92400e;
-        }
 
+        }
 
         /* =====================================================
            EMPTY
         ===================================================== */
 
         .empty {
+
             margin: 0;
 
             padding: 18px;
 
             background: #f8fafc;
 
-            border:
-                1px dashed #cbd5e1;
+            border: 1px dashed #cbd5e1;
 
             border-radius: 12px;
 
@@ -752,8 +1099,8 @@
             font-size: 12px;
 
             line-height: 1.6;
-        }
 
+        }
 
         /* =====================================================
            RESPONSIVE
@@ -762,79 +1109,109 @@
         @media (max-width: 950px) {
 
             .metrics {
+
                 grid-template-columns:
                     repeat(
                         2,
                         minmax(0, 1fr)
                     );
+
             }
 
         }
-
 
         @media (max-width: 850px) {
 
             .partner-grid {
+
                 grid-template-columns: 1fr;
+
+            }
+
+            .partnership-cards {
+
+                grid-template-columns: 1fr;
+
             }
 
         }
 
-
         @media (max-width: 620px) {
 
             .nav {
+
                 align-items: flex-start;
 
                 flex-direction: column;
+
             }
 
-
             .hero {
+
                 align-items: stretch;
 
                 flex-direction: column;
+
             }
 
-
             .hero-actions {
+
                 display: grid;
 
                 grid-template-columns: 1fr;
-            }
 
+            }
 
             .metrics {
+
                 grid-template-columns: 1fr;
+
             }
 
-
             .section-head {
+
                 align-items: stretch;
 
                 flex-direction: column;
-            }
 
+            }
 
             .section-head > .button {
+
                 width: 100%;
+
             }
 
-
             .row {
+
                 align-items: flex-start;
 
                 flex-direction: column;
-            }
 
+            }
 
             .row-actions {
+
                 width: 100%;
+
             }
 
-
             .row-actions .button {
+
                 flex: 1;
+
+            }
+
+            .section {
+
+                padding: 16px;
+
+            }
+
+            .hero {
+
+                padding: 22px;
+
             }
 
         }
@@ -843,12 +1220,9 @@
 
 </head>
 
-
 <body>
 
-
 <div class="shell">
-
 
     <!-- =====================================================
          NAVIGATION
@@ -860,40 +1234,40 @@
             KALXA TICKETING · SUPER ADMIN
         </div>
 
-
         <div class="nav-links">
 
             <a
-                href="{{ url_for(
-                    'superadmin_dashboard'
-                ) }}"
+                href="{{ url_for('superadmin_dashboard') }}"
             >
                 Dashboard
             </a>
 
-
             <a
-                href="{{ url_for(
-                    'superadmin_organizers'
-                ) }}"
+                href="{{ url_for('superadmin_organizers') }}"
             >
                 Organizers
             </a>
 
-
             <a
                 href="{{ url_for(
-                    'superadmin_create_partner'
+                    'superadmin_create_partner',
+                    account_type='event'
                 ) }}"
             >
-                🤝 Partners
+                🎟 Event Partners
             </a>
-
 
             <a
                 href="{{ url_for(
-                    'superadmin_notifications'
+                    'superadmin_create_partner',
+                    account_type='restaurant'
                 ) }}"
+            >
+                🍽 Restaurant Partners
+            </a>
+
+            <a
+                href="{{ url_for('superadmin_notifications') }}"
             >
                 🔔 Notifications
             </a>
@@ -901,15 +1275,16 @@
             <a
                 href="{{ url_for('superadmin_settlements') }}"
             >
-               💰 Settlements
+                💰 Settlements
             </a>
 
             <a
-               href="{{ url_for('superadmin_organiser_payout_ledger') }}"
+                href="{{ url_for(
+                    'superadmin_organiser_payout_ledger'
+                ) }}"
             >
-               📒 Payout Ledger
+                📒 Payout Ledger
             </a>
-
 
             <a
                 href="{{ url_for(
@@ -919,23 +1294,20 @@
             >
                 📸 Experiences
 
-                {% if
-                    pending_restaurant_experience_count
-                    and pending_restaurant_experience_count > 0
-                %}
+                {% if pending_restaurant_experience_count|default(0) > 0 %}
 
                     <span class="nav-count">
+
                         {{ pending_restaurant_experience_count }}
+
                     </span>
 
                 {% endif %}
+
             </a>
 
-
             <a
-                href="{{ url_for(
-                    'superadmin_logout'
-                ) }}"
+                href="{{ url_for('superadmin_logout') }}"
             >
                 Logout
             </a>
@@ -943,8 +1315,6 @@
         </div>
 
     </nav>
-
-
 
     <!-- =====================================================
          HERO
@@ -958,80 +1328,68 @@
                 PLATFORM CONTROL CENTRE
             </p>
 
-
             <h1>
                 Kalxa Super Admin
             </h1>
 
-
             <p>
-                Manage organizer access,
-                subscriptions, partnerships,
+
+                Manage event organizers,
+                restaurant partners,
+                subscriptions, payments,
                 notifications and community content.
+
             </p>
 
         </div>
-
 
         <div class="hero-actions">
 
             <a
                 href="{{ url_for(
+                    'superadmin_create_partner',
+                    account_type='restaurant'
+                ) }}"
+                class="button button-green"
+            >
+                🍽 Create Restaurant Partner
+            </a>
+
+            <a
+                href="{{ url_for(
+                    'superadmin_create_partner',
+                    account_type='event'
+                ) }}"
+                class="button button-light"
+            >
+                🎟 Create Event Partner
+            </a>
+
+            <a
+                href="{{ url_for(
                     'superadmin_restaurant_experiences'
                 ) }}"
-                class="
-                    button
-                    button-light
-                "
+                class="button button-outline"
             >
                 📸 Review Experiences
 
-                {% if
-                    pending_restaurant_experience_count
-                    and pending_restaurant_experience_count > 0
-                %}
+                {% if pending_restaurant_experience_count|default(0) > 0 %}
+
                     · {{ pending_restaurant_experience_count }}
+
                 {% endif %}
-            </a>
 
-
-            <a
-                href="{{ url_for(
-                    'superadmin_create_partner'
-                ) }}"
-                class="
-                    button
-                    button-outline
-                "
-            >
-                🤝 Create Event Partner
-            </a>
-
-
-            <a
-                href="{{ url_for(
-                    'superadmin_organizers'
-                ) }}"
-                class="
-                    button
-                    button-outline
-                "
-            >
-                View Organizers
             </a>
 
         </div>
 
     </header>
 
-
-
     <!-- =====================================================
          PLATFORM METRICS
     ====================================================== -->
 
     <div class="metrics">
-
 
         <div class="metric">
 
@@ -1045,7 +1403,6 @@
 
         </div>
 
-
         <div class="metric">
 
             <span>
@@ -1057,7 +1414,6 @@
             </strong>
 
         </div>
-
 
         <div class="metric">
 
@@ -1071,7 +1427,6 @@
 
         </div>
 
-
         <div class="metric">
 
             <span>
@@ -1083,7 +1438,6 @@
             </strong>
 
         </div>
-
 
         <div class="metric">
 
@@ -1097,7 +1451,6 @@
 
         </div>
 
-
         <div class="metric">
 
             <span>
@@ -1109,7 +1462,6 @@
             </strong>
 
         </div>
-
 
         <div class="metric">
 
@@ -1123,14 +1475,9 @@
 
         </div>
 
-
         <div
-            class="
-                metric
-                {% if
-                    pending_restaurant_experience_count
-                    and pending_restaurant_experience_count > 0
-                %}
+            class="metric
+                {% if pending_restaurant_experience_count|default(0) > 0 %}
                     attention
                 {% endif %}
             "
@@ -1146,65 +1493,421 @@
 
         </div>
 
-
     </div>
 
-
     <!-- =====================================================
-     FINANCIAL OPERATIONS — SETTLEMENT RECONCILIATION
-====================================================== -->
+         PARTNERSHIP MANAGEMENT
+    ====================================================== -->
 
-    <section class="section">
+    <section class="section partnership-section">
 
-     <div class="section-head">
-
-        <div class="section-head-copy">
+        <div class="partnership-header">
 
             <p
                 class="eyebrow"
                 style="color:#475569;"
             >
-                FINANCIAL OPERATIONS
+                KALXA COMMUNITY GROWTH
             </p>
 
             <h2>
-                💰 Paystack Settlement Reconciliation
+                🤝 Partnership Management
             </h2>
 
             <p class="section-copy">
-                Review ticket revenue settlements,
-                Paystack processing fees,
-                KALXA commission accounting
-                and unreconciled ticket payments.
-            </p>
 
-            <p class="section-copy">
-                Organiser payouts are managed separately.
-                Reconciliation does not transfer funds.
+                Create complimentary partner accounts
+                for event organizers and local restaurants.
+
+                Help participating businesses establish
+                a digital presence on Kalxa while
+                growing our local business network.
+
             </p>
 
         </div>
 
-        <a
-            href="{{ url_for('superadmin_settlements') }}"
-            class="button"
-        >
-            Open Settlement Centre
-        </a>
+        <div class="partnership-cards">
 
-     </div>
+            <!-- =================================================
+                 EVENT ORGANIZER PARTNERS
+            ================================================== -->
+
+            <article class="partnership-card event">
+
+                <div class="partnership-card-content">
+
+                    <div class="partnership-icon">
+                        🎟️
+                    </div>
+
+                    <span class="partnership-badge event">
+                        30 Days Complimentary
+                    </span>
+
+                    <h3>
+                        Event Organizer Partner
+                    </h3>
+
+                    <p>
+
+                        Invite event organizers to use
+                        Kalxa Ticketing through a
+                        complimentary partner account.
+
+                        Organizers receive access to
+                        the existing event management
+                        platform.
+
+                    </p>
+
+                    <div class="partnership-features">
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Event organizer account
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Organizer dashboard
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            30-day complimentary access
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Existing subscription management
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="partnership-card-footer">
+
+                    <a
+                        href="{{ url_for(
+                            'superadmin_create_partner',
+                            account_type='event'
+                        ) }}"
+                        class="button"
+                    >
+                        + Create Event Partner
+                    </a>
+
+                </div>
+
+            </article>
+
+            <!-- =================================================
+                 RESTAURANT PARTNERS
+            ================================================== -->
+
+            <article class="partnership-card restaurant">
+
+                <div class="partnership-card-content">
+
+                    <div class="partnership-icon">
+                        🍽️
+                    </div>
+
+                    <span class="partnership-badge restaurant">
+                        3 Months Complimentary
+                    </span>
+
+                    <h3>
+                        Restaurant Partner
+                    </h3>
+
+                    <p>
+
+                        Invite local restaurants and
+                        hospitality businesses to
+                        establish their digital presence
+                        on Kalxa Restaurant Profiles.
+
+                        Participating restaurants receive
+                        a three-month complimentary
+                        partner listing during the
+                        community launch initiative.
+
+                    </p>
+
+                    <div class="partnership-features">
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Restaurant business account
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Restaurant management dashboard
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Restaurant business profile
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            90-day complimentary listing
+
+                        </div>
+
+                        <div class="partnership-feature">
+
+                            <span class="partnership-feature-icon">
+                                ✓
+                            </span>
+
+                            Optional voluntary contribution
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="partnership-card-footer">
+
+                    <a
+                        href="{{ url_for(
+                            'superadmin_create_partner',
+                            account_type='restaurant'
+                        ) }}"
+                        class="button button-green"
+                    >
+                        + Create Restaurant Partner
+                    </a>
+
+                </div>
+
+            </article>
+
+        </div>
+
+        <div class="partnership-note">
+
+            <strong>
+                Community Launch Policy
+            </strong>
+
+            <br>
+
+            Restaurant partnership participation
+            is free during the approved three-month
+            promotional period.
+
+            Financial contributions are entirely
+            voluntary and must not affect
+            eligibility for the complimentary listing.
+
+            Paid subscriptions must not begin
+            automatically without the restaurant's
+            agreement.
+
+        </div>
 
     </section>
+
+    <!-- =====================================================
+         PARTNER PROGRAM WORKFLOW
+    ====================================================== -->
+
+    <section class="section partner-section">
+
+        <div class="section-head">
+
+            <div class="section-head-copy">
+
+                <p class="eyebrow">
+                    PARTNER ONBOARDING
+                </p>
+
+                <h2>
+                    Partner Account Workflow
+                </h2>
+
+                <p class="section-copy">
+
+                    Create and manage complimentary
+                    Event and Restaurant accounts using
+                    Kalxa's existing account and
+                    subscription systems.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="partner-grid">
+
+            <div class="partner-step">
+
+                <span class="partner-step-number">
+                    STEP 1
+                </span>
+
+                <strong>
+                    Select Partner Type
+                </strong>
+
+                <p>
+
+                    Choose an Event Organizer
+                    or Restaurant Partner account.
+
+                </p>
+
+            </div>
+
+            <div class="partner-step">
+
+                <span class="partner-step-number">
+                    STEP 2
+                </span>
+
+                <strong>
+                    Create Business Account
+                </strong>
+
+                <p>
+
+                    Capture partner information,
+                    create the correct account type
+                    and assign the complimentary
+                    access period.
+
+                </p>
+
+            </div>
+
+            <div class="partner-step">
+
+                <span class="partner-step-number">
+                    STEP 3
+                </span>
+
+                <strong>
+                    Manage Partnership
+                </strong>
+
+                <p>
+
+                    Monitor subscription status,
+                    expiry dates and account activity
+                    using the existing Super Admin
+                    tools.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- =====================================================
+         FINANCIAL OPERATIONS
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="section-head">
+
+            <div class="section-head-copy">
+
+                <p
+                    class="eyebrow"
+                    style="color:#475569;"
+                >
+                    FINANCIAL OPERATIONS
+                </p>
+
+                <h2>
+                    💰 Paystack Settlement Reconciliation
+                </h2>
+
+                <p class="section-copy">
+
+                    Review ticket revenue settlements,
+                    Paystack processing fees,
+                    KALXA commission accounting
+                    and unreconciled ticket payments.
+
+                </p>
+
+                <p class="section-copy">
+
+                    Organiser payouts are managed separately.
+                    Reconciliation does not transfer funds.
+
+                </p>
+
+            </div>
+
+            <a
+                href="{{ url_for('superadmin_settlements') }}"
+                class="button"
+            >
+                Open Settlement Centre
+            </a>
+
+        </div>
+
+    </section>
+
     <!-- =====================================================
          CUSTOMER EXPERIENCE MODERATION
     ====================================================== -->
 
-    <section
-        class="
-            section
-            experience-section
-        "
-    >
+    <section class="section experience-section">
 
         <div class="section-head">
 
@@ -1217,30 +1920,17 @@
                     COMMUNITY CONTENT
                 </p>
 
-
                 <h2>
                     📸 Restaurant Experiences
                 </h2>
 
-
                 <p class="section-copy">
 
-                    Review customer photos, reels and
-                    testimonials before they appear
-                    publicly on Kalxa.
+                    Review customer photos, reels
+                    and testimonials before they
+                    appear publicly on Kalxa.
 
-                    {% if
-                        pending_restaurant_experience_count
-                        and pending_restaurant_experience_count > 0
-                    %}
-
-                        There
-
-                        {% if pending_restaurant_experience_count == 1 %}
-                            is
-                        {% else %}
-                            are
-                        {% endif %}
+                    {% if pending_restaurant_experience_count|default(0) > 0 %}
 
                         <strong>
                             {{ pending_restaurant_experience_count }}
@@ -1260,7 +1950,6 @@
 
             </div>
 
-
             <a
                 href="{{ url_for(
                     'superadmin_restaurant_experiences'
@@ -1272,19 +1961,15 @@
 
         </div>
 
-
         {% if pending_restaurant_experiences %}
 
             <div class="experience-grid">
-
 
                 {% for post in pending_restaurant_experiences[:6] %}
 
                     <article class="experience-preview">
 
-
                         <div class="experience-media">
-
 
                             {% if post.is_video %}
 
@@ -1292,6 +1977,7 @@
                                     muted
                                     playsinline
                                     preload="metadata"
+
                                     {% if post.thumbnail_url %}
                                         poster="{{ post.thumbnail_url }}"
                                     {% endif %}
@@ -1313,20 +1999,17 @@
 
                             {% endif %}
 
-
                             <span class="experience-pending-badge">
                                 Pending
                             </span>
 
                         </div>
 
-
                         <div class="experience-copy">
 
                             <strong>
                                 {{ post.poster_name }}
                             </strong>
-
 
                             {% if post.restaurant_advert %}
 
@@ -1345,7 +2028,6 @@
 
                             {% endif %}
 
-
                             <p class="experience-text">
                                 “{{ post.experience_text }}”
                             </p>
@@ -1356,150 +2038,26 @@
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
             <p class="empty">
+
                 No customer restaurant experiences
                 are waiting for review.
+
             </p>
 
         {% endif %}
 
     </section>
 
-
-
-    <!-- =====================================================
-         EVENT PARTNER PROGRAM
-    ====================================================== -->
-
-    <section
-        class="
-            section
-            partner-section
-        "
-    >
-
-        <div class="section-head">
-
-            <div class="section-head-copy">
-
-                <p class="eyebrow">
-                    GROWTH PROGRAM
-                </p>
-
-
-                <h2>
-                    🤝 Event Organizer Partners
-                </h2>
-
-
-                <p class="section-copy">
-
-                    Invite selected event organizers
-                    onto Kalxa with 30 days of
-                    complimentary Ticketing access.
-
-                    Their event account receives the
-                    normal organizer dashboard and
-                    automatically expires after the
-                    partner period.
-
-                </p>
-
-            </div>
-
-
-            <a
-                href="{{ url_for(
-                    'superadmin_create_partner'
-                ) }}"
-                class="
-                    button
-                    button-light
-                "
-            >
-                + Create Partner Account
-            </a>
-
-        </div>
-
-
-        <div class="partner-grid">
-
-
-            <div class="partner-step">
-
-                <span class="partner-step-number">
-                    STEP 1
-                </span>
-
-                <strong>
-                    Create Partner
-                </strong>
-
-                <p>
-                    Enter the organizer's details
-                    and Kalxa creates an Event account.
-                </p>
-
-            </div>
-
-
-            <div class="partner-step">
-
-                <span class="partner-step-number">
-                    STEP 2
-                </span>
-
-                <strong>
-                    30 Days Free
-                </strong>
-
-                <p>
-                    Complimentary access is recorded
-                    as a partner grant in the existing
-                    subscription system.
-                </p>
-
-            </div>
-
-
-            <div class="partner-step">
-
-                <span class="partner-step-number">
-                    STEP 3
-                </span>
-
-                <strong>
-                    Convert to Paid
-                </strong>
-
-                <p>
-                    After expiry their data remains,
-                    but paid access is required
-                    to continue.
-                </p>
-
-            </div>
-
-
-        </div>
-
-    </section>
-
-
-
     <!-- =====================================================
          EVENTS READY FOR NOTIFICATION
     ====================================================== -->
 
     <section class="section">
-
 
         <div class="section-head">
 
@@ -1509,11 +2067,10 @@
                     🔔 New Events Ready to Promote
                 </h2>
 
-
                 <p class="section-copy">
 
-                    Published events that have not
-                    yet had a successful push campaign.
+                    Published events that have not yet
+                    had a successful push campaign.
 
                     Active audience:
                     {{ active_push_audience_count }}
@@ -1524,11 +2081,8 @@
 
             </div>
 
-
             <a
-                href="{{ url_for(
-                    'superadmin_notifications'
-                ) }}"
+                href="{{ url_for('superadmin_notifications') }}"
                 class="button"
             >
                 Open Notification Centre
@@ -1536,23 +2090,19 @@
 
         </div>
 
-
         {% if notification_ready_events %}
 
             <div class="list">
 
-
                 {% for event in notification_ready_events %}
 
                     <div class="row">
-
 
                         <div class="row-main">
 
                             <strong>
                                 {{ event.title }}
                             </strong>
-
 
                             <small>
 
@@ -1566,16 +2116,13 @@
 
                                 {% endif %}
 
-
                                 {% if event.organizer %}
 
-                                    ·
-                                    {{ event.organizer.display_name }}
+                                    · {{ event.organizer.display_name }}
 
                                 {% elif event.organizer_name %}
 
-                                    ·
-                                    {{ event.organizer_name }}
+                                    · {{ event.organizer_name }}
 
                                 {% endif %}
 
@@ -1583,18 +2130,11 @@
 
                         </div>
 
-
                         <div class="row-actions">
 
-                            <span
-                                class="
-                                    status
-                                    active
-                                "
-                            >
+                            <span class="status active">
                                 READY TO NOTIFY
                             </span>
-
 
                             <a
                                 href="{{ url_for(
@@ -1608,35 +2148,30 @@
 
                         </div>
 
-
                     </div>
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
             <p class="empty">
+
                 No newly published events
                 are waiting for promotion.
+
             </p>
 
         {% endif %}
 
-
     </section>
-
-
 
     <!-- =====================================================
          RESTAURANTS READY FOR NOTIFICATION
     ====================================================== -->
 
     <section class="section">
-
 
         <div class="section-head">
 
@@ -1646,22 +2181,18 @@
                     🍔 New Restaurants Ready to Promote
                 </h2>
 
-
                 <p class="section-copy">
 
-                    Active subscribed restaurant campaigns
-                    that have not yet had a successful
-                    restaurant push campaign.
+                    Active subscribed restaurant
+                    campaigns that have not yet had
+                    a successful restaurant push campaign.
 
                 </p>
 
             </div>
 
-
             <a
-                href="{{ url_for(
-                    'superadmin_notifications'
-                ) }}"
+                href="{{ url_for('superadmin_notifications') }}"
                 class="button"
             >
                 Open Notification Centre
@@ -1669,23 +2200,19 @@
 
         </div>
 
-
         {% if notification_ready_restaurants %}
 
             <div class="list">
 
-
                 {% for advert in notification_ready_restaurants %}
 
                     <div class="row">
-
 
                         <div class="row-main">
 
                             <strong>
                                 {{ advert.business_name }}
                             </strong>
-
 
                             <small>
 
@@ -1699,11 +2226,9 @@
 
                                 {% endif %}
 
-
                                 {% if advert.organizer %}
 
-                                    ·
-                                    {{ advert.organizer.display_name }}
+                                    · {{ advert.organizer.display_name }}
 
                                 {% endif %}
 
@@ -1711,18 +2236,11 @@
 
                         </div>
 
-
                         <div class="row-actions">
 
-                            <span
-                                class="
-                                    status
-                                    active
-                                "
-                            >
+                            <span class="status active">
                                 READY TO NOTIFY
                             </span>
-
 
                             <a
                                 href="{{ url_for(
@@ -1736,35 +2254,30 @@
 
                         </div>
 
-
                     </div>
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
             <p class="empty">
-                No restaurant campaigns are waiting
-                for promotion.
+
+                No restaurant campaigns
+                are waiting for promotion.
+
             </p>
 
         {% endif %}
 
-
     </section>
-
-
 
     <!-- =====================================================
          PENDING SUBSCRIPTIONS
     ====================================================== -->
 
     <section class="section">
-
 
         <div class="section-head">
 
@@ -1774,33 +2287,32 @@
                     Pending Subscription Payments
                 </h2>
 
-
                 <p class="section-copy">
+
                     Subscription requests that still
                     require confirmation or processing.
+
                 </p>
 
             </div>
 
         </div>
 
-
         {% if pending_subscription_payments %}
 
             <div class="list">
-
 
                 {% for payment in pending_subscription_payments %}
 
                     <div class="row">
 
-
                         <div class="row-main">
 
                             <strong>
-                                {{ payment.organizer.display_name }}
-                            </strong>
 
+                                {{ payment.organizer.display_name }}
+
+                            </strong>
 
                             <small>
 
@@ -1813,7 +2325,9 @@
                                 {% if payment.payment_method %}
 
                                     ·
-                                    {{ payment.payment_method
+
+                                    {{
+                                        payment.payment_method
                                         |replace('_', ' ')
                                         |title
                                     }}
@@ -1824,18 +2338,11 @@
 
                         </div>
 
-
                         <div class="row-actions">
 
-                            <span
-                                class="
-                                    status
-                                    inactive
-                                "
-                            >
+                            <span class="status inactive">
                                 PENDING
                             </span>
-
 
                             <a
                                 href="{{ url_for(
@@ -1849,74 +2356,64 @@
 
                         </div>
 
-
                     </div>
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
             <p class="empty">
+
                 No subscription payments are
                 waiting for confirmation.
+
             </p>
 
         {% endif %}
 
-
     </section>
 
-
-
     <!-- =====================================================
-         RECENT ORGANIZERS
+         RECENT ORGANIZERS AND BUSINESS ACCOUNTS
     ====================================================== -->
 
     <section class="section">
-
 
         <div class="section-head">
 
             <div class="section-head-copy">
 
                 <h2>
-                    Recent Organizers
+                    Recent Business Accounts
                 </h2>
 
-
                 <p class="section-copy">
-                    Recently created Event and
-                    Restaurant business accounts.
+
+                    Recently created Event Organizer
+                    and Restaurant business accounts.
+
                 </p>
 
             </div>
 
-
             <a
-                href="{{ url_for(
-                    'superadmin_organizers'
-                ) }}"
+                href="{{ url_for('superadmin_organizers') }}"
                 class="button"
             >
-                View All Organizers
+                View All Accounts
             </a>
 
         </div>
-
 
         {% if recent_organizers %}
 
             <div class="list">
 
-
                 {% for organizer in recent_organizers %}
 
                     <div class="row">
-
 
                         <div class="row-main">
 
@@ -1924,30 +2421,27 @@
                                 {{ organizer.display_name }}
                             </strong>
 
-
                             <small>
 
                                 {{ organizer.email }}
 
-
                                 {% if organizer.account_type %}
 
                                     ·
+
                                     {{ organizer.account_type|title }}
                                     Account
 
                                 {% endif %}
 
-
                                 {% if organizer.subscription_expires_at %}
 
                                     · Expires
+
                                     {{
                                         organizer
                                         .subscription_expires_at
-                                        .strftime(
-                                            '%d %b %Y'
-                                        )
+                                        .strftime('%d %b %Y')
                                     }}
 
                                 {% endif %}
@@ -1956,44 +2450,30 @@
 
                         </div>
 
-
                         <div class="row-actions">
-
 
                             {% if organizer.account_type == "restaurant" %}
 
-                                <span
-                                    class="
-                                        status
-                                        restaurant-account
-                                    "
-                                >
+                                <span class="status restaurant-account">
                                     🍔 Restaurant
                                 </span>
 
                             {% else %}
 
-                                <span
-                                    class="
-                                        status
-                                        event-account
-                                    "
-                                >
+                                <span class="status event-account">
                                     🎟 Event
                                 </span>
 
                             {% endif %}
 
-
                             <span
-                                class="
-                                    status
-                                    {{ organizer.effective_subscription_status }}
-                                "
+                                class="status
+                                {{ organizer.effective_subscription_status }}"
                             >
-                                {{ organizer.effective_subscription_status }}
-                            </span>
 
+                                {{ organizer.effective_subscription_status }}
+
+                            </span>
 
                             <a
                                 href="{{ url_for(
@@ -2007,29 +2487,26 @@
 
                         </div>
 
-
                     </div>
 
                 {% endfor %}
 
-
             </div>
-
 
         {% else %}
 
             <p class="empty">
-                No organizers have registered yet.
+
+                No organizer or restaurant
+                accounts have registered yet.
+
             </p>
 
         {% endif %}
 
-
     </section>
 
-
 </div>
-
 
 </body>
 
