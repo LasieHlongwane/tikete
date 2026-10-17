@@ -52,6 +52,16 @@ from kalxa_ticket_inventory import (
     InventoryConfigurationError,
 )
 
+
+
+from sqlalchemy import (
+    inspect as sqlalchemy_inspect,
+    select,
+    func,
+)
+
+from sqlalchemy.exc import SQLAlchemyError
+
 from services.paystack_settlement_reconciliation import (
     reconcile_paystack_settlements,
 )
@@ -21802,6 +21812,505 @@ def admin_edit_restaurant(
     )
 
 
+
+# ============================================================
+# SUPER ADMIN - DELETE ORGANIZER / RESTAURANT ACCOUNT
+# ============================================================
+#
+# PURPOSE:
+#
+# Permanently delete unused KALXA business accounts.
+#
+# SUPPORTED:
+#
+# - Event Organizer accounts
+# - Restaurant accounts
+#
+# SAFETY:
+#
+# - Super Admin only
+# - POST only
+# - Requires DELETE confirmation
+# - Requires CSRF validation
+# - Blocks accounts with business/financial dependencies
+# - Deletes only safe complimentary grants
+# - Deletes unused staff accounts where safe
+# - Does not delete events, restaurants or customer records
+#
+# IMPORTANT:
+#
+# This is intentionally conservative.
+#
+# Financially active accounts should be suspended,
+# not permanently deleted.
+# ============================================================
+
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/delete",
+    methods=["POST"],
+)
+def superadmin_delete_organizer(
+    organizer_id,
+):
+
+    # ========================================================
+    # SUPER ADMIN AUTHENTICATION
+    # ========================================================
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    # ========================================================
+    # CSRF
+    # ========================================================
+    #
+    # This route requires application-level CSRF protection.
+    #
+    # Flask-WTF's CSRFProtect can validate the submitted
+    # csrf_token before this function runs.
+    #
+    # Ensure CSRFProtect is enabled for this endpoint.
+    # ========================================================
+
+    # ========================================================
+    # CONFIRMATION
+    # ========================================================
+
+    confirmation = (
+        request.form.get(
+            "confirmation",
+            "",
+        )
+        .strip()
+    )
+
+    if confirmation != "DELETE":
+
+        flash(
+            "Deletion cancelled. Type DELETE exactly to confirm.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizers",
+            )
+        )
+
+    # ========================================================
+    # FIND ACCOUNT
+    # ========================================================
+
+    organizer = (
+        db.session.get(
+            Organizer,
+            organizer_id,
+        )
+    )
+
+    if organizer is None:
+
+        flash(
+            "Business account was not found.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizers",
+            )
+        )
+
+    account_name = organizer.display_name
+
+    # ========================================================
+    # CHECK DIRECT BUSINESS DEPENDENCIES
+    # ========================================================
+
+    event_count = (
+        db.session.query(
+            func.count(TicketEvent.id)
+        )
+        .filter(
+            TicketEvent.organizer_id == organizer.id
+        )
+        .scalar()
+        or 0
+    )
+
+    restaurant_count = (
+        db.session.query(
+            func.count(RestaurantAdvert.id)
+        )
+        .filter(
+            RestaurantAdvert.organizer_id == organizer.id
+        )
+        .scalar()
+        or 0
+    )
+
+    restaurant_payment_count = (
+        db.session.query(
+            func.count(
+                RestaurantSubscriptionPayment.id
+            )
+        )
+        .filter(
+            RestaurantSubscriptionPayment.organizer_id
+            == organizer.id
+        )
+        .scalar()
+        or 0
+    )
+
+    # ========================================================
+    # CHECK PAID OR NON-GRANT SUBSCRIPTIONS
+    # ========================================================
+
+    protected_subscription_count = (
+        db.session.query(
+            func.count(SubscriptionPayment.id)
+        )
+        .filter(
+            SubscriptionPayment.organizer_id
+            == organizer.id,
+            ~(
+                (SubscriptionPayment.payment_method == "partner_grant")
+                & (SubscriptionPayment.amount == 0)
+            ),
+        )
+        .scalar()
+        or 0
+    )
+
+    # ========================================================
+    # BLOCK ACCOUNTS WITH PROTECTED ACTIVITY
+    # ========================================================
+
+    reasons = []
+
+    if event_count:
+
+        reasons.append(
+            f"{event_count} associated event(s)"
+        )
+
+    if restaurant_count:
+
+        reasons.append(
+            f"{restaurant_count} restaurant profile(s)"
+        )
+
+    if restaurant_payment_count:
+
+        reasons.append(
+            (
+                f"{restaurant_payment_count} "
+                "restaurant subscription payment record(s)"
+            )
+        )
+
+    if protected_subscription_count:
+
+        reasons.append(
+            (
+                f"{protected_subscription_count} "
+                "non-grant subscription record(s)"
+            )
+        )
+
+    # ========================================================
+    # CHECK OTHER DATABASE REFERENCES
+    # ========================================================
+    #
+    # Do not assume Organizer has only the relationships
+    # explicitly declared on the Organizer class.
+    #
+    # Other models, such as EventReel or FeaturedListing,
+    # may also reference organizers.id.
+    #
+    # We must inspect all mapped table foreign keys.
+    # ========================================================
+
+    try:
+
+        organizer_table = Organizer.__table__
+
+        for table in db.metadata.tables.values():
+
+            if table is organizer_table:
+                continue
+
+            referencing_columns = []
+
+            for foreign_key in table.foreign_keys:
+
+                if foreign_key.column.table is organizer_table:
+
+                    referencing_columns.append(
+                        foreign_key.parent
+                    )
+
+            # Models already checked above are excluded.
+            # Staff accounts and zero-value partner grants
+            # are handled explicitly below.
+
+            if table.name in {
+                "ticket_events",
+                "restaurant_adverts",
+                "restaurant_subscription_payments",
+                "subscription_payments",
+                "staff_accounts",
+            }:
+                continue
+
+            for column in referencing_columns:
+
+                stmt = (
+                    select(
+                        func.count()
+                    )
+                    .select_from(table)
+                    .where(
+                        column == organizer.id
+                    )
+                )
+
+                count = (
+                    db.session.execute(
+                        stmt
+                    )
+                    .scalar()
+                    or 0
+                )
+
+                if count:
+
+                    reasons.append(
+                        (
+                            f"{count} dependent record(s) "
+                            f"in {table.name}"
+                        )
+                    )
+
+    except SQLAlchemyError:
+
+        current_app.logger.exception(
+            (
+                "[Super Admin Delete] "
+                "Unable to inspect dependencies "
+                "organizer_id=%s"
+            ),
+            organizer.id,
+        )
+
+        flash(
+            (
+                "Unable to verify account dependencies. "
+                "No account was deleted."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizers",
+            )
+        )
+
+    # ========================================================
+    # BLOCK UNSAFE DELETION
+    # ========================================================
+
+    if reasons:
+
+        current_app.logger.warning(
+            (
+                "[Super Admin Delete] "
+                "Deletion blocked organizer_id=%s "
+                "reasons=%s"
+            ),
+            organizer.id,
+            reasons,
+        )
+
+        flash(
+            (
+                f"Cannot permanently delete '{account_name}'. "
+                "The account still has: "
+                + "; ".join(reasons)
+                + ". Suspend the account instead."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizers",
+            )
+        )
+
+    # ========================================================
+    # STAFF CHECK
+    # ========================================================
+    #
+    # Staff accounts can have check-in activity.
+    #
+    # Only unused staff accounts may be removed with
+    # the organizer.
+    # ========================================================
+
+    staff_accounts = (
+        StaffAccount.query
+        .filter_by(
+            organizer_id=organizer.id
+        )
+        .all()
+    )
+
+    for staff in staff_accounts:
+
+        if staff.checkins:
+
+            flash(
+                (
+                    "Deletion blocked. "
+                    "An associated staff account "
+                    "has historical check-in records."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "superadmin_organizers",
+                )
+            )
+
+    # ========================================================
+    # VERIFY PARTNER GRANTS
+    # ========================================================
+    #
+    # Only zero-value complimentary partner grants
+    # may be deleted with the account.
+    #
+    # Real financial records must never be removed here.
+    # ========================================================
+
+    payments = (
+        SubscriptionPayment.query
+        .filter_by(
+            organizer_id=organizer.id
+        )
+        .all()
+    )
+
+    for payment in payments:
+
+        if (
+            payment.payment_method != "partner_grant"
+            or Decimal(str(payment.amount))
+            != Decimal("0.00")
+        ):
+
+            flash(
+                (
+                    "Deletion blocked. "
+                    "The account has subscription "
+                    "payment records that must be retained."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "superadmin_organizers",
+                )
+            )
+
+    # ========================================================
+    # PERMANENT DELETION
+    # ========================================================
+    #
+    # Organizer relationships currently include:
+    #
+    # subscription_payments:
+    #     cascade="all, delete-orphan"
+    #
+    # staff_accounts:
+    #     cascade="all, delete-orphan"
+    #
+    # Deletion is permitted only after the dependency
+    # checks above.
+    #
+    # ORM cascades are used only for known safe records.
+    # ========================================================
+
+    try:
+
+        db.session.delete(
+            organizer
+        )
+
+        db.session.commit()
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "[Super Admin Delete] "
+                "Database deletion failed "
+                "organizer_id=%s"
+            ),
+            organizer_id,
+        )
+
+        flash(
+            (
+                "Account deletion failed. "
+                "No changes were saved."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizers",
+            )
+        )
+
+    # ========================================================
+    # SUCCESS AUDIT LOG
+    # ========================================================
+
+    current_app.logger.warning(
+        (
+            "[Super Admin Delete] "
+            "Business account permanently deleted "
+            "organizer_id=%s "
+            "account_name=%s"
+        ),
+        organizer_id,
+        account_name,
+    )
+
+    flash(
+        (
+            f"'{account_name}' was permanently deleted."
+        ),
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "superadmin_organizers",
+        )
+    )
 # ============================================================
 # DELETE CLOUDINARY REEL
 # ============================================================
