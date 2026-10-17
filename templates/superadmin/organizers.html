@@ -1,105 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Organizers | Kalxa Super Admin</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
+    <meta
+        name="robots"
+        content="noindex, nofollow"
+    >
+
+    <title>
+        Business Accounts | Kalxa Super Admin
+    </title>
+
     <style>
-        * { box-sizing: border-box; }
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: #f6f7f9;
+            --surface: #ffffff;
+            --text: #111827;
+            --muted: #64748b;
+            --border: #e5e7eb;
+            --danger: #dc2626;
+            --danger-dark: #991b1b;
+        }
+
         body {
             margin: 0;
-            background: #f6f7f9;
-            color: #111827;
-            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+            background: var(--background);
+            color: var(--text);
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            -webkit-font-smoothing: antialiased;
         }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
         .shell {
-            width: min(1100px, calc(100% - 28px));
+            width: min(
+                1100px,
+                calc(100% - 28px)
+            );
+
             margin: 0 auto;
+
             padding: 22px 0 60px;
         }
-        .nav, .section {
+
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
+
+        .nav,
+        .section {
             background: #ffffff;
+
             border: 1px solid #e5e7eb;
+
             border-radius: 16px;
         }
+
         .nav {
             display: flex;
+
             justify-content: space-between;
-            gap: 14px;
             align-items: center;
+
+            gap: 14px;
+
             padding: 14px 16px;
+
             margin-bottom: 20px;
         }
-        .brand { font-size: 14px; font-weight: 900; }
-        .nav a {
-            margin-left: 10px;
+
+        .brand {
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+
+            gap: 12px;
+        }
+
+        .nav-links a {
             color: #334155;
+
             text-decoration: none;
+
             font-size: 12px;
             font-weight: 750;
         }
-        .section { padding: 22px; }
-        h1 { margin: 0 0 6px; font-size: 30px; letter-spacing: -0.04em; }
-        .intro { margin: 0 0 20px; color: #64748b; font-size: 13px; }
-        .list { display: grid; gap: 10px; }
-        .row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 16px;
-            align-items: center;
-            padding: 14px;
-            background: #fafafa;
-            border: 1px solid #e8edf2;
-            border-radius: 12px;
+
+        .nav-links a:hover {
+            color: #111827;
         }
-        .name { font-size: 15px; font-weight: 900; }
-        .meta { margin-top: 4px; color: #64748b; font-size: 12px; }
-        .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .status {
-            padding: 5px 8px;
-            border-radius: 999px;
+
+        /* =====================================================
+           PAGE HEADER
+        ===================================================== */
+
+        .section {
+            padding: 22px;
+        }
+
+        .section-head {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: flex-start;
+
+            gap: 16px;
+
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+
+            color: #64748b;
+
             font-size: 10px;
             font-weight: 900;
+
+            letter-spacing: .1em;
+
             text-transform: uppercase;
         }
-        .status.active { background: #dcfce7; color: #166534; }
-        .status.inactive, .status.expired { background: #fff7ed; color: #9a3412; }
-        .status.suspended { background: #fef2f2; color: #991b1b; }
+
+        h1 {
+            margin: 0 0 6px;
+
+            font-size: clamp(
+                26px,
+                5vw,
+                34px
+            );
+
+            letter-spacing: -.04em;
+        }
+
+        .intro {
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
+
         .button {
-            padding: 8px 11px;
+            display: inline-flex;
+
+            justify-content: center;
+            align-items: center;
+
+            gap: 6px;
+
+            min-height: 38px;
+
+            padding: 9px 12px;
+
             background: #111111;
             color: #ffffff;
+
+            border: 1px solid #111111;
+
             border-radius: 9px;
+
             text-decoration: none;
+
+            font: inherit;
+            font-size: 11px;
+            font-weight: 850;
+
+            cursor: pointer;
+
+            transition:
+                background .2s,
+                opacity .2s;
+        }
+
+        .button:hover {
+            opacity: .88;
+        }
+
+        .button-secondary {
+            background: #ffffff;
+            color: #111827;
+
+            border-color: #cbd5e1;
+        }
+
+        .button-danger {
+            background: #dc2626;
+            color: #ffffff;
+
+            border-color: #dc2626;
+        }
+
+        .button-danger:hover {
+            background: #b91c1c;
+        }
+
+        .button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        /* =====================================================
+           SUMMARY
+        ===================================================== */
+
+        .summary {
+            display: flex;
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            margin-bottom: 18px;
+        }
+
+        .summary-item {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            padding: 9px 12px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 10px;
+
+            color: #475569;
+
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .summary-item strong {
+            color: #111827;
+
+            font-size: 13px;
+        }
+
+        /* =====================================================
+           ORGANIZER LIST
+        ===================================================== */
+
+        .list {
+            display: grid;
+
+            gap: 10px;
+        }
+
+        .row {
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1fr) auto;
+
+            gap: 16px;
+
+            align-items: center;
+
+            padding: 14px;
+
+            background: #fafafa;
+
+            border: 1px solid #e8edf2;
+
+            border-radius: 12px;
+        }
+
+        .row-main {
+            min-width: 0;
+        }
+
+        .name {
+            font-size: 15px;
+            font-weight: 900;
+
+            overflow-wrap: anywhere;
+        }
+
+        .meta {
+            margin-top: 5px;
+
+            color: #64748b;
+
+            font-size: 12px;
+
+            line-height: 1.6;
+
+            overflow-wrap: anywhere;
+        }
+
+        .actions {
+            display: flex;
+
+            align-items: center;
+            justify-content: flex-end;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+        }
+
+        /* =====================================================
+           BADGES
+        ===================================================== */
+
+        .status,
+        .account-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            padding: 6px 9px;
+
+            border-radius: 999px;
+
+            font-size: 10px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+        }
+
+        .status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.inactive,
+        .status.expired {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .status.suspended {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .account-badge.event {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .account-badge.restaurant {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
+
+        .flash-wrapper {
+            display: grid;
+
+            gap: 9px;
+
+            margin-bottom: 18px;
+        }
+
+        .alert {
+            padding: 13px 15px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 11px;
+
+            color: #334155;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            line-height: 1.6;
+        }
+
+        .alert[data-category="success"] {
+            background: #f0fdf4;
+            color: #166534;
+
+            border-color: #bbf7d0;
+        }
+
+        .alert[data-category="error"] {
+            background: #fef2f2;
+            color: #991b1b;
+
+            border-color: #fecaca;
+        }
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty {
+            padding: 22px;
+
+            background: #f8fafc;
+
+            border: 1px dashed #cbd5e1;
+
+            border-radius: 12px;
+
+            color: #64748b;
+
+            font-size: 12px;
+
+            line-height: 1.6;
+        }
+
+        /* =====================================================
+           DELETE CONFIRMATION MODAL
+        ===================================================== */
+
+        .modal-backdrop {
+            position: fixed;
+
+            inset: 0;
+
+            display: none;
+
+            justify-content: center;
+            align-items: center;
+
+            padding: 16px;
+
+            background: rgba(
+                15,
+                23,
+                42,
+                .72
+            );
+
+            z-index: 9999;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal {
+            width: min(100%, 520px);
+
+            max-height: calc(100vh - 32px);
+
+            overflow-y: auto;
+
+            padding: 24px;
+
+            background: #ffffff;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 24px 70px rgba(
+                    0,
+                    0,
+                    0,
+                    .2
+                );
+        }
+
+        .modal-icon {
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            width: 48px;
+            height: 48px;
+
+            margin-bottom: 14px;
+
+            background: #fef2f2;
+            color: #dc2626;
+
+            border-radius: 13px;
+
+            font-size: 24px;
+        }
+
+        .modal h2 {
+            margin: 0 0 8px;
+
+            font-size: 23px;
+
+            letter-spacing: -.03em;
+        }
+
+        .modal-description {
+            margin: 0 0 17px;
+
+            color: #64748b;
+
+            font-size: 12px;
+
+            line-height: 1.7;
+        }
+
+        .delete-account-details {
+            display: grid;
+
+            gap: 8px;
+
+            margin-bottom: 16px;
+
+            padding: 14px;
+
+            background: #f8fafc;
+
+            border: 1px solid #e2e8f0;
+
+            border-radius: 11px;
+        }
+
+        .delete-account-details span {
+            color: #475569;
+
+            font-size: 11px;
+
+            line-height: 1.5;
+
+            overflow-wrap: anywhere;
+        }
+
+        .delete-account-details strong {
+            color: #111827;
+        }
+
+        .danger-notice {
+            margin-bottom: 17px;
+
+            padding: 13px;
+
+            background: #fff7ed;
+
+            border: 1px solid #fed7aa;
+
+            border-radius: 10px;
+
+            color: #9a3412;
+
+            font-size: 11px;
+
+            line-height: 1.65;
+        }
+
+        .confirmation-label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #334155;
+
             font-size: 11px;
             font-weight: 850;
         }
-        @media(max-width: 620px) {
-            .nav { align-items: flex-start; flex-direction: column; }
-            .row { grid-template-columns: 1fr; }
+
+        .confirmation-input {
+            width: 100%;
+
+            min-height: 44px;
+
+            padding: 10px 12px;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 10px;
+
+            font: inherit;
+
+            font-size: 13px;
+
+            background: #ffffff;
         }
+
+        .confirmation-input:focus {
+            outline: 2px solid #fecaca;
+            border-color: #dc2626;
+        }
+
+        .modal-actions {
+            display: flex;
+
+            justify-content: flex-end;
+
+            gap: 9px;
+
+            margin-top: 20px;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 700px) {
+
+            .section-head {
+                flex-direction: column;
+            }
+
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                justify-content: flex-start;
+            }
+
+        }
+
+        @media (max-width: 620px) {
+
+            .nav {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .section {
+                padding: 17px;
+            }
+
+            .modal {
+                padding: 19px;
+            }
+
+            .modal-actions {
+                flex-direction: column-reverse;
+            }
+
+            .modal-actions .button {
+                width: 100%;
+            }
+
+        }
+
     </style>
+
 </head>
+
 <body>
+
 <div class="shell">
 
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
+
     <nav class="nav">
+
         <div class="brand">
             KALXA TICKETING · SUPER ADMIN
         </div>
-        <div>
-            <a href="{{ url_for('superadmin_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('superadmin_logout') }}">Logout</a>
+
+        <div class="nav-links">
+
+            <a
+                href="{{ url_for('superadmin_dashboard') }}"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('superadmin_organizers') }}"
+            >
+                Organizers
+            </a>
+
+            <a
+                href="{{ url_for('superadmin_logout') }}"
+            >
+                Logout
+            </a>
+
         </div>
+
     </nav>
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="flash-wrapper">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert"
+                        data-category="{{ category }}"
+                        role="alert"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+    <!-- =====================================================
+         ORGANIZERS
+    ====================================================== -->
 
     <section class="section">
 
-        <h1>Organizers</h1>
+        <div class="section-head">
 
-        <p class="intro">
-            View organizer accounts and manage their Kalxa subscription access.
-        </p>
+            <div>
+
+                <p class="eyebrow">
+                    ACCOUNT MANAGEMENT
+                </p>
+
+                <h1>
+                    Business Accounts
+                </h1>
+
+                <p class="intro">
+
+                    View and manage Event Organizer
+                    and Restaurant accounts, their
+                    subscription access and account status.
+
+                </p>
+
+            </div>
+
+            <a
+                href="{{ url_for(
+                    'superadmin_create_partner'
+                ) }}"
+                class="button"
+            >
+                + Create Partner
+            </a>
+
+        </div>
+
+        <!-- =================================================
+             SUMMARY
+        ================================================== -->
+
+        <div class="summary">
+
+            <div class="summary-item">
+
+                Total Accounts
+
+                <strong>
+                    {{ organizers|length }}
+                </strong>
+
+            </div>
+
+            <div class="summary-item">
+
+                🎟 Event
+
+                <strong>
+                    {{
+                        organizers
+                        |selectattr('account_type', 'equalto', 'event')
+                        |list
+                        |length
+                    }}
+                </strong>
+
+            </div>
+
+            <div class="summary-item">
+
+                🍽 Restaurant
+
+                <strong>
+                    {{
+                        organizers
+                        |selectattr('account_type', 'equalto', 'restaurant')
+                        |list
+                        |length
+                    }}
+                </strong>
+
+            </div>
+
+        </div>
+
+        <!-- =================================================
+             ACCOUNTS LIST
+        ================================================== -->
 
         {% if organizers %}
 
@@ -109,31 +858,64 @@
 
                     <div class="row">
 
-                        <div>
+                        <div class="row-main">
+
                             <div class="name">
                                 {{ organizer.display_name }}
                             </div>
 
                             <div class="meta">
+
                                 {{ organizer.email }}
-                                · Organizer #{{ organizer.id }}
+
+                                · Account #{{ organizer.id }}
+
                             </div>
 
                             {% if organizer.subscription_expires_at %}
+
                                 <div class="meta">
+
                                     Expires:
-                                    {{ organizer.subscription_expires_at.strftime('%d %B %Y') }}
+
+                                    {{
+                                        organizer.subscription_expires_at
+                                        .strftime('%d %B %Y')
+                                    }}
+
                                 </div>
+
                             {% endif %}
+
                         </div>
 
                         <div class="actions">
+
+                            <!-- ACCOUNT TYPE -->
+
+                            {% if organizer.account_type == "restaurant" %}
+
+                                <span class="account-badge restaurant">
+                                    🍽 Restaurant
+                                </span>
+
+                            {% else %}
+
+                                <span class="account-badge event">
+                                    🎟 Event
+                                </span>
+
+                            {% endif %}
+
+                            <!-- SUBSCRIPTION STATUS -->
 
                             <span
                                 class="status {{ organizer.effective_subscription_status }}"
                             >
                                 {{ organizer.effective_subscription_status }}
                             </span>
+
+                            <!-- MANAGE -->
 
                             <a
                                 href="{{ url_for(
@@ -145,6 +927,25 @@
                                 Manage
                             </a>
 
+                            <!-- DELETE -->
+
+                            <button
+                                type="button"
+                                class="button button-danger delete-trigger"
+
+                                data-organizer-id="{{ organizer.id }}"
+                                data-organizer-name="{{ organizer.display_name }}"
+                                data-organizer-email="{{ organizer.email }}"
+                                data-organizer-type="{{ organizer.account_type }}"
+
+                                data-delete-url="{{ url_for(
+                                    'superadmin_delete_organizer',
+                                    organizer_id=organizer.id
+                                ) }}"
+                            >
+                                🗑 Delete
+                            </button>
+
                         </div>
 
                     </div>
@@ -155,8 +956,403 @@
 
         {% else %}
 
-            <p>No organizer accounts found.</p>
+            <div class="empty">
+                No Event Organizer or Restaurant accounts found.
+            </div>
 
         {% endif %}
 
     </section>
+
+</div>
+
+<!-- =========================================================
+     DELETE CONFIRMATION MODAL
+========================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="delete-modal"
+    aria-hidden="true"
+>
+
+    <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-modal-title"
+        aria-describedby="delete-modal-description"
+    >
+
+        <div class="modal-icon">
+            ⚠️
+        </div>
+
+        <h2 id="delete-modal-title">
+            Delete Business Account?
+        </h2>
+
+        <p
+            class="modal-description"
+            id="delete-modal-description"
+        >
+
+            You are requesting permanent deletion
+            of the selected Kalxa business account.
+
+            Accounts with financial transactions,
+            active bookings, settlements or
+            protected dependent records may not
+            be eligible for permanent deletion.
+
+        </p>
+
+        <!-- =================================================
+             ACCOUNT DETAILS
+        ================================================== -->
+
+        <div class="delete-account-details">
+
+            <span>
+                <strong>Business:</strong>
+                <span id="delete-business-name"></span>
+            </span>
+
+            <span>
+                <strong>Email:</strong>
+                <span id="delete-business-email"></span>
+            </span>
+
+            <span>
+                <strong>Account Type:</strong>
+                <span id="delete-business-type"></span>
+            </span>
+
+        </div>
+
+        <!-- =================================================
+             WARNING
+        ================================================== -->
+
+        <div class="danger-notice">
+
+            <strong>
+                Important:
+            </strong>
+
+            Permanent deletion cannot be undone.
+
+            Only unused accounts without protected
+            financial or business records should
+            be permanently removed.
+
+            For active businesses, suspension
+            is generally the safer option.
+
+        </div>
+
+        <!-- =================================================
+             DELETE FORM
+        ================================================== -->
+
+        <form
+            method="POST"
+            id="delete-account-form"
+        >
+
+            <!-- CSRF -->
+
+            {% if csrf_token is defined %}
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
+
+            {% endif %}
+
+            <!-- ACCOUNT CONFIRMATION -->
+
+            <label
+                for="delete-confirmation"
+                class="confirmation-label"
+            >
+                Type <strong>DELETE</strong> to confirm.
+            </label>
+
+            <input
+                id="delete-confirmation"
+                class="confirmation-input"
+                name="confirmation"
+                type="text"
+                placeholder="Type DELETE"
+                autocomplete="off"
+                spellcheck="false"
+                required
+            >
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    id="cancel-delete"
+                    class="button button-secondary"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    id="confirm-delete"
+                    class="button button-danger"
+                    disabled
+                >
+                    Permanently Delete Account
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
+<script>
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            "use strict";
+
+            // =================================================
+            // ELEMENTS
+            // =================================================
+
+            const modal =
+                document.getElementById("delete-modal");
+
+            const deleteForm =
+                document.getElementById(
+                    "delete-account-form"
+                );
+
+            const confirmationInput =
+                document.getElementById(
+                    "delete-confirmation"
+                );
+
+            const confirmButton =
+                document.getElementById(
+                    "confirm-delete"
+                );
+
+            const cancelButton =
+                document.getElementById(
+                    "cancel-delete"
+                );
+
+            const businessName =
+                document.getElementById(
+                    "delete-business-name"
+                );
+
+            const businessEmail =
+                document.getElementById(
+                    "delete-business-email"
+                );
+
+            const businessType =
+                document.getElementById(
+                    "delete-business-type"
+                );
+
+            const deleteButtons =
+                document.querySelectorAll(
+                    ".delete-trigger"
+                );
+
+            let previousFocus = null;
+
+            // =================================================
+            // OPEN MODAL
+            // =================================================
+
+            function openDeleteModal(button) {
+
+                previousFocus = document.activeElement;
+
+                businessName.textContent =
+                    button.dataset.organizerName || "";
+
+                businessEmail.textContent =
+                    button.dataset.organizerEmail || "";
+
+                businessType.textContent =
+                    button.dataset.organizerType === "restaurant"
+                        ? "Restaurant"
+                        : "Event Organizer";
+
+                deleteForm.action =
+                    button.dataset.deleteUrl;
+
+                confirmationInput.value = "";
+
+                confirmButton.disabled = true;
+
+                modal.classList.add("open");
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+                document.body.classList.add(
+                    "modal-open"
+                );
+
+                confirmationInput.focus();
+
+            }
+
+            // =================================================
+            // CLOSE MODAL
+            // =================================================
+
+            function closeDeleteModal() {
+
+                modal.classList.remove("open");
+
+                modal.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+                document.body.classList.remove(
+                    "modal-open"
+                );
+
+                confirmationInput.value = "";
+
+                confirmButton.disabled = true;
+
+                if (previousFocus) {
+                    previousFocus.focus();
+                }
+
+            }
+
+            // =================================================
+            // DELETE BUTTONS
+            // =================================================
+
+            deleteButtons.forEach(
+                function (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function () {
+                            openDeleteModal(button);
+                        }
+                    );
+
+                }
+            );
+
+            // =================================================
+            // CONFIRMATION INPUT
+            // =================================================
+
+            confirmationInput.addEventListener(
+                "input",
+                function () {
+
+                    confirmButton.disabled =
+                        confirmationInput.value.trim() !== "DELETE";
+
+                }
+            );
+
+            // =================================================
+            // CANCEL
+            // =================================================
+
+            cancelButton.addEventListener(
+                "click",
+                closeDeleteModal
+            );
+
+            // =================================================
+            // CLICK OUTSIDE
+            // =================================================
+
+            modal.addEventListener(
+                "click",
+                function (event) {
+
+                    if (event.target === modal) {
+                        closeDeleteModal();
+                    }
+
+                }
+            );
+
+            // =================================================
+            // ESCAPE KEY
+            // =================================================
+
+            document.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (
+                        event.key === "Escape"
+                        && modal.classList.contains("open")
+                    ) {
+                        closeDeleteModal();
+                    }
+
+                }
+            );
+
+            // =================================================
+            // PREVENT UNCONFIRMED SUBMISSION
+            // =================================================
+
+            deleteForm.addEventListener(
+                "submit",
+                function (event) {
+
+                    if (
+                        confirmationInput.value.trim() !== "DELETE"
+                    ) {
+
+                        event.preventDefault();
+
+                        confirmButton.disabled = true;
+
+                        return;
+                    }
+
+                    confirmButton.disabled = true;
+
+                    confirmButton.textContent =
+                        "Processing deletion...";
+
+                }
+            );
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>
