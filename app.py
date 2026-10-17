@@ -11980,18 +11980,100 @@ def kalxa_refund_superadmin_guard():
 )
 def superadmin_create_partner():
 
-    auth = (
-        require_superadmin()
-    )
+    # ========================================================
+    # SUPER ADMIN AUTHENTICATION
+    # ========================================================
+
+    auth = require_superadmin()
 
     if auth:
         return auth
 
+    # ========================================================
+    # PARTNER CONFIGURATION
+    # ========================================================
+
+    # Preserve the existing Event Organizer partner duration.
+    # The restaurant community-launch grant is 90 days.
+
+    partner_configs = {
+
+        "event": {
+            "days": KALXA_PARTNER_ACCESS_DAYS,
+            "plan_name": KALXA_PARTNER_PLAN_NAME,
+            "label": "Event Organizer",
+        },
+
+        "restaurant": {
+            "days": 90,
+            "plan_name": "Kalxa Restaurant Community Partner",
+            "label": "Restaurant",
+        },
+
+    }
+
+    # ========================================================
+    # GET SELECTED ACCOUNT TYPE
+    # ========================================================
+
+    if request.method == "POST":
+
+        requested_account_type = (
+            request.form.get(
+                "account_type",
+                "event",
+            )
+            .strip()
+            .lower()
+        )
+
+    else:
+
+        requested_account_type = (
+            request.args.get(
+                "account_type",
+                "event",
+            )
+            .strip()
+            .lower()
+        )
+
+    # ========================================================
+    # VALIDATE PARTNER TYPE
+    # ========================================================
+
+    if requested_account_type not in partner_configs:
+
+        flash(
+            "Invalid partner account type selected.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_create_partner",
+                account_type="event",
+            )
+        )
+
+    account_type = requested_account_type
+
+    config = partner_configs[account_type]
+
+    partner_days = config["days"]
+
+    partner_plan_name = config["plan_name"]
+
+    partner_label = config["label"]
+
+    # ========================================================
+    # HANDLE PARTNER CREATION
+    # ========================================================
 
     if request.method == "POST":
 
         # ====================================================
-        # FORM
+        # FORM DATA
         # ====================================================
 
         name = (
@@ -12002,7 +12084,6 @@ def superadmin_create_partner():
             .strip()
         )
 
-
         business_name = (
             request.form.get(
                 "business_name",
@@ -12011,16 +12092,12 @@ def superadmin_create_partner():
             .strip()
         )
 
-
-        email = (
-            normalize_email(
-                request.form.get(
-                    "email",
-                    "",
-                )
+        email = normalize_email(
+            request.form.get(
+                "email",
+                "",
             )
         )
-
 
         phone = (
             request.form.get(
@@ -12031,7 +12108,6 @@ def superadmin_create_partner():
             or None
         )
 
-
         # ====================================================
         # VALIDATION
         # ====================================================
@@ -12039,29 +12115,38 @@ def superadmin_create_partner():
         if not name:
 
             flash(
-                "Organizer name is required.",
-                "error",
-            )
-
-            return render_template(
-                "superadmin/partner_form.html"
-            )
-
-
-        if not business_name:
-
-            flash(
                 (
-                    "Event business or brand "
+                    "Restaurant owner or manager "
                     "name is required."
+                    if account_type == "restaurant"
+                    else "Organizer name is required."
                 ),
                 "error",
             )
 
             return render_template(
-                "superadmin/partner_form.html"
+                "superadmin/partner_form.html",
+                account_type=account_type,
             )
 
+        if not business_name:
+
+            flash(
+                (
+                    "Restaurant business name is required."
+                    if account_type == "restaurant"
+                    else (
+                        "Event business or brand "
+                        "name is required."
+                    )
+                ),
+                "error",
+            )
+
+            return render_template(
+                "superadmin/partner_form.html",
+                account_type=account_type,
+            )
 
         if not email:
 
@@ -12071,26 +12156,28 @@ def superadmin_create_partner():
             )
 
             return render_template(
-                "superadmin/partner_form.html"
+                "superadmin/partner_form.html",
+                account_type=account_type,
             )
 
+        # ====================================================
+        # PREVENT DUPLICATE ACCOUNTS
+        # ====================================================
 
         existing_organizer = (
             Organizer.query
             .filter_by(
-                email=
-                    email
+                email=email
             )
             .first()
         )
-
 
         if existing_organizer:
 
             flash(
                 (
-                    "An organizer account already "
-                    "exists with this email."
+                    "An existing Kalxa business account "
+                    "already uses this email address."
                 ),
                 "error",
             )
@@ -12098,76 +12185,78 @@ def superadmin_create_partner():
             return redirect(
                 url_for(
                     "superadmin_organizer_detail",
-                    organizer_id=
-                        existing_organizer.id,
+                    organizer_id=existing_organizer.id,
                 )
             )
 
-
         # ====================================================
-        # PARTNER ACCESS
+        # GENERATE TEMPORARY PASSWORD
         # ====================================================
 
         temporary_password = (
             generate_partner_temporary_password()
         )
 
+        # ====================================================
+        # COMPLIMENTARY SUBSCRIPTION PERIOD
+        # ====================================================
 
-        now = (
-            datetime.utcnow()
-        )
-
+        now = datetime.utcnow()
 
         subscription_end = (
             now
             + timedelta(
-                days=
-                    KALXA_PARTNER_ACCESS_DAYS
+                days=partner_days
             )
         )
 
+        # ====================================================
+        # CREATE PARTNER BUSINESS ACCOUNT
+        # ====================================================
 
-        # ====================================================
-        # CREATE EVENT ORGANIZER
-        # ====================================================
+        # The existing Organizer model supports both:
+        #
+        # account_type="event"
+        # account_type="restaurant"
+        #
+        # This allows both partners to use the appropriate
+        # existing KALXA business dashboards.
 
         organizer = Organizer(
 
-            name=
-                name,
+            name=name,
 
-            business_name=
-                business_name,
+            business_name=business_name,
 
-            email=
-                email,
+            email=email,
 
-            phone=
-                phone,
+            phone=phone,
 
-            account_type=
-                "event",
+            account_type=account_type,
 
-            active=
-                True,
+            active=True,
 
-            subscription_status=
-                "active",
+            subscription_status="active",
 
-            subscription_started_at=
-                now,
+            subscription_started_at=now,
 
-            subscription_expires_at=
-                subscription_end,
+            subscription_expires_at=subscription_end,
+
         )
-
 
         organizer.set_password(
             temporary_password
         )
 
+        # ====================================================
+        # DATABASE TRANSACTION
+        # ====================================================
 
         try:
+
+            # ================================================
+            # SAVE ORGANIZER
+            # ================================================
 
             db.session.add(
                 organizer
@@ -12175,125 +12264,147 @@ def superadmin_create_partner():
 
             db.session.flush()
 
-
             # ================================================
-            # PARTNER GRANT AUDIT RECORD
+            # CREATE COMPLIMENTARY PARTNER GRANT
             # ================================================
 
-            partner_payment = (
-                SubscriptionPayment(
+            # IMPORTANT:
+            #
+            # This is NOT an actual customer payment.
+            #
+            # amount=0.00
+            # payment_method="partner_grant"
+            #
+            # The existing SubscriptionPayment record
+            # provides an audit trail for the granted
+            # subscription.
+            #
+            # payment_status="paid" is retained for
+            # compatibility with the existing subscription
+            # system. Reporting must exclude partner grants
+            # from actual cash revenue.
 
-                    organizer_id=
-                        organizer.id,
+            partner_payment = SubscriptionPayment(
 
-                    plan_name=
-                        KALXA_PARTNER_PLAN_NAME,
+                organizer_id=organizer.id,
 
-                    amount=
-                        Decimal(
-                            "0.00"
-                        ),
+                plan_name=partner_plan_name,
 
-                    period_days=
-                        KALXA_PARTNER_ACCESS_DAYS,
+                amount=Decimal("0.00"),
 
-                    payment_reference=
-                        generate_subscription_payment_reference(),
+                period_days=partner_days,
 
-                    payment_method=
-                        "partner_grant",
+                payment_reference=(
+                    generate_subscription_payment_reference()
+                ),
 
-                    payment_status=
-                        "paid",
+                payment_method="partner_grant",
 
-                    paid_at=
-                        now,
+                payment_status="paid",
 
-                    confirmed_at=
-                        now,
+                paid_at=now,
 
-                    confirmed_by=
-                        "superadmin_partner_grant",
+                confirmed_at=now,
 
-                    subscription_start=
-                        now,
+                confirmed_by="superadmin_partner_grant",
 
-                    subscription_end=
-                        subscription_end,
-                )
+                subscription_start=now,
+
+                subscription_end=subscription_end,
+
             )
-
 
             db.session.add(
                 partner_payment
             )
 
+            # ================================================
+            # COMMIT
+            # ================================================
+
             db.session.commit()
 
-
-        except Exception as error:
+        except Exception:
 
             db.session.rollback()
 
-
             current_app.logger.exception(
                 (
-                    "[Event Partner] "
-                    "Unable to create partner "
-                    "email=%s error=%s"
+                    "[%s Partner] "
+                    "Unable to create partner account "
+                    "email=%s"
                 ),
+                partner_label,
                 email,
-                error,
             )
-
 
             flash(
                 (
-                    "Partner account could "
-                    "not be created."
+                    f"{partner_label} partner account "
+                    "could not be created. "
+                    "Please try again."
                 ),
                 "error",
             )
 
-
             return render_template(
-                "superadmin/partner_form.html"
+                "superadmin/partner_form.html",
+                account_type=account_type,
             )
 
-
         # ====================================================
-        # SUCCESS
+        # SUCCESS AUDIT LOG
         # ====================================================
 
         current_app.logger.info(
             (
-                "[Event Partner] "
+                "[%s Partner] "
                 "Partner account created "
-                "organizer_id=%s expires_at=%s"
+                "organizer_id=%s "
+                "account_type=%s "
+                "period_days=%s "
+                "expires_at=%s"
             ),
+            partner_label,
             organizer.id,
+            account_type,
+            partner_days,
             subscription_end,
         )
 
+        # ====================================================
+        # SUCCESS PAGE
+        # ====================================================
 
         return render_template(
+
             "superadmin/partner_created.html",
 
-            organizer=
-                organizer,
+            organizer=organizer,
 
-            temporary_password=
-                temporary_password,
+            temporary_password=temporary_password,
 
-            subscription_end=
-                subscription_end,
+            subscription_end=subscription_end,
+
+            account_type=account_type,
+
+            partner_days=partner_days,
+
+            partner_label=partner_label,
+
         )
 
+    # ========================================================
+    # GET REQUEST
+    # ========================================================
 
     return render_template(
-        "superadmin/partner_form.html"
-    )
 
+        "superadmin/partner_form.html",
+
+        account_type=account_type,
+
+    )
 
 
 @app.route(
