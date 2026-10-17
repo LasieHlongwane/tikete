@@ -10,23 +10,57 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
+    <meta
+        name="robots"
+        content="noindex, nofollow"
+    >
+
     <title>
-        Partner Created | Kalxa
+        Partner Account Created | Kalxa
     </title>
 
-
     <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
+        :root {
+
+            --background: #f6f7f9;
+            --surface: #ffffff;
+
+            --text: #111827;
+            --muted: #64748b;
+
+            --border: #e5e7eb;
+
+            --green: #166534;
+            --green-light: #f0fdf4;
+
+            --blue: #1d4ed8;
+            --blue-light: #eff6ff;
+
+            --orange: #9a3412;
+            --orange-light: #fff7ed;
+
+        }
 
         body {
+
             margin: 0;
 
-            background: #f6f7f9;
-            color: #111827;
+            background: var(--background);
+            color: var(--text);
 
             font-family:
                 Inter,
@@ -37,36 +71,76 @@
                 Helvetica,
                 Arial,
                 sans-serif;
+
+            -webkit-font-smoothing: antialiased;
+
         }
 
-
         .shell {
-            width:
-                min(
-                    680px,
-                    calc(100% - 28px)
-                );
+
+            width: min(
+                720px,
+                calc(100% - 28px)
+            );
 
             margin: 0 auto;
 
-            padding:
-                35px 0 60px;
+            padding: 35px 0 60px;
+
         }
 
+        /* =====================================================
+           CARD
+        ===================================================== */
 
         .card {
+
             padding: 26px;
 
             background: #ffffff;
 
-            border:
-                1px solid #e5e7eb;
+            border: 1px solid #e5e7eb;
 
             border-radius: 18px;
+
+            box-shadow:
+                0 10px 30px rgba(
+                    15,
+                    23,
+                    42,
+                    .04
+                );
+
         }
 
+        /* =====================================================
+           SUCCESS HEADER
+        ===================================================== */
+
+        .success-icon {
+
+            display: flex;
+
+            justify-content: center;
+            align-items: center;
+
+            width: 54px;
+            height: 54px;
+
+            margin-bottom: 16px;
+
+            background: #dcfce7;
+
+            border-radius: 15px;
+
+            color: #166534;
+
+            font-size: 26px;
+
+        }
 
         .success-label {
+
             margin-bottom: 8px;
 
             color: #166534;
@@ -75,68 +149,135 @@
             font-weight: 900;
 
             letter-spacing: .08em;
-        }
 
+        }
 
         h1 {
+
             margin: 0 0 8px;
 
-            font-size:
-                clamp(
-                    28px,
-                    6vw,
-                    36px
-                );
+            font-size: clamp(
+                28px,
+                6vw,
+                36px
+            );
 
             letter-spacing: -.04em;
+
+            overflow-wrap: anywhere;
+
         }
 
-
         .intro {
+
             margin: 0;
 
             color: #64748b;
 
             font-size: 12px;
 
-            line-height: 1.6;
+            line-height: 1.7;
+
         }
 
+        /* =====================================================
+           PARTNER TYPE BADGE
+        ===================================================== */
+
+        .partner-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            margin-top: 16px;
+
+            padding: 8px 12px;
+
+            background: #eff6ff;
+            color: #1d4ed8;
+
+            border: 1px solid #bfdbfe;
+
+            border-radius: 999px;
+
+            font-size: 11px;
+            font-weight: 900;
+
+        }
+
+        .partner-badge.restaurant {
+
+            background: #f0fdf4;
+            color: #166534;
+
+            border-color: #bbf7d0;
+
+        }
+
+        /* =====================================================
+           CREDENTIALS
+        ===================================================== */
 
         .credentials {
+
             display: grid;
 
             gap: 12px;
 
-            margin-top: 20px;
+            margin-top: 22px;
 
             padding: 18px;
 
             background: #f8fafc;
 
-            border:
-                1px solid #e2e8f0;
+            border: 1px solid #e2e8f0;
 
             border-radius: 13px;
+
         }
 
+        .credentials-heading {
+
+            margin: 0 0 3px;
+
+            font-size: 15px;
+            font-weight: 900;
+
+        }
+
+        .credentials-description {
+
+            margin: 0 0 8px;
+
+            color: #64748b;
+
+            font-size: 11px;
+
+            line-height: 1.6;
+
+        }
 
         .row {
-            padding-bottom: 10px;
 
-            border-bottom:
-                1px solid #e2e8f0;
+            padding-bottom: 12px;
+
+            border-bottom: 1px solid #e2e8f0;
+
         }
 
-
         .row:last-child {
+
             padding-bottom: 0;
 
             border-bottom: 0;
+
         }
 
-
         .label {
+
             display: block;
 
             color: #64748b;
@@ -147,10 +288,11 @@
             letter-spacing: .08em;
 
             text-transform: uppercase;
+
         }
 
-
         .value {
+
             display: block;
 
             margin-top: 5px;
@@ -160,111 +302,509 @@
             font-size: 14px;
             font-weight: 900;
 
-            word-break: break-word;
+            overflow-wrap: anywhere;
+
         }
 
+        .value.success {
 
-        .warning {
+            color: #166534;
+
+        }
+
+        /* =====================================================
+           PASSWORD
+        ===================================================== */
+
+        .password-row {
+
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 10px;
+
+        }
+
+        .password-value {
+
+            min-width: 0;
+
+            font-family:
+                "Courier New",
+                monospace;
+
+            font-size: 14px;
+
+            letter-spacing: .03em;
+
+        }
+
+        .password-hidden {
+
+            letter-spacing: .12em;
+
+        }
+
+        .small-button {
+
+            display: inline-flex;
+
+            justify-content: center;
+            align-items: center;
+
+            min-height: 34px;
+
+            padding: 7px 11px;
+
+            background: #ffffff;
+            color: #111827;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 8px;
+
+            font: inherit;
+
+            font-size: 10px;
+            font-weight: 850;
+
+            cursor: pointer;
+
+            flex-shrink: 0;
+
+        }
+
+        .small-button:hover {
+
+            background: #f1f5f9;
+
+        }
+
+        /* =====================================================
+           ACCESS SUMMARY
+        ===================================================== */
+
+        .access-summary {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 12px;
+
             margin-top: 18px;
 
-            padding: 13px;
+        }
+
+        .summary-item {
+
+            padding: 15px;
+
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 12px;
+
+        }
+
+        .summary-item span {
+
+            display: block;
+
+            color: #64748b;
+
+            font-size: 10px;
+            font-weight: 800;
+
+        }
+
+        .summary-item strong {
+
+            display: block;
+
+            margin-top: 7px;
+
+            color: #111827;
+
+            font-size: 16px;
+            font-weight: 900;
+
+        }
+
+        .summary-item.green {
+
+            background: #f0fdf4;
+
+            border-color: #bbf7d0;
+
+        }
+
+        .summary-item.green strong {
+
+            color: #166534;
+
+        }
+
+        /* =====================================================
+           NEXT STEPS
+        ===================================================== */
+
+        .next-steps {
+
+            margin-top: 20px;
+
+            padding: 17px;
+
+            background: #eff6ff;
+
+            border: 1px solid #bfdbfe;
+
+            border-radius: 12px;
+
+        }
+
+        .next-steps.restaurant {
+
+            background: #f0fdf4;
+
+            border-color: #bbf7d0;
+
+        }
+
+        .next-steps h2 {
+
+            margin: 0 0 10px;
+
+            font-size: 14px;
+
+            font-weight: 900;
+
+            color: #1e40af;
+
+        }
+
+        .next-steps.restaurant h2 {
+
+            color: #166534;
+
+        }
+
+        .next-steps ol {
+
+            margin: 0;
+
+            padding-left: 19px;
+
+            color: #334155;
+
+            font-size: 11px;
+
+            line-height: 1.8;
+
+        }
+
+        /* =====================================================
+           WARNING
+        ===================================================== */
+
+        .warning {
+
+            margin-top: 18px;
+
+            padding: 14px;
 
             background: #fff7ed;
             color: #9a3412;
 
-            border:
-                1px solid #fed7aa;
+            border: 1px solid #fed7aa;
 
             border-radius: 11px;
 
             font-size: 11px;
 
-            line-height: 1.55;
+            line-height: 1.65;
+
         }
 
+        .warning strong {
+
+            display: block;
+
+            margin-bottom: 4px;
+
+            font-size: 12px;
+
+        }
+
+        /* =====================================================
+           COPY FEEDBACK
+        ===================================================== */
+
+        .copy-feedback {
+
+            display: none;
+
+            margin-top: 10px;
+
+            padding: 10px;
+
+            background: #f0fdf4;
+
+            border: 1px solid #bbf7d0;
+
+            border-radius: 9px;
+
+            color: #166534;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+        }
+
+        .copy-feedback.visible {
+
+            display: block;
+
+        }
+
+        /* =====================================================
+           ACTIONS
+        ===================================================== */
 
         .actions {
+
             display: grid;
 
             gap: 9px;
 
-            margin-top: 20px;
+            margin-top: 22px;
+
         }
 
-
         .button {
+
             display: flex;
 
             justify-content: center;
             align-items: center;
 
-            min-height: 44px;
+            min-height: 46px;
 
             padding: 10px;
 
             background: #111827;
             color: #ffffff;
 
-            border:
-                1px solid #111827;
+            border: 1px solid #111827;
 
             border-radius: 10px;
 
             text-decoration: none;
 
+            text-align: center;
+
             font-size: 11px;
             font-weight: 900;
+
+            cursor: pointer;
+
         }
 
+        .button:hover {
+
+            opacity: .9;
+
+        }
+
+        .button.restaurant {
+
+            background: #166534;
+
+            border-color: #166534;
+
+        }
 
         .button-secondary {
+
             background: #ffffff;
             color: #111827;
 
             border-color: #cbd5e1;
+
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 560px) {
+
+            .shell {
+
+                padding-top: 18px;
+
+            }
+
+            .card {
+
+                padding: 20px;
+
+            }
+
+            .access-summary {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .password-row {
+
+                align-items: flex-start;
+
+                flex-direction: column;
+
+            }
+
         }
 
     </style>
 
 </head>
 
-
 <body>
 
+<!-- =========================================================
+     PARTNER TYPE
+========================================================== -->
+
+{% set is_restaurant =
+    organizer.account_type == "restaurant"
+%}
+
+{% set access_days =
+    partner_days
+    if partner_days is defined
+    else (
+        90 if is_restaurant else 30
+    )
+%}
 
 <div class="shell">
 
-
     <section class="card">
 
+        <!-- =================================================
+             SUCCESS
+        ================================================== -->
 
-        <div class="success-label">
-            ✅ PARTNER ACCOUNT CREATED
+        <div class="success-icon">
+            ✓
         </div>
 
+        <div class="success-label">
+            ✅ PARTNER ACCOUNT CREATED SUCCESSFULLY
+        </div>
 
         <h1>
             {{ organizer.display_name }}
         </h1>
 
-
         <p class="intro">
 
-            This Event organizer now has
-            complimentary Kalxa Ticketing access until
+            {% if is_restaurant %}
+
+                Your Restaurant Partner account has
+                been created successfully.
+
+                This restaurant now has
+
+                <strong>
+                    {{ access_days }} days
+                </strong>
+
+                of complimentary Kalxa Restaurant
+                Profiles access.
+
+            {% else %}
+
+                Your Event Organizer Partner account
+                has been created successfully.
+
+                This organizer now has
+
+                <strong>
+                    {{ access_days }} days
+                </strong>
+
+                of complimentary Kalxa Ticketing access.
+
+            {% endif %}
+
+            <br><br>
+
+            Complimentary access expires on
 
             <strong>
-                {{ subscription_end.strftime(
-                    '%d %B %Y'
-                ) }}
+                {{ subscription_end.strftime('%d %B %Y') }}
             </strong>.
 
         </p>
 
+        <!-- =================================================
+             PARTNER BADGE
+        ================================================== -->
 
+        <span
+            class="partner-badge
+                {% if is_restaurant %}
+                    restaurant
+                {% endif %}
+            "
+        >
+
+            {% if is_restaurant %}
+
+                🍽️ Restaurant Community Partner
+
+            {% else %}
+
+                🎟️ Event Organizer Partner
+
+            {% endif %}
+
+        </span>
+
+        <!-- =================================================
+             CREDENTIALS
+        ================================================== -->
 
         <div class="credentials">
 
+            <div>
+
+                <h2 class="credentials-heading">
+                    Partner Account Details
+                </h2>
+
+                <p class="credentials-description">
+
+                    Review the account information
+                    and securely share login details
+                    with the partner.
+
+                </p>
+
+            </div>
+
+            <!-- ACCOUNT TYPE -->
 
             <div class="row">
 
@@ -273,11 +813,50 @@
                 </span>
 
                 <span class="value">
-                    🎟 Event Organizer
+
+                    {% if is_restaurant %}
+
+                        🍽️ Restaurant
+
+                    {% else %}
+
+                        🎟️ Event Organizer
+
+                    {% endif %}
+
                 </span>
 
             </div>
 
+            <!-- BUSINESS NAME -->
+
+            <div class="row">
+
+                <span class="label">
+                    Business / Brand Name
+                </span>
+
+                <span class="value">
+                    {{ organizer.business_name }}
+                </span>
+
+            </div>
+
+            <!-- ACCOUNT HOLDER -->
+
+            <div class="row">
+
+                <span class="label">
+                    Account Holder
+                </span>
+
+                <span class="value">
+                    {{ organizer.name }}
+                </span>
+
+            </div>
+
+            <!-- EMAIL -->
 
             <div class="row">
 
@@ -285,12 +864,34 @@
                     Login Email
                 </span>
 
-                <span class="value">
+                <span
+                    class="value"
+                    id="partner-email"
+                >
                     {{ organizer.email }}
                 </span>
 
             </div>
 
+            <!-- PHONE -->
+
+            {% if organizer.phone %}
+
+                <div class="row">
+
+                    <span class="label">
+                        Phone Number
+                    </span>
+
+                    <span class="value">
+                        {{ organizer.phone }}
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+            <!-- TEMPORARY PASSWORD -->
 
             <div class="row">
 
@@ -298,12 +899,47 @@
                     Temporary Password
                 </span>
 
-                <span class="value">
-                    {{ temporary_password }}
+                <div class="password-row">
+
+                    <span
+                        class="value password-value password-hidden"
+                        id="password-display"
+                        aria-live="polite"
+                    >
+                        ••••••••••••
+                    </span>
+
+                    <button
+                        type="button"
+                        class="small-button"
+                        id="toggle-password"
+                        aria-controls="password-display"
+                        aria-pressed="false"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- ACCESS TYPE -->
+
+            <div class="row">
+
+                <span class="label">
+                    Subscription Type
+                </span>
+
+                <span class="value success">
+
+                    Complimentary Partner Grant
+
                 </span>
 
             </div>
 
+            <!-- DURATION -->
 
             <div class="row">
 
@@ -312,11 +948,14 @@
                 </span>
 
                 <span class="value">
-                    30 Days
+
+                    {{ access_days }} Days
+
                 </span>
 
             </div>
 
+            <!-- EXPIRY -->
 
             <div class="row">
 
@@ -330,79 +969,466 @@
                         '%d %B %Y %H:%M'
                     ) }}
 
+                    <small style="
+                        display:block;
+                        margin-top:4px;
+                        color:#64748b;
+                        font-size:10px;
+                        font-weight:500;
+                    ">
+                        Date and time shown according
+                        to the application's configured
+                        timezone.
+                    </small>
+
                 </span>
 
             </div>
 
+        </div>
+
+        <!-- =================================================
+             ACCESS SUMMARY
+        ================================================== -->
+
+        <div class="access-summary">
+
+            <div class="summary-item green">
+
+                <span>
+                    Account Status
+                </span>
+
+                <strong>
+                    ✓ Active
+                </strong>
+
+            </div>
+
+            <div class="summary-item">
+
+                <span>
+                    Complimentary Period
+                </span>
+
+                <strong>
+                    {{ access_days }} Days
+                </strong>
+
+            </div>
 
         </div>
 
+        <!-- =================================================
+             NEXT STEPS
+        ================================================== -->
 
+        <div
+            class="next-steps
+                {% if is_restaurant %}
+                    restaurant
+                {% endif %}
+            "
+        >
+
+            {% if is_restaurant %}
+
+                <h2>
+                    🍽️ Next Steps: Restaurant Partner
+                </h2>
+
+                <ol>
+
+                    <li>
+                        Securely provide the restaurant
+                        owner or manager with their
+                        login credentials.
+                    </li>
+
+                    <li>
+                        Ask the restaurant to sign in
+                        to the existing Kalxa
+                        restaurant management dashboard.
+                    </li>
+
+                    <li>
+                        Complete the restaurant profile,
+                        including its business information,
+                        location, contact details,
+                        operating hours and available media.
+                    </li>
+
+                    <li>
+                        Publish the restaurant profile
+                        using the existing Kalxa
+                        restaurant approval and
+                        subscription rules.
+                    </li>
+
+                    <li>
+                        Review the account before
+                        its complimentary access expires.
+                    </li>
+
+                </ol>
+
+            {% else %}
+
+                <h2>
+                    🎟️ Next Steps: Event Organizer Partner
+                </h2>
+
+                <ol>
+
+                    <li>
+                        Securely provide the organizer
+                        with their login credentials.
+                    </li>
+
+                    <li>
+                        Ask the organizer to sign in
+                        to their Kalxa Ticketing
+                        dashboard.
+                    </li>
+
+                    <li>
+                        Complete the organizer's
+                        business profile.
+                    </li>
+
+                    <li>
+                        Create and publish events
+                        using the existing Kalxa
+                        event management workflow.
+                    </li>
+
+                    <li>
+                        Review the account before
+                        its complimentary access expires.
+                    </li>
+
+                </ol>
+
+            {% endif %}
+
+        </div>
+
+        <!-- =================================================
+             SECURITY WARNING
+        ================================================== -->
 
         <div class="warning">
 
             <strong>
-                Save these login details now.
+                🔐 Save and share login details securely.
             </strong>
 
-            <br>
+            The temporary password is only
+            available on this confirmation page.
 
-            The temporary password is only shown
-            on this page. Kalxa stores the hashed
-            password, not this plain-text password.
+            Kalxa stores the password hash,
+            not the original plain-text password.
+
+            <br><br>
+
+            Share credentials through a secure
+            communication channel.
+
+            The partner should change their
+            temporary password after signing in.
+
+            Avoid sending passwords through
+            unencrypted group messages.
 
         </div>
 
+        <!-- =================================================
+             COPY FEEDBACK
+        ================================================== -->
 
+        <div
+            class="copy-feedback"
+            id="copy-feedback"
+            role="status"
+            aria-live="polite"
+        >
+            Login details copied successfully.
+        </div>
+
+        <!-- =================================================
+             ACTIONS
+        ================================================== -->
 
         <div class="actions">
 
+            <button
+                type="button"
+                class="button
+                    {% if is_restaurant %}
+                        restaurant
+                    {% endif %}
+                "
+                id="copy-credentials"
+            >
+                📋 Copy Partner Login Details
+            </button>
 
             <a
                 href="{{ url_for(
                     'superadmin_organizer_detail',
                     organizer_id=organizer.id
                 ) }}"
-                class="button"
+                class="button button-secondary"
             >
-                Open Organizer Profile
-            </a>
 
+                {% if is_restaurant %}
+
+                    Open Restaurant Account
+
+                {% else %}
+
+                    Open Organizer Account
+
+                {% endif %}
+
+            </a>
 
             <a
                 href="{{ url_for(
-                    'superadmin_create_partner'
+                    'superadmin_create_partner',
+                    account_type=organizer.account_type
                 ) }}"
-                class="
-                    button
-                    button-secondary
-                "
+                class="button button-secondary"
             >
-                Create Another Partner
+                + Create Another Partner
             </a>
-
 
             <a
                 href="{{ url_for(
                     'superadmin_dashboard'
                 ) }}"
-                class="
-                    button
-                    button-secondary
-                "
+                class="button button-secondary"
             >
-                Back to Super Admin
+                ← Back to Super Admin
             </a>
-
 
         </div>
 
-
     </section>
-
 
 </div>
 
+<!-- =========================================================
+     TEMPORARY PASSWORD DATA
+     This page must not be cached.
+========================================================== -->
+
+<script
+    type="application/json"
+    id="partner-credentials-data"
+>
+    {{ {
+        "email": organizer.email,
+        "temporary_password": temporary_password
+    } | tojson }}
+</script>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
+
+<script>
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            "use strict";
+
+            /* =============================================
+               CREDENTIAL DATA
+            ============================================== */
+
+            const credentialsElement =
+                document.getElementById(
+                    "partner-credentials-data"
+                );
+
+            let credentials = {};
+
+            try {
+
+                credentials = JSON.parse(
+                    credentialsElement.textContent
+                );
+
+            } catch (error) {
+
+                credentials = {};
+
+            }
+
+            const temporaryPassword =
+                credentials.temporary_password || "";
+
+            const partnerEmail =
+                credentials.email || "";
+
+            /* =============================================
+               ELEMENTS
+            ============================================== */
+
+            const passwordDisplay =
+                document.getElementById(
+                    "password-display"
+                );
+
+            const togglePasswordButton =
+                document.getElementById(
+                    "toggle-password"
+                );
+
+            const copyCredentialsButton =
+                document.getElementById(
+                    "copy-credentials"
+                );
+
+            const copyFeedback =
+                document.getElementById(
+                    "copy-feedback"
+                );
+
+            let passwordVisible = false;
+
+            /* =============================================
+               PASSWORD VISIBILITY
+            ============================================== */
+
+            function updatePasswordVisibility() {
+
+                if (passwordVisible) {
+
+                    passwordDisplay.textContent =
+                        temporaryPassword;
+
+                    passwordDisplay.classList.remove(
+                        "password-hidden"
+                    );
+
+                    togglePasswordButton.textContent =
+                        "Hide";
+
+                } else {
+
+                    passwordDisplay.textContent =
+                        "••••••••••••";
+
+                    passwordDisplay.classList.add(
+                        "password-hidden"
+                    );
+
+                    togglePasswordButton.textContent =
+                        "Show";
+
+                }
+
+                togglePasswordButton.setAttribute(
+                    "aria-pressed",
+                    String(passwordVisible)
+                );
+
+            }
+
+            togglePasswordButton.addEventListener(
+                "click",
+                function () {
+
+                    passwordVisible =
+                        !passwordVisible;
+
+                    updatePasswordVisibility();
+
+                }
+            );
+
+            /* =============================================
+               COPY CREDENTIALS
+            ============================================== */
+
+            copyCredentialsButton.addEventListener(
+                "click",
+                async function () {
+
+                    const details = [
+                        "KALXA Partner Account",
+                        "",
+                        "Login Email: " + partnerEmail,
+                        "Temporary Password: " + temporaryPassword,
+                        "",
+                        "Please change your password after signing in."
+                    ].join("\n");
+
+                    if (!temporaryPassword) {
+
+                        copyFeedback.textContent =
+                            "Temporary password is unavailable.";
+
+                        copyFeedback.classList.add(
+                            "visible"
+                        );
+
+                        return;
+
+                    }
+
+                    try {
+
+                        await navigator.clipboard.writeText(
+                            details
+                        );
+
+                        copyFeedback.textContent =
+                            "Login details copied successfully. Share them securely.";
+
+                        copyFeedback.classList.add(
+                            "visible"
+                        );
+
+                        window.setTimeout(
+                            function () {
+
+                                copyFeedback.classList.remove(
+                                    "visible"
+                                );
+
+                            },
+                            3500
+                        );
+
+                    } catch (error) {
+
+                        copyFeedback.textContent =
+                            "Unable to copy automatically. Use the Show button to view the temporary password.";
+
+                        copyFeedback.classList.add(
+                            "visible"
+                        );
+
+                    }
+
+                }
+            );
+
+            /* =============================================
+               INITIALISE
+            ============================================== */
+
+            updatePasswordVisibility();
+
+        }
+    );
+
+</script>
 
 </body>
 
