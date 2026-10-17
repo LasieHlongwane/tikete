@@ -10,23 +10,40 @@
         content="width=device-width, initial-scale=1"
     >
 
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
     <title>
-        Create Event Partner | Kalxa
+        Create Partner Account | Kalxa
     </title>
 
-
     <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
+        :root {
+            --background: #f6f7f9;
+            --surface: #ffffff;
+            --text: #111827;
+            --muted: #64748b;
+            --border: #e5e7eb;
+            --green: #166534;
+            --blue: #1d4ed8;
+        }
 
         body {
             margin: 0;
 
-            background: #f6f7f9;
-            color: #111827;
+            background: var(--background);
+            color: var(--text);
 
             font-family:
                 Inter,
@@ -37,22 +54,24 @@
                 Helvetica,
                 Arial,
                 sans-serif;
+
+            -webkit-font-smoothing: antialiased;
         }
 
-
         .shell {
-            width:
-                min(
-                    720px,
-                    calc(100% - 28px)
-                );
+            width: min(
+                760px,
+                calc(100% - 28px)
+            );
 
             margin: 0 auto;
 
-            padding:
-                24px 0 60px;
+            padding: 24px 0 60px;
         }
 
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
 
         .nav {
             display: flex;
@@ -68,18 +87,15 @@
 
             background: #ffffff;
 
-            border:
-                1px solid #e5e7eb;
+            border: 1px solid #e5e7eb;
 
             border-radius: 16px;
         }
-
 
         .brand {
             font-size: 13px;
             font-weight: 900;
         }
-
 
         .nav a {
             color: #334155;
@@ -90,18 +106,19 @@
             font-weight: 800;
         }
 
+        /* =====================================================
+           CARD
+        ===================================================== */
 
         .card {
             padding: 24px;
 
             background: #ffffff;
 
-            border:
-                1px solid #e5e7eb;
+            border: 1px solid #e5e7eb;
 
             border-radius: 18px;
         }
-
 
         .eyebrow {
             margin: 0 0 6px;
@@ -116,20 +133,17 @@
             text-transform: uppercase;
         }
 
-
         h1 {
             margin: 0 0 8px;
 
-            font-size:
-                clamp(
-                    28px,
-                    6vw,
-                    38px
-                );
+            font-size: clamp(
+                28px,
+                6vw,
+                38px
+            );
 
             letter-spacing: -.04em;
         }
-
 
         .intro {
             margin: 0 0 20px;
@@ -141,25 +155,139 @@
             line-height: 1.6;
         }
 
+        /* =====================================================
+           PARTNER TYPE SELECTOR
+        ===================================================== */
+
+        .partner-type-section {
+            margin-bottom: 22px;
+        }
+
+        .field-heading {
+            display: block;
+
+            margin-bottom: 10px;
+
+            color: #475569;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            text-transform: uppercase;
+
+            letter-spacing: .05em;
+        }
+
+        .partner-type-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 12px;
+        }
+
+        .partner-type-option {
+            position: relative;
+
+            display: block;
+
+            cursor: pointer;
+        }
+
+        .partner-type-option input {
+            position: absolute;
+
+            width: 1px;
+            height: 1px;
+
+            opacity: 0;
+        }
+
+        .partner-type-card {
+            display: flex;
+            flex-direction: column;
+
+            gap: 8px;
+
+            min-height: 155px;
+
+            padding: 17px;
+
+            background: #f8fafc;
+
+            border: 2px solid #e2e8f0;
+
+            border-radius: 14px;
+
+            transition:
+                border-color .2s,
+                background .2s;
+        }
+
+        .partner-type-icon {
+            font-size: 27px;
+        }
+
+        .partner-type-card strong {
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .partner-type-card small {
+            color: #64748b;
+
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .partner-type-option input:checked
+        + .partner-type-card {
+            border-color: #111827;
+
+            background: #f1f5f9;
+        }
+
+        .partner-type-option input:focus-visible
+        + .partner-type-card {
+            outline: 3px solid #93c5fd;
+            outline-offset: 3px;
+        }
+
+        .partner-type-option.restaurant input:checked
+        + .partner-type-card {
+            border-color: #16a34a;
+
+            background: #f0fdf4;
+        }
+
+        /* =====================================================
+           PARTNER INFORMATION
+        ===================================================== */
 
         .partner-info {
             margin-bottom: 22px;
 
-            padding: 14px;
+            padding: 15px;
 
             background: #f5f3ff;
             color: #5b21b6;
 
-            border:
-                1px solid #ddd6fe;
+            border: 1px solid #ddd6fe;
 
             border-radius: 12px;
 
             font-size: 11px;
-
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
+        .partner-info.restaurant {
+            background: #f0fdf4;
+
+            color: #166534;
+
+            border-color: #bbf7d0;
+        }
 
         .partner-info strong {
             display: block;
@@ -169,6 +297,9 @@
             font-size: 12px;
         }
 
+        /* =====================================================
+           FORM
+        ===================================================== */
 
         form {
             display: grid;
@@ -176,13 +307,11 @@
             gap: 15px;
         }
 
-
         .field {
             display: grid;
 
             gap: 6px;
         }
-
 
         label {
             color: #475569;
@@ -191,8 +320,9 @@
             font-weight: 850;
         }
 
-
-        input {
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
             width: 100%;
 
             min-height: 46px;
@@ -201,21 +331,93 @@
 
             background: #f8fafc;
 
-            border:
-                1px solid #cbd5e1;
+            border: 1px solid #cbd5e1;
 
             border-radius: 10px;
 
             font: inherit;
+
+            font-size: 13px;
         }
 
-
-        input:focus {
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus {
             outline: 2px solid #c4b5fd;
 
             border-color: #8b5cf6;
         }
 
+        .form-divider {
+            margin: 8px 0 2px;
+
+            border: 0;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            margin: 0;
+
+            font-size: 15px;
+
+            font-weight: 900;
+        }
+
+        .section-description {
+            margin: 0;
+
+            color: #64748b;
+
+            font-size: 11px;
+
+            line-height: 1.6;
+        }
+
+        .field-help {
+            color: #64748b;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+        /* =====================================================
+           CONTRIBUTION NOTICE
+        ===================================================== */
+
+        .contribution-info {
+            display: none;
+
+            padding: 14px;
+
+            background: #fffbeb;
+
+            border: 1px solid #fde68a;
+
+            border-radius: 12px;
+
+            color: #92400e;
+
+            font-size: 11px;
+
+            line-height: 1.7;
+        }
+
+        .contribution-info.visible {
+            display: block;
+        }
+
+        .contribution-info strong {
+            display: block;
+
+            margin-bottom: 4px;
+
+            font-size: 12px;
+        }
+
+        /* =====================================================
+           BUTTONS
+        ===================================================== */
 
         .button {
             display: inline-flex;
@@ -230,8 +432,7 @@
             background: #111827;
             color: #ffffff;
 
-            border:
-                1px solid #111827;
+            border: 1px solid #111827;
 
             border-radius: 10px;
 
@@ -241,13 +442,32 @@
             font-weight: 900;
 
             cursor: pointer;
+
+            transition:
+                background .2s,
+                transform .2s;
         }
 
+        .button:hover {
+            background: #1f2937;
+
+            transform: translateY(-1px);
+        }
+
+        .button.restaurant {
+            background: #166534;
+
+            border-color: #166534;
+        }
+
+        .button.restaurant:hover {
+            background: #14532d;
+        }
 
         .back-link {
             display: inline-flex;
 
-            margin-top: 14px;
+            margin-top: 20px;
 
             color: #64748b;
 
@@ -257,6 +477,9 @@
             font-weight: 800;
         }
 
+        /* =====================================================
+           FLASH MESSAGES
+        ===================================================== */
 
         .flash-wrapper {
             display: grid;
@@ -265,7 +488,6 @@
 
             margin-bottom: 16px;
         }
-
 
         .alert {
             padding: 11px 13px;
@@ -277,10 +499,8 @@
 
             background: #f8fafc;
 
-            border:
-                1px solid #e2e8f0;
+            border: 1px solid #e2e8f0;
         }
-
 
         .alert[data-category="error"] {
             color: #991b1b;
@@ -290,7 +510,6 @@
             border-color: #fecaca;
         }
 
-
         .alert[data-category="success"] {
             color: #166534;
 
@@ -299,8 +518,11 @@
             border-color: #bbf7d0;
         }
 
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
 
-        @media(max-width: 560px) {
+        @media (max-width: 560px) {
 
             .nav {
                 align-items: flex-start;
@@ -308,9 +530,16 @@
                 flex-direction: column;
             }
 
-
             .card {
                 padding: 20px;
+            }
+
+            .partner-type-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .partner-type-card {
+                min-height: auto;
             }
 
         }
@@ -319,19 +548,19 @@
 
 </head>
 
-
 <body>
-
 
 <div class="shell">
 
+    <!-- =====================================================
+         NAVIGATION
+    ====================================================== -->
 
     <nav class="nav">
 
         <div class="brand">
             KALXA TICKETING · SUPER ADMIN
         </div>
-
 
         <a
             href="{{ url_for(
@@ -343,7 +572,9 @@
 
     </nav>
 
-
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
 
     {% with messages =
         get_flashed_messages(
@@ -360,6 +591,7 @@
                     <div
                         class="alert"
                         data-category="{{ category }}"
+                        role="alert"
                     >
                         {{ message }}
                     </div>
@@ -372,62 +604,200 @@
 
     {% endwith %}
 
-
+    <!-- =====================================================
+         PARTNER FORM
+    ====================================================== -->
 
     <section class="card">
 
-
         <p class="eyebrow">
-            EVENT PARTNER PROGRAM
+            KALXA PARTNERSHIP PROGRAM
         </p>
 
-
-        <h1>
+        <h1 id="page-title">
             Create Partner Account
         </h1>
 
-
-        <p class="intro">
-
-            Create an Event organizer account
-            for one of your Kalxa Ticketing
-            launch partners.
-
+        <p
+            class="intro"
+            id="page-intro"
+        >
+            Create a complimentary account for
+            an Event Organizer or Restaurant
+            joining the Kalxa partnership program.
         </p>
 
+        <!-- =================================================
+             PARTNER FORM
+        ================================================== -->
 
-        <div class="partner-info">
+        <form
+            method="POST"
+            id="partner-form"
+        >
 
-            <strong>
-                🤝 30-Day Complimentary Access
-            </strong>
+            <!-- =================================================
+                 CSRF TOKEN
+                 Render only when Flask-WTF supplies csrf_token.
+            ================================================== -->
 
-            This organizer will receive access
-            to the normal Kalxa Event organizer
-            dashboard for 30 days.
+            {% if csrf_token is defined %}
 
-            After the free period expires,
-            they will need an active subscription
-            to continue using paid organizer tools.
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
 
-        </div>
+            {% endif %}
 
+            <!-- =================================================
+                 ACCOUNT TYPE
+            ================================================== -->
 
+            <div class="partner-type-section">
 
-        <form method="POST">
+                <span class="field-heading">
+                    Select Partner Type
+                </span>
 
+                {% set selected_account_type =
+                    request.form.get(
+                        'account_type',
+                        request.args.get(
+                            'account_type',
+                            'event'
+                        )
+                    )
+                %}
+
+                <div class="partner-type-grid">
+
+                    <!-- EVENT ORGANIZER -->
+
+                    <label class="partner-type-option event">
+
+                        <input
+                            type="radio"
+                            name="account_type"
+                            value="event"
+
+                            {% if selected_account_type != 'restaurant' %}
+                                checked
+                            {% endif %}
+                        >
+
+                        <span class="partner-type-card">
+
+                            <span class="partner-type-icon">
+                                🎟️
+                            </span>
+
+                            <strong>
+                                Event Organizer
+                            </strong>
+
+                            <small>
+                                Create an event organizer
+                                account with 30 days
+                                of complimentary access.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                    <!-- RESTAURANT -->
+
+                    <label class="partner-type-option restaurant">
+
+                        <input
+                            type="radio"
+                            name="account_type"
+                            value="restaurant"
+
+                            {% if selected_account_type == 'restaurant' %}
+                                checked
+                            {% endif %}
+                        >
+
+                        <span class="partner-type-card">
+
+                            <span class="partner-type-icon">
+                                🍽️
+                            </span>
+
+                            <strong>
+                                Restaurant Partner
+                            </strong>
+
+                            <small>
+                                Create a restaurant
+                                account with 90 days
+                                of complimentary access.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+            <!-- =================================================
+                 PARTNERSHIP INFORMATION
+            ================================================== -->
+
+            <div
+                class="partner-info"
+                id="partner-info"
+            >
+
+                <strong id="partner-info-title">
+                    🤝 Complimentary Partner Access
+                </strong>
+
+                <span id="partner-info-description">
+                    The selected partner receives
+                    complimentary access for the
+                    applicable partnership period.
+                </span>
+
+            </div>
+
+            <!-- =================================================
+                 BUSINESS INFORMATION
+            ================================================== -->
+
+            <hr class="form-divider">
+
+            <h2 class="section-title">
+                Partner Information
+            </h2>
+
+            <p class="section-description">
+                Enter the details of the business
+                representative and their establishment.
+            </p>
+
+            <!-- NAME -->
 
             <div class="field">
 
-                <label for="name">
+                <label
+                    for="name"
+                    id="name-label"
+                >
                     Organizer Name
                 </label>
-
 
                 <input
                     id="name"
                     name="name"
                     type="text"
+
+                    maxlength="120"
 
                     value="{{ request.form.get(
                         'name',
@@ -436,24 +806,35 @@
 
                     placeholder="e.g. Thabo Mokoena"
 
+                    autocomplete="name"
+
                     required
                 >
 
+                <span class="field-help">
+                    Name of the person responsible
+                    for managing the Kalxa account.
+                </span>
+
             </div>
 
-
+            <!-- BUSINESS NAME -->
 
             <div class="field">
 
-                <label for="business_name">
+                <label
+                    for="business_name"
+                    id="business-name-label"
+                >
                     Event Business / Brand
                 </label>
-
 
                 <input
                     id="business_name"
                     name="business_name"
                     type="text"
+
+                    maxlength="160"
 
                     value="{{ request.form.get(
                         'business_name',
@@ -462,12 +843,14 @@
 
                     placeholder="e.g. KWM Events"
 
+                    autocomplete="organization"
+
                     required
                 >
 
             </div>
 
-
+            <!-- EMAIL -->
 
             <div class="field">
 
@@ -475,25 +858,34 @@
                     Email Address
                 </label>
 
-
                 <input
                     id="email"
                     name="email"
                     type="email"
+
+                    maxlength="254"
 
                     value="{{ request.form.get(
                         'email',
                         ''
                     ) }}"
 
-                    placeholder="organizer@example.com"
+                    placeholder="partner@example.com"
+
+                    autocomplete="email"
 
                     required
                 >
 
+                <span class="field-help">
+                    Use an email address the partner
+                    can access for account login
+                    and communication.
+                </span>
+
             </div>
 
-
+            <!-- PHONE -->
 
             <div class="field">
 
@@ -501,11 +893,12 @@
                     Phone Number
                 </label>
 
-
                 <input
                     id="phone"
                     name="phone"
                     type="tel"
+
+                    maxlength="30"
 
                     value="{{ request.form.get(
                         'phone',
@@ -513,23 +906,61 @@
                     ) }}"
 
                     placeholder="e.g. 0791234567"
+
+                    autocomplete="tel"
                 >
 
             </div>
 
+            <!-- =================================================
+                 RESTAURANT PARTNER NOTICE
+            ================================================== -->
 
+            <div
+                class="contribution-info"
+                id="contribution-info"
+            >
+
+                <strong>
+                    🌱 KALXA Community Launch
+                </strong>
+
+                Restaurant partners receive a
+                complimentary promotional listing
+                for 90 days.
+
+                Participation does not require
+                payment.
+
+                Businesses may choose to make
+                a voluntary contribution of any
+                amount towards Kalxa's hosting
+                and digital infrastructure.
+
+                <br><br>
+
+                Contributions do not affect
+                eligibility for the free listing.
+
+                Paid access must not begin
+                automatically when the
+                complimentary period ends.
+
+            </div>
+
+            <!-- =================================================
+                 SUBMIT
+            ================================================== -->
 
             <button
                 type="submit"
                 class="button"
+                id="submit-button"
             >
-                🤝 Create 30-Day Partner Account
+                🤝 Create Partner Account
             </button>
 
-
         </form>
-
-
 
         <a
             href="{{ url_for(
@@ -540,12 +971,218 @@
             ← Back to Super Admin
         </a>
 
-
     </section>
-
 
 </div>
 
+<!-- =====================================================
+     DYNAMIC PARTNER TYPE UI
+====================================================== -->
+
+<script>
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            "use strict";
+
+            /* =============================================
+               ELEMENTS
+            ============================================== */
+
+            const accountTypeInputs =
+                document.querySelectorAll(
+                    'input[name="account_type"]'
+                );
+
+            const pageIntro =
+                document.getElementById(
+                    "page-intro"
+                );
+
+            const nameLabel =
+                document.getElementById(
+                    "name-label"
+                );
+
+            const businessNameLabel =
+                document.getElementById(
+                    "business-name-label"
+                );
+
+            const nameInput =
+                document.getElementById(
+                    "name"
+                );
+
+            const businessNameInput =
+                document.getElementById(
+                    "business_name"
+                );
+
+            const emailInput =
+                document.getElementById(
+                    "email"
+                );
+
+            const partnerInfo =
+                document.getElementById(
+                    "partner-info"
+                );
+
+            const partnerInfoTitle =
+                document.getElementById(
+                    "partner-info-title"
+                );
+
+            const partnerInfoDescription =
+                document.getElementById(
+                    "partner-info-description"
+                );
+
+            const contributionInfo =
+                document.getElementById(
+                    "contribution-info"
+                );
+
+            const submitButton =
+                document.getElementById(
+                    "submit-button"
+                );
+
+            /* =============================================
+               GET SELECTED ACCOUNT TYPE
+            ============================================== */
+
+            function getAccountType() {
+
+                const selected =
+                    document.querySelector(
+                        'input[name="account_type"]:checked'
+                    );
+
+                if (!selected) {
+                    return "event";
+                }
+
+                return selected.value === "restaurant"
+                    ? "restaurant"
+                    : "event";
+
+            }
+
+            /* =============================================
+               UPDATE FORM
+            ============================================== */
+
+            function updatePartnerForm() {
+
+                const accountType =
+                    getAccountType();
+
+                const isRestaurant =
+                    accountType === "restaurant";
+
+                /* PAGE INTRO */
+
+                pageIntro.textContent =
+                    isRestaurant
+                        ? "Create a complimentary Restaurant Partner account for a local restaurant joining the Kalxa Community Launch initiative."
+                        : "Create an Event Organizer account for one of your Kalxa Ticketing launch partners.";
+
+                /* FORM LABELS */
+
+                nameLabel.textContent =
+                    isRestaurant
+                        ? "Restaurant Owner / Manager Name"
+                        : "Organizer Name";
+
+                businessNameLabel.textContent =
+                    isRestaurant
+                        ? "Restaurant Business Name"
+                        : "Event Business / Brand";
+
+                /* PLACEHOLDERS */
+
+                nameInput.placeholder =
+                    isRestaurant
+                        ? "e.g. Nomsa Mahlangu"
+                        : "e.g. Thabo Mokoena";
+
+                businessNameInput.placeholder =
+                    isRestaurant
+                        ? "e.g. KwaMhlanga Grill"
+                        : "e.g. KWM Events";
+
+                emailInput.placeholder =
+                    isRestaurant
+                        ? "restaurant@example.com"
+                        : "organizer@example.com";
+
+                /* PARTNER INFORMATION */
+
+                partnerInfo.classList.toggle(
+                    "restaurant",
+                    isRestaurant
+                );
+
+                partnerInfoTitle.textContent =
+                    isRestaurant
+                        ? "🍽️ 90-Day Restaurant Partnership"
+                        : "🎟️ 30-Day Event Organizer Partnership";
+
+                partnerInfoDescription.textContent =
+                    isRestaurant
+                        ? "This restaurant receives 90 days of complimentary promotional access through Kalxa Restaurant Profiles. After expiry, continued paid services require the restaurant's agreement."
+                        : "This organizer receives 30 days of complimentary access to the normal Kalxa Event Organizer dashboard. After expiry, an active subscription is required to continue using paid organizer tools.";
+
+                /* CONTRIBUTION NOTICE */
+
+                contributionInfo.classList.toggle(
+                    "visible",
+                    isRestaurant
+                );
+
+                /* BUTTON */
+
+                submitButton.classList.toggle(
+                    "restaurant",
+                    isRestaurant
+                );
+
+                submitButton.textContent =
+                    isRestaurant
+                        ? "🍽️ Create 90-Day Restaurant Partner"
+                        : "🎟️ Create 30-Day Event Partner";
+
+            }
+
+            /* =============================================
+               ACCOUNT TYPE CHANGE
+            ============================================== */
+
+            accountTypeInputs.forEach(
+                function (input) {
+
+                    input.addEventListener(
+                        "change",
+                        updatePartnerForm
+                    );
+
+                }
+            );
+
+            /* =============================================
+               INITIALISE
+            ============================================== */
+
+            updatePartnerForm();
+
+        }
+    );
+
+</script>
 
 </body>
 
