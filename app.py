@@ -6575,6 +6575,109 @@ def serialize_public_restaurant(
     # ============================================================
 # REQUIRE ACTIVE RESTAURANT SUBSCRIPTION
 # ============================================================
+# ============================================================
+# KALXA TICKETING - ORGANIZER AUTHENTICATION
+# ============================================================
+#
+# PURPOSE:
+#
+# Verify that a user is authenticated as a KALXA Ticketing
+# business account.
+#
+# SUPPORTED ACCOUNT TYPES:
+#
+# - event
+# - restaurant
+#
+# IMPORTANT:
+#
+# This function checks authentication only.
+#
+# It does not:
+#
+# - Require Event Organizer approval.
+# - Require a legacy Organizer subscription.
+# - Require a paid Restaurant subscription.
+# - Require a published restaurant profile.
+#
+# Account authorization is enforced separately by
+# the relevant route.
+# ============================================================
+
+
+def require_ticketing_organizer():
+
+    # ========================================================
+    # CURRENT ORGANIZER
+    # ========================================================
+
+    organizer = get_current_organizer()
+
+    # ========================================================
+    # AUTHENTICATED
+    # ========================================================
+
+    if organizer is not None:
+
+        return None
+
+    # ========================================================
+    # NOT AUTHENTICATED
+    # ========================================================
+
+    flash(
+        (
+            "Please sign in to your "
+            "KALXA Ticketing business account."
+        ),
+        "error",
+    )
+
+    return redirect(
+        url_for(
+            "organizer_login"
+        )
+    )
+    
+
+# ============================================================
+# KALXA TICKETING - RESTAURANT ACCOUNT ACCESS
+# ============================================================
+#
+# PURPOSE:
+#
+# Authorize restaurant accounts to access restaurant
+# management tools.
+#
+# SUPPORTED:
+#
+# - Free restaurant accounts
+# - Standard restaurant accounts
+# - Premium restaurant accounts
+# - Super Admin-created Premium restaurant partners
+# - Published restaurant profiles
+# - Unpublished restaurant profiles
+#
+# IMPORTANT:
+#
+# This helper verifies the account itself.
+#
+# It must NOT require:
+#
+#     organizer.is_subscription_active
+#
+# It must NOT require:
+#
+#     organizer.can_manage_events
+#
+# It must NOT require:
+#
+#     restaurant.active == True
+#
+# Restaurant subscription features are determined through
+# the RestaurantAdvert model.
+# ============================================================
+
 
 def require_restaurant_subscription():
 
@@ -6582,16 +6685,21 @@ def require_restaurant_subscription():
     # CURRENT ORGANIZER
     # ========================================================
 
-    organizer = (
-        get_current_organizer()
-    )
-
+    organizer = get_current_organizer()
 
     # ========================================================
     # AUTHENTICATION
     # ========================================================
 
-    if not organizer:
+    if organizer is None:
+
+        flash(
+            (
+                "Please sign in to your "
+                "KALXA restaurant account."
+            ),
+            "error",
+        )
 
         return redirect(
             url_for(
@@ -6599,43 +6707,34 @@ def require_restaurant_subscription():
             )
         )
 
-
     # ========================================================
     # ACCOUNT TYPE
     # ========================================================
 
     account_type = (
-        getattr(
-            organizer,
-            "account_type",
-            None,
+        str(
+            getattr(
+                organizer,
+                "account_type",
+                None,
+            )
+            or "event"
         )
-        or "event"
+        .strip()
+        .lower()
     )
-
 
     # ========================================================
     # RESTAURANT ACCOUNT REQUIRED
     # ========================================================
-    #
-    # Restaurant tools are only available to accounts whose
-    # account_type is:
-    #
-    #     restaurant
-    #
-    # Event organizer accounts should not be able to enter
-    # restaurant management routes.
-    # ========================================================
 
-    if (
-        account_type
-        != "restaurant"
-    ):
+    if account_type != "restaurant":
 
         flash(
             (
-                "Restaurant tools are only "
-                "available to restaurant accounts."
+                "Restaurant management tools "
+                "are only available to "
+                "restaurant accounts."
             ),
             "error",
         )
@@ -6646,63 +6745,122 @@ def require_restaurant_subscription():
             )
         )
 
+    # ========================================================
+    # ACCOUNT MUST BE ACTIVE
+    # ========================================================
+    #
+    # Check the owner's Organizer account status.
+    #
+    # Do not confuse this with:
+    #
+    #     RestaurantAdvert.active
+    #
+    # RestaurantAdvert.active controls the publication
+    # state of a restaurant profile.
+    #
+    # An unpublished restaurant profile must still be
+    # editable by its authenticated owner.
+    # ========================================================
+
+    if not organizer.active:
+
+        flash(
+            (
+                "Your restaurant account is currently "
+                "inactive. Please contact KALXA support."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
 
     # ========================================================
-    # RESTAURANT PLAN ARCHITECTURE
+    # RESTAURANT ACCOUNT SUSPENSION
     # ========================================================
     #
-    # IMPORTANT:
+    # Suspended owners cannot access management tools.
     #
-    # We deliberately DO NOT check:
+    # Do not use the Event Organizer approval workflow
+    # for restaurant accounts.
+    # ========================================================
+
+    if (
+        getattr(
+            organizer,
+            "subscription_status",
+            None,
+        )
+        == "suspended"
+        or getattr(
+            organizer,
+            "suspended_at",
+            None,
+        )
+        is not None
+    ):
+
+        flash(
+            (
+                "Your restaurant account has been "
+                "suspended. Please contact KALXA support."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "organizer_login"
+            )
+        )
+
+    # ========================================================
+    # RESTAURANT SUBSCRIPTION ARCHITECTURE
+    # ========================================================
     #
-    #     organizer.is_subscription_active
+    # FREE:
     #
-    # here anymore.
+    # - Basic restaurant profile
+    # - Main poster
+    # - Restaurant reel
     #
-    # Restaurant access now follows the RestaurantAdvert plan:
+    # STANDARD:
     #
-    # FREE
-    #     R0
-    #     Basic restaurant profile
-    #     Main poster
-    #     Restaurant reel/discovery
+    # - Free features
+    # - Gallery images
+    # - Opening hours
+    # - Customer experiences
     #
-    # STANDARD
-    #     R219/month
-    #     Free features
-    #     Gallery
-    #     Operational hours
-    #     Customer experiences
-    #     Rating QR
+    # PREMIUM:
     #
-    # PREMIUM
-    #     R299/month
-    #     Standard features
-    #     Kalxa Stories eligibility
-    #     Restaurant analytics
+    # - Standard features
+    # - KALXA Stories eligibility
+    # - Restaurant analytics
     #
-    # Because Free is a valid active restaurant plan, a
-    # restaurant account must NOT be forced to purchase the
-    # old Organizer subscription merely to create/manage its
-    # Free restaurant profile.
+    # SUPER ADMIN RESTAURANT PARTNERS:
     #
-    # Paid feature permissions are enforced on the actual
-    # RestaurantAdvert through:
+    # - RestaurantAdvert.subscription_tier = "premium"
+    # - RestaurantAdvert.subscription_status = "active"
+    # - Complimentary Premium access for the grant period
     #
+    # This helper must NOT require a payment transaction
+    # or legacy Organizer subscription.
+    #
+    # Feature permissions remain enforced using:
+    #
+    #     advert.can_use_reel
     #     advert.can_use_gallery
     #     advert.can_use_opening_hours
     #     advert.can_receive_customer_experiences
     #     advert.can_use_stories
     #     advert.can_view_analytics
-    #
-    # This helper therefore controls access to RESTAURANT
-    # TOOLS, not access to a particular paid restaurant
-    # feature.
     # ========================================================
 
-
     # ========================================================
-    # ACCESS ALLOWED
+    # ACCESS GRANTED
     # ========================================================
 
     return None
@@ -11229,32 +11387,7 @@ def normalize_attendee_phone(
 # REQUIRE ORGANIZER
 # ============================================================
 
-def require_ticketing_organizer():
 
-    organizer = (
-        get_current_organizer()
-    )
-
-
-    if organizer:
-
-        return None
-
-
-    flash(
-        (
-            "Please sign in to your "
-            "Kalxa Ticketing organizer account."
-        ),
-        "error",
-    )
-
-
-    return redirect(
-        url_for(
-            "organizer_login"
-        )
-    )
 
 
 # ============================================================
@@ -20675,11 +20808,66 @@ def admin_create_restaurant():
 # EDIT RESTAURANT
 # ============================================================
 
+# ============================================================
+# KALXA TICKETING
+# RESTAURANT PROFILE EDITING
+# ============================================================
+#
+# PURPOSE:
+#
+# Allow authenticated restaurant owners to edit their
+# existing restaurant profiles.
+#
+# SUPPORTS:
+#
+# - Normal restaurant registrations
+# - Super Admin-created restaurant partners
+# - Free, Standard and Premium plans
+# - Complimentary Premium partner access
+# - Published restaurant profiles
+# - Unpublished restaurant profiles
+#
+# SECURITY:
+#
+# - Authenticated organizer required
+# - Restaurant account required
+# - Active organizer account required
+# - Strict restaurant ownership verification
+# - Server-side Premium feature checks
+#
+# IMPORTANT:
+#
+# RestaurantAdvert.active controls publication status.
+#
+# An unpublished restaurant must remain editable.
+# ============================================================
+
+
 @app.route(
     "/admin/restaurants/<int:advert_id>/edit",
     methods=["GET", "POST"],
 )
 def admin_edit_restaurant(advert_id):
+
+    # ========================================================
+    # REQUEST DIAGNOSTICS
+    # ========================================================
+    #
+    # These logs help identify the source of HTTP 403.
+    #
+    # Do not log passwords, authentication tokens
+    # or customer personal information.
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Restaurant Edit] "
+            "Request started "
+            "advert_id=%s method=%s"
+        ),
+        advert_id,
+        request.method,
+    )
 
     # ========================================================
     # AUTHENTICATION
@@ -20688,23 +20876,53 @@ def admin_edit_restaurant(advert_id):
     auth = require_ticketing_organizer()
 
     if auth:
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "Blocked by organizer authentication "
+                "advert_id=%s status=%s"
+            ),
+            advert_id,
+            getattr(auth, "status_code", None),
+        )
+
         return auth
 
     # ========================================================
-    # RESTAURANT SUBSCRIPTION ACCESS
+    # RESTAURANT ACCOUNT ACCESS
     # ========================================================
     #
-    # Restaurant access must not depend on legacy
-    # Event Organizer SaaS subscriptions.
+    # This helper checks restaurant account eligibility.
     #
-    # IMPORTANT:
-    # If this helper rejects unpublished restaurant
-    # profiles, its implementation must also be updated.
+    # It must not require:
+    #
+    # organizer.can_manage_events
+    # organizer.is_subscription_active
+    # advert.active == True
+    #
+    # Restaurant subscription features are controlled
+    # by RestaurantAdvert.
     # ========================================================
 
     subscription_auth = require_restaurant_subscription()
 
     if subscription_auth:
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "Blocked by restaurant access helper "
+                "advert_id=%s status=%s"
+            ),
+            advert_id,
+            getattr(
+                subscription_auth,
+                "status_code",
+                None,
+            ),
+        )
+
         return subscription_auth
 
     # ========================================================
@@ -20713,10 +20931,22 @@ def admin_edit_restaurant(advert_id):
 
     organizer = get_current_organizer()
 
-    if not organizer:
+    if organizer is None:
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "No authenticated organizer "
+                "advert_id=%s"
+            ),
+            advert_id,
+        )
 
         flash(
-            "Your account could not be found. Please log in.",
+            (
+                "Your account could not be found. "
+                "Please log in."
+            ),
             "error",
         )
 
@@ -20725,10 +20955,39 @@ def admin_edit_restaurant(advert_id):
         )
 
     # ========================================================
+    # ORGANIZER DIAGNOSTICS
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Restaurant Edit] "
+            "Authenticated organizer "
+            "advert_id=%s "
+            "organizer_id=%s "
+            "account_type=%s "
+            "account_active=%s"
+        ),
+        advert_id,
+        organizer.id,
+        organizer.normalized_account_type,
+        organizer.active,
+    )
+
+    # ========================================================
     # ORGANIZER ACCOUNT STATUS
     # ========================================================
 
     if not organizer.active:
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "Inactive organizer "
+                "organizer_id=%s advert_id=%s"
+            ),
+            organizer.id,
+            advert_id,
+        )
 
         flash(
             "Your business account is inactive.",
@@ -20745,6 +21004,19 @@ def admin_edit_restaurant(advert_id):
 
     if organizer.normalized_account_type != "restaurant":
 
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "HTTP 403: account type mismatch "
+                "organizer_id=%s "
+                "account_type=%s "
+                "advert_id=%s"
+            ),
+            organizer.id,
+            organizer.normalized_account_type,
+            advert_id,
+        )
+
         abort(403)
 
     # ========================================================
@@ -20753,12 +21025,11 @@ def admin_edit_restaurant(advert_id):
     #
     # CRITICAL:
     #
-    # A restaurant owner can only edit a RestaurantAdvert
-    # belonging to their authenticated Organizer account.
+    # The authenticated organizer must own the restaurant.
     #
     # Do not filter by advert.active.
     #
-    # Unpublished profiles must remain editable.
+    # active=False represents an unpublished profile.
     # ========================================================
 
     advert = (
@@ -20771,39 +21042,130 @@ def admin_edit_restaurant(advert_id):
     )
 
     # ========================================================
+    # RESTAURANT DIAGNOSTICS
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Restaurant Edit] "
+            "Restaurant loaded "
+            "advert_id=%s "
+            "owner_id=%s "
+            "active=%s "
+            "plan=%s "
+            "subscription_status=%s"
+        ),
+        advert.id,
+        advert.organizer_id,
+        advert.active,
+        advert.normalized_subscription_tier,
+        advert.subscription_status,
+    )
+
+    # ========================================================
     # RESTAURANT PUBLICATION STATUS
     # ========================================================
     #
-    # REMOVED:
+    # DO NOT RESTORE THIS CHECK:
     #
     # if not advert.active:
     #     abort(403)
     #
-    # This was preventing owners from editing
-    # Super Admin-created restaurant profiles.
+    # Super Admin-created partners may have active=False.
     #
-    # active=False means unpublished.
-    # It must not mean editing is forbidden.
+    # They must be allowed to complete their profiles.
     # ========================================================
 
     # ========================================================
     # RESTAURANT ORGANIZER SAFETY
     # ========================================================
 
-    if not advert.organizer:
+    if advert.organizer is None:
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "HTTP 403: restaurant has no owner "
+                "advert_id=%s"
+            ),
+            advert.id,
+        )
+
+        abort(403)
+
+    if advert.organizer.id != organizer.id:
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "HTTP 403: ownership mismatch "
+                "advert_id=%s "
+                "authenticated_organizer_id=%s"
+            ),
+            advert.id,
+            organizer.id,
+        )
 
         abort(403)
 
     if not advert.organizer.active:
 
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "HTTP 403: restaurant owner inactive "
+                "advert_id=%s "
+                "organizer_id=%s"
+            ),
+            advert.id,
+            organizer.id,
+        )
+
         abort(403)
 
-    if advert.organizer.normalized_account_type != "restaurant":
+    if (
+        advert.organizer.normalized_account_type
+        != "restaurant"
+    ):
+
+        current_app.logger.warning(
+            (
+                "[Restaurant Edit] "
+                "HTTP 403: restaurant owner role invalid "
+                "advert_id=%s "
+                "organizer_id=%s"
+            ),
+            advert.id,
+            organizer.id,
+        )
 
         abort(403)
 
     # ========================================================
+    # ACCOUNT AUTHORIZATION SUCCESSFUL
+    # ========================================================
+
+    current_app.logger.info(
+        (
+            "[Restaurant Edit] "
+            "Authorization passed "
+            "advert_id=%s organizer_id=%s"
+        ),
+        advert.id,
+        organizer.id,
+    )
+
+    # ========================================================
     # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # ========================================================
+    #
+    # This preserves the existing restaurant subscription
+    # lifecycle.
+    #
+    # Super Admin-created complimentary Premium partners
+    # already have Premium assigned during onboarding.
+    #
+    # This route does not create subscription payments.
     # ========================================================
 
     sync_restaurant_subscription(advert)
@@ -20821,17 +21183,12 @@ def admin_edit_restaurant(advert_id):
     # ========================================================
     # LEGACY ORGANIZER SUBSCRIPTION DATE
     # ========================================================
-    #
-    # Used only when expected by restaurant_form.html.
-    # ========================================================
 
     subscription_end_iso = (
         organizer.subscription_expires_at
         .date()
         .isoformat()
-
         if organizer.subscription_expires_at
-
         else ""
     )
 
@@ -20850,7 +21207,13 @@ def admin_edit_restaurant(advert_id):
 
             today_iso=today_iso,
 
-            subscription_end_iso=subscription_end_iso,
+            subscription_end_iso=(
+                subscription_end_iso
+            ),
+
+            # =================================================
+            # RESTAURANT PLAN
+            # =================================================
 
             restaurant_plan=(
                 advert.normalized_subscription_tier
@@ -20863,6 +21226,10 @@ def admin_edit_restaurant(advert_id):
             restaurant_plan_price=(
                 advert.subscription_price
             ),
+
+            # =================================================
+            # RESTAURANT FEATURE PERMISSIONS
+            # =================================================
 
             can_use_reel=(
                 advert.can_use_reel
@@ -20895,13 +21262,26 @@ def admin_edit_restaurant(advert_id):
 
     if request.method == "GET":
 
+        current_app.logger.info(
+            (
+                "[Restaurant Edit] "
+                "Rendering edit form "
+                "advert_id=%s organizer_id=%s"
+            ),
+            advert.id,
+            organizer.id,
+        )
+
         return render_form()
 
     # ========================================================
     # POST REQUEST
     # ========================================================
     #
-    # CSRF validation must be enabled for this route.
+    # IMPORTANT:
+    #
+    # Ensure the application validates CSRF tokens
+    # for all authenticated state-changing requests.
     # ========================================================
 
     sync_restaurant_subscription(advert)
@@ -21031,6 +21411,10 @@ def admin_edit_restaurant(advert_id):
 
         if new_poster and new_poster.filename:
 
+            # =================================================
+            # VALIDATE POSTER TYPE
+            # =================================================
+
             if not allowed_restaurant_poster_filename(
                 new_poster.filename
             ):
@@ -21043,7 +21427,7 @@ def admin_edit_restaurant(advert_id):
                 return render_form()
 
             # =================================================
-            # POSTER FILE SIZE
+            # VALIDATE POSTER SIZE
             # =================================================
 
             new_poster.stream.seek(
@@ -21058,7 +21442,10 @@ def admin_edit_restaurant(advert_id):
             if file_size > RESTAURANT_POSTER_MAX_FILE_BYTES:
 
                 flash(
-                    "The poster is too large. Maximum size is 8 MB.",
+                    (
+                        "The poster is too large. "
+                        "Maximum size is 8 MB."
+                    ),
                     "error",
                 )
 
@@ -21068,33 +21455,41 @@ def admin_edit_restaurant(advert_id):
             # UPLOAD NEW POSTER
             # =================================================
 
-            upload_result = cloudinary.uploader.upload(
-                new_poster,
+            upload_result = (
+                cloudinary.uploader.upload(
+                    new_poster,
 
-                resource_type="image",
+                    resource_type="image",
 
-                folder=(
-                    f"kalxa/organizers/"
-                    f"{organizer.id}/restaurants/posters"
-                ),
+                    folder=(
+                        f"kalxa/organizers/"
+                        f"{organizer.id}/"
+                        "restaurants/posters"
+                    ),
 
-                use_filename=True,
-                unique_filename=True,
-                overwrite=False,
+                    use_filename=True,
+
+                    unique_filename=True,
+
+                    overwrite=False,
+                )
             )
 
-            uploaded_public_id = upload_result.get(
-                "public_id"
+            uploaded_public_id = (
+                upload_result.get("public_id")
             )
 
-            secure_url = upload_result.get(
-                "secure_url"
+            secure_url = (
+                upload_result.get("secure_url")
             )
 
             if not uploaded_public_id or not secure_url:
 
                 raise RuntimeError(
-                    "Cloudinary did not return the uploaded poster."
+                    (
+                        "Cloudinary did not return "
+                        "the uploaded poster."
+                    )
                 )
 
             old_public_id = (
@@ -21108,7 +21503,7 @@ def admin_edit_restaurant(advert_id):
             advert.poster_image_url = secure_url
 
         # ====================================================
-        # UPDATE RESTAURANT DETAILS
+        # UPDATE BASIC RESTAURANT DETAILS
         # ========================================================
 
         advert.business_name = business_name
@@ -21185,7 +21580,7 @@ def admin_edit_restaurant(advert_id):
         advert.ends_at = ends_at
 
         # ====================================================
-        # FINAL GALLERY CAPABILITY CHECK
+        # FINAL GALLERY PERMISSION CHECK
         # ========================================================
 
         if gallery_files:
@@ -21213,7 +21608,7 @@ def admin_edit_restaurant(advert_id):
                 )
 
         # ====================================================
-        # ADD GALLERY PHOTOS
+        # UPLOAD GALLERY IMAGES
         # ========================================================
 
         next_image_order = (
@@ -21230,9 +21625,9 @@ def admin_edit_restaurant(advert_id):
                 )
             )
 
-            public_id = gallery_result[
-                "public_id"
-            ]
+            public_id = (
+                gallery_result["public_id"]
+            )
 
             gallery_uploaded_public_ids.append(
                 public_id
@@ -21262,10 +21657,14 @@ def admin_edit_restaurant(advert_id):
             next_image_order += 1
 
         # ====================================================
-        # SAVE CHANGES
+        # SAVE DATABASE CHANGES
         # ========================================================
 
         db.session.commit()
+
+    # ========================================================
+    # UPDATE FAILURE
+    # ========================================================
 
     except Exception:
 
@@ -21290,7 +21689,7 @@ def admin_edit_restaurant(advert_id):
                 current_app.logger.exception(
                     (
                         "[Restaurant Edit] "
-                        "Poster cleanup failed."
+                        "New poster cleanup failed."
                     )
                 )
 
@@ -21319,10 +21718,15 @@ def admin_edit_restaurant(advert_id):
                     public_id,
                 )
 
+        # ====================================================
+        # LOG DATABASE/UPLOAD FAILURE
+        # ========================================================
+
         current_app.logger.exception(
             (
                 "[Restaurant Edit] "
-                "Failed organizer_id=%s advert_id=%s"
+                "Update failed "
+                "organizer_id=%s advert_id=%s"
             ),
             organizer.id,
             advert.id,
@@ -21341,7 +21745,7 @@ def admin_edit_restaurant(advert_id):
         )
 
     # ========================================================
-    # CLEAN OLD POSTER AFTER SUCCESS
+    # REMOVE OLD POSTER AFTER SUCCESS
     # ========================================================
 
     if old_public_id and old_public_id != uploaded_public_id:
@@ -21382,7 +21786,8 @@ def admin_edit_restaurant(advert_id):
         flash(
             (
                 "Restaurant updated successfully. "
-                f"{photo_count} gallery {photo_label} added."
+                f"{photo_count} gallery "
+                f"{photo_label} added."
             ),
             "success",
         )
@@ -21404,7 +21809,6 @@ def admin_edit_restaurant(advert_id):
             advert_id=advert.id,
         )
     )
-
 # ============================================================
 # SUPER ADMIN - DELETE ORGANIZER / RESTAURANT ACCOUNT
 # ============================================================
@@ -27832,104 +28236,7 @@ def get_current_organizer():
 # REQUIRE AUTHENTICATED ORGANIZER
 # ============================================================
 
-def require_ticketing_organizer():
 
-    organizer = get_current_organizer()
-
-    if organizer:
-        return None
-
-    flash(
-        "Please sign in to your "
-        "Kalxa Ticketing organiser account.",
-        "error",
-    )
-
-    return redirect(
-        url_for("organizer_login")
-    )
-
-
-# ============================================================
-# REQUIRE APPROVED EVENT ORGANIZER
-# ============================================================
-#
-# Replaces the old mandatory subscription requirement for
-# event management.
-#
-# IMPORTANT:
-# This function is for event management actions, not
-# general dashboard access.
-# ============================================================
-
-def require_approved_event_organizer():
-
-    auth = require_ticketing_organizer()
-
-    if auth:
-        return auth
-
-    organizer = get_current_organizer()
-
-    if organizer.account_type != "event":
-
-        flash(
-            "This feature is available only "
-            "to event organisers.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    approval_status = (
-        organizer.approval_status
-        or "pending"
-    ).strip().lower()
-
-    if (
-        approval_status == "approved"
-        and organizer.active
-    ):
-        return None
-
-    if approval_status == "pending":
-
-        message = (
-            "Your event organiser application is "
-            "pending KALXA administrator approval."
-        )
-
-    elif approval_status == "rejected":
-
-        message = (
-            "Your event organiser application "
-            "has been rejected."
-        )
-
-    elif approval_status == "suspended":
-
-        message = (
-            "Your event organiser account "
-            "is currently suspended."
-        )
-
-    else:
-
-        message = (
-            "Your event organiser account "
-            "is not approved for event management."
-        )
-
-    flash(
-        message,
-        "error",
-    )
-
-    return redirect(
-        url_for("admin_dashboard")
-    )
 
 
 # ============================================================
