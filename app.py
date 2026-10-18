@@ -23514,44 +23514,68 @@ def get_taggable_restaurants():
 # ============================================================
 # ADMIN - MANAGE RESTAURANT
 # ============================================================
+# ============================================================
+# KALXA TICKETING
+# RESTAURANT MANAGEMENT CONTROL CENTRE
+# ============================================================
+#
+# SUPPORTS:
+#
+# - Restaurant accounts
+# - Super Admin-created restaurant partners
+# - Free / Standard / Premium plans
+# - Complimentary Premium partner access
+# - Published restaurant profiles
+# - Unpublished restaurant profiles
+# - Restaurant subscription lifecycle
+# - Restaurant feature permissions
+#
+# SECURITY:
+#
+# - Authenticated organizer required
+# - Active restaurant account required
+# - Restaurant ownership enforced
+# - No cross-account restaurant access
+#
+# IMPORTANT:
+#
+# RestaurantAdvert.active controls publication status.
+#
+# It must NOT prevent a restaurant owner from managing
+# or editing their own restaurant profile.
+# ============================================================
+
 
 @app.route(
     "/admin/restaurants/<int:advert_id>/manage"
 )
-def admin_manage_restaurant(
-    advert_id,
-):
+def admin_manage_restaurant(advert_id):
 
     # ========================================================
     # AUTHENTICATION
     # ========================================================
 
-    auth = (
-        require_ticketing_organizer()
-    )
-
+    auth = require_ticketing_organizer()
 
     if auth:
         return auth
 
-
-    organizer = (
-        get_current_organizer()
-    )
-
-
     # ========================================================
-    # ORGANIZER REQUIRED
+    # CURRENT ORGANIZER
     # ========================================================
+
+    organizer = get_current_organizer()
 
     if not organizer:
 
-        return redirect(
-            url_for(
-                "organizer_login"
-            )
+        flash(
+            "Please log in to manage your restaurant.",
+            "error",
         )
 
+        return redirect(
+            url_for("organizer_login")
+        )
 
     # ========================================================
     # RESTAURANT ACCOUNT ONLY
@@ -23560,108 +23584,157 @@ def admin_manage_restaurant(
     account_type = (
         getattr(
             organizer,
-            "account_type",
+            "normalized_account_type",
             None,
         )
         or "event"
     )
 
+    if account_type != "restaurant":
 
-    if (
-        account_type
-        != "restaurant"
-    ):
-
-        return redirect(
-            url_for(
-                "admin_dashboard"
-            )
+        flash(
+            "This section is available to restaurant accounts.",
+            "error",
         )
 
+        return redirect(
+            url_for("admin_dashboard")
+        )
 
     # ========================================================
     # ORGANIZER ACCOUNT MUST BE ACTIVE
     # ========================================================
     #
-    # IMPORTANT:
+    # Do not check organizer.is_subscription_active here.
     #
-    # We only check whether the owner account itself is active.
-    #
-    # We deliberately DO NOT require:
-    #
-    #     organizer.is_subscription_active
-    #
-    # Restaurant subscription access is now controlled by the
-    # RestaurantAdvert Free / Standard / Premium plan.
+    # Restaurant subscription permissions are managed by
+    # RestaurantAdvert, not the legacy organizer subscription.
     # ========================================================
 
     if not organizer.active:
 
         flash(
-            (
-                "Your restaurant account is "
-                "currently inactive."
-            ),
+            "Your restaurant account is currently inactive.",
             "error",
         )
 
-
         return redirect(
-            url_for(
-                "admin_dashboard"
-            )
+            url_for("admin_dashboard")
         )
 
-
     # ========================================================
-    # RESTAURANT
+    # RESTAURANT OWNERSHIP
+    # ========================================================
+    #
+    # Super Admin-created restaurant profiles already have:
+    #
+    #     RestaurantAdvert.organizer_id = Organizer.id
+    #
+    # Retrieve the profile regardless of its active status.
+    #
+    # CRITICAL:
+    #
+    # Do NOT add:
+    #
+    #     active=True
+    #
+    # to this query.
+    #
+    # Unpublished profiles must remain manageable.
     # ========================================================
 
     advert = (
         RestaurantAdvert.query
-
         .filter_by(
             id=advert_id,
             organizer_id=organizer.id,
         )
-
         .first_or_404()
     )
 
+    # ========================================================
+    # RESTAURANT ORGANIZER SAFETY
+    # ========================================================
+
+    if not advert.organizer:
+
+        abort(403)
+
+    if advert.organizer.id != organizer.id:
+
+        abort(403)
+
+    if not advert.organizer.active:
+
+        abort(403)
+
+    if (
+        advert.organizer.normalized_account_type
+        != "restaurant"
+    ):
+
+        abort(403)
+
+    # ========================================================
+    # RESTAURANT PUBLICATION STATUS
+    # ========================================================
+    #
+    # active=True:
+    #     Restaurant is enabled for public visibility,
+    #     subject to any existing scheduling restrictions.
+    #
+    # active=False:
+    #     Restaurant is unpublished or paused.
+    #
+    # Neither state prevents authorized owner management.
+    # ========================================================
+
+    restaurant_is_published = bool(
+        advert.active
+    )
+
+    restaurant_is_unpublished = (
+        not restaurant_is_published
+    )
+
+    restaurant_publication_status = (
+        "published"
+        if restaurant_is_published
+        else "unpublished"
+    )
 
     # ========================================================
     # SYNCHRONIZE RESTAURANT SUBSCRIPTION
     # ========================================================
     #
-    # STANDARD / PREMIUM lifecycle:
+    # STANDARD / PREMIUM:
     #
-    # Active
-    #     -> paid features available
+    # Active:
+    #     Paid plan features available.
     #
-    # Expired
-    #     -> 5-day grace period
-    #     -> paid features remain available
+    # Grace period:
+    #     Features remain available under current rules.
     #
-    # Grace period expires
-    #     -> automatically downgrade to Free
+    # Grace expired:
+    #     Downgrade to Free through the existing helper.
     #
-    # Existing gallery images, hours and experiences remain
-    # stored in the database.
+    # IMPORTANT:
+    #
+    # Super Admin partner grants are not real payments.
+    #
+    # This route does not create subscription payments
+    # or alter the restaurant's payment history.
     # ========================================================
 
     sync_restaurant_subscription(
         advert
     )
 
-
     # ========================================================
     # CURRENT TIME
     # ========================================================
 
-    now = (
-        datetime.utcnow()
-    )
-
+    now = datetime.utcnow()
 
     # ========================================================
     # RESTAURANT PLAN
@@ -23671,16 +23744,13 @@ def admin_manage_restaurant(
         advert.normalized_subscription_tier
     )
 
-
     restaurant_plan_name = (
         advert.subscription_plan_name
     )
 
-
     restaurant_plan_price = (
         advert.subscription_price
     )
-
 
     # ========================================================
     # PLAN STATE
@@ -23690,145 +23760,175 @@ def admin_manage_restaurant(
         advert.is_restaurant_subscription_active
     )
 
-
     restaurant_subscription_in_grace = (
         advert.is_restaurant_subscription_in_grace_period
     )
-
 
     restaurant_subscription_grace_ends_at = (
         advert.restaurant_subscription_grace_ends_at
     )
 
+    restaurant_subscription_expires_at = (
+        advert.subscription_expires_at
+    )
 
     # ========================================================
     # GRACE PERIOD DAYS REMAINING
     # ========================================================
-    #
-    # Example:
-    #
-    # Premium expires:
-    #     1 October 10:00
-    #
-    # Grace ends:
-    #     6 October 10:00
-    #
-    # During this period the owner retains Premium features
-    # while being prompted to renew.
-    # ========================================================
 
-    restaurant_subscription_grace_days_remaining = (
-        None
-    )
-
+    restaurant_subscription_grace_days_remaining = None
 
     if (
         restaurant_subscription_in_grace
-        and
-        restaurant_subscription_grace_ends_at
+        and restaurant_subscription_grace_ends_at
     ):
 
         remaining_seconds = max(
             0,
             (
                 restaurant_subscription_grace_ends_at
-                -
-                now
+                - now
             ).total_seconds(),
         )
 
-
-        # ----------------------------------------------------
-        # ROUND UP PARTIAL DAYS
-        # ----------------------------------------------------
-        #
-        # 2 days + 3 hours remaining should display as:
-        #
-        #     3 days remaining
-        #
-        # rather than:
-        #
-        #     2 days remaining
-        # ----------------------------------------------------
-
-        restaurant_subscription_grace_days_remaining = (
-            max(
-                1,
-                int(
-                    (
-                        remaining_seconds
-                        +
-                        86399
-                    )
-                    //
-                    86400
-                ),
-            )
+        restaurant_subscription_grace_days_remaining = max(
+            1,
+            int(
+                (
+                    remaining_seconds + 86399
+                ) // 86400
+            ),
         )
 
-
     # ========================================================
-    # SUBSCRIPTION EXPIRY
+    # PREMIUM PARTNER IDENTIFICATION
+    # ========================================================
+    #
+    # A restaurant is a complimentary Premium partner when
+    # it has an eligible Super Admin-issued R0 partner grant.
+    #
+    # This is separate from payment-verified restaurant
+    # subscriptions.
+    #
+    # Only the grant created for the restaurant's organizer
+    # account is examined here.
     # ========================================================
 
-    restaurant_subscription_expires_at = (
-        advert.subscription_expires_at
+    partner_grant = (
+        SubscriptionPayment.query
+        .filter(
+            SubscriptionPayment.organizer_id
+            == organizer.id,
+
+            SubscriptionPayment.payment_method
+            == "partner_grant",
+
+            SubscriptionPayment.amount
+            == Decimal("0.00"),
+
+            SubscriptionPayment.confirmed_by
+            == "superadmin_partner_grant",
+        )
+        .order_by(
+            SubscriptionPayment.created_at.desc(),
+            SubscriptionPayment.id.desc(),
+        )
+        .first()
     )
 
+    is_restaurant_partner = bool(
+        partner_grant is not None
+        and advert.is_premium_plan
+        and partner_grant.subscription_start is not None
+        and partner_grant.subscription_end is not None
+        and partner_grant.subscription_start <= now
+        and now < partner_grant.subscription_end
+    )
+
+    # ========================================================
+    # PREMIUM PARTNER PERIOD
+    # ========================================================
+
+    partner_access_expires_at = (
+        partner_grant.subscription_end
+        if is_restaurant_partner
+        else None
+    )
+
+    partner_days_remaining = None
+
+    if partner_access_expires_at:
+
+        remaining_seconds = max(
+            0,
+            (
+                partner_access_expires_at - now
+            ).total_seconds(),
+        )
+
+        partner_days_remaining = max(
+            0,
+            int(
+                (
+                    remaining_seconds + 86399
+                ) // 86400
+            ),
+        )
 
     # ========================================================
     # PLAN FLAGS
     # ========================================================
 
-    is_free_plan = (
-        advert.is_free_plan
-    )
-
+    is_free_plan = advert.is_free_plan
 
     is_standard_plan = (
         advert.is_standard_plan
     )
 
-
     is_premium_plan = (
         advert.is_premium_plan
     )
-
 
     # ========================================================
     # UPGRADE / RENEWAL OPTIONS
     # ========================================================
     #
-    # These flags only control what the management page should
-    # offer.
+    # These are presentation flags only.
     #
-    # The payment routes must still validate the requested plan
-    # server-side when Paystack is connected.
+    # Actual upgrades and renewals must still be
+    # validated by the relevant payment routes.
+    #
+    # While complimentary Premium is active:
+    #
+    # - Do not prompt the partner to upgrade.
+    # - Do not treat the grant as a paid subscription.
+    #
+    # Renewal remains available under the existing
+    # subscription billing process.
     # ========================================================
 
     can_upgrade_to_standard = (
         restaurant_plan
         != RESTAURANT_PLAN_STANDARD
+        and not is_restaurant_partner
     )
-
 
     can_upgrade_to_premium = (
         restaurant_plan
         != RESTAURANT_PLAN_PREMIUM
+        and not is_restaurant_partner
     )
-
 
     can_renew_standard = (
         restaurant_plan
         == RESTAURANT_PLAN_STANDARD
+        and not is_restaurant_partner
     )
-
 
     can_renew_premium = (
         restaurant_plan
         == RESTAURANT_PLAN_PREMIUM
     )
-
 
     # ========================================================
     # PLAN PRICES
@@ -23840,73 +23940,100 @@ def admin_manage_restaurant(
         ]
     )
 
-
     premium_plan_price = (
         RESTAURANT_PLAN_PRICES[
             RESTAURANT_PLAN_PREMIUM
         ]
     )
 
-
     # ========================================================
     # RESTAURANT FEATURE PERMISSIONS
+    # ========================================================
+    #
+    # The actual feature entitlements come from the
+    # RestaurantAdvert model.
+    #
+    # This preserves Free / Standard / Premium permissions.
+    #
+    # The partner grant does not directly override
+    # those permission checks.
     # ========================================================
 
     can_use_reel = (
         advert.can_use_reel
     )
 
-
     can_use_gallery = (
         advert.can_use_gallery
     )
-
 
     can_use_opening_hours = (
         advert.can_use_opening_hours
     )
 
-
     can_receive_customer_experiences = (
         advert.can_receive_customer_experiences
     )
-
 
     can_use_stories = (
         advert.can_use_stories
     )
 
-
     can_view_analytics = (
         advert.can_view_analytics
     )
 
-
     # ========================================================
-    # RENDER
+    # RENDER RESTAURANT CONTROL CENTRE
     # ========================================================
 
     return render_template(
-        "admin/restaurant_manage.html",
 
+        "admin/restaurant_manage.html",
 
         # ====================================================
         # ORGANIZER
         # ====================================================
 
-        organizer=(
-            organizer
-        ),
-
+        organizer=organizer,
 
         # ====================================================
         # RESTAURANT
         # ====================================================
 
-        advert=(
-            advert
+        advert=advert,
+
+        # ====================================================
+        # PUBLICATION STATUS
+        # ====================================================
+
+        restaurant_is_published=(
+            restaurant_is_published
         ),
 
+        restaurant_is_unpublished=(
+            restaurant_is_unpublished
+        ),
+
+        restaurant_publication_status=(
+            restaurant_publication_status
+        ),
+
+        # ====================================================
+        # PARTNER STATUS
+        # ====================================================
+
+        is_restaurant_partner=(
+            is_restaurant_partner
+        ),
+
+        partner_access_expires_at=(
+            partner_access_expires_at
+        ),
+
+        partner_days_remaining=(
+            partner_days_remaining
+        ),
 
         # ====================================================
         # RESTAURANT PLAN
@@ -23932,7 +24059,6 @@ def admin_manage_restaurant(
             restaurant_subscription_expires_at
         ),
 
-
         # ====================================================
         # GRACE PERIOD
         # ====================================================
@@ -23948,7 +24074,6 @@ def admin_manage_restaurant(
         restaurant_subscription_grace_days_remaining=(
             restaurant_subscription_grace_days_remaining
         ),
-
 
         # ====================================================
         # PLAN FLAGS
@@ -23966,7 +24091,6 @@ def admin_manage_restaurant(
             is_premium_plan
         ),
 
-
         # ====================================================
         # PLAN PRICES
         # ====================================================
@@ -23978,7 +24102,6 @@ def admin_manage_restaurant(
         premium_plan_price=(
             premium_plan_price
         ),
-
 
         # ====================================================
         # UPGRADE / RENEWAL CONTROLS
@@ -23999,7 +24122,6 @@ def admin_manage_restaurant(
         can_renew_premium=(
             can_renew_premium
         ),
-
 
         # ====================================================
         # RESTAURANT FEATURE PERMISSIONS
