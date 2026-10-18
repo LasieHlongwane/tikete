@@ -12002,26 +12002,18 @@ def superadmin_create_partner():
     partner_configs = {
 
         "event": {
-
             "days": KALXA_PARTNER_ACCESS_DAYS,
-
             "plan_name": KALXA_PARTNER_PLAN_NAME,
-
             "label": "Event Organizer",
-
         },
 
         "restaurant": {
-
             "days": 90,
-
             "plan_name": (
                 "Kalxa Restaurant Community "
                 "Partner - Premium"
             ),
-
             "label": "Restaurant",
-
         },
 
     }
@@ -12069,9 +12061,7 @@ def superadmin_create_partner():
     config = partner_configs[account_type]
 
     partner_days = config["days"]
-
     partner_plan_name = config["plan_name"]
-
     partner_label = config["label"]
 
     # ========================================================
@@ -12102,7 +12092,7 @@ def superadmin_create_partner():
 
         # ====================================================
         # VALIDATION
-        # ====================================================
+        # ========================================================
 
         if not name:
 
@@ -12141,8 +12131,8 @@ def superadmin_create_partner():
             )
 
         # ====================================================
-        # DUPLICATE EMAIL CHECK
-        # ====================================================
+        # DUPLICATE ACCOUNT CHECK
+        # ========================================================
 
         existing_organizer = (
             Organizer.query
@@ -12166,7 +12156,7 @@ def superadmin_create_partner():
 
         # ====================================================
         # PARTNERSHIP PERIOD
-        # ====================================================
+        # ========================================================
 
         now = datetime.utcnow()
 
@@ -12179,17 +12169,14 @@ def superadmin_create_partner():
         )
 
         # ====================================================
-        # CREATE ORGANIZER ACCOUNT
-        # ====================================================
+        # CREATE ACCOUNT
+        # ========================================================
 
         organizer = Organizer(
 
             name=name,
-
             business_name=business_name,
-
             email=email,
-
             phone=phone,
 
             account_type=account_type,
@@ -12197,21 +12184,14 @@ def superadmin_create_partner():
             active=True,
 
             subscription_status="active",
-
             subscription_started_at=now,
-
             subscription_expires_at=subscription_end,
 
         )
 
-        # Event accounts use approval-based permissions.
-        # The legacy subscription grant alone does not
-        # provide permission to manage events.
-
         if account_type == "event":
 
             organizer.approval_status = "approved"
-
             organizer.approved_at = now
 
             organizer.approved_by = (
@@ -12226,20 +12206,20 @@ def superadmin_create_partner():
 
         # ====================================================
         # DATABASE TRANSACTION
-        # ====================================================
+        # ========================================================
 
         try:
 
             db.session.add(organizer)
 
+            # Flush generates organizer.id.
+            # The restaurant profile must use this ID.
+
             db.session.flush()
 
-            # ================================================
-            # PARTNER GRANT RECORD
-            # ================================================
-
-            # This is a zero-value administrative grant,
-            # not a real customer payment.
+            # =================================================
+            # COMPLIMENTARY PARTNER GRANT
+            # =================================================
 
             partner_payment = SubscriptionPayment(
 
@@ -12263,42 +12243,38 @@ def superadmin_create_partner():
 
                 confirmed_at=now,
 
-                confirmed_by=(
-                    "superadmin_partner_grant"
-                ),
+                confirmed_by="superadmin_partner_grant",
 
                 subscription_start=now,
-
                 subscription_end=subscription_end,
 
             )
 
-            db.session.add(
-                partner_payment
-            )
+            db.session.add(partner_payment)
 
-            # ================================================
-            # RESTAURANT PARTNER: AUTOMATIC PREMIUM PROFILE
-            # ================================================
+            # =================================================
+            # RESTAURANT PARTNER — PREMIUM PROFILE
+            # =================================================
 
             if account_type == "restaurant":
 
                 restaurant_advert = RestaurantAdvert(
+
+                    # CRITICAL:
+                    # Assign ownership to the newly
+                    # created restaurant account.
 
                     organizer_id=organizer.id,
 
                     business_name=business_name,
 
                     headline=None,
-
                     description=None,
 
                     phone_number=phone,
-
                     whatsapp_number=phone,
 
-                    # Profile creation does not require
-                    # a separate customer payment.
+                    # Complimentary Premium entitlement.
 
                     subscription_tier=(
                         RESTAURANT_PLAN_PREMIUM
@@ -12307,35 +12283,43 @@ def superadmin_create_partner():
                     subscription_status="active",
 
                     subscription_started_at=now,
+                    subscription_expires_at=subscription_end,
 
-                    subscription_expires_at=(
-                        subscription_end
-                    ),
-
-                    # Keep the unfinished profile hidden
-                    # until the business details are ready.
-                    #
-                    # Super Admin or the restaurant owner
-                    # can activate the profile after
-                    # completing the required information.
+                    # This controls public visibility.
+                    # It must NOT prevent the owner
+                    # from editing the profile.
 
                     active=False,
 
                     starts_at=now,
 
-                    ends_at=subscription_end,
+                    # Do not automatically remove the
+                    # restaurant's public profile when
+                    # Premium access expires.
+                    #
+                    # Premium feature expiry is controlled
+                    # separately by subscription_expires_at.
+
+                    ends_at=None,
 
                 )
 
-                db.session.add(
-                    restaurant_advert
-                )
-
+                db.session.add(restaurant_advert)
                 db.session.flush()
 
-            # ================================================
+                current_app.logger.info(
+                    (
+                        "[Restaurant Partner] "
+                        "Linked premium restaurant profile "
+                        "advert_id=%s organizer_id=%s"
+                    ),
+                    restaurant_advert.id,
+                    organizer.id,
+                )
+
+            # =================================================
             # COMMIT
-            # ================================================
+            # =================================================
 
             db.session.commit()
 
@@ -12346,8 +12330,7 @@ def superadmin_create_partner():
             current_app.logger.exception(
                 (
                     "[%s Partner] "
-                    "Unable to create partner "
-                    "email=%s"
+                    "Unable to create partner email=%s"
                 ),
                 partner_label,
                 email,
@@ -12364,31 +12347,8 @@ def superadmin_create_partner():
             )
 
         # ====================================================
-        # SUCCESS LOG
-        # ====================================================
-
-        current_app.logger.info(
-            (
-                "[%s Partner] "
-                "Created organizer_id=%s "
-                "restaurant_advert_id=%s "
-                "days=%s "
-                "expires=%s"
-            ),
-            partner_label,
-            organizer.id,
-            (
-                restaurant_advert.id
-                if restaurant_advert
-                else None
-            ),
-            partner_days,
-            subscription_end,
-        )
-
-        # ====================================================
-        # SUCCESS PAGE
-        # ====================================================
+        # SUCCESS
+        # =================================================
 
         response = make_response(
             render_template(
@@ -12396,7 +12356,6 @@ def superadmin_create_partner():
                 "superadmin/partner_created.html",
 
                 organizer=organizer,
-
                 restaurant_advert=restaurant_advert,
 
                 temporary_password=temporary_password,
@@ -12404,31 +12363,20 @@ def superadmin_create_partner():
                 subscription_end=subscription_end,
 
                 account_type=account_type,
-
                 partner_days=partner_days,
-
                 partner_label=partner_label,
 
             )
         )
-
-        # Password-bearing responses must not be cached.
 
         response.headers["Cache-Control"] = (
             "no-store, no-cache, max-age=0, must-revalidate"
         )
 
         response.headers["Pragma"] = "no-cache"
-
         response.headers["Expires"] = "0"
-
-        response.headers["X-Content-Type-Options"] = (
-            "nosniff"
-        )
-
-        response.headers["Referrer-Policy"] = (
-            "no-referrer"
-        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "no-referrer"
 
         return response
 
