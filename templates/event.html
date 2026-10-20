@@ -155,14 +155,16 @@ content="Kalxa"
         gap: 16px;
 
         margin-bottom: 20px;
-        padding-bottom: 14px;
+        padding: 12px 14px;
 
-        border-bottom:
-            1px solid #eef2f7;
+        background: linear-gradient(135deg, #b9e8ff 0%, #87ceeb 48%, #4bb8ef 100%);
+        border-radius: 14px;
     }
 
     .brand {
-        color: #111111;
+        flex: 0 0 auto;
+
+        color: #083344;
 
         font-size: 15px;
         font-weight: 900;
@@ -176,11 +178,29 @@ content="Kalxa"
         display: flex;
 
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
 
         gap: 10px;
 
-        flex-wrap: wrap;
+        flex: 1 1 auto;
+        min-width: 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+    }
+
+    .topbar-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    .topbar-actions .topbar-link {
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .topbar-link {
@@ -4150,7 +4170,7 @@ content="Kalxa"
 
         .topbar-actions {
             width: 100%;
-
+            max-width: 100%;
             justify-content: flex-start;
         }
 
