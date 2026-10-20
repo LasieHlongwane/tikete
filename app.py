@@ -26486,6 +26486,58 @@ def admin_restaurant_reel(advert_id):
         try:
 
             # =================================================
+            # REQUEST DIAGNOSTICS
+            # =================================================
+
+            current_app.logger.info(
+                (
+                    "[Restaurant Reel] Incoming request "
+                    "advert_id=%s organizer_id=%s "
+                    "content_type=%s content_length=%s "
+                    "max_content_length=%s"
+                ),
+                advert.id,
+                organizer.id,
+                request.content_type,
+                request.content_length,
+                current_app.config.get(
+                    "MAX_CONTENT_LENGTH"
+                ),
+            )
+
+            # =================================================
+            # VERIFY MULTIPART FORM
+            # =================================================
+
+            if not request.mimetype == "multipart/form-data":
+
+                current_app.logger.warning(
+                    (
+                        "[Restaurant Reel] Unexpected request "
+                        "content type advert_id=%s "
+                        "content_type=%s"
+                    ),
+                    advert.id,
+                    request.content_type,
+                )
+
+                flash(
+                    (
+                        "The upload form was submitted "
+                        "incorrectly. Refresh the page, "
+                        "select your video again, and retry."
+                    ),
+                    "error",
+                )
+
+                return redirect(
+                    url_for(
+                        "admin_restaurant_reel",
+                        advert_id=advert.id,
+                    )
+                )
+
+            # =================================================
             # RE-SYNCHRONIZE SUBSCRIPTION
             # =================================================
 
@@ -26499,6 +26551,14 @@ def admin_restaurant_reel(advert_id):
             # =================================================
 
             if not cloudinary_reels_configured():
+
+                current_app.logger.error(
+                    (
+                        "[Restaurant Reel] Cloudinary is "
+                        "not configured advert_id=%s"
+                    ),
+                    advert.id,
+                )
 
                 flash(
                     (
@@ -26516,15 +26576,49 @@ def admin_restaurant_reel(advert_id):
                 )
 
             # =================================================
-            # REQUEST FILE
+            # INSPECT RECEIVED FILE FIELDS
+            # =================================================
+
+            received_file_fields = list(
+                request.files.keys()
+            )
+
+            current_app.logger.info(
+                (
+                    "[Restaurant Reel] Received file "
+                    "field names advert_id=%s fields=%s"
+                ),
+                advert.id,
+                received_file_fields,
+            )
+
+            # =================================================
+            # GET VIDEO FILE
             # =================================================
 
             video = request.files.get("reel_video")
 
-            if not video or not video.filename:
+            if video is None:
+
+                current_app.logger.warning(
+                    (
+                        "[Restaurant Reel] Missing reel_video "
+                        "field advert_id=%s "
+                        "received_fields=%s "
+                        "content_length=%s"
+                    ),
+                    advert.id,
+                    received_file_fields,
+                    request.content_length,
+                )
 
                 flash(
-                    "Choose a video to upload.",
+                    (
+                        "No video file reached the server. "
+                        "Please select the video again. "
+                        "If you are using a phone, try a video "
+                        "saved directly to your device."
+                    ),
                     "error",
                 )
 
@@ -26534,6 +26628,52 @@ def admin_restaurant_reel(advert_id):
                         advert_id=advert.id,
                     )
                 )
+
+            # =================================================
+            # VERIFY FILENAME
+            # =================================================
+
+            if not video.filename:
+
+                current_app.logger.warning(
+                    (
+                        "[Restaurant Reel] Empty filename "
+                        "advert_id=%s fields=%s"
+                    ),
+                    advert.id,
+                    received_file_fields,
+                )
+
+                flash(
+                    (
+                        "The selected video has no filename. "
+                        "Please choose the video again."
+                    ),
+                    "error",
+                )
+
+                return redirect(
+                    url_for(
+                        "admin_restaurant_reel",
+                        advert_id=advert.id,
+                    )
+                )
+
+            # =================================================
+            # LOG RECEIVED FILE
+            # =================================================
+
+            current_app.logger.info(
+                (
+                    "[Restaurant Reel] File received "
+                    "advert_id=%s organizer_id=%s "
+                    "filename=%s mimetype=%s"
+                ),
+                advert.id,
+                organizer.id,
+                video.filename,
+                video.mimetype,
+            )
 
             # =================================================
             # FILE TYPE
@@ -26561,10 +26701,6 @@ def admin_restaurant_reel(advert_id):
             # =================================================
             # FILE SIZE
             # =================================================
-            # SEEK POSITION:
-            #   offset = 0
-            #   whence = os.SEEK_END
-            # =================================================
 
             video.stream.seek(
                 0,
@@ -26580,6 +26716,15 @@ def admin_restaurant_reel(advert_id):
 
             if file_size <= 0:
 
+                current_app.logger.warning(
+                    (
+                        "[Restaurant Reel] Empty uploaded "
+                        "file advert_id=%s filename=%s"
+                    ),
+                    advert.id,
+                    video.filename,
+                )
+
                 flash(
                     "The selected video file is empty.",
                     "error",
@@ -26593,6 +26738,16 @@ def admin_restaurant_reel(advert_id):
                 )
 
             if file_size > RESTAURANT_REEL_MAX_FILE_BYTES:
+
+                current_app.logger.warning(
+                    (
+                        "[Restaurant Reel] File exceeds "
+                        "size limit advert_id=%s "
+                        "file_size=%s"
+                    ),
+                    advert.id,
+                    file_size,
+                )
 
                 flash(
                     (
@@ -26615,14 +26770,13 @@ def admin_restaurant_reel(advert_id):
 
             current_app.logger.info(
                 (
-                    "[Restaurant Reel] Upload started "
-                    "advert_id=%s organizer_id=%s "
-                    "file_size=%s filename=%s"
+                    "[Restaurant Reel] Cloudinary upload "
+                    "starting advert_id=%s organizer_id=%s "
+                    "file_size=%s"
                 ),
                 advert.id,
                 organizer.id,
                 file_size,
-                video.filename,
             )
 
             # =================================================
@@ -26643,6 +26797,10 @@ def admin_restaurant_reel(advert_id):
                 overwrite=False,
             )
 
+            # =================================================
+            # VALIDATE CLOUDINARY RESPONSE
+            # =================================================
+
             if not isinstance(upload_result, dict):
 
                 raise RuntimeError(
@@ -26656,10 +26814,6 @@ def admin_restaurant_reel(advert_id):
             secure_url = upload_result.get(
                 "secure_url"
             )
-
-            # =================================================
-            # VALIDATE CLOUDINARY RESPONSE
-            # =================================================
 
             if not uploaded_public_id or not secure_url:
 
@@ -26683,10 +26837,6 @@ def admin_restaurant_reel(advert_id):
             except (TypeError, ValueError):
 
                 duration_seconds = 0
-
-            # =================================================
-            # VERIFY DURATION
-            # =================================================
 
             if duration_seconds <= 0:
 
@@ -26919,7 +27069,7 @@ def admin_restaurant_reel(advert_id):
                     )
 
             # =================================================
-            # LOG ERROR
+            # LOG ERROR WITH TRACEBACK
             # =================================================
 
             current_app.logger.exception(
