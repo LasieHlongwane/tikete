@@ -22,7 +22,6 @@
             margin: 0;
             background: #f6f7f9;
             color: #111827;
-
             font-family:
                 Inter,
                 -apple-system,
@@ -103,7 +102,9 @@
         }
 
         .upload-input {
+            display: block;
             width: 100%;
+            min-width: 0;
             padding: 13px;
             background: #f8fafc;
             border: 1px solid #d1d5db;
@@ -239,6 +240,7 @@
             border-radius: 10px;
             font-size: 12px;
             font-weight: 700;
+            overflow-wrap: anywhere;
         }
 
         .flash.success {
@@ -270,6 +272,7 @@
         }
 
         .upload-progress {
+            display: block;
             width: 100%;
             height: 12px;
             overflow: hidden;
@@ -277,6 +280,7 @@
         }
 
         .upload-help {
+            margin: 0;
             color: #6b7280;
             font-size: 11px;
             line-height: 1.5;
@@ -366,6 +370,10 @@
 
         </div>
 
+        <!-- ================================================
+             RESTAURANT REEL UPLOAD FORM
+             ================================================ -->
+
         <form
             method="POST"
             action="{{ url_for(
@@ -431,7 +439,6 @@
                 <progress
                     id="reel-upload-progress"
                     class="upload-progress"
-                    value="0"
                     max="100"
                 ></progress>
 
@@ -465,6 +472,10 @@
             </button>
 
         </form>
+
+        <!-- ================================================
+             CURRENT RESTAURANT REEL
+             ================================================ -->
 
         {% if reel %}
 
@@ -648,11 +659,8 @@
 
     let metadataValidationId = 0;
 
-    const originalButtonText =
-        submitButton.textContent.trim();
-
     // =====================================================
-    // STATUS
+    // STATUS HELPERS
     // =====================================================
 
     function showStatus(element, message, type) {
@@ -685,7 +693,7 @@
         }
 
         if (progressBar) {
-            progressBar.value = 0;
+            progressBar.removeAttribute("value");
         }
 
         if (progressText) {
@@ -694,7 +702,7 @@
     }
 
     // =====================================================
-    // VIDEO FILE SELECTION
+    // VALIDATE SELECTED FILE
     // =====================================================
 
     fileInput.addEventListener("change", function () {
@@ -758,10 +766,26 @@
         }
 
         // -------------------------------------------------
-        // LOCAL VIDEO METADATA
+        // READ VIDEO METADATA LOCALLY
         // -------------------------------------------------
 
-        const objectUrl = URL.createObjectURL(file);
+        let objectUrl;
+
+        try {
+
+            objectUrl = URL.createObjectURL(file);
+
+        } catch (error) {
+
+            showStatus(
+                durationStatus,
+                "The browser could not access this video. " +
+                "Try selecting a video saved directly on your device.",
+                "error"
+            );
+
+            return;
+        }
 
         const temporaryVideo =
             document.createElement("video");
@@ -863,7 +887,7 @@
     });
 
     // =====================================================
-    // SUBMIT
+    // FORM SUBMISSION
     // =====================================================
 
     form.addEventListener("submit", function (event) {
@@ -912,7 +936,7 @@
         }
 
         // -------------------------------------------------
-        // FILE TYPE
+        // FILE EXTENSION
         // -------------------------------------------------
 
         if (!/\.(mp4|webm|mov|m4v)$/i.test(file.name)) {
@@ -928,25 +952,25 @@
             return;
         }
 
-        /*
-         * Leave the browser's selected file input untouched.
-         *
-         * Do not:
-         * - Clear fileInput.value.
-         * - Rebuild the input element.
-         * - Reset the form.
-         * - Navigate away before submission.
-         *
-         * The browser handles the multipart file upload.
-         */
+        // -------------------------------------------------
+        // PREPARE SUBMISSION
+        // -------------------------------------------------
 
         uploadStarted = true;
+
+        /*
+         * IMPORTANT:
+         *
+         * Do not disable fileInput here.
+         *
+         * A disabled file input is omitted from the submitted
+         * form data. Keeping it enabled allows the browser to
+         * send the "reel_video" multipart field to Flask.
+         */
 
         submitButton.disabled = true;
 
         submitButton.textContent = "Uploading Reel...";
-
-        fileInput.disabled = true;
 
         showStatus(
             uploadStatus,
@@ -969,9 +993,12 @@
         }
 
         /*
-         * This is a normal multipart form submission.
-         * It intentionally preserves the existing Flask
-         * route's redirect and flash-message behavior.
+         * This uses a standard multipart form submission.
+         * The browser submits the selected file and follows
+         * the existing Flask redirect after processing.
+         *
+         * The progress indicator is indeterminate; it does
+         * not represent a measured upload percentage.
          */
 
     });
