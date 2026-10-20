@@ -174,33 +174,143 @@ content="Kalxa"
         text-decoration: none;
     }
 
-    .topbar-actions {
-        display: flex;
-
+    .topbar-menu-button {
+        display: inline-flex;
         align-items: center;
-        justify-content: flex-start;
-
-        gap: 10px;
-
-        flex: 1 1 auto;
-        min-width: 0;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-        overscroll-behavior-x: contain;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        margin-left: auto;
+        background: rgba(255, 255, 255, .78);
+        color: #083344;
+        border: 1px solid rgba(8, 51, 68, .18);
+        border-radius: 12px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    .topbar-actions::-webkit-scrollbar {
-        display: none;
+    .topbar-menu-button:hover {
+        background: #ffffff;
+    }
+
+    .topbar-menu-icon {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        width: 21px;
+    }
+
+    .topbar-menu-icon span {
+        display: block;
+        width: 21px;
+        height: 2px;
+        background: currentColor;
+        border-radius: 2px;
+    }
+
+    .topbar-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1998;
+        background: rgba(15, 23, 42, .48);
+        opacity: 1;
+    }
+
+    .topbar-menu-backdrop[hidden] {
+        display: none !important;
+    }
+
+    .topbar-actions {
+        position: fixed;
+        top: 0;
+        right: 0;
+        z-index: 1999;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        width: min(340px, 88vw);
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: auto;
+        padding: max(22px, env(safe-area-inset-top)) 18px
+                 max(22px, env(safe-area-inset-bottom));
+        background: #ffffff;
+        color: #111827;
+        box-shadow: -12px 0 35px rgba(15, 23, 42, .18);
+        transform: translateX(105%);
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform .24s ease, visibility .24s ease;
+        overscroll-behavior: contain;
+    }
+
+    .topbar-actions.open {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .topbar-menu-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding-bottom: 14px;
+        color: #083344;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .topbar-menu-close {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        background: #f1f5f9;
+        color: #0f172a;
+        border: 0;
+        border-radius: 10px;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
     }
 
     .topbar-actions .topbar-link {
-        flex: 0 0 auto;
-        white-space: nowrap;
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+        min-height: 46px;
+        padding: 12px 13px;
+        background: #f8fafc;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-radius: 11px;
+        white-space: normal;
+        text-decoration: none;
+    }
+
+    .topbar-actions .topbar-link:hover {
+        background: #eaf7ff;
+        color: #083344;
+    }
+
+    .topbar-actions .topbar-link.track-link {
+        background: #111827;
+        color: #ffffff;
+        border-color: #111827;
+    }
+
+    .topbar-actions .topbar-link.track-link:hover {
+        background: #27272a;
+        color: #ffffff;
     }
 
     .topbar-link {
@@ -4163,15 +4273,8 @@ content="Kalxa"
         }
 
         .topbar {
-            align-items: flex-start;
-
-            flex-direction: column;
-        }
-
-        .topbar-actions {
-            width: 100%;
-            max-width: 100%;
-            justify-content: flex-start;
+            align-items: center;
+            flex-direction: row;
         }
 
         .event-detail {
@@ -4198,91 +4301,106 @@ content="Kalxa"
 
 </style></head><body><div class="page-shell"><!-- =========================================
      TOP BAR
-========================================== --><div class="topbar"><a
-    href="{{ url_for('home') }}"
-    class="brand"
->
-    KALXA
-</a>
-
-
-<div class="topbar-actions">
-
+========================================== -->
+<div class="topbar">
     <a
-        href="{{ url_for('track_ticket') }}"
-        class="topbar-link track-link"
+        href="{{ url_for('home') }}"
+        class="brand"
     >
-        Track My Ticket
+        KALXA
     </a>
 
-
-    <a
-        href="{{ url_for(
-            'create_restaurant_experience'
-        ) }}"
-        class="topbar-link"
+    <button
+        type="button"
+        class="topbar-menu-button"
+        id="kalxa-menu-toggle"
+        aria-label="Open navigation menu"
+        aria-controls="kalxa-side-menu"
+        aria-expanded="false"
     >
-        Rate & Review
-    </a>
+        <span class="topbar-menu-icon" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+        </span>
+    </button>
 
+    <div
+        class="topbar-menu-backdrop"
+        id="kalxa-menu-backdrop"
+        hidden
+    ></div>
 
-    {% if session.get('ticketing_organizer_id') %}
-
-        <a
-            href="{{ url_for(
-                'admin_dashboard'
-            ) }}"
-            class="topbar-link"
-        >
-            Organizer Dashboard
-        </a>
-
-
-        <a
-            href="{{ url_for(
-                'organizer_logout'
-            ) }}"
-            class="topbar-link"
-        >
-            Logout
-        </a>
-
-    {% else %}
-
-        <a
-            href="{{ url_for(
-                'organizer_login'
-            ) }}"
-            class="topbar-link"
-        >
-            Login
-        </a>
-
+    <nav
+        class="topbar-actions"
+        id="kalxa-side-menu"
+        aria-label="Main navigation"
+        aria-hidden="true"
+        inert
+    >
+        <div class="topbar-menu-heading">
+            <span>Kalxa Menu</span>
+            <button
+                type="button"
+                class="topbar-menu-close"
+                id="kalxa-menu-close"
+                aria-label="Close navigation menu"
+            >×</button>
+        </div>
 
         <a
-            href="{{ url_for(
-                'organizer_signup'
-            ) }}"
-            class="topbar-link"
+            href="{{ url_for('track_ticket') }}"
+            class="topbar-link track-link"
         >
-            Register
+            Track My Ticket
         </a>
-
 
         <a
-            href=https://kalxa.co.za/q/KWM-TAXI-001
-                
-            
+            href="{{ url_for('create_restaurant_experience') }}"
             class="topbar-link"
         >
-            + More
+            Rate & Review
         </a>
 
-    {% endif %}
+        {% if session.get('ticketing_organizer_id') %}
+            <a
+                href="{{ url_for('admin_dashboard') }}"
+                class="topbar-link"
+            >
+                Organizer Dashboard
+            </a>
 
+            <a
+                href="{{ url_for('organizer_logout') }}"
+                class="topbar-link"
+            >
+                Logout
+            </a>
+        {% else %}
+            <a
+                href="{{ url_for('organizer_login') }}"
+                class="topbar-link"
+            >
+                Login
+            </a>
+
+            <a
+                href="{{ url_for('organizer_signup') }}"
+                class="topbar-link"
+            >
+                Register
+            </a>
+
+            <a
+                href="https://kalxa.co.za/q/KWM-TAXI-001"
+                class="topbar-link"
+            >
+                + More
+            </a>
+        {% endif %}
+    </nav>
 </div>
-
-</div><!-- =========================================
+<!-- =========================================
      PUSH NOTIFICATIONS
 ========================================== -->{% if firebase_push_configured %}
 
@@ -13345,4 +13463,63 @@ document
 
 })();
 
-</script></body></html>
+</script>
+<script>
+(() => {
+    const menu = document.getElementById("kalxa-side-menu");
+    const toggle = document.getElementById("kalxa-menu-toggle");
+    const closeButton = document.getElementById("kalxa-menu-close");
+    const backdrop = document.getElementById("kalxa-menu-backdrop");
+
+    if (!menu || !toggle || !closeButton || !backdrop) {
+        return;
+    }
+
+    function openMenu() {
+        menu.classList.add("open");
+        menu.removeAttribute("inert");
+        menu.setAttribute("aria-hidden", "false");
+        toggle.setAttribute("aria-expanded", "true");
+        toggle.setAttribute("aria-label", "Close navigation menu");
+        backdrop.hidden = false;
+        document.body.style.overflow = "hidden";
+        closeButton.focus();
+    }
+
+    function closeMenu(returnFocus = true) {
+        menu.classList.remove("open");
+        menu.setAttribute("inert", "");
+        menu.setAttribute("aria-hidden", "true");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Open navigation menu");
+        backdrop.hidden = true;
+        document.body.style.overflow = "";
+
+        if (returnFocus) {
+            toggle.focus();
+        }
+    }
+
+    toggle.addEventListener("click", () => {
+        if (menu.classList.contains("open")) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    closeButton.addEventListener("click", () => closeMenu());
+    backdrop.addEventListener("click", () => closeMenu());
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && menu.classList.contains("open")) {
+            closeMenu();
+        }
+    });
+
+    menu.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => closeMenu(false));
+    });
+})();
+</script>
+</body></html>
