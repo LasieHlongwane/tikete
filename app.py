@@ -12608,36 +12608,36 @@ def admin_reconcile_yoco_restaurant_subscription(
 # ============================================================
 # SUPER ADMIN - EXTEND EVENT PARTNER
 # ============================================================
-
 @app.route(
     "/superadmin/organizers/<int:organizer_id>/partner/extend",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
-def superadmin_extend_partner_access(
-    organizer_id,
-):
+def superadmin_extend_partner_access(organizer_id):
 
-    auth = (
-        require_superadmin()
-    )
+    # ========================================================
+    # SUPER ADMIN AUTHENTICATION
+    # ========================================================
+
+    auth = require_superadmin()
 
     if auth:
         return auth
 
+    # ========================================================
+    # FIND ORGANIZER
+    # ========================================================
 
-    organizer = (
-        db.session.get(
-            Organizer,
-            organizer_id,
-        )
+    organizer = db.session.get(
+        Organizer,
+        organizer_id,
     )
-
 
     if not organizer:
         abort(404)
 
+    # ========================================================
+    # VERIFY ACCOUNT TYPE
+    # ========================================================
 
     if (
         getattr(
@@ -12650,9 +12650,8 @@ def superadmin_extend_partner_access(
 
         flash(
             (
-                "Complimentary Event Partner "
-                "access can only be granted "
-                "to Event accounts."
+                "Complimentary Event Partner access "
+                "can only be granted to Event accounts."
             ),
             "error",
         )
@@ -12660,22 +12659,23 @@ def superadmin_extend_partner_access(
         return redirect(
             url_for(
                 "superadmin_organizer_detail",
-                organizer_id=
-                    organizer.id,
+                organizer_id=organizer.id,
             )
         )
 
+    # ========================================================
+    # CHECK ACCOUNT STATUS
+    # ========================================================
 
     if (
-        organizer.subscription_status
-        == "suspended"
+        organizer.subscription_status == "suspended"
         or not organizer.active
     ):
 
         flash(
             (
-                "Reactivate this organizer "
-                "before extending partner access."
+                "Reactivate this organizer before "
+                "extending partner access."
             ),
             "error",
         )
@@ -12683,161 +12683,138 @@ def superadmin_extend_partner_access(
         return redirect(
             url_for(
                 "superadmin_organizer_detail",
-                organizer_id=
-                    organizer.id,
+                organizer_id=organizer.id,
             )
         )
 
+    # ========================================================
+    # DETERMINE NEW ACCESS PERIOD
+    # ========================================================
 
-    now = (
-        datetime.utcnow()
-    )
+    now = datetime.utcnow()
 
+    current_expiry = organizer.subscription_expires_at
 
+    # If the organizer already has unexpired access, extend
+    # from the current expiry. Otherwise, start from now.
     if (
-        organizer.subscription_expires_at
-        and organizer.subscription_expires_at
-        > now
+        current_expiry
+        and current_expiry > now
     ):
 
-        subscription_start = (
-            organizer.subscription_expires_at
-        )
+        subscription_start = current_expiry
 
     else:
 
         subscription_start = now
 
-
     subscription_end = (
         subscription_start
         + timedelta(
-            days=
-                KALXA_PARTNER_ACCESS_DAYS
+            days=KALXA_PARTNER_ACCESS_DAYS,
         )
     )
 
+    # ========================================================
+    # CREATE PARTNER-GRANT RECORD
+    # ========================================================
 
-    partner_payment = (
-        SubscriptionPayment(
+    partner_payment = SubscriptionPayment(
+        organizer_id=organizer.id,
 
-            organizer_id=
-                organizer.id,
+        plan_name=KALXA_PARTNER_PLAN_NAME,
 
-            plan_name=
-                KALXA_PARTNER_PLAN_NAME,
+        amount=Decimal("0.00"),
 
-            amount=
-                Decimal(
-                    "0.00"
-                ),
+        period_days=KALXA_PARTNER_ACCESS_DAYS,
 
-            period_days=
-                KALXA_PARTNER_ACCESS_DAYS,
+        payment_reference=(
+            generate_subscription_payment_reference()
+        ),
 
-            payment_reference=
-                generate_subscription_payment_reference(),
+        payment_method="partner_grant",
 
-            payment_method=
-                "partner_grant",
+        payment_status="paid",
 
-            payment_status=
-                "paid",
+        paid_at=now,
 
-            paid_at=
-                now,
+        confirmed_at=now,
 
-            confirmed_at=
-                now,
+        confirmed_by="superadmin_partner_extension",
 
-            confirmed_by=
-                "superadmin_partner_extension",
+        subscription_start=subscription_start,
 
-            subscription_start=
-                subscription_start,
-
-            subscription_end=
-                subscription_end,
-        )
+        subscription_end=subscription_end,
     )
 
+    # ========================================================
+    # UPDATE ORGANIZER ACCESS
+    # ========================================================
 
     organizer.active = True
 
-    organizer.subscription_status = (
-        "active"
-    )
-
+    organizer.subscription_status = "active"
 
     if not organizer.subscription_started_at:
+        organizer.subscription_started_at = now
 
-        organizer.subscription_started_at = (
-            now
-        )
+    organizer.subscription_expires_at = subscription_end
 
-
-    organizer.subscription_expires_at = (
-        subscription_end
-    )
-
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
 
     try:
 
-        db.session.add(
-            partner_payment
-        )
+        db.session.add(partner_payment)
 
         db.session.commit()
-
 
     except Exception as error:
 
         db.session.rollback()
 
-
         current_app.logger.exception(
             (
-                "[Event Partner] "
-                "Extension failed "
+                "[Event Partner] Extension failed. "
                 "organizer_id=%s error=%s"
             ),
             organizer.id,
             error,
         )
 
-
         flash(
-            (
-                "Partner access could not "
-                "be extended."
-            ),
+            "Partner access could not be extended.",
             "error",
         )
-
 
         return redirect(
             url_for(
                 "superadmin_organizer_detail",
-                organizer_id=
-                    organizer.id,
+                organizer_id=organizer.id,
             )
         )
 
+    # ========================================================
+    # SUCCESS MESSAGE
+    # ========================================================
 
     flash(
         (
-            "30 days of complimentary "
-            "partner access added successfully."
+            f"{KALXA_PARTNER_ACCESS_DAYS} days of "
+            "complimentary partner access added successfully."
         ),
         "success",
     )
 
+    # ========================================================
+    # RETURN TO ORGANIZER DETAILS
+    # ========================================================
 
     return redirect(
         url_for(
             "superadmin_organizer_detail",
-            organizer_id=
-                organizer.id,
+            organizer_id=organizer.id,
         )
     )
 
@@ -15720,7 +15697,6 @@ def superadmin_set_subscription_expiry(organizer_id):
     # ========================================================
 
     try:
-
         expiry_date = datetime.strptime(
             expiry_raw,
             "%Y-%m-%d",
@@ -15751,14 +15727,11 @@ def superadmin_set_subscription_expiry(organizer_id):
     # FIND LATEST PARTNER-GRANT RECORD
     # ========================================================
     #
-    # Partner accounts receive complimentary access recorded
-    # using payment_method="partner_grant".
+    # The latest complimentary partner-grant record is used
+    # to display the partner access period in Super Admin.
     #
-    # The Super Admin page displays the partner period using
-    # SubscriptionPayment.subscription_end.
-    #
-    # Therefore, updating only Organizer.subscription_expires_at
-    # would leave the displayed partner expiry unchanged.
+    # Update its subscription_end so the displayed partner
+    # expiry matches the organizer expiry selected here.
     # ========================================================
 
     latest_partner_grant = (
@@ -15775,19 +15748,24 @@ def superadmin_set_subscription_expiry(organizer_id):
     )
 
     # ========================================================
+    # PREPARE STATUS UPDATE
+    # ========================================================
+
+    now = datetime.utcnow()
+
+    # ========================================================
     # UPDATE ORGANIZER EXPIRY
     # ========================================================
 
     organizer.subscription_expires_at = expiry_at
 
-    now = datetime.utcnow()
-
     # ========================================================
     # UPDATE SUBSCRIPTION STATUS
     # ========================================================
     #
-    # Preserve a deliberately suspended subscription.
-    # Otherwise, reflect the newly selected expiry date.
+    # Allow expired accounts to receive a future expiry date.
+    # Preserve deliberate suspension and inactive-account
+    # status instead of automatically reactivating them.
     # ========================================================
 
     if (
@@ -15807,14 +15785,7 @@ def superadmin_set_subscription_expiry(organizer_id):
             organizer.subscription_status = "expired"
 
     # ========================================================
-    # UPDATE LATEST PARTNER PERIOD
-    # ========================================================
-    #
-    # This makes the partner expiry displayed in the Super
-    # Admin account details agree with the date just selected.
-    #
-    # We update the existing latest partner-grant record
-    # rather than creating a duplicate grant.
+    # SYNCHRONIZE LATEST PARTNER-GRANT EXPIRY
     # ========================================================
 
     if latest_partner_grant:
@@ -15835,24 +15806,26 @@ def superadmin_set_subscription_expiry(organizer_id):
 
         current_app.logger.exception(
             (
-                "[Super Admin] Failed to set subscription/"
-                "partner expiry "
-                "organizer_id=%s "
-                "error=%s"
+                "[Super Admin] Failed to set "
+                "subscription/partner expiry. "
+                "organizer_id=%s error=%s"
             ),
-            organizer.id,
+            organizer_id,
             error,
         )
 
         flash(
-            "Subscription expiry update failed. No changes were saved.",
+            (
+                "Subscription expiry update failed. "
+                "No changes were saved."
+            ),
             "error",
         )
 
         return redirect(
             url_for(
                 "superadmin_organizer_detail",
-                organizer_id=organizer.id,
+                organizer_id=organizer_id,
             )
         )
 
@@ -15864,7 +15837,7 @@ def superadmin_set_subscription_expiry(organizer_id):
 
         flash(
             (
-                "Partner access expiry updated successfully. "
+                "Expiry date updated successfully. "
                 "The organizer expiry and latest recorded "
                 "partner expiry now match."
             ),
@@ -15874,7 +15847,10 @@ def superadmin_set_subscription_expiry(organizer_id):
     else:
 
         flash(
-            "Subscription expiry date updated successfully.",
+            (
+                "Subscription expiry date updated "
+                "successfully."
+            ),
             "success",
         )
 
@@ -15885,7 +15861,7 @@ def superadmin_set_subscription_expiry(organizer_id):
     return redirect(
         url_for(
             "superadmin_organizer_detail",
-            organizer_id=organizer.id,
+            organizer_id=organizer_id,
         )
     )
 
