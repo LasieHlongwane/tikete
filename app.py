@@ -25742,23 +25742,21 @@ def create_restaurant_experience():
 # ============================================================
 def sync_restaurant_subscription(advert):
     """
-    Synchronize a restaurant's subscription with its
-    expiry and grace-period rules.
+    Synchronize a restaurant's subscription lifecycle.
 
-    Returns:
-        True  - a downgrade was successfully committed.
-        False - no downgrade was needed or the update failed.
+    Free restaurants remain Free and active indefinitely.
 
-    This function only changes the RestaurantAdvert
-    subscription. It does not modify the organizer's
-    separate ticketing subscription.
+    Standard/Premium restaurants remain eligible for paid
+    features during the configured grace period.
+
+    After grace expires, the model's existing downgrade method
+    changes the restaurant to Free. Existing stored content is
+    preserved.
     """
 
-    if advert is None:
+    if not advert:
         return False
 
-    # Only downgrade a paid restaurant plan after its
-    # configured grace period has expired.
     try:
         changed = (
             advert.downgrade_expired_restaurant_plan_to_free()
@@ -25767,17 +25765,12 @@ def sync_restaurant_subscription(advert):
         if not changed:
             return False
 
-        advert_id = advert.id
-
         db.session.commit()
 
         current_app.logger.info(
-            (
-                "[Restaurant Subscription] "
-                "Restaurant automatically downgraded to Free "
-                "after its grace period. advert_id=%s"
-            ),
-            advert_id,
+            "Restaurant subscription automatically downgraded "
+            "to Free after grace period. advert_id=%s",
+            advert.id,
         )
 
         return True
@@ -25786,10 +25779,8 @@ def sync_restaurant_subscription(advert):
         db.session.rollback()
 
         current_app.logger.exception(
-            (
-                "[Restaurant Subscription] "
-                "Automatic downgrade failed. advert_id=%s"
-            ),
+            "Failed to synchronize restaurant subscription. "
+            "advert_id=%s",
             getattr(advert, "id", None),
         )
 
@@ -29002,460 +28993,219 @@ def admin_logout():
 # If the restaurant upgrades again, the existing content can
 # become available again.
 # ============================================================
-@app.route(
-    "/restaurant/<int:advert_id>"
-)
-def restaurant_page(
-    advert_id,
-):
+@app.route("/restaurant/<int:advert_id>")
+def restaurant_page(advert_id):
 
     # ========================================================
-    # RESTAURANT
-    # ========================================================
-    #
-    # The RestaurantAdvert itself remains available on every
-    # restaurant plan, including Free.
-    #
-    # Restaurant plan permissions determine which additional
-    # features are exposed on the public profile.
+    # LOAD RESTAURANT
     # ========================================================
 
     advert = (
         RestaurantAdvert.query
-
         .filter_by(
             id=advert_id,
             active=True,
         )
-
         .first_or_404()
     )
 
-
     # ========================================================
-    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
-    # ========================================================
-    #
-    # FREE
-    #     -> always active
-    #     -> profile/campaign/reel available
-    #
-    # STANDARD / PREMIUM ACTIVE
-    #     -> paid features available
-    #
-    # STANDARD / PREMIUM EXPIRED <= 5 DAYS
-    #     -> grace period
-    #     -> paid features remain available
-    #
-    # STANDARD / PREMIUM EXPIRED > 5 DAYS
-    #     -> automatically converted to Free
-    #     -> paid content remains stored
-    #     -> paid content is no longer exposed
+    # SYNCHRONIZE SUBSCRIPTION BEFORE CHECKING PERMISSIONS
     # ========================================================
 
-    sync_restaurant_subscription(
-        advert
-    )
+    sync_restaurant_subscription(advert)
 
-
-    now = (
-        datetime.utcnow()
-    )
-
+    now = datetime.utcnow()
 
     # ========================================================
     # ORGANIZER / ACCOUNT SAFETY
     # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # Public restaurant visibility does NOT depend on:
-    #
-    #     organizer.is_subscription_active
-    #
-    # That property belongs to the legacy Organizer/Event SaaS
-    # subscription system.
-    #
-    # A Free restaurant must remain publicly accessible.
-    # ========================================================
 
-    organizer = (
-        advert.organizer
-    )
-
+    organizer = advert.organizer
 
     if not organizer:
-
         abort(404)
-
 
     if not organizer.active:
-
         abort(404)
-
 
     if (
-        getattr(
-            organizer,
-            "account_type",
-            None,
-        )
+        getattr(organizer, "account_type", None)
         != "restaurant"
     ):
-
         abort(404)
 
-
     # ========================================================
-    # RESTAURANT PROFILE PERMISSION
-    # ========================================================
-    #
-    # FREE       -> YES
-    # STANDARD   -> YES
-    # PREMIUM    -> YES
+    # BASIC RESTAURANT PROFILE
     # ========================================================
 
-    can_use_profile = (
-        advert.can_use_profile
-    )
-
+    can_use_profile = advert.can_use_profile
 
     if not can_use_profile:
-
         abort(404)
-
 
     # ========================================================
     # CAMPAIGN DATE SAFETY
     # ========================================================
-    #
-    # Campaign visibility is separate from operational hours.
-    #
-    # A Free restaurant is allowed to publish and display its
-    # restaurant campaign even though regular operational
-    # hours are unavailable on Free.
-    # ========================================================
 
-    if (
-        advert.starts_at
-        and
-        advert.starts_at > now
-    ):
-
+    if advert.starts_at and advert.starts_at > now:
         abort(404)
 
-
-    if (
-        advert.ends_at
-        and
-        advert.ends_at <= now
-    ):
-
+    if advert.ends_at and advert.ends_at <= now:
         abort(404)
 
-
     # ========================================================
-    # RESTAURANT PLAN PERMISSIONS
-    # ========================================================
-    #
-    # These values are calculated once and then used
-    # throughout the route.
-    #
-    # FREE:
-    #
-    #     profile                 YES
-    #     reel / campaign         YES
-    #     gallery                 NO
-    #     opening hours           NO
-    #     customer experiences    NO
-    #     stories                 NO
-    #     analytics dashboard     NO
-    #
-    # STANDARD:
-    #
-    #     profile                 YES
-    #     reel / campaign         YES
-    #     gallery                 YES
-    #     opening hours           YES
-    #     customer experiences    YES
-    #     stories                 NO
-    #     analytics dashboard     NO
-    #
-    # PREMIUM:
-    #
-    #     all restaurant features
+    # CENTRALIZED PLAN PERMISSIONS
     # ========================================================
 
-    can_use_reel = (
-        advert.can_use_reel
-    )
+    can_use_reel = advert.can_use_reel
 
-
-    can_use_gallery = (
-        advert.can_use_gallery
-    )
-
+    can_use_gallery = advert.can_use_gallery
 
     can_use_opening_hours = (
         advert.can_use_opening_hours
     )
 
-
     can_receive_customer_experiences = (
         advert.can_receive_customer_experiences
     )
 
+    can_use_stories = advert.can_use_stories
 
-    can_use_stories = (
-        advert.can_use_stories
-    )
-
-
-    can_view_analytics = (
-        advert.can_view_analytics
-    )
-
+    can_view_analytics = advert.can_view_analytics
 
     # ========================================================
     # GRACE PERIOD INFORMATION
     # ========================================================
 
     restaurant_subscription_in_grace = (
-        advert
-        .is_restaurant_subscription_in_grace_period
+        advert.is_restaurant_subscription_in_grace_period
     )
-
 
     restaurant_subscription_grace_ends_at = (
-        advert
-        .restaurant_subscription_grace_ends_at
+        advert.restaurant_subscription_grace_ends_at
     )
 
-
     # ========================================================
-    # STORIES ATTRIBUTION
-    # ========================================================
-    #
-    # Attribution tracking may still be captured when somebody
-    # reaches the restaurant from another Kalxa surface.
-    #
-    # This does NOT grant Stories access.
-    # Stories access remains controlled by:
-    #
-    #     can_use_stories
+    # ATTRIBUTION
     # ========================================================
 
     restaurant_attribution = (
-        capture_restaurant_attribution(
-            advert
-        )
+        capture_restaurant_attribution(advert)
     )
 
-
     # ========================================================
-    # ANONYMOUS RESTAURANT SESSION
+    # ANONYMOUS EXPERIENCE SESSION
     # ========================================================
 
     anonymous_session_id = (
         get_restaurant_experience_session_id()
     )
 
-
     # ========================================================
-    # RESTAURANT VIEW ANALYTICS EVENT
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # We may still collect platform-level restaurant view
-    # events for Kalxa internally.
-    #
-    # can_view_analytics controls whether the restaurant owner
-    # can access the restaurant analytics product/dashboard.
-    #
-    # It does not need to stop Kalxa from collecting basic
-    # platform telemetry.
+    # RESTAURANT VIEW ANALYTICS
     # ========================================================
 
     record_restaurant_analytics_event(
         restaurant_id=advert.id,
-
         event_type="restaurant_view",
-
         metadata={
-            "page":
-                "restaurant",
-
-            "attributed":
-                bool(
-                    restaurant_attribution
-                ),
-
-            "restaurant_plan":
-                advert.normalized_subscription_tier,
-
-            "subscription_grace":
-                restaurant_subscription_in_grace,
+            "page": "restaurant",
+            "attributed": bool(restaurant_attribution),
+            "restaurant_plan": (
+                advert.normalized_subscription_tier
+            ),
+            "subscription_grace": (
+                restaurant_subscription_in_grace
+            ),
         },
     )
-
 
     # ========================================================
     # CUSTOMER EXPERIENCES
     # ========================================================
-    #
-    # FREE:
-    #
-    #     Do NOT load customer experience posts.
-    #
-    # STANDARD / PREMIUM:
-    #
-    #     Load approved customer experience posts.
-    #
-    # This is stronger than merely hiding the HTML section.
-    # Free profiles do not even receive the experience records
-    # in the Jinja template context.
-    # ========================================================
 
     experience_posts = []
 
-
     if can_receive_customer_experiences:
-
         experience_posts = (
             RestaurantExperiencePost.query
-
             .filter_by(
                 restaurant_advert_id=advert.id,
                 active=True,
                 moderation_status="approved",
             )
-
             .order_by(
-                RestaurantExperiencePost
-                .created_at
-                .desc()
+                RestaurantExperiencePost.created_at.desc()
             )
-
             .all()
         )
 
-
     # ========================================================
-    # RESTAURANT RATING SUMMARY
+    # RATING SUMMARY
     # ========================================================
     #
-    # Ratings come from customer experience posts.
+    # In this application, the public rating summary is
+    # calculated from RestaurantExperiencePost.rating.
     #
-    # Therefore Free restaurants must not expose a rating
-    # summary from stored paid-plan experience data.
+    # When the restaurant cannot receive customer experiences,
+    # no historical experience ratings are exposed here.
     # ========================================================
 
-    restaurant_rating_count = (
-        0
-    )
-
-
-    restaurant_average_rating = (
-        None
-    )
-
+    restaurant_rating_count = 0
+    restaurant_average_rating = None
 
     if can_receive_customer_experiences:
-
         restaurant_ratings = [
-
             post.rating
-
-            for post
-            in experience_posts
-
+            for post in experience_posts
             if post.rating is not None
         ]
 
-
-        restaurant_rating_count = (
-            len(
-                restaurant_ratings
-            )
+        restaurant_rating_count = len(
+            restaurant_ratings
         )
 
-
-        if restaurant_rating_count > 0:
-
+        if restaurant_rating_count:
             restaurant_average_rating = (
-                sum(
-                    restaurant_ratings
-                )
-                /
-                restaurant_rating_count
+                sum(restaurant_ratings)
+                / restaurant_rating_count
             )
 
-
     # ========================================================
-    # CUSTOMER EXPERIENCE LOVES
-    # ========================================================
-    #
-    # No experience engagement data is loaded for Free.
+    # CURRENTLY LOVED EXPERIENCE POSTS
     # ========================================================
 
-    loved_experience_post_ids = (
-        set()
-    )
-
+    loved_experience_post_ids = set()
 
     if (
         can_receive_customer_experiences
-        and
-        experience_posts
+        and experience_posts
     ):
-
         experience_post_ids = [
-
             post.id
-
-            for post
-            in experience_posts
+            for post in experience_posts
         ]
 
-
         loved_experience_post_ids = {
-
             love.post_id
-
-            for love
-            in (
+            for love in (
                 RestaurantExperienceLove.query
-
                 .filter(
-                    RestaurantExperienceLove
-                    .post_id
-                    .in_(
+                    RestaurantExperienceLove.post_id.in_(
                         experience_post_ids
                     )
                 )
-
                 .filter(
-                    RestaurantExperienceLove
-                    .anonymous_session_id
-                    ==
-                    anonymous_session_id
+                    RestaurantExperienceLove.anonymous_session_id
+                    == anonymous_session_id
                 )
-
                 .all()
             )
         }
 
-
     # ========================================================
     # CONTACT LINKS
-    # ========================================================
-    #
-    # Contact details belong to the basic restaurant profile.
-    #
-    # FREE       -> YES
-    # STANDARD   -> YES
-    # PREMIUM    -> YES
     # ========================================================
 
     raw_whatsapp_url = (
@@ -29464,13 +29214,11 @@ def restaurant_page(
         )
     )
 
-
     raw_phone_url = (
         build_restaurant_phone_url(
             advert.phone_number
         )
     )
-
 
     raw_directions_url = (
         valid_restaurant_directions_url(
@@ -29478,285 +29226,144 @@ def restaurant_page(
         )
     )
 
-
     whatsapp_url = (
-
         url_for(
             "restaurant_whatsapp_action",
             advert_id=advert.id,
         )
-
         if raw_whatsapp_url
-
         else None
     )
 
-
     phone_url = (
-
         url_for(
             "restaurant_phone_action",
             advert_id=advert.id,
         )
-
         if raw_phone_url
-
         else None
     )
 
-
     directions_url = (
-
         url_for(
             "restaurant_directions_action",
             advert_id=advert.id,
         )
-
         if raw_directions_url
-
         else None
     )
 
-
     # ========================================================
-    # RESTAURANT HOURS
-    # ========================================================
-    #
-    # FREE:
-    #
-    #     restaurant_hours_payload = None
-    #
-    # STANDARD / PREMIUM:
-    #
-    #     operational hours are loaded.
-    #
-    # IMPORTANT:
-    #
-    # Existing hours are NOT deleted when a restaurant falls
-    # back to Free. They simply stop being exposed.
-    #
-    # If the restaurant upgrades again, the stored hours can
-    # become available again.
+    # OPERATIONAL HOURS
     # ========================================================
 
-    restaurant_hours_payload = (
-        None
-    )
-
+    restaurant_hours_payload = None
 
     if can_use_opening_hours:
-
         restaurant_hours_payload = (
             build_restaurant_hours_payload(
                 advert
             )
         )
 
-
     # ========================================================
     # CURRENT ORGANIZER
     # ========================================================
 
-    current_organizer = (
-        get_current_organizer()
-    )
-
+    current_organizer = get_current_organizer()
 
     current_organizer_id = (
-
         current_organizer.id
-
         if current_organizer
-
         else None
     )
-
 
     # ========================================================
     # RESTAURANT MANAGEMENT PERMISSION
     # ========================================================
-    #
-    # Free restaurant owners must still be able to manage:
-    #
-    #     profile
-    #     contact information
-    #     restaurant campaign
-    #     main poster
-    #     reel/discovery
-    #
-    # Ownership therefore does NOT depend on:
-    #
-    #     organizer.is_subscription_active
-    # ========================================================
 
-    can_manage_restaurant = (
-        False
-    )
-
-
-    if (
+    can_manage_restaurant = bool(
         current_organizer_id
-        and
-        advert.organizer_id
-        ==
-        current_organizer_id
-        and
-        organizer.active
-        and
-        getattr(
+        and advert.organizer_id == current_organizer_id
+        and organizer.active
+        and getattr(
             organizer,
             "account_type",
             None,
-        )
-        == "restaurant"
-    ):
-
-        can_manage_restaurant = (
-            True
-        )
-
+        ) == "restaurant"
+    )
 
     # ========================================================
     # HOURS MANAGEMENT
     # ========================================================
-    #
-    # FREE       -> NO
-    # STANDARD   -> YES
-    # PREMIUM    -> YES
-    # ========================================================
 
-    can_manage_restaurant_hours = (
+    can_manage_restaurant_hours = bool(
         can_manage_restaurant
-        and
-        can_use_opening_hours
+        and can_use_opening_hours
     )
-
 
     # ========================================================
     # RATING QR MANAGEMENT
     # ========================================================
-    #
-    # Rating QR exists to collect customer experiences.
-    #
-    # FREE       -> NO
-    # STANDARD   -> YES
-    # PREMIUM    -> YES
-    # ========================================================
 
-    can_manage_restaurant_rating_qr = (
+    can_manage_restaurant_rating_qr = bool(
         can_manage_restaurant
-        and
-        can_receive_customer_experiences
+        and can_receive_customer_experiences
     )
 
-
-    # ========================================================
-    # RESTAURANT RATING QR
-    # ========================================================
-    #
-    # Do not even load the QR record for a Free restaurant.
-    #
-    # This allows an expired paid restaurant's QR record to
-    # remain safely stored without exposing it while the
-    # restaurant is on Free.
-    # ========================================================
-
-    restaurant_rating_qr = (
-        None
-    )
-
-
-    restaurant_rating_url = (
-        ""
-    )
-
+    restaurant_rating_qr = None
+    restaurant_rating_url = ""
 
     if can_manage_restaurant_rating_qr:
-
         restaurant_rating_qr = (
             RestaurantRatingQRCode.query
-
             .filter_by(
                 restaurant_advert_id=advert.id,
                 placement_type="main",
             )
-
             .order_by(
-                RestaurantRatingQRCode
-                .created_at
-                .asc()
+                RestaurantRatingQRCode.created_at.asc()
             )
-
             .first()
         )
 
-
         if restaurant_rating_qr:
-
-            restaurant_rating_url = (
-                url_for(
-                    "restaurant_rating_qr_page",
-
-                    public_code=(
-                        restaurant_rating_qr
-                        .public_code
-                    ),
-
-                    _external=True,
-                )
+            restaurant_rating_url = url_for(
+                "restaurant_rating_qr_page",
+                public_code=restaurant_rating_qr.public_code,
+                _external=True,
             )
-
 
     # ========================================================
     # ATTRIBUTION VALUES
     # ========================================================
 
     attribution_source = (
-        restaurant_attribution.get(
-            "source"
-        )
-
+        restaurant_attribution.get("source")
         if restaurant_attribution
-
         else None
     )
-
 
     source_article_id = (
-        restaurant_attribution.get(
-            "article_id"
-        )
-
+        restaurant_attribution.get("article_id")
         if restaurant_attribution
-
         else None
     )
-
 
     source_restaurant_id = (
-        restaurant_attribution.get(
-            "restaurant_id"
-        )
-
+        restaurant_attribution.get("restaurant_id")
         if restaurant_attribution
-
         else None
     )
-
 
     source_session_id = (
-        restaurant_attribution.get(
-            "source_session_id"
-        )
-
+        restaurant_attribution.get("source_session_id")
         if restaurant_attribution
-
         else None
     )
 
-
     # ========================================================
-    # RENDER
+    # RENDER PUBLIC PROFILE
     # ========================================================
 
     return render_template(
@@ -29764,11 +29371,7 @@ def restaurant_page(
 
         advert=advert,
 
-
-        # ====================================================
-        # RESTAURANT PLAN
-        # ====================================================
-
+        # Restaurant plan
         restaurant_plan=(
             advert.normalized_subscription_tier
         ),
@@ -29789,61 +29392,25 @@ def restaurant_page(
             restaurant_subscription_grace_ends_at
         ),
 
-
-        # ====================================================
-        # FEATURE CAPABILITIES
-        # ====================================================
-
-        can_use_profile=(
-            can_use_profile
-        ),
-
-        can_use_reel=(
-            can_use_reel
-        ),
-
-        can_use_gallery=(
-            can_use_gallery
-        ),
-
-        can_use_opening_hours=(
-            can_use_opening_hours
-        ),
+        # Capabilities
+        can_use_profile=can_use_profile,
+        can_use_reel=can_use_reel,
+        can_use_gallery=can_use_gallery,
+        can_use_opening_hours=can_use_opening_hours,
 
         can_receive_customer_experiences=(
             can_receive_customer_experiences
         ),
 
-        can_use_stories=(
-            can_use_stories
-        ),
+        can_use_stories=can_use_stories,
+        can_view_analytics=can_view_analytics,
 
-        can_view_analytics=(
-            can_view_analytics
-        ),
+        # Contact
+        whatsapp_url=whatsapp_url,
+        phone_url=phone_url,
+        directions_url=directions_url,
 
-
-        # ====================================================
-        # CONTACT
-        # ====================================================
-
-        whatsapp_url=(
-            whatsapp_url
-        ),
-
-        phone_url=(
-            phone_url
-        ),
-
-        directions_url=(
-            directions_url
-        ),
-
-
-        # ====================================================
-        # HOURS
-        # ====================================================
-
+        # Hours
         restaurant_hours_payload=(
             restaurant_hours_payload
         ),
@@ -29857,25 +29424,16 @@ def restaurant_page(
         ),
 
         restaurant_hours_update_url=(
-
             url_for(
                 "update_restaurant_hours",
                 advert_id=advert.id,
             )
-
             if can_manage_restaurant_hours
-
             else ""
         ),
 
-
-        # ====================================================
-        # CUSTOMER EXPERIENCES
-        # ====================================================
-
-        experience_posts=(
-            experience_posts
-        ),
+        # Customer experiences
+        experience_posts=experience_posts,
 
         loved_experience_post_ids=(
             loved_experience_post_ids
@@ -29889,11 +29447,7 @@ def restaurant_page(
             restaurant_rating_count
         ),
 
-
-        # ====================================================
-        # RATING QR
-        # ====================================================
-
+        # Rating QR
         can_manage_restaurant_rating_qr=(
             can_manage_restaurant_rating_qr
         ),
@@ -29907,41 +29461,20 @@ def restaurant_page(
         ),
 
         restaurant_rating_qr_create_url=(
-
             url_for(
                 "create_restaurant_rating_qr",
                 advert_id=advert.id,
             )
-
             if can_manage_restaurant_rating_qr
-
             else ""
         ),
 
-
-        # ====================================================
-        # ATTRIBUTION
-        # ====================================================
-
-        attribution_source=(
-            attribution_source
-        ),
-
-        source_article_id=(
-            source_article_id
-        ),
-
-        source_restaurant_id=(
-            source_restaurant_id
-        ),
-
-        source_session_id=(
-            source_session_id
-        ),
+        # Attribution
+        attribution_source=attribution_source,
+        source_article_id=source_article_id,
+        source_restaurant_id=source_restaurant_id,
+        source_session_id=source_session_id,
     )
-
-
-
 
 
 
@@ -45388,4 +44921,4 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
-# ============================================================
+# ============================================================..
