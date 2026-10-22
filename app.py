@@ -14675,52 +14675,36 @@ def superadmin_organizers():
 # ============================================================
 # SUPER ADMIN - ORGANIZER PROFILE
 # ============================================================
-
 @app.route(
     "/superadmin/organizers/<int:organizer_id>"
 )
 def superadmin_organizer_detail(
     organizer_id,
 ):
-
-    auth = (
-        require_superadmin()
-    )
-
+    auth = require_superadmin()
 
     if auth:
-
         return auth
 
-
-    organizer = (
-        db.session.get(
-            Organizer,
-            organizer_id,
-        )
+    organizer = db.session.get(
+        Organizer,
+        organizer_id,
     )
 
-
     if not organizer:
-
         abort(404)
-
 
     events = (
         TicketEvent.query
         .filter_by(
-            organizer_id=
-                organizer.id,
-
-            organizer_deleted=
-                False,
+            organizer_id=organizer.id,
+            organizer_deleted=False,
         )
         .order_by(
             TicketEvent.created_at.desc()
         )
         .all()
     )
-
 
     orders = (
         TicketOrder.query
@@ -14739,14 +14723,11 @@ def superadmin_organizer_detail(
         .all()
     )
 
-
     paid_orders = sum(
         1
         for order in orders
-        if order.payment_status
-        == "paid"
+        if order.payment_status == "paid"
     )
-
 
     paid_tickets = sum(
         (
@@ -14754,16 +14735,13 @@ def superadmin_organizer_detail(
             or 0
         )
         for order in orders
-        if order.payment_status
-        == "paid"
+        if order.payment_status == "paid"
     )
-
 
     subscription_payments = (
         SubscriptionPayment.query
         .filter_by(
-            organizer_id=
-                organizer.id
+            organizer_id=organizer.id
         )
         .order_by(
             SubscriptionPayment.created_at.desc()
@@ -14771,36 +14749,300 @@ def superadmin_organizer_detail(
         .all()
     )
 
+    # --------------------------------------------------------
+    # RESTAURANT SUBSCRIPTION
+    # --------------------------------------------------------
+    #
+    # Restaurant subscription plans belong to RestaurantAdvert.
+    # They are separate from event-organizer subscriptions.
+    # --------------------------------------------------------
+
+    restaurant_advert = None
+
+    if (
+        organizer.normalized_account_type
+        == "restaurant"
+    ):
+        restaurant_advert = (
+            RestaurantAdvert.query
+            .filter_by(
+                organizer_id=organizer.id
+            )
+            .first()
+        )
 
     return render_template(
         "superadmin/organizer_detail.html",
 
-        organizer=
-            organizer,
+        organizer=organizer,
 
-        events=
-            events,
+        events=events,
 
-        orders=
-            orders,
+        orders=orders,
 
-        paid_orders=
-            paid_orders,
+        paid_orders=paid_orders,
 
-        paid_tickets=
-            paid_tickets,
+        paid_tickets=paid_tickets,
 
-        subscription_payments=
-            subscription_payments,
+        subscription_payments=subscription_payments,
 
-        subscription_plan_name=
-            KALXA_SUBSCRIPTION_PLAN_NAME,
+        subscription_plan_name=KALXA_SUBSCRIPTION_PLAN_NAME,
 
-        subscription_price=
-            KALXA_SUBSCRIPTION_PRICE,
+        subscription_price=KALXA_SUBSCRIPTION_PRICE,
+
+        restaurant_advert=restaurant_advert,
     )
 
 
+# ============================================================
+# SUPER ADMIN: UPDATE RESTAURANT SUBSCRIPTION PLAN
+# ============================================================
+
+@app.route(
+    "/superadmin/organizers/<int:organizer_id>/restaurant-plan",
+    methods=["POST"],
+)
+def superadmin_update_restaurant_plan(
+    organizer_id,
+):
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    organizer = db.session.get(
+        Organizer,
+        organizer_id,
+    )
+
+    if not organizer:
+        abort(404)
+
+    # --------------------------------------------------------
+    # RESTAURANT ACCOUNTS ONLY
+    # --------------------------------------------------------
+
+    if (
+        organizer.normalized_account_type
+        != "restaurant"
+    ):
+        abort(403)
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            organizer_id=organizer.id
+        )
+        .first()
+    )
+
+    if not advert:
+        flash(
+            "No restaurant profile exists for this account. "
+            "Create its restaurant profile before assigning "
+            "a restaurant subscription plan.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    # --------------------------------------------------------
+    # VALIDATE SELECTED PLAN
+    # --------------------------------------------------------
+
+    selected_plan = (
+        request.form.get(
+            "subscription_tier",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+    allowed_plans = {
+        RESTAURANT_PLAN_FREE,
+        RESTAURANT_PLAN_STANDARD,
+        RESTAURANT_PLAN_PREMIUM,
+    }
+
+    if selected_plan not in allowed_plans:
+        flash(
+            "Please select a valid restaurant subscription plan.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    # --------------------------------------------------------
+    # FREE PLAN
+    # --------------------------------------------------------
+    #
+    # Free has no expiry date.
+    # Existing restaurant content is preserved.
+    # --------------------------------------------------------
+
+    if selected_plan == RESTAURANT_PLAN_FREE:
+
+        advert.subscription_tier = (
+            RESTAURANT_PLAN_FREE
+        )
+
+        advert.subscription_status = "active"
+
+        advert.subscription_started_at = (
+            datetime.utcnow()
+        )
+
+        advert.subscription_expires_at = None
+
+        try:
+            db.session.commit()
+
+            flash(
+                f"{advert.business_name} has been "
+                "successfully changed to the Free plan.",
+                "success",
+            )
+
+        except Exception:
+            db.session.rollback()
+
+            current_app.logger.exception(
+                "Failed to update restaurant subscription. "
+                "organizer_id=%s advert_id=%s",
+                organizer.id,
+                advert.id,
+            )
+
+            flash(
+                "The restaurant plan could not be updated. "
+                "Please try again.",
+                "error",
+            )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    # --------------------------------------------------------
+    # STANDARD / PREMIUM
+    # --------------------------------------------------------
+    #
+    # Paid plans require an expiry date and time.
+    #
+    # datetime-local submits YYYY-MM-DDTHH:MM.
+    # This parses the value into a naive datetime, consistent
+    # with the existing model's datetime.utcnow() convention.
+    # --------------------------------------------------------
+
+    expiry_value = (
+        request.form.get(
+            "subscription_expires_at",
+            "",
+        )
+        .strip()
+    )
+
+    if not expiry_value:
+        flash(
+            "Select an expiry date and time for the paid plan.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    try:
+        expiry_at = datetime.strptime(
+            expiry_value,
+            "%Y-%m-%dT%H:%M",
+        )
+
+    except (TypeError, ValueError):
+        flash(
+            "The expiry date or time is invalid.",
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "superadmin_organizer_detail",
+                organizer_id=organizer.id,
+            )
+        )
+
+    # --------------------------------------------------------
+    # SAVE PAID PLAN
+    # --------------------------------------------------------
+
+    advert.subscription_tier = selected_plan
+
+    advert.subscription_status = "active"
+
+    advert.subscription_started_at = (
+        datetime.utcnow()
+    )
+
+    advert.subscription_expires_at = expiry_at
+
+    try:
+        db.session.commit()
+
+        flash(
+            f"{advert.business_name} has been changed "
+            f"to the {selected_plan.title()} plan. "
+            f"Expiry: {expiry_at.strftime('%d %B %Y %H:%M')}.",
+            "success",
+        )
+
+        current_app.logger.info(
+            "Super Admin updated restaurant subscription. "
+            "organizer_id=%s advert_id=%s tier=%s expiry=%s",
+            organizer.id,
+            advert.id,
+            selected_plan,
+            expiry_at.isoformat(),
+        )
+
+    except Exception:
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "Failed to update restaurant subscription. "
+            "organizer_id=%s advert_id=%s",
+            organizer.id,
+            advert.id,
+        )
+
+        flash(
+            "The restaurant plan could not be updated. "
+            "Please try again.",
+            "error",
+        )
+
+    return redirect(
+        url_for(
+            "superadmin_organizer_detail",
+            organizer_id=organizer.id,
+        )
+    )
 # ============================================================
 # ORGANIZER PASSWORD RESET HELPERS
 # ============================================================
