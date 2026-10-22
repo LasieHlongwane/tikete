@@ -6168,7 +6168,6 @@ class RestaurantAdvert(db.Model):
 # ============================================================
 # DOWNGRADE EXPIRED RESTAURANT PLAN TO FREE
 # ============================================================
-
     def downgrade_expired_restaurant_plan_to_free(self):
 
 
@@ -6176,29 +6175,29 @@ class RestaurantAdvert(db.Model):
     # ALREADY FREE
     # --------------------------------------------------------
 
-    if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+     if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
         return False
 
     # --------------------------------------------------------
     # STILL ACTIVE OR WITHIN THE GRACE PERIOD
     # --------------------------------------------------------
 
-    if not self.is_restaurant_subscription_grace_expired:
+     if not self.is_restaurant_subscription_grace_expired:
         return False
 
     # --------------------------------------------------------
     # DOWNGRADE TO FREE
     # --------------------------------------------------------
 
-    self.subscription_tier = RESTAURANT_PLAN_FREE
+     self.subscription_tier = RESTAURANT_PLAN_FREE
 
-    self.subscription_status = "active"
+     self.subscription_status = "active"
 
     # Record when the Free plan begins.
-    self.subscription_started_at = datetime.utcnow()
+     self.subscription_started_at = datetime.utcnow()
 
     # Free subscriptions do not have an expiry date.
-    self.subscription_expires_at = None
+     self.subscription_expires_at = None
 
     # --------------------------------------------------------
     # PRESERVE ALL EXISTING CONTENT
