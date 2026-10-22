@@ -6169,64 +6169,75 @@ class RestaurantAdvert(db.Model):
 # DOWNGRADE EXPIRED RESTAURANT PLAN TO FREE
 # ============================================================
 
-    def downgrade_expired_restaurant_plan_to_free(
-      self,
-    ):
+    def downgrade_expired_restaurant_plan_to_free(self):
+    """
+    Downgrade an expired Standard or Premium restaurant
+    subscription to the Free plan after the grace period.
+
+    IMPORTANT:
+    - The restaurant profile remains available.
+    - Existing restaurant Reels are preserved.
+    - Gallery images and opening hours are preserved.
+    - Customer experiences and reviews are preserved in storage.
+    - Analytics history is preserved.
+    - Paid features must remain unavailable while the
+      restaurant is on the Free plan.
+    - The restaurant can regain paid features by upgrading
+      to Standard or Premium again.
+
+    Returns:
+        bool: True if the subscription was downgraded.
+        bool: False if no downgrade was necessary.
+    """
 
     # --------------------------------------------------------
     # ALREADY FREE
     # --------------------------------------------------------
 
-      if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
+    if self.normalized_subscription_tier == RESTAURANT_PLAN_FREE:
         return False
 
-
     # --------------------------------------------------------
-    # STILL ACTIVE / STILL IN GRACE
+    # STILL ACTIVE OR WITHIN THE GRACE PERIOD
     # --------------------------------------------------------
 
-      if not self.is_restaurant_subscription_grace_expired:
+    if not self.is_restaurant_subscription_grace_expired:
         return False
 
-
     # --------------------------------------------------------
-    # DOWNGRADE
-    # --------------------------------------------------------
-    #
-    # IMPORTANT:
-    #
-    # We do NOT delete:
-    #
-    #     gallery images
-    #     opening hours
-    #     customer experiences
-    #     analytics history
-    #
-    # Free-plan permissions simply stop exposing paid
-    # features.
-    #
-    # If the restaurant upgrades again later, the stored
-    # content can become available again.
+    # DOWNGRADE TO FREE
     # --------------------------------------------------------
 
-      self.subscription_tier = (
-        RESTAURANT_PLAN_FREE
-      )
+    self.subscription_tier = RESTAURANT_PLAN_FREE
 
-      self.subscription_status = (
-        "active"
-      )
+    self.subscription_status = "active"
 
-      self.subscription_started_at = (
-        datetime.utcnow()
-      )
+    # Record when the Free plan begins.
+    self.subscription_started_at = datetime.utcnow()
 
-      self.subscription_expires_at = (
-        None
-      )
+    # Free subscriptions do not have an expiry date.
+    self.subscription_expires_at = None
 
+    # --------------------------------------------------------
+    # PRESERVE ALL EXISTING CONTENT
+    # --------------------------------------------------------
+    #
+    # Do not delete or deactivate:
+    # - Restaurant profile
+    # - Restaurant Reel
+    # - Gallery images
+    # - Opening hours
+    # - Customer experiences and stored reviews
+    # - Analytics history
+    #
+    # Access to paid features must be controlled separately
+    # by the application's subscription permission checks.
+    #
+    # Do not commit here. Let the calling synchronization
+    # function manage the database transaction.
+    # --------------------------------------------------------
 
-      return True
+    return True    
 
     @property
     def subscription_price(self):
