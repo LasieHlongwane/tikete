@@ -15724,21 +15724,23 @@ def superadmin_set_subscription_expiry(organizer_id):
         )
 
     # ========================================================
-    # FIND LATEST PARTNER-GRANT RECORD
-    # ========================================================
-    #
-    # The latest complimentary partner-grant record is used
-    # to display the partner access period in Super Admin.
-    #
-    # Update its subscription_end so the displayed partner
-    # expiry matches the organizer expiry selected here.
+    # FIND LATEST PARTNER GRANT
     # ========================================================
 
     latest_partner_grant = (
         SubscriptionPayment.query
-        .filter_by(
-            organizer_id=organizer.id,
-            payment_method="partner_grant",
+        .filter(
+            SubscriptionPayment.organizer_id
+            == organizer.id,
+
+            SubscriptionPayment.payment_method
+            == "partner_grant",
+
+            SubscriptionPayment.amount
+            == Decimal("0.00"),
+
+            SubscriptionPayment.confirmed_by
+            == "superadmin_partner_grant",
         )
         .order_by(
             SubscriptionPayment.created_at.desc(),
@@ -15746,6 +15748,34 @@ def superadmin_set_subscription_expiry(organizer_id):
         )
         .first()
     )
+
+    # ========================================================
+    # FIND RESTAURANT PROFILE, IF APPLICABLE
+    # ========================================================
+
+    restaurant_advert = None
+
+    account_type = (
+        getattr(
+            organizer,
+            "normalized_account_type",
+            None,
+        )
+        or "event"
+    )
+
+    if account_type == "restaurant":
+
+        restaurant_advert = (
+            RestaurantAdvert.query
+            .filter_by(
+                organizer_id=organizer.id,
+            )
+            .order_by(
+                RestaurantAdvert.id.asc()
+            )
+            .first()
+        )
 
     # ========================================================
     # PREPARE STATUS UPDATE
@@ -15760,12 +15790,10 @@ def superadmin_set_subscription_expiry(organizer_id):
     organizer.subscription_expires_at = expiry_at
 
     # ========================================================
-    # UPDATE SUBSCRIPTION STATUS
+    # UPDATE ORGANIZER SUBSCRIPTION STATUS
     # ========================================================
     #
-    # Allow expired accounts to receive a future expiry date.
-    # Preserve deliberate suspension and inactive-account
-    # status instead of automatically reactivating them.
+    # Do not reactivate suspended or inactive accounts.
     # ========================================================
 
     if (
@@ -15785,12 +15813,51 @@ def superadmin_set_subscription_expiry(organizer_id):
             organizer.subscription_status = "expired"
 
     # ========================================================
-    # SYNCHRONIZE LATEST PARTNER-GRANT EXPIRY
+    # UPDATE PARTNER-GRANT EXPIRY
     # ========================================================
 
     if latest_partner_grant:
 
-        latest_partner_grant.subscription_end = expiry_at
+        latest_partner_grant.subscription_end = (
+            expiry_at
+        )
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION EXPIRY
+    # ========================================================
+    #
+    # Only synchronize when the restaurant subscription
+    # started at the same time as the complimentary grant.
+    #
+    # This avoids overwriting a separate paid subscription
+    # that started later.
+    # ========================================================
+
+    restaurant_expiry_synchronized = False
+
+    if (
+        restaurant_advert
+        and latest_partner_grant
+        and latest_partner_grant.subscription_start
+    ):
+
+        restaurant_subscription_started_at = getattr(
+            restaurant_advert,
+            "subscription_started_at",
+            None,
+        )
+
+        if (
+            restaurant_subscription_started_at
+            and restaurant_subscription_started_at
+            == latest_partner_grant.subscription_start
+        ):
+
+            restaurant_advert.subscription_expires_at = (
+                expiry_at
+            )
+
+            restaurant_expiry_synchronized = True
 
     # ========================================================
     # SAVE CHANGES
@@ -15806,8 +15873,8 @@ def superadmin_set_subscription_expiry(organizer_id):
 
         current_app.logger.exception(
             (
-                "[Super Admin] Failed to set "
-                "subscription/partner expiry. "
+                "[Super Admin] Failed to synchronize "
+                "organizer, partner and restaurant expiry. "
                 "organizer_id=%s error=%s"
             ),
             organizer_id,
@@ -15830,27 +15897,69 @@ def superadmin_set_subscription_expiry(organizer_id):
         )
 
     # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION LIFECYCLE
+    # ========================================================
+    #
+    # Run after saving the new expiry so the existing
+    # subscription lifecycle method sees the updated date.
+    # ========================================================
+
+    if restaurant_expiry_synchronized:
+
+        try:
+
+            sync_restaurant_subscription(
+                restaurant_advert
+            )
+
+        except Exception:
+
+            current_app.logger.exception(
+                (
+                    "[Super Admin] Restaurant subscription "
+                    "lifecycle synchronization failed. "
+                    "organizer_id=%s advert_id=%s"
+                ),
+                organizer_id,
+                restaurant_advert.id,
+            )
+
+    # ========================================================
     # SUCCESS MESSAGE
     # ========================================================
 
     if latest_partner_grant:
 
-        flash(
-            (
-                "Expiry date updated successfully. "
-                "The organizer expiry and latest recorded "
-                "partner expiry now match."
-            ),
-            "success",
-        )
+        if restaurant_expiry_synchronized:
+
+            flash(
+                (
+                    "Expiry date updated successfully. "
+                    "The organizer, partner grant and "
+                    "restaurant subscription expiry dates "
+                    "have been synchronized."
+                ),
+                "success",
+            )
+
+        else:
+
+            flash(
+                (
+                    "Expiry date updated successfully. "
+                    "The organizer expiry and latest recorded "
+                    "partner expiry now match. The restaurant "
+                    "subscription was not changed because a "
+                    "matching complimentary subscription period "
+                    "could not be confirmed."
+                ),
+                "success",
+            )
 
     else:
 
         flash(
-            (
-                "Subscription expiry date updated "
-                "successfully."
-            ),
+            "Subscription expiry date updated successfully.",
             "success",
         )
 
@@ -15864,7 +15973,6 @@ def superadmin_set_subscription_expiry(organizer_id):
             organizer_id=organizer_id,
         )
     )
-
 # ============================================================
 # SUPER ADMIN - SUSPEND ORGANIZER
 # ============================================================
@@ -23687,7 +23795,6 @@ def get_taggable_restaurants():
 # or editing their own restaurant profile.
 # ============================================================
 
-
 @app.route(
     "/admin/restaurants/<int:advert_id>/manage"
 )
@@ -23709,7 +23816,6 @@ def admin_manage_restaurant(advert_id):
     organizer = get_current_organizer()
 
     if not organizer:
-
         flash(
             "Please log in to manage your restaurant.",
             "error",
@@ -23733,7 +23839,6 @@ def admin_manage_restaurant(advert_id):
     )
 
     if account_type != "restaurant":
-
         flash(
             "This section is available to restaurant accounts.",
             "error",
@@ -23746,15 +23851,8 @@ def admin_manage_restaurant(advert_id):
     # ========================================================
     # ORGANIZER ACCOUNT MUST BE ACTIVE
     # ========================================================
-    #
-    # Do not check organizer.is_subscription_active here.
-    #
-    # Restaurant subscription permissions are managed by
-    # RestaurantAdvert, not the legacy organizer subscription.
-    # ========================================================
 
     if not organizer.active:
-
         flash(
             "Your restaurant account is currently inactive.",
             "error",
@@ -23766,23 +23864,6 @@ def admin_manage_restaurant(advert_id):
 
     # ========================================================
     # RESTAURANT OWNERSHIP
-    # ========================================================
-    #
-    # Super Admin-created restaurant profiles already have:
-    #
-    #     RestaurantAdvert.organizer_id = Organizer.id
-    #
-    # Retrieve the profile regardless of its active status.
-    #
-    # CRITICAL:
-    #
-    # Do NOT add:
-    #
-    #     active=True
-    #
-    # to this query.
-    #
-    # Unpublished profiles must remain manageable.
     # ========================================================
 
     advert = (
@@ -23799,36 +23880,28 @@ def admin_manage_restaurant(advert_id):
     # ========================================================
 
     if not advert.organizer:
-
         abort(403)
 
     if advert.organizer.id != organizer.id:
-
         abort(403)
 
     if not advert.organizer.active:
-
         abort(403)
 
     if (
         advert.organizer.normalized_account_type
         != "restaurant"
     ):
-
         abort(403)
 
     # ========================================================
-    # RESTAURANT PUBLICATION STATUS
+    # CURRENT TIME
     # ========================================================
-    #
-    # active=True:
-    #     Restaurant is enabled for public visibility,
-    #     subject to any existing scheduling restrictions.
-    #
-    # active=False:
-    #     Restaurant is unpublished or paused.
-    #
-    # Neither state prevents authorized owner management.
+
+    now = datetime.utcnow()
+
+    # ========================================================
+    # RESTAURANT PUBLICATION STATUS
     # ========================================================
 
     restaurant_is_published = bool(
@@ -23846,114 +23919,13 @@ def admin_manage_restaurant(advert_id):
     )
 
     # ========================================================
-    # SYNCHRONIZE RESTAURANT SUBSCRIPTION
+    # FIND LATEST COMPLIMENTARY PARTNER GRANT
     # ========================================================
     #
-    # STANDARD / PREMIUM:
+    # This is separate from a verified paid subscription.
     #
-    # Active:
-    #     Paid plan features available.
-    #
-    # Grace period:
-    #     Features remain available under current rules.
-    #
-    # Grace expired:
-    #     Downgrade to Free through the existing helper.
-    #
-    # IMPORTANT:
-    #
-    # Super Admin partner grants are not real payments.
-    #
-    # This route does not create subscription payments
-    # or alter the restaurant's payment history.
-    # ========================================================
-
-    sync_restaurant_subscription(
-        advert
-    )
-
-    # ========================================================
-    # CURRENT TIME
-    # ========================================================
-
-    now = datetime.utcnow()
-
-    # ========================================================
-    # RESTAURANT PLAN
-    # ========================================================
-
-    restaurant_plan = (
-        advert.normalized_subscription_tier
-    )
-
-    restaurant_plan_name = (
-        advert.subscription_plan_name
-    )
-
-    restaurant_plan_price = (
-        advert.subscription_price
-    )
-
-    # ========================================================
-    # PLAN STATE
-    # ========================================================
-
-    restaurant_subscription_active = (
-        advert.is_restaurant_subscription_active
-    )
-
-    restaurant_subscription_in_grace = (
-        advert.is_restaurant_subscription_in_grace_period
-    )
-
-    restaurant_subscription_grace_ends_at = (
-        advert.restaurant_subscription_grace_ends_at
-    )
-
-    restaurant_subscription_expires_at = (
-        advert.subscription_expires_at
-    )
-
-    # ========================================================
-    # GRACE PERIOD DAYS REMAINING
-    # ========================================================
-
-    restaurant_subscription_grace_days_remaining = None
-
-    if (
-        restaurant_subscription_in_grace
-        and restaurant_subscription_grace_ends_at
-    ):
-
-        remaining_seconds = max(
-            0,
-            (
-                restaurant_subscription_grace_ends_at
-                - now
-            ).total_seconds(),
-        )
-
-        restaurant_subscription_grace_days_remaining = max(
-            1,
-            int(
-                (
-                    remaining_seconds + 86399
-                ) // 86400
-            ),
-        )
-
-    # ========================================================
-    # PREMIUM PARTNER IDENTIFICATION
-    # ========================================================
-    #
-    # A restaurant is a complimentary Premium partner when
-    # it has an eligible Super Admin-issued R0 partner grant.
-    #
-    # This is separate from payment-verified restaurant
-    # subscriptions.
-    #
-    # Only the grant created for the restaurant's organizer
-    # account is examined here.
+    # Only recognize a grant matching the existing
+    # Super Admin partner-grant identification rules.
     # ========================================================
 
     partner_grant = (
@@ -23978,29 +23950,36 @@ def admin_manage_restaurant(advert_id):
         .first()
     )
 
+    has_partner_grant_record = bool(
+        partner_grant
+        and partner_grant.subscription_start
+        and partner_grant.subscription_end
+    )
+
+    partner_access_expires_at = (
+        partner_grant.subscription_end
+        if has_partner_grant_record
+        else None
+    )
+
+    # ========================================================
+    # PARTNER ACCESS STATUS
+    # ========================================================
+
     is_restaurant_partner = bool(
-        partner_grant is not None
-        and advert.is_premium_plan
-        and partner_grant.subscription_start is not None
-        and partner_grant.subscription_end is not None
+        has_partner_grant_record
         and partner_grant.subscription_start <= now
         and now < partner_grant.subscription_end
     )
 
-    # ========================================================
-    # PREMIUM PARTNER PERIOD
-    # ========================================================
-
-    partner_access_expires_at = (
-        partner_grant.subscription_end
-        if is_restaurant_partner
-        else None
+    restaurant_partner_access_expired = bool(
+        has_partner_grant_record
+        and partner_grant.subscription_end <= now
     )
 
     partner_days_remaining = None
 
-    if partner_access_expires_at:
-
+    if is_restaurant_partner:
         remaining_seconds = max(
             0,
             (
@@ -24011,9 +23990,196 @@ def admin_manage_restaurant(advert_id):
         partner_days_remaining = max(
             0,
             int(
-                (
-                    remaining_seconds + 86399
-                ) // 86400
+                (remaining_seconds + 86399) // 86400
+            ),
+        )
+
+    # ========================================================
+    # SYNCHRONIZE COMPLIMENTARY PARTNER EXPIRY
+    # ========================================================
+    #
+    # A complimentary partner grant must not leave the
+    # restaurant advertising a later subscription expiry
+    # when the stored restaurant subscription belongs to
+    # that same complimentary access period.
+    #
+    # Do not overwrite a separately started paid subscription.
+    # We only synchronize when the restaurant subscription's
+    # start timestamp matches the grant's start timestamp.
+    # ========================================================
+
+    if has_partner_grant_record:
+        restaurant_subscription_started_at = getattr(
+            advert,
+            "subscription_started_at",
+            None,
+        )
+
+        if (
+            restaurant_subscription_started_at
+            and restaurant_subscription_started_at
+            == partner_grant.subscription_start
+        ):
+            if (
+                advert.subscription_expires_at
+                != partner_grant.subscription_end
+            ):
+                advert.subscription_expires_at = (
+                    partner_grant.subscription_end
+                )
+
+                try:
+                    db.session.commit()
+
+                except Exception:
+                    db.session.rollback()
+
+                    current_app.logger.exception(
+                        (
+                            "Failed to synchronize restaurant "
+                            "subscription expiry with partner "
+                            "grant. advert_id=%s organizer_id=%s"
+                        ),
+                        advert.id,
+                        organizer.id,
+                    )
+
+                    flash(
+                        (
+                            "The restaurant subscription expiry "
+                            "could not be synchronized. Please "
+                            "contact the administrator."
+                        ),
+                        "error",
+                    )
+
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTION LIFECYCLE
+    # ========================================================
+    #
+    # The existing model method determines when a plan is
+    # downgraded after its applicable expiry/grace rules.
+    # ========================================================
+
+    sync_restaurant_subscription(advert)
+
+    # Refresh persisted values after synchronization.
+    db.session.refresh(advert)
+
+    now = datetime.utcnow()
+
+    # ========================================================
+    # RESTAURANT PLAN
+    # ========================================================
+
+    restaurant_plan = (
+        advert.normalized_subscription_tier
+    )
+
+    restaurant_plan_name = (
+        advert.subscription_plan_name
+    )
+
+    restaurant_plan_price = (
+        advert.subscription_price
+    )
+
+    # ========================================================
+    # RESTAURANT SUBSCRIPTION STATE
+    # ========================================================
+
+    restaurant_subscription_active = (
+        advert.is_restaurant_subscription_active
+    )
+
+    restaurant_subscription_in_grace = (
+        advert.is_restaurant_subscription_in_grace_period
+    )
+
+    restaurant_subscription_grace_ends_at = (
+        advert.restaurant_subscription_grace_ends_at
+    )
+
+    restaurant_subscription_expires_at = (
+        advert.subscription_expires_at
+    )
+
+    # ========================================================
+    # EXPLICIT ACCESS STATUS FOR THE TEMPLATE
+    # ========================================================
+    #
+    # A partner grant's expiry is exposed separately from
+    # the restaurant's paid subscription status.
+    #
+    # The template can display an expired partner grant even
+    # if the stored plan still needs model-level correction.
+    # ========================================================
+
+    if restaurant_partner_access_expired:
+        restaurant_access_status = "expired"
+
+    elif is_restaurant_partner:
+        restaurant_access_status = "active"
+
+    elif restaurant_subscription_in_grace:
+        restaurant_access_status = "grace"
+
+    elif restaurant_subscription_active:
+        restaurant_access_status = "active"
+
+    else:
+        restaurant_access_status = "expired"
+
+    restaurant_access_expired = (
+        restaurant_access_status == "expired"
+    )
+
+    # ========================================================
+    # GRACE PERIOD DAYS REMAINING
+    # ========================================================
+
+    restaurant_subscription_grace_days_remaining = None
+
+    if (
+        restaurant_subscription_in_grace
+        and restaurant_subscription_grace_ends_at
+    ):
+        remaining_seconds = max(
+            0,
+            (
+                restaurant_subscription_grace_ends_at
+                - now
+            ).total_seconds(),
+        )
+
+        restaurant_subscription_grace_days_remaining = max(
+            1,
+            int(
+                (remaining_seconds + 86399) // 86400
+            ),
+        )
+
+    # ========================================================
+    # PARTNER PERIOD DAYS REMAINING
+    # ========================================================
+
+    partner_days_remaining = None
+
+    if (
+        is_restaurant_partner
+        and partner_access_expires_at
+    ):
+        remaining_seconds = max(
+            0,
+            (
+                partner_access_expires_at - now
+            ).total_seconds(),
+        )
+
+        partner_days_remaining = max(
+            0,
+            int(
+                (remaining_seconds + 86399) // 86400
             ),
         )
 
@@ -24034,42 +24200,25 @@ def admin_manage_restaurant(advert_id):
     # ========================================================
     # UPGRADE / RENEWAL OPTIONS
     # ========================================================
-    #
-    # These are presentation flags only.
-    #
-    # Actual upgrades and renewals must still be
-    # validated by the relevant payment routes.
-    #
-    # While complimentary Premium is active:
-    #
-    # - Do not prompt the partner to upgrade.
-    # - Do not treat the grant as a paid subscription.
-    #
-    # Renewal remains available under the existing
-    # subscription billing process.
-    # ========================================================
 
     can_upgrade_to_standard = (
-        restaurant_plan
-        != RESTAURANT_PLAN_STANDARD
+        restaurant_plan != RESTAURANT_PLAN_STANDARD
         and not is_restaurant_partner
     )
 
     can_upgrade_to_premium = (
-        restaurant_plan
-        != RESTAURANT_PLAN_PREMIUM
+        restaurant_plan != RESTAURANT_PLAN_PREMIUM
         and not is_restaurant_partner
     )
 
     can_renew_standard = (
-        restaurant_plan
-        == RESTAURANT_PLAN_STANDARD
+        restaurant_plan == RESTAURANT_PLAN_STANDARD
         and not is_restaurant_partner
     )
 
     can_renew_premium = (
-        restaurant_plan
-        == RESTAURANT_PLAN_PREMIUM
+        restaurant_plan == RESTAURANT_PLAN_PREMIUM
+        and not is_restaurant_partner
     )
 
     # ========================================================
@@ -24090,15 +24239,6 @@ def admin_manage_restaurant(advert_id):
 
     # ========================================================
     # RESTAURANT FEATURE PERMISSIONS
-    # ========================================================
-    #
-    # The actual feature entitlements come from the
-    # RestaurantAdvert model.
-    #
-    # This preserves Free / Standard / Premium permissions.
-    #
-    # The partner grant does not directly override
-    # those permission checks.
     # ========================================================
 
     can_use_reel = (
@@ -24130,168 +24270,109 @@ def admin_manage_restaurant(advert_id):
     # ========================================================
 
     return render_template(
-
         "admin/restaurant_manage.html",
 
-        # ====================================================
-        # ORGANIZER
-        # ====================================================
-
+        # Organizer and restaurant
         organizer=organizer,
-
-        # ====================================================
-        # RESTAURANT
-        # ====================================================
-
         advert=advert,
 
-        # ====================================================
-        # PUBLICATION STATUS
-        # ====================================================
-
+        # Publication status
         restaurant_is_published=(
             restaurant_is_published
         ),
-
         restaurant_is_unpublished=(
             restaurant_is_unpublished
         ),
-
         restaurant_publication_status=(
             restaurant_publication_status
         ),
 
-        # ====================================================
-        # PARTNER STATUS
-        # ====================================================
-
+        # Partner grant status
+        partner_grant=partner_grant,
+        has_partner_grant_record=(
+            has_partner_grant_record
+        ),
         is_restaurant_partner=(
             is_restaurant_partner
         ),
-
+        restaurant_partner_access_expired=(
+            restaurant_partner_access_expired
+        ),
         partner_access_expires_at=(
             partner_access_expires_at
         ),
-
         partner_days_remaining=(
             partner_days_remaining
         ),
 
-        # ====================================================
-        # RESTAURANT PLAN
-        # ====================================================
-
-        restaurant_plan=(
-            restaurant_plan
+        # Overall access status
+        restaurant_access_status=(
+            restaurant_access_status
+        ),
+        restaurant_access_expired=(
+            restaurant_access_expired
         ),
 
+        # Restaurant plan
+        restaurant_plan=restaurant_plan,
         restaurant_plan_name=(
             restaurant_plan_name
         ),
-
         restaurant_plan_price=(
             restaurant_plan_price
         ),
-
         restaurant_subscription_active=(
             restaurant_subscription_active
         ),
-
         restaurant_subscription_expires_at=(
             restaurant_subscription_expires_at
         ),
 
-        # ====================================================
-        # GRACE PERIOD
-        # ====================================================
-
+        # Grace period
         restaurant_subscription_in_grace=(
             restaurant_subscription_in_grace
         ),
-
         restaurant_subscription_grace_ends_at=(
             restaurant_subscription_grace_ends_at
         ),
-
         restaurant_subscription_grace_days_remaining=(
             restaurant_subscription_grace_days_remaining
         ),
 
-        # ====================================================
-        # PLAN FLAGS
-        # ====================================================
+        # Plan flags
+        is_free_plan=is_free_plan,
+        is_standard_plan=is_standard_plan,
+        is_premium_plan=is_premium_plan,
 
-        is_free_plan=(
-            is_free_plan
-        ),
+        # Plan prices
+        standard_plan_price=standard_plan_price,
+        premium_plan_price=premium_plan_price,
 
-        is_standard_plan=(
-            is_standard_plan
-        ),
-
-        is_premium_plan=(
-            is_premium_plan
-        ),
-
-        # ====================================================
-        # PLAN PRICES
-        # ====================================================
-
-        standard_plan_price=(
-            standard_plan_price
-        ),
-
-        premium_plan_price=(
-            premium_plan_price
-        ),
-
-        # ====================================================
-        # UPGRADE / RENEWAL CONTROLS
-        # ====================================================
-
+        # Upgrade / renewal
         can_upgrade_to_standard=(
             can_upgrade_to_standard
         ),
-
         can_upgrade_to_premium=(
             can_upgrade_to_premium
         ),
-
         can_renew_standard=(
             can_renew_standard
         ),
-
         can_renew_premium=(
             can_renew_premium
         ),
 
-        # ====================================================
-        # RESTAURANT FEATURE PERMISSIONS
-        # ====================================================
-
-        can_use_reel=(
-            can_use_reel
-        ),
-
-        can_use_gallery=(
-            can_use_gallery
-        ),
-
+        # Feature permissions
+        can_use_reel=can_use_reel,
+        can_use_gallery=can_use_gallery,
         can_use_opening_hours=(
             can_use_opening_hours
         ),
-
         can_receive_customer_experiences=(
             can_receive_customer_experiences
         ),
-
-        can_use_stories=(
-            can_use_stories
-        ),
-
-        can_view_analytics=(
-            can_view_analytics
-        ),
+        can_use_stories=can_use_stories,
+        can_view_analytics=can_view_analytics,
     )
 
 # ============================================================
