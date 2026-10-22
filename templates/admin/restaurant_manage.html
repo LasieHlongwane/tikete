@@ -209,6 +209,18 @@ button {
     letter-spacing: .08em;
 }
 
+.sidebar-access-expired {
+    display: inline-flex;
+    margin-top: 6px;
+    padding: 4px 6px;
+    background: #7f1d1d;
+    color: #fee2e2;
+    border-radius: 5px;
+    font-size: 8px;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
 /* =====================================================
    SIDEBAR NAVIGATION
 ===================================================== */
@@ -579,6 +591,54 @@ h1 {
 .plan-premium {
     background: #111827;
     color: #ffffff;
+}
+
+.plan-expired {
+    background: var(--red-bg);
+    color: var(--red);
+}
+
+/* =====================================================
+   ACCESS STATUS ALERTS
+===================================================== */
+
+.access-alert {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid;
+    border-radius: 13px;
+    font-size: 11px;
+    line-height: 1.65;
+}
+
+.access-alert strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.access-alert-expired {
+    background: var(--red-bg);
+    color: var(--red);
+    border-color: #fecaca;
+}
+
+.access-alert-active {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: #bbf7d0;
+}
+
+.access-alert-info {
+    background: var(--blue-bg);
+    color: #1e40af;
+    border-color: var(--blue-border);
+}
+
+.access-alert-date {
+    display: block;
+    margin-top: 8px;
+    font-weight: 900;
 }
 
 /* =====================================================
@@ -1216,6 +1276,14 @@ form {
                     {{ restaurant_plan_name }} Plan
                 </p>
 
+                {% if restaurant_access_expired|default(false) %}
+
+                    <span class="sidebar-access-expired">
+                        Access expired
+                    </span>
+
+                {% endif %}
+
             </div>
 
         </div>
@@ -1235,10 +1303,7 @@ form {
                 ) }}"
                 class="sidebar-link sidebar-link-active"
             >
-                <span class="sidebar-icon">
-                    ▦
-                </span>
-
+                <span class="sidebar-icon">▦</span>
                 Overview
             </a>
 
@@ -1249,10 +1314,7 @@ form {
                 ) }}"
                 class="sidebar-link"
             >
-                <span class="sidebar-icon">
-                    ✎
-                </span>
-
+                <span class="sidebar-icon">✎</span>
                 Edit Restaurant
             </a>
 
@@ -1265,10 +1327,7 @@ form {
                     ) }}"
                     class="sidebar-link"
                 >
-                    <span class="sidebar-icon">
-                        ▶
-                    </span>
-
+                    <span class="sidebar-icon">▶</span>
                     Restaurant Reel
                 </a>
 
@@ -1283,10 +1342,7 @@ form {
                     ) }}#restaurant-hours"
                     class="sidebar-link"
                 >
-                    <span class="sidebar-icon">
-                        ◷
-                    </span>
-
+                    <span class="sidebar-icon">◷</span>
                     Opening Hours
                 </a>
 
@@ -1301,10 +1357,7 @@ form {
                 rel="noopener noreferrer"
                 class="sidebar-link"
             >
-                <span class="sidebar-icon">
-                    ↗
-                </span>
-
+                <span class="sidebar-icon">↗</span>
                 Public Restaurant
             </a>
 
@@ -1319,10 +1372,7 @@ form {
                 href="#restaurant-subscription"
                 class="sidebar-link"
             >
-                <span class="sidebar-icon">
-                    ◈
-                </span>
-
+                <span class="sidebar-icon">◈</span>
                 Manage Subscription
             </a>
 
@@ -1332,10 +1382,7 @@ form {
                     href="#restaurant-features"
                     class="sidebar-link"
                 >
-                    <span class="sidebar-icon">
-                        ▥
-                    </span>
-
+                    <span class="sidebar-icon">▥</span>
                     Analytics
                 </a>
 
@@ -1578,8 +1625,7 @@ form {
 
                                 {% if advert.days_remaining is not none %}
 
-                                    {{ advert.days_remaining }}
-                                    days
+                                    {{ advert.days_remaining }} days
 
                                 {% else %}
 
@@ -1638,6 +1684,14 @@ form {
 
                         {% endif %}
 
+                        {% if restaurant_access_expired|default(false) %}
+
+                            <span class="plan-badge plan-expired">
+                                Subscription expired
+                            </span>
+
+                        {% endif %}
+
                     </div>
 
                     <div class="subscription-price">
@@ -1646,15 +1700,11 @@ form {
 
                         {% if not is_free_plan %}
 
-                            <small>
-                                per month
-                            </small>
+                            <small>per month</small>
 
                         {% else %}
 
-                            <small>
-                                no monthly fee
-                            </small>
+                            <small>no monthly fee</small>
 
                         {% endif %}
 
@@ -1663,13 +1713,90 @@ form {
                 </div>
 
                 <!-- =================================================
+                     EXPIRED PARTNER / ACCESS WARNING
+                ================================================== -->
+
+                {% if restaurant_partner_access_expired|default(false) %}
+
+                    <div class="access-alert access-alert-expired">
+
+                        <strong>
+                            🔴 Complimentary partner access has expired
+                        </strong>
+
+                        Your recorded Kalxa partner-access period has
+                        ended. Complimentary access is no longer active.
+
+                        {% if partner_access_expires_at %}
+
+                            <span class="access-alert-date">
+
+                                Partner access expired:
+
+                                {{ partner_access_expires_at.strftime(
+                                    '%d %B %Y at %H:%M'
+                                ) }}
+
+                            </span>
+
+                        {% endif %}
+
+                        {% if is_free_plan %}
+
+                            Your restaurant is on the Free plan.
+                            Your restaurant profile and Reel can remain
+                            available, while paid features are locked.
+
+                        {% else %}
+
+                            Your recorded restaurant plan is still
+                            {{ restaurant_plan_name }}.
+
+                            Please renew through the secure checkout
+                            below if you want to continue paid features.
+
+                        {% endif %}
+
+                    </div>
+
+                {% elif is_restaurant_partner|default(false) %}
+
+                    <div class="access-alert access-alert-active">
+
+                        <strong>
+                            🤝 Complimentary Kalxa partner access is active
+                        </strong>
+
+                        Your restaurant currently has complimentary
+                        partner access.
+
+                        {% if partner_access_expires_at %}
+
+                            <span class="access-alert-date">
+
+                                Partner access ends:
+
+                                {{ partner_access_expires_at.strftime(
+                                    '%d %B %Y at %H:%M'
+                                ) }}
+
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endif %}
+
+                <!-- =================================================
                      STANDARD TO PREMIUM UPGRADE
                 ================================================== -->
 
                 {% if
                     is_standard_plan
-                    and
-                    not restaurant_subscription_in_grace
+                    and not restaurant_subscription_in_grace
+                    and not restaurant_access_expired|default(false)
+                    and not is_restaurant_partner|default(false)
                 %}
 
                     <div class="premium-upgrade">
@@ -1723,8 +1850,6 @@ form {
 
                         </div>
 
-                        <!-- YOCO PREMIUM UPGRADE -->
-
                         <form
                             method="POST"
                             class="yoco-checkout-form"
@@ -1736,11 +1861,13 @@ form {
                         >
 
                             {% if csrf_token is defined %}
+
                                 <input
                                     type="hidden"
                                     name="csrf_token"
                                     value="{{ csrf_token() }}"
                                 >
+
                             {% endif %}
 
                             <button
@@ -1752,9 +1879,7 @@ form {
 
                                 <span class="yoco-button-content">
 
-                                    <span class="yoco-button-icon">
-                                        🔒
-                                    </span>
+                                    <span class="yoco-button-icon">🔒</span>
 
                                     Upgrade with Yoco —
                                     R{{ premium_plan_price }}/month
@@ -1778,34 +1903,27 @@ form {
                     <div class="grace-warning">
 
                         <strong>
-                            ⚠ {{ restaurant_plan_name }}
-                            subscription expired
+                            ⚠ {{ restaurant_plan_name }} subscription expired
                         </strong>
 
                         {% if restaurant_subscription_grace_days_remaining == 1 %}
 
                             You have approximately
-
                             <strong style="display:inline;">
                                 1 day remaining
                             </strong>
-
-                            to renew before your restaurant
-                            automatically moves to the Free plan.
+                            to renew before your restaurant automatically
+                            moves to the Free plan.
 
                         {% else %}
 
                             You have approximately
-
                             <strong style="display:inline;">
-
                                 {{ restaurant_subscription_grace_days_remaining }}
                                 days remaining
-
                             </strong>
-
-                            to renew before your restaurant
-                            automatically moves to the Free plan.
+                            to renew before your restaurant automatically
+                            moves to the Free plan.
 
                         {% endif %}
 
@@ -1825,8 +1943,8 @@ form {
 
                         <br>
 
-                        Your {{ restaurant_plan_name }} features
-                        remain available during this grace period.
+                        Your {{ restaurant_plan_name }} features remain
+                        available during this grace period.
 
                     </div>
 
@@ -1846,13 +1964,11 @@ form {
 
                         <br><br>
 
-                        Your restaurant profile, campaign,
-                        contact details and restaurant Reel
-                        remain available.
+                        Your restaurant profile, campaign, contact details
+                        and published restaurant Reel can remain available.
 
-                        Upgrade to Standard or Premium to
-                        unlock gallery photos, operational
-                        hours and customer experiences.
+                        Upgrade to Standard or Premium to unlock paid
+                        restaurant features.
 
                     </div>
 
@@ -1864,25 +1980,42 @@ form {
 
                 {% if
                     not is_free_plan
-                    and
-                    restaurant_subscription_expires_at
-                    and
-                    not restaurant_subscription_in_grace
+                    and restaurant_subscription_expires_at
+                    and not restaurant_subscription_in_grace
+                    and not restaurant_partner_access_expired|default(false)
                 %}
 
-                    <div class="free-info">
+                    <div
+                        class="
+                            {% if restaurant_subscription_active %}
+                                access-alert access-alert-active
+                            {% else %}
+                                access-alert access-alert-expired
+                            {% endif %}
+                        "
+                    >
 
-                        <strong>
-                            Subscription active
-                        </strong>
+                        {% if restaurant_subscription_active %}
 
-                        <br>
+                            <strong>Subscription active</strong>
 
-                        Current paid period ends:
+                            Current paid period ends:
 
-                        {{ restaurant_subscription_expires_at.strftime(
-                            '%d %b %Y at %H:%M'
-                        ) }}
+                        {% else %}
+
+                            <strong>Restaurant subscription expired</strong>
+
+                            Recorded subscription expiry:
+
+                        {% endif %}
+
+                        <span class="access-alert-date">
+
+                            {{ restaurant_subscription_expires_at.strftime(
+                                '%d %b %Y at %H:%M'
+                            ) }}
+
+                        </span>
 
                     </div>
 
@@ -2046,7 +2179,6 @@ form {
                     <article
                         class="
                             plan-card
-
                             {% if is_standard_plan %}
                                 plan-card-current
                             {% endif %}
@@ -2061,6 +2193,10 @@ form {
 
                                     Renewal required
 
+                                {% elif restaurant_access_expired|default(false) %}
+
+                                    Access expired
+
                                 {% else %}
 
                                     Current plan
@@ -2071,63 +2207,35 @@ form {
 
                         {% endif %}
 
-                        <h3>
-                            Standard
-                        </h3>
+                        <h3>Standard</h3>
 
                         <div class="plan-card-price">
 
                             R{{ standard_plan_price }}
 
-                            <span>
-                                / month
-                            </span>
+                            <span>/ month</span>
 
                         </div>
 
                         <ul class="plan-features">
 
-                            <li>
-                                ✓ Restaurant profile
-                            </li>
-
-                            <li>
-                                ✓ Restaurant Reel / discovery
-                            </li>
-
-                            <li>
-                                ✓ Gallery photos
-                            </li>
-
-                            <li>
-                                ✓ Operational hours
-                            </li>
-
-                            <li>
-                                ✓ Customer experiences
-                            </li>
-
-                            <li>
-                                ✓ Rating QR
-                            </li>
-
-                            <li class="plan-feature-muted">
-                                — Kalxa Stories
-                            </li>
-
-                            <li class="plan-feature-muted">
-                                — Restaurant analytics
-                            </li>
+                            <li>✓ Restaurant profile</li>
+                            <li>✓ Restaurant Reel / discovery</li>
+                            <li>✓ Gallery photos</li>
+                            <li>✓ Operational hours</li>
+                            <li>✓ Customer experiences</li>
+                            <li>✓ Rating QR</li>
+                            <li class="plan-feature-muted">— Kalxa Stories</li>
+                            <li class="plan-feature-muted">— Restaurant analytics</li>
 
                         </ul>
 
-                        <!-- STANDARD CURRENT PLAN -->
-
                         {% if is_standard_plan %}
 
-                            {% if restaurant_subscription_in_grace %}
-
-                                <!-- YOCO STANDARD RENEWAL -->
+                            {% if
+                                restaurant_subscription_in_grace
+                                or restaurant_access_expired|default(false)
+                            %}
 
                                 <form
                                     method="POST"
@@ -2140,19 +2248,18 @@ form {
                                 >
 
                                     {% if csrf_token is defined %}
+
                                         <input
                                             type="hidden"
                                             name="csrf_token"
                                             value="{{ csrf_token() }}"
                                         >
+
                                     {% endif %}
 
                                     <button
                                         type="submit"
-                                        class="
-                                            plan-action
-                                            plan-action-dark
-                                        "
+                                        class="plan-action plan-action-dark"
                                     >
 
                                         <span class="yoco-loading-spinner"></span>
@@ -2172,10 +2279,7 @@ form {
 
                                 <button
                                     type="button"
-                                    class="
-                                        plan-action
-                                        plan-action-disabled
-                                    "
+                                    class="plan-action plan-action-disabled"
                                     disabled
                                 >
                                     Current Standard Plan
@@ -2183,9 +2287,7 @@ form {
 
                             {% endif %}
 
-                        {% elif is_free_plan %}
-
-                            <!-- YOCO STANDARD UPGRADE -->
+                        {% else %}
 
                             <form
                                 method="POST"
@@ -2198,19 +2300,18 @@ form {
                             >
 
                                 {% if csrf_token is defined %}
+
                                     <input
                                         type="hidden"
                                         name="csrf_token"
                                         value="{{ csrf_token() }}"
                                     >
+
                                 {% endif %}
 
                                 <button
                                     type="submit"
-                                    class="
-                                        plan-action
-                                        plan-action-dark
-                                    "
+                                    class="plan-action plan-action-dark"
                                 >
 
                                     <span class="yoco-loading-spinner"></span>
@@ -2226,20 +2327,6 @@ form {
 
                             </form>
 
-                        {% else %}
-
-                            <button
-                                type="button"
-                                class="
-                                    plan-action
-                                    plan-action-disabled
-                                "
-                                disabled
-                            >
-                                Standard —
-                                R{{ standard_plan_price }}
-                            </button>
-
                         {% endif %}
 
                     </article>
@@ -2252,7 +2339,6 @@ form {
                         class="
                             plan-card
                             plan-card-premium
-
                             {% if is_premium_plan %}
                                 plan-card-current
                             {% endif %}
@@ -2267,6 +2353,10 @@ form {
 
                                     Renewal required
 
+                                {% elif restaurant_access_expired|default(false) %}
+
+                                    Access expired
+
                                 {% else %}
 
                                     Current plan
@@ -2277,61 +2367,35 @@ form {
 
                         {% endif %}
 
-                        <h3>
-                            Premium
-                        </h3>
+                        <h3>Premium</h3>
 
                         <div class="plan-card-price">
 
                             R{{ premium_plan_price }}
 
-                            <span>
-                                / month
-                            </span>
+                            <span>/ month</span>
 
                         </div>
 
                         <ul class="plan-features">
 
-                            <li>
-                                ✓ Everything in Standard
-                            </li>
-
-                            <li>
-                                ✓ Gallery photos
-                            </li>
-
-                            <li>
-                                ✓ Operational hours
-                            </li>
-
-                            <li>
-                                ✓ Customer experiences
-                            </li>
-
-                            <li>
-                                ✓ Rating QR
-                            </li>
-
-                            <li>
-                                ✓ Kalxa Stories exposure
-                            </li>
-
-                            <li>
-                                ✓ Restaurant analytics
-                            </li>
-
-                            <li>
-                                ✓ Customer engagement insights
-                            </li>
+                            <li>✓ Everything in Standard</li>
+                            <li>✓ Gallery photos</li>
+                            <li>✓ Operational hours</li>
+                            <li>✓ Customer experiences</li>
+                            <li>✓ Rating QR</li>
+                            <li>✓ Kalxa Stories exposure</li>
+                            <li>✓ Restaurant analytics</li>
+                            <li>✓ Customer engagement insights</li>
 
                         </ul>
 
                         {% if is_premium_plan %}
 
-                            {% if restaurant_subscription_in_grace %}
-
-                                <!-- YOCO PREMIUM RENEWAL -->
+                            {% if
+                                restaurant_subscription_in_grace
+                                or restaurant_access_expired|default(false)
+                            %}
 
                                 <form
                                     method="POST"
@@ -2344,19 +2408,18 @@ form {
                                 >
 
                                     {% if csrf_token is defined %}
+
                                         <input
                                             type="hidden"
                                             name="csrf_token"
                                             value="{{ csrf_token() }}"
                                         >
+
                                     {% endif %}
 
                                     <button
                                         type="submit"
-                                        class="
-                                            plan-action
-                                            plan-action-light
-                                        "
+                                        class="plan-action plan-action-light"
                                     >
 
                                         <span class="yoco-loading-spinner"></span>
@@ -2376,10 +2439,7 @@ form {
 
                                 <button
                                     type="button"
-                                    class="
-                                        plan-action
-                                        plan-action-light
-                                    "
+                                    class="plan-action plan-action-light"
                                     disabled
                                     style="
                                         cursor: not-allowed;
@@ -2393,8 +2453,6 @@ form {
 
                         {% else %}
 
-                            <!-- YOCO PREMIUM UPGRADE -->
-
                             <form
                                 method="POST"
                                 class="yoco-checkout-form"
@@ -2406,19 +2464,18 @@ form {
                             >
 
                                 {% if csrf_token is defined %}
+
                                     <input
                                         type="hidden"
                                         name="csrf_token"
                                         value="{{ csrf_token() }}"
                                     >
+
                                 {% endif %}
 
                                 <button
                                     type="submit"
-                                    class="
-                                        plan-action
-                                        plan-action-light
-                                    "
+                                    class="plan-action plan-action-light"
                                 >
 
                                     <span class="yoco-loading-spinner"></span>
@@ -2448,9 +2505,7 @@ form {
 
                     <div class="yoco-payment-label">
 
-                        <span class="yoco-secure-icon">
-                            🔒
-                        </span>
+                        <span class="yoco-secure-icon">🔒</span>
 
                         Secure payments powered by Yoco
 
@@ -2458,49 +2513,40 @@ form {
 
                     <div class="yoco-payment-description">
 
-                        Standard and Premium subscription
-                        payments are processed securely
-                        through Yoco.
+                        Standard and Premium subscription payments
+                        are processed securely through Yoco.
 
-                        When you select a paid plan,
-                        Kalxa redirects you to Yoco's
-                        secure checkout page to complete
-                        your payment.
+                        When you select a paid plan, Kalxa redirects
+                        you to Yoco's secure checkout page to
+                        complete your payment.
 
                     </div>
 
                     <div class="yoco-payment-note">
 
-                        <strong>
-                            Payment verification
-                        </strong>
+                        <strong>Payment verification</strong>
 
                         <br>
 
-                        Your restaurant subscription will
-                        only be activated or renewed after
-                        Kalxa successfully verifies
-                        your payment.
+                        Your restaurant subscription will only be
+                        activated or renewed after Kalxa successfully
+                        verifies your payment.
 
-                        Returning from Yoco does not
-                        automatically mean the payment
-                        has been confirmed.
+                        Returning from Yoco does not automatically
+                        mean the payment has been confirmed.
 
                         <br><br>
 
-                        <strong>
-                            Billing
-                        </strong>
+                        <strong>Billing</strong>
 
                         <br>
 
-                        Each successful checkout purchases
-                        one subscription period.
+                        Each successful checkout purchases one
+                        subscription period.
 
-                        Payments do not automatically
-                        renew unless a recurring billing
-                        arrangement is introduced and
-                        explicitly authorised.
+                        Payments do not automatically renew unless
+                        a recurring billing arrangement is introduced
+                        and explicitly authorised.
 
                     </div>
 
@@ -2508,16 +2554,13 @@ form {
 
                         <div class="yoco-payment-note">
 
-                            <strong>
-                                Grace period reminder
-                            </strong>
+                            <strong>Grace period reminder</strong>
 
                             <br>
 
-                            Renew before your grace
-                            period ends to maintain
-                            uninterrupted access to
-                            your paid restaurant features.
+                            Renew before your grace period ends to
+                            maintain uninterrupted access to your
+                            paid restaurant features.
 
                         </div>
 
@@ -2537,39 +2580,29 @@ form {
 
                 <section class="section">
 
-                    <h2>
-                        Campaign Details
-                    </h2>
+                    <h2>Campaign Details</h2>
 
                     <div class="detail">
 
-                        <div class="detail-label">
-                            Business
-                        </div>
+                        <div class="detail-label">Business</div>
 
                         <div class="detail-value">
                             {{ advert.business_name }}
                         </div>
 
-                        <div class="detail-label">
-                            Headline
-                        </div>
+                        <div class="detail-label">Headline</div>
 
                         <div class="detail-value">
                             {{ advert.headline or "—" }}
                         </div>
 
-                        <div class="detail-label">
-                            Area
-                        </div>
+                        <div class="detail-label">Area</div>
 
                         <div class="detail-value">
                             {{ advert.area or "—" }}
                         </div>
 
-                        <div class="detail-label">
-                            Address
-                        </div>
+                        <div class="detail-label">Address</div>
 
                         <div class="detail-value">
                             {{ advert.address or "—" }}
@@ -2583,31 +2616,23 @@ form {
 
                 <section class="section">
 
-                    <h2>
-                        Customer Contact
-                    </h2>
+                    <h2>Customer Contact</h2>
 
                     <div class="detail">
 
-                        <div class="detail-label">
-                            WhatsApp
-                        </div>
+                        <div class="detail-label">WhatsApp</div>
 
                         <div class="detail-value">
                             {{ advert.whatsapp_number or "—" }}
                         </div>
 
-                        <div class="detail-label">
-                            Phone
-                        </div>
+                        <div class="detail-label">Phone</div>
 
                         <div class="detail-value">
                             {{ advert.phone_number or "—" }}
                         </div>
 
-                        <div class="detail-label">
-                            Directions
-                        </div>
+                        <div class="detail-label">Directions</div>
 
                         <div class="detail-value">
 
@@ -2631,23 +2656,15 @@ form {
 
                 <section class="section">
 
-                    <h2>
-                        Restaurant Reel
-                    </h2>
+                    <h2>Restaurant Reel</h2>
 
                     <div class="detail">
 
-                        <div class="detail-label">
-                            Status
-                        </div>
+                        <div class="detail-label">Status</div>
 
                         <div class="detail-value">
 
-                            {% if
-                                advert.reel
-                                and
-                                advert.reel.active
-                            %}
+                            {% if advert.reel and advert.reel.active %}
 
                                 🎬 Published
 
@@ -2659,9 +2676,7 @@ form {
 
                         </div>
 
-                        <div class="detail-label">
-                            Plan access
-                        </div>
+                        <div class="detail-label">Plan access</div>
 
                         <div class="detail-value">
 
@@ -2687,15 +2702,11 @@ form {
 
                     <section class="section">
 
-                        <h2>
-                            Paid Restaurant Features
-                        </h2>
+                        <h2>Paid Restaurant Features</h2>
 
                         <div class="detail">
 
-                            <div class="detail-label">
-                                Gallery
-                            </div>
+                            <div class="detail-label">Gallery</div>
 
                             <div class="detail-value">
 
@@ -2707,9 +2718,7 @@ form {
 
                             </div>
 
-                            <div class="detail-label">
-                                Hours
-                            </div>
+                            <div class="detail-label">Hours</div>
 
                             <div class="detail-value">
 
@@ -2721,9 +2730,7 @@ form {
 
                             </div>
 
-                            <div class="detail-label">
-                                Experiences
-                            </div>
+                            <div class="detail-label">Experiences</div>
 
                             <div class="detail-value">
 
@@ -2735,9 +2742,7 @@ form {
 
                             </div>
 
-                            <div class="detail-label">
-                                Stories
-                            </div>
+                            <div class="detail-label">Stories</div>
 
                             <div class="detail-value">
 
@@ -2749,9 +2754,7 @@ form {
 
                             </div>
 
-                            <div class="detail-label">
-                                Analytics
-                            </div>
+                            <div class="detail-label">Analytics</div>
 
                             <div class="detail-value">
 
@@ -2836,11 +2839,13 @@ form {
                     >
 
                         {% if csrf_token is defined %}
+
                             <input
                                 type="hidden"
                                 name="csrf_token"
                                 value="{{ csrf_token() }}"
                             >
+
                         {% endif %}
 
                         <button
@@ -2864,11 +2869,13 @@ form {
                     >
 
                         {% if csrf_token is defined %}
+
                             <input
                                 type="hidden"
                                 name="csrf_token"
                                 value="{{ csrf_token() }}"
                             >
+
                         {% endif %}
 
                         <button
@@ -2989,12 +2996,8 @@ form {
                 "click",
                 function () {
 
-                    if (
-                        window.innerWidth <= 820
-                    ) {
-
+                    if (window.innerWidth <= 820) {
                         closeSidebar();
-
                     }
 
                 }
@@ -3008,9 +3011,7 @@ form {
         function (event) {
 
             if (event.key === "Escape") {
-
                 closeSidebar();
-
             }
 
         }
