@@ -15672,39 +15672,40 @@ def superadmin_activate_subscription(
 # ============================================================
 # SUPER ADMIN - SET EXACT EXPIRY DATE
 # ============================================================
+# ============================================================
+# SUPER ADMIN - SET EXACT SUBSCRIPTION / PARTNER EXPIRY
+# ============================================================
 
 @app.route(
     "/superadmin/organizers/<int:organizer_id>/set-expiry",
-    methods=[
-        "POST",
-    ],
+    methods=["POST"],
 )
-def superadmin_set_subscription_expiry(
-    organizer_id,
-):
+def superadmin_set_subscription_expiry(organizer_id):
 
-    auth = (
-        require_superadmin()
-    )
+    # ========================================================
+    # SUPER ADMIN AUTHENTICATION
+    # ========================================================
 
+    auth = require_superadmin()
 
     if auth:
-
         return auth
 
+    # ========================================================
+    # FIND ORGANIZER
+    # ========================================================
 
-    organizer = (
-        db.session.get(
-            Organizer,
-            organizer_id,
-        )
+    organizer = db.session.get(
+        Organizer,
+        organizer_id,
     )
 
-
     if not organizer:
-
         abort(404)
 
+    # ========================================================
+    # READ EXPIRY DATE
+    # ========================================================
 
     expiry_raw = (
         request.form.get(
@@ -15714,130 +15715,179 @@ def superadmin_set_subscription_expiry(
         .strip()
     )
 
+    # ========================================================
+    # VALIDATE DATE
+    # ========================================================
 
     try:
 
-        expiry_date = (
-            datetime.strptime(
-                expiry_raw,
-                "%Y-%m-%d",
-            )
+        expiry_date = datetime.strptime(
+            expiry_raw,
+            "%Y-%m-%d",
         )
 
-
-        expiry_at = (
-            expiry_date.replace(
-                hour=23,
-                minute=59,
-                second=59,
-                microsecond=0,
-            )
+        expiry_at = expiry_date.replace(
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=0,
         )
 
-
-    except ValueError:
+    except (TypeError, ValueError):
 
         flash(
             "Please enter a valid expiry date.",
             "error",
         )
 
-
         return redirect(
             url_for(
                 "superadmin_organizer_detail",
-                organizer_id=
-                    organizer.id,
+                organizer_id=organizer.id,
             )
         )
 
+    # ========================================================
+    # FIND LATEST PARTNER-GRANT RECORD
+    # ========================================================
+    #
+    # Partner accounts receive complimentary access recorded
+    # using payment_method="partner_grant".
+    #
+    # The Super Admin page displays the partner period using
+    # SubscriptionPayment.subscription_end.
+    #
+    # Therefore, updating only Organizer.subscription_expires_at
+    # would leave the displayed partner expiry unchanged.
+    # ========================================================
 
-    organizer.subscription_expires_at = (
-        expiry_at
+    latest_partner_grant = (
+        SubscriptionPayment.query
+        .filter_by(
+            organizer_id=organizer.id,
+            payment_method="partner_grant",
+        )
+        .order_by(
+            SubscriptionPayment.created_at.desc(),
+            SubscriptionPayment.id.desc(),
+        )
+        .first()
     )
 
+    # ========================================================
+    # UPDATE ORGANIZER EXPIRY
+    # ========================================================
 
-    now = (
-        datetime.utcnow()
-    )
+    organizer.subscription_expires_at = expiry_at
 
+    now = datetime.utcnow()
+
+    # ========================================================
+    # UPDATE SUBSCRIPTION STATUS
+    # ========================================================
+    #
+    # Preserve a deliberately suspended subscription.
+    # Otherwise, reflect the newly selected expiry date.
+    # ========================================================
 
     if (
-        organizer.subscription_status
-        != "suspended"
+        organizer.subscription_status != "suspended"
         and organizer.active
     ):
 
         if expiry_at > now:
 
-            organizer.subscription_status = (
-                "active"
-            )
-
+            organizer.subscription_status = "active"
 
             if not organizer.subscription_started_at:
-
-                organizer.subscription_started_at = (
-                    now
-                )
+                organizer.subscription_started_at = now
 
         else:
 
-            organizer.subscription_status = (
-                "expired"
-            )
+            organizer.subscription_status = "expired"
 
+    # ========================================================
+    # UPDATE LATEST PARTNER PERIOD
+    # ========================================================
+    #
+    # This makes the partner expiry displayed in the Super
+    # Admin account details agree with the date just selected.
+    #
+    # We update the existing latest partner-grant record
+    # rather than creating a duplicate grant.
+    # ========================================================
+
+    if latest_partner_grant:
+
+        latest_partner_grant.subscription_end = expiry_at
+
+    # ========================================================
+    # SAVE CHANGES
+    # ========================================================
 
     try:
 
         db.session.commit()
 
-
     except Exception as error:
 
         db.session.rollback()
 
-
         current_app.logger.exception(
             (
-                "[Super Admin] Failed to set "
-                "subscription expiry organizer_id=%s "
+                "[Super Admin] Failed to set subscription/"
+                "partner expiry "
+                "organizer_id=%s "
                 "error=%s"
             ),
             organizer.id,
             error,
         )
 
-
         flash(
-            "Subscription expiry update failed.",
+            "Subscription expiry update failed. No changes were saved.",
             "error",
         )
-
 
         return redirect(
             url_for(
                 "superadmin_organizer_detail",
-                organizer_id=
-                    organizer.id,
+                organizer_id=organizer.id,
             )
         )
 
+    # ========================================================
+    # SUCCESS MESSAGE
+    # ========================================================
 
-    flash(
-        "Subscription expiry date updated.",
-        "success",
-    )
+    if latest_partner_grant:
 
+        flash(
+            (
+                "Partner access expiry updated successfully. "
+                "The organizer expiry and latest recorded "
+                "partner expiry now match."
+            ),
+            "success",
+        )
+
+    else:
+
+        flash(
+            "Subscription expiry date updated successfully.",
+            "success",
+        )
+
+    # ========================================================
+    # RETURN TO ORGANIZER DETAILS
+    # ========================================================
 
     return redirect(
         url_for(
             "superadmin_organizer_detail",
-            organizer_id=
-                organizer.id,
+            organizer_id=organizer.id,
         )
     )
-
 
 # ============================================================
 # SUPER ADMIN - SUSPEND ORGANIZER
