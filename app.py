@@ -19632,44 +19632,33 @@ def restaurant_rating_qr_page(
 # ============================================================
 # ADMIN - RESTAURANTS
 # ============================================================
-
-@app.route(
-    "/admin/restaurants"
-)
+@app.route("/admin/restaurants")
 def admin_restaurants():
 
-    auth = (
-        require_ticketing_organizer()
-    )
+    # ========================================================
+    # AUTHENTICATION
+    # ========================================================
 
+    auth = require_ticketing_organizer()
 
     if auth:
         return auth
 
+    organizer = get_current_organizer()
 
-    organizer = (
-        get_current_organizer()
-    )
-
+    if not organizer:
+        abort(403)
 
     account_type = (
-        getattr(
-            organizer,
-            "account_type",
-            None,
-        )
+        getattr(organizer, "account_type", None)
         or "event"
     )
-
 
     # ========================================================
     # RESTAURANT ACCOUNTS ONLY
     # ========================================================
 
-    if (
-        account_type
-        != "restaurant"
-    ):
+    if account_type != "restaurant":
 
         flash(
             (
@@ -19679,76 +19668,71 @@ def admin_restaurants():
             "error",
         )
 
-
         return redirect(
-            url_for(
-                "admin_dashboard"
-            )
+            url_for("admin_dashboard")
         )
 
-
     # ========================================================
-    # ADVERTS
+    # LOAD RESTAURANTS
     # ========================================================
 
     adverts = (
         RestaurantAdvert.query
-
         .filter_by(
-            organizer_id=
-                organizer.id
+            organizer_id=organizer.id,
         )
-
         .order_by(
-            RestaurantAdvert.created_at.desc()
+            RestaurantAdvert.created_at.desc(),
         )
-
         .all()
     )
 
+    # ========================================================
+    # SYNCHRONIZE RESTAURANT SUBSCRIPTIONS
+    # ========================================================
+    #
+    # Downgrade any paid restaurant plan whose grace period
+    # has expired before calculating dashboard metrics.
+    #
+    # This does not modify the organizer's separate
+    # ticketing subscription.
+    # ========================================================
 
-    advert_ids = [
-        advert.id
-        for advert
-        in adverts
-    ]
-
+    for advert in adverts:
+        sync_restaurant_subscription(advert)
 
     # ========================================================
     # DASHBOARD METRICS
     # ========================================================
 
+    advert_ids = [
+        advert.id
+        for advert in adverts
+    ]
+
     live_adverts = sum(
         1
         for advert in adverts
-        if advert.campaign_status
-        == "live"
+        if advert.campaign_status == "live"
     )
-
 
     scheduled_adverts = sum(
         1
         for advert in adverts
-        if advert.campaign_status
-        == "scheduled"
+        if advert.campaign_status == "scheduled"
     )
-
 
     expired_adverts = sum(
         1
         for advert in adverts
-        if advert.campaign_status
-        == "expired"
+        if advert.campaign_status == "expired"
     )
-
 
     paused_adverts = sum(
         1
         for advert in adverts
-        if advert.campaign_status
-        == "paused"
+        if advert.campaign_status == "paused"
     )
-
 
     live_reels = sum(
         1
@@ -19756,11 +19740,9 @@ def admin_restaurants():
         if (
             advert.reel
             and advert.reel.active
-            and advert.campaign_status
-            == "live"
+            and advert.campaign_status == "live"
         )
     )
-
 
     # ========================================================
     # CUSTOMER EXPERIENCE METRICS
@@ -19770,142 +19752,99 @@ def admin_restaurants():
     pending_experience_count = 0
     total_experience_loves = 0
 
-
     if advert_ids:
 
         approved_experience_count = (
             RestaurantExperiencePost.query
-
             .filter(
                 RestaurantExperiencePost.restaurant_advert_id.in_(
                     advert_ids
                 )
             )
-
             .filter(
-                RestaurantExperiencePost.active.is_(
-                    True
-                )
+                RestaurantExperiencePost.active.is_(True)
             )
-
             .filter(
                 RestaurantExperiencePost.moderation_status
                 == "approved"
             )
-
             .count()
         )
 
-
         pending_experience_count = (
             RestaurantExperiencePost.query
-
             .filter(
                 RestaurantExperiencePost.restaurant_advert_id.in_(
                     advert_ids
                 )
             )
-
             .filter(
                 RestaurantExperiencePost.moderation_status
                 == "pending"
             )
-
             .count()
         )
 
-
         restaurant_post_ids = [
-
             post_id
-
-            for (
-                post_id,
-            )
-            in (
+            for (post_id,) in (
                 db.session.query(
                     RestaurantExperiencePost.id
                 )
-
                 .filter(
                     RestaurantExperiencePost.restaurant_advert_id.in_(
                         advert_ids
                     )
                 )
-
                 .filter(
                     RestaurantExperiencePost.moderation_status
                     == "approved"
                 )
-
                 .all()
             )
         ]
-
 
         if restaurant_post_ids:
 
             total_experience_loves = (
                 RestaurantExperienceLove.query
-
                 .filter(
                     RestaurantExperienceLove.post_id.in_(
                         restaurant_post_ids
                     )
                 )
-
                 .count()
             )
 
-
     # ========================================================
-    # RESTAURANT CUSTOMER RATING QR DATA
+    # CUSTOMER RATING QR DATA
     # ========================================================
     #
-    # IMPORTANT:
-    #
-    # This dashboard only READS existing QR records.
-    #
-    # It does not create QR records just because the owner
-    # opened the Restaurant Control Centre.
-    #
-    # A QR is created only when the owner explicitly clicks
-    # "Generate Customer Rating QR".
+    # Read existing QR records only.
+    # Do not generate QR codes automatically.
     # ========================================================
 
     restaurant_qr_data = {}
-
 
     if advert_ids:
 
         existing_rating_qrs = (
             RestaurantRatingQRCode.query
-
             .filter(
                 RestaurantRatingQRCode.restaurant_advert_id.in_(
                     advert_ids
                 )
             )
-
             .filter(
-                RestaurantRatingQRCode.placement_type
-                == "main"
+                RestaurantRatingQRCode.placement_type == "main"
             )
-
             .order_by(
                 RestaurantRatingQRCode.created_at.asc()
             )
-
             .all()
         )
 
-
-        # ====================================================
-        # ONE MAIN QR PER RESTAURANT
-        # ====================================================
-
         rating_qr_by_restaurant = {}
-
 
         for restaurant_qr in existing_rating_qrs:
 
@@ -19918,204 +19857,127 @@ def admin_restaurants():
                     restaurant_qr.restaurant_advert_id
                 ] = restaurant_qr
 
-
-        # ====================================================
-        # BUILD TEMPLATE PAYLOAD
-        # ====================================================
-
         for advert in adverts:
 
             restaurant_qr = (
-                rating_qr_by_restaurant.get(
-                    advert.id
-                )
+                rating_qr_by_restaurant.get(advert.id)
             )
-
 
             if restaurant_qr:
 
-                rating_url = (
-                    url_for(
-                        "restaurant_rating_qr_page",
-
-                        public_code=
-                            restaurant_qr.public_code,
-
-                        _external=True,
-
-                        _scheme="https",
-                    )
+                rating_url = url_for(
+                    "restaurant_rating_qr_page",
+                    public_code=restaurant_qr.public_code,
+                    _external=True,
+                    _scheme="https",
                 )
 
-
-                restaurant_qr_data[
-                    advert.id
-                ] = {
-
-                    "exists":
-                        True,
-
-                    "public_code":
-                        restaurant_qr.public_code,
-
-                    "active":
-                        restaurant_qr.active,
-
-                    "rating_url":
-                        rating_url,
-
-                    "image_url":
-                        url_for(
-                            "restaurant_rating_qr_image",
-                            advert_id=
-                                advert.id,
-                        ),
-
-                    "download_url":
-                        url_for(
-                            "download_restaurant_rating_qr",
-                            advert_id=
-                                advert.id,
-                        ),
-
-                    "create_url":
-                        url_for(
-                            "create_restaurant_rating_qr",
-                            advert_id=
-                                advert.id,
-                        ),
+                restaurant_qr_data[advert.id] = {
+                    "exists": True,
+                    "public_code": restaurant_qr.public_code,
+                    "active": restaurant_qr.active,
+                    "rating_url": rating_url,
+                    "image_url": url_for(
+                        "restaurant_rating_qr_image",
+                        advert_id=advert.id,
+                    ),
+                    "download_url": url_for(
+                        "download_restaurant_rating_qr",
+                        advert_id=advert.id,
+                    ),
+                    "create_url": url_for(
+                        "create_restaurant_rating_qr",
+                        advert_id=advert.id,
+                    ),
                 }
-
 
             else:
 
-                restaurant_qr_data[
-                    advert.id
-                ] = {
-
-                    "exists":
-                        False,
-
-                    "public_code":
-                        "",
-
-                    "active":
-                        False,
-
-                    "rating_url":
-                        "",
-
-                    "image_url":
-                        "",
-
-                    "download_url":
-                        "",
-
-                    "create_url":
-                        url_for(
-                            "create_restaurant_rating_qr",
-                            advert_id=
-                                advert.id,
-                        ),
+                restaurant_qr_data[advert.id] = {
+                    "exists": False,
+                    "public_code": "",
+                    "active": False,
+                    "rating_url": "",
+                    "image_url": "",
+                    "download_url": "",
+                    "create_url": url_for(
+                        "create_restaurant_rating_qr",
+                        advert_id=advert.id,
+                    ),
                 }
 
-
     # ========================================================
-    # PENDING SUBSCRIPTION
+    # PENDING SUBSCRIPTION PAYMENT
     # ========================================================
 
     pending_subscription_payment = (
         SubscriptionPayment.query
-
         .filter_by(
-            organizer_id=
-                organizer.id,
-
-            payment_status=
-                "pending",
+            organizer_id=organizer.id,
+            payment_status="pending",
         )
-
         .order_by(
             SubscriptionPayment.created_at.desc()
         )
-
         .first()
     )
 
-
     # ========================================================
-    # RENDER
+    # RENDER DASHBOARD
     # ========================================================
 
     return render_template(
         "admin/restaurants.html",
 
-        organizer=
-            organizer,
+        organizer=organizer,
 
-        adverts=
-            adverts,
+        adverts=adverts,
 
-        live_adverts=
-            live_adverts,
+        live_adverts=live_adverts,
+        scheduled_adverts=scheduled_adverts,
+        expired_adverts=expired_adverts,
+        paused_adverts=paused_adverts,
 
-        scheduled_adverts=
-            scheduled_adverts,
+        live_reels=live_reels,
 
-        expired_adverts=
-            expired_adverts,
+        approved_experience_count=(
+            approved_experience_count
+        ),
 
-        paused_adverts=
-            paused_adverts,
+        pending_experience_count=(
+            pending_experience_count
+        ),
 
-        live_reels=
-            live_reels,
+        total_experience_loves=(
+            total_experience_loves
+        ),
 
-        # ====================================================
-        # CUSTOMER EXPERIENCES
-        # ====================================================
+        restaurant_qr_data=restaurant_qr_data,
 
-        approved_experience_count=
-            approved_experience_count,
+        # Preserve the organizer's existing ticketing
+        # subscription information.
+        subscription_active=organizer.is_subscription_active,
 
-        pending_experience_count=
-            pending_experience_count,
+        subscription_status=(
+            organizer.effective_subscription_status
+        ),
 
-        total_experience_loves=
-            total_experience_loves,
+        subscription_expires_at=(
+            organizer.subscription_expires_at
+        ),
 
-        # ====================================================
-        # CUSTOMER RATING QR
-        # ====================================================
+        pending_subscription_payment=(
+            pending_subscription_payment
+        ),
 
-        restaurant_qr_data=
-            restaurant_qr_data,
+        subscription_plan_name=(
+            KALXA_SUBSCRIPTION_PLAN_NAME
+        ),
 
-        # ====================================================
-        # SUBSCRIPTION
-        # ====================================================
-
-        subscription_active=
-            organizer.is_subscription_active,
-
-        subscription_status=
-            organizer.effective_subscription_status,
-
-        subscription_expires_at=
-            organizer.subscription_expires_at,
-
-        pending_subscription_payment=
-            pending_subscription_payment,
-
-        subscription_plan_name=
-            KALXA_SUBSCRIPTION_PLAN_NAME,
-
-
-        subscription_price=
-           KALXA_RESTAURANT_SUBSCRIPTION_PRICE,
-                      
+        subscription_price=(
+            KALXA_RESTAURANT_SUBSCRIPTION_PRICE
+        ),
     )
-
 
 @app.route(
     "/admin/restaurants/new",
@@ -25878,75 +25740,60 @@ def create_restaurant_experience():
 # ============================================================
 # RESTAURANT RATING QR - DOWNLOAD
 # ============================================================
+def sync_restaurant_subscription(advert):
+    """
+    Synchronize a restaurant's subscription with its
+    expiry and grace-period rules.
 
-def sync_restaurant_subscription(
-    advert,
-):
+    Returns:
+        True  - a downgrade was successfully committed.
+        False - no downgrade was needed or the update failed.
 
-    # ========================================================
-    # RESTAURANT REQUIRED
-    # ========================================================
+    This function only changes the RestaurantAdvert
+    subscription. It does not modify the organizer's
+    separate ticketing subscription.
+    """
 
-    if not advert:
+    if advert is None:
         return False
 
-
-    # ========================================================
-    # DOWNGRADE AFTER GRACE PERIOD
-    # ========================================================
-
-    changed = (
-        advert
-        .downgrade_expired_restaurant_plan_to_free()
-    )
-
-
-    if not changed:
-        return False
-
-
-    # ========================================================
-    # SAVE DOWNGRADE
-    # ========================================================
-
+    # Only downgrade a paid restaurant plan after its
+    # configured grace period has expired.
     try:
+        changed = (
+            advert.downgrade_expired_restaurant_plan_to_free()
+        )
+
+        if not changed:
+            return False
+
+        advert_id = advert.id
 
         db.session.commit()
-
 
         current_app.logger.info(
             (
                 "[Restaurant Subscription] "
-                "Restaurant automatically downgraded "
-                "to Free after grace period "
-                "advert_id=%s"
+                "Restaurant automatically downgraded to Free "
+                "after its grace period. advert_id=%s"
             ),
-            advert.id,
+            advert_id,
         )
-
 
         return True
 
-
-    except Exception as error:
-
+    except Exception:
         db.session.rollback()
-
 
         current_app.logger.exception(
             (
                 "[Restaurant Subscription] "
-                "Automatic downgrade failed "
-                "advert_id=%s "
-                "error=%s"
+                "Automatic downgrade failed. advert_id=%s"
             ),
-            advert.id,
-            error,
+            getattr(advert, "id", None),
         )
 
-
-        return False  
-
+        return False
 # ============================================================
 # ADMIN - MANAGE RESTAURANT
 # ============================================================
