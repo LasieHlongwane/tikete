@@ -121,6 +121,11 @@
             font-size: 20px;
         }
 
+        h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+        }
+
         .meta {
             color: #64748b;
             font-size: 13px;
@@ -181,6 +186,21 @@
         .status.restaurant-account {
             background: #fef3c7;
             color: #92400e;
+        }
+
+        .status.free-plan {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .status.standard-plan {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status.premium-plan {
+            background: #ede9fe;
+            color: #6d28d9;
         }
 
         /* =====================================================
@@ -265,6 +285,7 @@
             background: #fafafa;
             border: 1px solid #e8edf2;
             border-radius: 12px;
+            min-width: 0;
         }
 
         .panel-title {
@@ -302,6 +323,7 @@
         }
 
         input,
+        select,
         textarea {
             width: 100%;
             min-height: 42px;
@@ -310,6 +332,11 @@
             border: 1px solid #cbd5e1;
             border-radius: 9px;
             font: inherit;
+            color: #111827;
+        }
+
+        select {
+            cursor: pointer;
         }
 
         textarea {
@@ -334,6 +361,11 @@
             opacity: .92;
         }
 
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
         .danger button {
             background: #991b1b;
             border-color: #991b1b;
@@ -344,12 +376,54 @@
             border-color: #166534;
         }
 
+        .plan-save-button {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
         .notice {
             padding: 12px;
             background: #eff6ff;
             border: 1px solid #bfdbfe;
             border-radius: 10px;
             color: #1e40af;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .warning-notice {
+            padding: 12px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            color: #92400e;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .plan-feature-list {
+            margin: 10px 0 0;
+            padding-left: 18px;
+            color: #475569;
+            font-size: 11px;
+            line-height: 1.9;
+        }
+
+        .plan-summary {
+            padding: 14px;
+            margin-bottom: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        .plan-summary strong {
+            font-size: 14px;
+        }
+
+        .plan-summary p {
+            margin: 6px 0 0;
+            color: #64748b;
             font-size: 11px;
             line-height: 1.6;
         }
@@ -693,7 +767,6 @@
                             {{ organizer.approved_by }}
 
                         {% endif %}
-
                     </p>
 
                 {% elif approval_status == "pending" %}
@@ -726,7 +799,6 @@
                             {{ organizer.rejection_reason }}
 
                         {% endif %}
-
                     </p>
 
                 {% elif approval_status == "suspended" %}
@@ -747,7 +819,6 @@
                             {{ organizer.suspension_reason }}
 
                         {% endif %}
-
                     </p>
 
                 {% else %}
@@ -897,10 +968,6 @@
 
             <div class="grid" style="margin-top:16px;">
 
-                <!-- =========================================
-                     PENDING APPLICATION
-                ========================================== -->
-
                 {% if approval_status == "pending" %}
 
                     <div class="panel approval-panel success">
@@ -969,10 +1036,6 @@
 
                     </div>
 
-                <!-- =========================================
-                     APPROVED APPLICATION
-                ========================================== -->
-
                 {% elif organizer.is_approved_event_organizer %}
 
                     <div class="panel success">
@@ -1030,10 +1093,6 @@
 
                     </div>
 
-                <!-- =========================================
-                     APPROVED BUT INACTIVE
-                ========================================== -->
-
                 {% elif approval_status == "approved" %}
 
                     <div class="panel">
@@ -1053,10 +1112,6 @@
                         </p>
 
                     </div>
-
-                <!-- =========================================
-                     REJECTED / SUSPENDED
-                ========================================== -->
 
                 {% else %}
 
@@ -1152,7 +1207,313 @@
     </section>
 
     <!-- =====================================================
-         SUBSCRIPTION / PARTNER CONTROLS
+         RESTAURANT SUBSCRIPTION PLAN CONTROLS
+    ====================================================== -->
+
+    {% if not is_event_account %}
+
+        <section class="card">
+
+            <p class="eyebrow">
+                RESTAURANT SUBSCRIPTION
+            </p>
+
+            <h2>
+                Restaurant Subscription Plan
+            </h2>
+
+            {% if restaurant_advert %}
+
+                {% set current_tier =
+                    restaurant_advert.normalized_subscription_tier
+                %}
+
+                <div class="plan-summary">
+
+                    <div class="badges" style="margin-top:0;">
+
+                        {% if current_tier == "premium" %}
+
+                            <span class="status premium-plan">
+                                Premium Plan
+                            </span>
+
+                        {% elif current_tier == "standard" %}
+
+                            <span class="status standard-plan">
+                                Standard Plan
+                            </span>
+
+                        {% else %}
+
+                            <span class="status free-plan">
+                                Free Plan
+                            </span>
+
+                        {% endif %}
+
+                        <span class="status {{ restaurant_advert.subscription_status }}">
+                            {{ restaurant_advert.subscription_status | title }}
+                        </span>
+
+                    </div>
+
+                    <p>
+
+                        <strong>
+                            {{ restaurant_advert.business_name }}
+                        </strong>
+
+                        <br>
+
+                        Current plan:
+                        {{ restaurant_advert.subscription_plan_name }}
+
+                        <br>
+
+                        {% if restaurant_advert.subscription_started_at %}
+
+                            Started:
+                            {{ restaurant_advert.subscription_started_at.strftime('%d %B %Y %H:%M') }}
+
+                            <br>
+
+                        {% endif %}
+
+                        {% if restaurant_advert.subscription_expires_at %}
+
+                            Expiry:
+                            {{ restaurant_advert.subscription_expires_at.strftime('%d %B %Y %H:%M') }}
+
+                            <br>
+
+                            {% if restaurant_advert.is_restaurant_subscription_in_grace_period %}
+
+                                <strong>
+                                    Subscription is in its grace period.
+                                </strong>
+
+                            {% elif restaurant_advert.is_restaurant_subscription_grace_expired %}
+
+                                <strong>
+                                    Subscription grace period has expired.
+                                </strong>
+
+                            {% endif %}
+
+                        {% else %}
+
+                            {% if current_tier == "free" %}
+
+                                This Free plan has no expiry date.
+
+                            {% else %}
+
+                                No expiry date is currently recorded.
+
+                            {% endif %}
+
+                        {% endif %}
+
+                    </p>
+
+                </div>
+
+                <div class="grid">
+
+                    <div class="panel">
+
+                        <span class="panel-title">
+                            Update Subscription
+                        </span>
+
+                        <p class="panel-copy">
+
+                            Select Free, Standard, or Premium.
+
+                            Paid plans require an expiry date
+                            and time.
+
+                            This control updates the restaurant
+                            subscription directly.
+
+                        </p>
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'superadmin_update_restaurant_plan',
+                                organizer_id=organizer.id
+                            ) }}"
+                            id="restaurant-plan-form"
+                        >
+
+                            {% if csrf_token is defined %}
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+                            {% endif %}
+
+                            <label for="subscription_tier">
+                                Subscription Plan
+                            </label>
+
+                            <select
+                                id="subscription_tier"
+                                name="subscription_tier"
+                                required
+                            >
+
+                                <option
+                                    value="free"
+                                    {% if current_tier == "free" %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    Free
+                                </option>
+
+                                <option
+                                    value="standard"
+                                    {% if current_tier == "standard" %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    Standard
+                                </option>
+
+                                <option
+                                    value="premium"
+                                    {% if current_tier == "premium" %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    Premium
+                                </option>
+
+                            </select>
+
+                            <label for="subscription_expires_at">
+                                Paid Plan Expiry Date and Time
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                id="subscription_expires_at"
+                                name="subscription_expires_at"
+                                value="{% if restaurant_advert.subscription_expires_at %}{{ restaurant_advert.subscription_expires_at.strftime('%Y-%m-%dT%H:%M') }}{% endif %}"
+                            >
+
+                            <p
+                                class="panel-copy"
+                                id="expiry-help"
+                            >
+                                Required for Standard and Premium.
+                                Free has no expiry date.
+                            </p>
+
+                            <button
+                                type="submit"
+                                class="plan-save-button"
+                            >
+                                Save Subscription Plan
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                    <div class="panel">
+
+                        <span class="panel-title">
+                            Plan Features
+                        </span>
+
+                        <p class="panel-copy">
+
+                            Changing the plan does not delete
+                            existing restaurant content.
+
+                        </p>
+
+                        <strong>Free</strong>
+
+                        <ul class="plan-feature-list">
+
+                            <li>Restaurant profile</li>
+                            <li>Restaurant Reel</li>
+                            <li>Campaign visibility subject to campaign status</li>
+                            <li>No paid customer-experience features</li>
+
+                        </ul>
+
+                        <strong style="display:block;margin-top:14px;">
+                            Standard
+                        </strong>
+
+                        <ul class="plan-feature-list">
+
+                            <li>Everything in Free</li>
+                            <li>Gallery and opening hours</li>
+                            <li>Customer experiences</li>
+
+                        </ul>
+
+                        <strong style="display:block;margin-top:14px;">
+                            Premium
+                        </strong>
+
+                        <ul class="plan-feature-list">
+
+                            <li>Everything in Standard</li>
+                            <li>Kalxa Stories/blog features</li>
+                            <li>Analytics</li>
+
+                        </ul>
+
+                        <div
+                            class="notice"
+                            style="margin-top:14px;"
+                        >
+
+                            Switching plans does not itself
+                            delete gallery images, Reels,
+                            customer experiences, or analytics
+                            history.
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="warning-notice">
+
+                    No RestaurantAdvert profile was found
+                    for this organizer.
+
+                    The subscription cannot be changed
+                    until a restaurant profile exists.
+
+                    This page does not create a restaurant
+                    profile automatically.
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    {% endif %}
+
+    <!-- =====================================================
+         LEGACY SUBSCRIPTION / PARTNER CONTROLS
     ====================================================== -->
 
     {% if not is_event_account %}
@@ -1160,8 +1521,19 @@
         <section class="card">
 
             <h2>
-                Subscription Access Controls
+                Legacy Subscription Access Controls
             </h2>
+
+            <div class="notice" style="margin-bottom:16px;">
+
+                These existing controls use the organizer's
+                legacy subscription or partner-access routes.
+
+                To change the restaurant's Free, Standard,
+                or Premium plan, use the Restaurant
+                Subscription Plan section above.
+
+            </div>
 
             <div class="grid">
 
@@ -1195,7 +1567,7 @@
                         {% else %}
 
                             Activate or extend this
-                            organizer's subscription access.
+                            organizer's legacy subscription access.
 
                         {% endif %}
 
@@ -1258,13 +1630,16 @@
                 <div class="panel">
 
                     <span class="panel-title">
-                        Set Exact Expiry
+                        Set Exact Legacy Expiry
                     </span>
 
                     <p class="panel-copy">
 
-                        Override the current
-                        subscription expiry date.
+                        This existing control updates the
+                        organizer's legacy subscription expiry.
+
+                        For restaurant plan expiry, use the
+                        Restaurant Subscription Plan section.
 
                     </p>
 
@@ -1287,7 +1662,7 @@
                         {% endif %}
 
                         <label for="subscription_expires_on">
-                            Access expiry date
+                            Legacy access expiry date
                         </label>
 
                         <input
@@ -1298,7 +1673,7 @@
                         >
 
                         <button type="submit">
-                            Set Expiry Date
+                            Set Legacy Expiry Date
                         </button>
 
                     </form>
@@ -1823,6 +2198,82 @@
     </section>
 
 </div>
+
+<script>
+(function () {
+    "use strict";
+
+    const planSelect = document.getElementById(
+        "subscription_tier"
+    );
+
+    const expiryInput = document.getElementById(
+        "subscription_expires_at"
+    );
+
+    const expiryHelp = document.getElementById(
+        "expiry-help"
+    );
+
+    const planForm = document.getElementById(
+        "restaurant-plan-form"
+    );
+
+    if (!planSelect || !expiryInput) {
+        return;
+    }
+
+    function updateExpiryRequirement() {
+        const selectedPlan = planSelect.value;
+
+        if (selectedPlan === "free") {
+            expiryInput.required = false;
+            expiryInput.disabled = true;
+            expiryInput.value = "";
+
+            if (expiryHelp) {
+                expiryHelp.textContent =
+                    "Free has no expiry date. Saving Free clears the paid-plan expiry.";
+            }
+        } else {
+            expiryInput.disabled = false;
+            expiryInput.required = true;
+
+            if (expiryHelp) {
+                expiryHelp.textContent =
+                    "Required for Standard and Premium. Choose the exact expiry date and time.";
+            }
+        }
+    }
+
+    planSelect.addEventListener(
+        "change",
+        updateExpiryRequirement
+    );
+
+    if (planForm) {
+        planForm.addEventListener(
+            "submit",
+            function (event) {
+                if (
+                    planSelect.value !== "free"
+                    && !expiryInput.value
+                ) {
+                    event.preventDefault();
+
+                    expiryInput.focus();
+
+                    alert(
+                        "Please select an expiry date and time for Standard or Premium."
+                    );
+                }
+            }
+        );
+    }
+
+    updateExpiryRequirement();
+})();
+</script>
 
 </body>
 
