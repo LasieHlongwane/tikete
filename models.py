@@ -6170,25 +6170,7 @@ class RestaurantAdvert(db.Model):
 # ============================================================
 
     def downgrade_expired_restaurant_plan_to_free(self):
-    """
-    Downgrade an expired Standard or Premium restaurant
-    subscription to the Free plan after the grace period.
 
-    IMPORTANT:
-    - The restaurant profile remains available.
-    - Existing restaurant Reels are preserved.
-    - Gallery images and opening hours are preserved.
-    - Customer experiences and reviews are preserved in storage.
-    - Analytics history is preserved.
-    - Paid features must remain unavailable while the
-      restaurant is on the Free plan.
-    - The restaurant can regain paid features by upgrading
-      to Standard or Premium again.
-
-    Returns:
-        bool: True if the subscription was downgraded.
-        bool: False if no downgrade was necessary.
-    """
 
     # --------------------------------------------------------
     # ALREADY FREE
