@@ -24456,44 +24456,51 @@ def admin_manage_restaurant(advert_id):
         "POST",
     ],
 )
+
 def create_restaurant_experience():
 
     # ========================================================
     # TAGGABLE RESTAURANTS
     # ========================================================
     #
-    # Only restaurants that currently have the
-    # customer_experiences capability should appear in the
-    # public restaurant selector.
+    # Only restaurants with the customer_experiences
+    # capability should appear in the public restaurant selector.
     #
-    # Expected:
-    #
-    # FREE
-    #     -> excluded
-    #
-    # STANDARD ACTIVE
-    #     -> included
-    #
-    # STANDARD GRACE
-    #     -> included
-    #
-    # PREMIUM ACTIVE
-    #     -> included
-    #
-    # PREMIUM GRACE
-    #     -> included
-    #
-    # AFTER 5-DAY GRACE
-    #     -> subscription sync downgrades to Free
-    #     -> excluded
+    # FREE                     -> excluded
+    # STANDARD ACTIVE          -> included
+    # STANDARD GRACE           -> included
+    # PREMIUM ACTIVE           -> included
+    # PREMIUM GRACE            -> included
+    # AFTER 5-DAY GRACE         -> downgraded to Free and excluded
     #
     # Operational hours are NOT part of this decision.
     # ========================================================
 
-    restaurants = (
-        get_taggable_restaurants()
-    )
+    restaurants = get_taggable_restaurants()
 
+    # ========================================================
+    # HELPER: RESTAURANT-SPECIFIC FORM URL
+    # ========================================================
+    #
+    # Preserve restaurant_id in the query string when a
+    # customer entered through a restaurant-specific QR code
+    # or direct experience link.
+    #
+    # This is important for both GET and POST requests.
+    # ========================================================
+
+    def experience_form_url(restaurant=None):
+
+        if restaurant:
+
+            return url_for(
+                "create_restaurant_experience",
+                restaurant_id=restaurant.id,
+            )
+
+        return url_for(
+            "create_restaurant_experience"
+        )
 
     # ========================================================
     # FORM RENDER HELPER
@@ -24505,57 +24512,38 @@ def create_restaurant_experience():
 
         return render_template(
             "restaurant_experience_form.html",
-
             restaurants=restaurants,
-
-            preselected_restaurant=(
-                preselected_restaurant
-            ),
+            preselected_restaurant=preselected_restaurant,
         )
-
 
     # ========================================================
     # QR / PRESELECTED RESTAURANT
     # ========================================================
     #
-    # A restaurant can be supplied through:
+    # Example:
     #
-    #     /experiences/new?restaurant_id=123
+    # /experiences/new?restaurant_id=123
     #
-    # This is useful for restaurant rating QR codes and direct
-    # "Share Experience" links.
-    #
-    # IMPORTANT:
-    #
-    # Query-string input is never trusted.
+    # Query-string values are untrusted.
     #
     # The restaurant must pass the same server-side plan and
-    # availability rules as every other experience submission.
+    # availability checks as every other submission.
     # ========================================================
 
     preselected_restaurant = None
 
-
-    preselected_restaurant_id = (
-        request.args.get(
-            "restaurant_id",
-            type=int,
-        )
+    preselected_restaurant_id = request.args.get(
+        "restaurant_id",
+        type=int,
     )
-
 
     if preselected_restaurant_id:
 
         possible_restaurant = (
             RestaurantAdvert.query
-
-            .filter_by(
-                id=preselected_restaurant_id
-            )
-
+            .filter_by(id=preselected_restaurant_id)
             .first()
         )
-
 
         # ====================================================
         # PRESELECTED RESTAURANT DOES NOT EXIST
@@ -24572,22 +24560,17 @@ def create_restaurant_experience():
             )
 
             return redirect(
-                url_for(
-                    "create_restaurant_experience"
-                )
+                url_for("create_restaurant_experience")
             )
-
 
         # ====================================================
         # PLAN + AVAILABILITY CHECK
         # ====================================================
         #
-        # This prevents a Free restaurant from bypassing the
-        # restaurant selector with:
+        # This prevents Free restaurants from bypassing the
+        # public selector through a manually supplied ID.
         #
-        #     ?restaurant_id=<free-restaurant-id>
-        #
-        # It also handles expired paid plans.
+        # Expired paid subscriptions are also synchronized.
         # ====================================================
 
         if not restaurant_can_receive_experience_posts(
@@ -24603,29 +24586,13 @@ def create_restaurant_experience():
             )
 
             return redirect(
-                url_for(
-                    "create_restaurant_experience"
-                )
+                url_for("create_restaurant_experience")
             )
 
-
-        preselected_restaurant = (
-            possible_restaurant
-        )
-
+        preselected_restaurant = possible_restaurant
 
     # ========================================================
     # GET
-    # ========================================================
-    #
-    # At this point:
-    #
-    #     no restaurant selected
-    #
-    # OR
-    #
-    #     preselected restaurant has already passed the
-    #     restaurant plan + availability checks.
     # ========================================================
 
     if request.method == "GET":
@@ -24634,24 +24601,8 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
     # ========================================================
-    # POST
-    # ========================================================
-    #
-    # IMPORTANT:
-    #
-    # Everything from the browser must be validated again.
-    #
-    # The GET checks are useful for UX.
-    #
-    # The POST restaurant eligibility check below is the
-    # authoritative security check.
-    # ========================================================
-
-
-    # ========================================================
-    # FORM VALUES
+    # POST: READ FORM VALUES
     # ========================================================
 
     poster_name = (
@@ -24662,7 +24613,6 @@ def create_restaurant_experience():
         .strip()
     )
 
-
     rating_raw = (
         request.form.get(
             "rating",
@@ -24670,7 +24620,6 @@ def create_restaurant_experience():
         )
         .strip()
     )
-
 
     experience_text = (
         request.form.get(
@@ -24680,46 +24629,27 @@ def create_restaurant_experience():
         .strip()
     )
 
-
-    restaurant_advert_id = (
-        request.form.get(
-            "restaurant_advert_id",
-            type=int,
-        )
+    restaurant_advert_id = request.form.get(
+        "restaurant_advert_id",
+        type=int,
     )
 
-
     # ========================================================
-    # RATING
+    # RATING VALIDATION
     # ========================================================
 
     try:
 
-        rating = int(
-            rating_raw
-        )
+        rating = int(rating_raw)
 
-    except (
-        TypeError,
-        ValueError,
-    ):
+    except (TypeError, ValueError):
 
         rating = 0
 
-
-    if rating not in {
-        1,
-        2,
-        3,
-        4,
-        5,
-    }:
+    if rating not in {1, 2, 3, 4, 5}:
 
         flash(
-            (
-                "Please choose a rating "
-                "between 1 and 5 stars."
-            ),
+            "Please choose a rating between 1 and 5 stars.",
             "error",
         )
 
@@ -24727,30 +24657,20 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
     # ========================================================
     # MULTIPLE MEDIA FILES
     # ========================================================
 
     media_files = [
-
         media
-
-        for media
-        in request.files.getlist(
+        for media in request.files.getlist(
             "experience_media"
         )
-
-        if (
-            media
-            and
-            media.filename
-        )
+        if media and media.filename
     ]
 
-
     # ========================================================
-    # NAME
+    # NAME VALIDATION
     # ========================================================
 
     if not poster_name:
@@ -24764,19 +24684,10 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
-    if (
-        len(
-            poster_name
-        )
-        > 120
-    ):
+    if len(poster_name) > 120:
 
         flash(
-            (
-                "Your name must be "
-                "120 characters or fewer."
-            ),
+            "Your name must be 120 characters or fewer.",
             "error",
         )
 
@@ -24784,18 +24695,14 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
     # ========================================================
-    # EXPERIENCE TEXT
+    # EXPERIENCE TEXT VALIDATION
     # ========================================================
 
     if not experience_text:
 
         flash(
-            (
-                "Tell us about your "
-                "experience."
-            ),
+            "Tell us about your experience.",
             "error",
         )
 
@@ -24803,26 +24710,16 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
-    if (
-        len(
-            experience_text
-        )
-        > 2000
-    ):
+    if len(experience_text) > 2000:
 
         flash(
-            (
-                "Your experience must be "
-                "2,000 characters or fewer."
-            ),
+            "Your experience must be 2,000 characters or fewer.",
             "error",
         )
 
         return render_experience_form(
             preselected_restaurant
         )
-
 
     # ========================================================
     # RESTAURANT REQUIRED
@@ -24839,88 +24736,73 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
     # ========================================================
     # LOAD SUBMITTED RESTAURANT
     # ========================================================
     #
-    # Never trust the restaurant ID submitted by the form.
-    #
-    # The browser could be modified manually.
+    # Never trust the restaurant ID supplied by the browser.
     # ========================================================
 
     advert = (
         RestaurantAdvert.query
-
-        .filter_by(
-            id=restaurant_advert_id
-        )
-
+        .filter_by(id=restaurant_advert_id)
         .first()
     )
-
-
-    # ========================================================
-    # RESTAURANT EXISTS
-    # ========================================================
 
     if not advert:
 
         flash(
-            (
-                "The selected restaurant "
-                "is not available."
-            ),
+            "The selected restaurant is not available.",
             "error",
         )
 
         return redirect(
-            url_for(
-                "create_restaurant_experience"
+            experience_form_url(
+                preselected_restaurant
             )
         )
 
+    # ========================================================
+    # QR / PRESELECTED RESTAURANT SAFETY
+    # ========================================================
+    #
+    # If the request was opened using a restaurant-specific
+    # URL, the submitted restaurant must match that restaurant.
+    #
+    # The form's action must preserve restaurant_id in the
+    # query string for this check to apply to the POST request.
+    # ========================================================
+
+    if (
+        preselected_restaurant
+        and advert.id != preselected_restaurant.id
+    ):
+
+        abort(400)
 
     # ========================================================
     # RESTAURANT PLAN + AVAILABILITY ENFORCEMENT
     # ========================================================
     #
-    # This is the authoritative server-side security check.
+    # This is the authoritative server-side eligibility check.
     #
-    # FREE
-    # --------------------------------------------------------
+    # FREE:
+    #   Profile                  YES
+    #   Campaign                 YES
+    #   Reel / Discovery         YES
+    #   Customer experiences     NO
     #
-    # Profile                     YES
-    # Campaign                    YES
-    # Reel / Discovery            YES
+    # STANDARD:
+    #   Active                   YES
+    #   5-day grace              YES
     #
-    # Customer experiences        NO
+    # PREMIUM:
+    #   Active                   YES
+    #   5-day grace              YES
     #
-    #
-    # STANDARD
-    # --------------------------------------------------------
-    #
-    # Active                      YES
-    # 5-day grace                 YES
-    #
-    #
-    # PREMIUM
-    # --------------------------------------------------------
-    #
-    # Active                      YES
-    # 5-day grace                 YES
-    #
-    #
-    # AFTER GRACE
-    # --------------------------------------------------------
-    #
-    # sync_restaurant_subscription() inside the helper
-    # converts the restaurant to Free.
-    #
-    # Submission is therefore rejected.
-    #
-    #
-    # IMPORTANT:
+    # AFTER GRACE:
+    #   Subscription sync downgrades to Free.
+    #   Customer experience submission is rejected.
     #
     # Operational hours are NOT checked here.
     # ========================================================
@@ -24938,31 +24820,10 @@ def create_restaurant_experience():
         )
 
         return redirect(
-            url_for(
-                "create_restaurant_experience"
+            experience_form_url(
+                preselected_restaurant
             )
         )
-
-
-    # ========================================================
-    # QR / PRESELECTED RESTAURANT SAFETY
-    # ========================================================
-    #
-    # When the customer entered through a restaurant-specific
-    # QR/direct link, they must not be able to change the
-    # restaurant ID in the submitted HTML form.
-    # ========================================================
-
-    if (
-        preselected_restaurant
-        and
-        advert.id
-        !=
-        preselected_restaurant.id
-    ):
-
-        abort(400)
-
 
     # ========================================================
     # MEDIA REQUIRED
@@ -24982,30 +24843,24 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
     # ========================================================
     # DETERMINE MEDIA TYPES
     # ========================================================
 
     media_types = []
 
-
     for media in media_files:
 
-        media_type = (
-            get_restaurant_experience_media_type(
-                media.filename
-            )
+        media_type = get_restaurant_experience_media_type(
+            media.filename
         )
-
 
         if not media_type:
 
             flash(
                 (
-                    "Use JPG, JPEG, PNG or WebP "
-                    "photos, or an MP4, MOV, M4V "
-                    "or WebM reel."
+                    "Use JPG, JPEG, PNG or WebP photos, "
+                    "or an MP4, MOV, M4V or WebM reel."
                 ),
                 "error",
             )
@@ -25014,35 +24869,16 @@ def create_restaurant_experience():
                 preselected_restaurant
             )
 
+        media_types.append(media_type)
 
-        media_types.append(
-            media_type
-        )
-
-
-    image_count = (
-        media_types.count(
-            "image"
-        )
-    )
-
-
-    video_count = (
-        media_types.count(
-            "video"
-        )
-    )
-
+    image_count = media_types.count("image")
+    video_count = media_types.count("video")
 
     # ========================================================
     # CANNOT MIX PHOTOS + VIDEO
     # ========================================================
 
-    if (
-        image_count > 0
-        and
-        video_count > 0
-    ):
+    if image_count > 0 and video_count > 0:
 
         flash(
             (
@@ -25057,31 +24893,22 @@ def create_restaurant_experience():
             preselected_restaurant
         )
 
-
     # ========================================================
     # PHOTO RULE
     # ========================================================
 
     if image_count:
 
-        if (
-            image_count < 1
-            or
-            image_count > 3
-        ):
+        if image_count > 3:
 
             flash(
-                (
-                    "You can upload a maximum "
-                    "of 3 photos."
-                ),
+                "You can upload a maximum of 3 photos.",
                 "error",
             )
 
             return render_experience_form(
                 preselected_restaurant
             )
-
 
     # ========================================================
     # REEL RULE
@@ -25091,18 +24918,11 @@ def create_restaurant_experience():
 
         if (
             video_count != 1
-            or
-            len(
-                media_files
-            )
-            != 1
+            or len(media_files) != 1
         ):
 
             flash(
-                (
-                    "Only one reel can be uploaded "
-                    "per experience."
-                ),
+                "Only one reel can be uploaded per experience.",
                 "error",
             )
 
@@ -25110,71 +24930,41 @@ def create_restaurant_experience():
                 preselected_restaurant
             )
 
-
     # ========================================================
     # VALIDATE FILE SIZES BEFORE UPLOAD
     # ========================================================
 
     prepared_media = []
 
+    for media_order, media in enumerate(media_files):
 
-    for (
-        media_order,
-        media,
-    ) in enumerate(
-        media_files
-    ):
-
-        media_type = (
-            media_types[
-                media_order
-            ]
-        )
-
+        media_type = media_types[media_order]
 
         media.stream.seek(
             0,
             os.SEEK_END,
         )
 
+        file_size = media.stream.tell()
 
-        file_size = (
-            media.stream.tell()
-        )
-
-
-        media.stream.seek(
-            0
-        )
-
+        media.stream.seek(0)
 
         # ====================================================
         # IMAGE SIZE
         # ====================================================
 
-        if (
-            media_type
-            == "image"
-        ):
+        if media_type == "image":
 
-            if (
-                file_size
-                >
-                RESTAURANT_POSTER_MAX_FILE_BYTES
-            ):
+            if file_size > RESTAURANT_POSTER_MAX_FILE_BYTES:
 
                 flash(
-                    (
-                        "Each photo must be "
-                        "8 MB or smaller."
-                    ),
+                    "Each photo must be 8 MB or smaller.",
                     "error",
                 )
 
                 return render_experience_form(
                     preselected_restaurant
                 )
-
 
         # ====================================================
         # VIDEO SIZE
@@ -25182,17 +24972,10 @@ def create_restaurant_experience():
 
         else:
 
-            if (
-                file_size
-                >
-                EVENT_REEL_MAX_FILE_BYTES
-            ):
+            if file_size > EVENT_REEL_MAX_FILE_BYTES:
 
                 flash(
-                    (
-                        "The reel must be "
-                        "80 MB or smaller."
-                    ),
+                    "The reel must be 80 MB or smaller.",
                     "error",
                 )
 
@@ -25200,36 +24983,21 @@ def create_restaurant_experience():
                     preselected_restaurant
                 )
 
-
         prepared_media.append(
             {
-                "file":
-                    media,
-
-                "media_type":
-                    media_type,
-
-                "media_order":
-                    media_order,
-
-                "file_size":
-                    file_size,
+                "file": media,
+                "media_type": media_type,
+                "media_order": media_order,
+                "file_size": file_size,
             }
         )
-
 
     # ========================================================
     # FINAL ELIGIBILITY CHECK BEFORE WRITING DATA
     # ========================================================
     #
-    # The restaurant was checked above before media
-    # validation.
-    #
-    # We check once more immediately before creating the
-    # database record / uploading media.
-    #
-    # This keeps the final write path protected by the
-    # RestaurantAdvert subscription capability.
+    # Check the restaurant one more time immediately before
+    # creating the database record and uploading media.
     # ========================================================
 
     if not restaurant_can_receive_experience_posts(
@@ -25245,11 +25013,10 @@ def create_restaurant_experience():
         )
 
         return redirect(
-            url_for(
-                "create_restaurant_experience"
+            experience_form_url(
+                preselected_restaurant
             )
         )
-
 
     # ========================================================
     # CLOUDINARY + DATABASE
@@ -25257,57 +25024,28 @@ def create_restaurant_experience():
 
     uploaded_assets = []
 
-
     try:
 
         # ====================================================
         # CREATE EXPERIENCE POST
         # ====================================================
 
-        experience_post = (
-            RestaurantExperiencePost(
-
-                restaurant_advert_id=(
-                    advert.id
-                ),
-
-                poster_name=(
-                    poster_name
-                ),
-
-                experience_text=(
-                    experience_text
-                ),
-
-                rating=(
-                    rating
-                ),
-
-                moderation_status=(
-                    "pending"
-                ),
-
-                active=True,
-            )
+        experience_post = RestaurantExperiencePost(
+            restaurant_advert_id=advert.id,
+            poster_name=poster_name,
+            experience_text=experience_text,
+            rating=rating,
+            moderation_status="pending",
+            active=True,
         )
 
-
-        db.session.add(
-            experience_post
-        )
-
+        db.session.add(experience_post)
 
         # ====================================================
         # GET EXPERIENCE ID
         # ====================================================
-        #
-        # We need the ID before Cloudinary upload so the media
-        # can be stored under the correct restaurant /
-        # experience folder.
-        # ====================================================
 
         db.session.flush()
-
 
         # ====================================================
         # UPLOAD MEDIA
@@ -25315,130 +25053,64 @@ def create_restaurant_experience():
 
         for item in prepared_media:
 
-            media = (
-                item[
-                    "file"
-                ]
-            )
-
-
-            media_type = (
-                item[
-                    "media_type"
-                ]
-            )
-
-
-            media_order = (
-                item[
-                    "media_order"
-                ]
-            )
-
-
-            file_size = (
-                item[
-                    "file_size"
-                ]
-            )
-
+            media = item["file"]
+            media_type = item["media_type"]
+            media_order = item["media_order"]
+            file_size = item["file_size"]
 
             resource_type = (
-
                 "image"
-
-                if media_type
-                == "image"
-
+                if media_type == "image"
                 else "video"
             )
 
-
-            upload_result = (
-                cloudinary.uploader.upload(
-                    media,
-
-                    resource_type=(
-                        resource_type
-                    ),
-
-                    folder=(
-                        "kalxa/"
-                        f"restaurants/{advert.id}/"
-                        "customer-experiences/"
-                        f"{experience_post.id}"
-                    ),
-
-                    use_filename=True,
-
-                    unique_filename=True,
-
-                    overwrite=False,
-                )
+            upload_result = cloudinary.uploader.upload(
+                media,
+                resource_type=resource_type,
+                folder=(
+                    "kalxa/"
+                    f"restaurants/{advert.id}/"
+                    "customer-experiences/"
+                    f"{experience_post.id}"
+                ),
+                use_filename=True,
+                unique_filename=True,
+                overwrite=False,
             )
 
-
-            uploaded_public_id = (
-                upload_result.get(
-                    "public_id"
-                )
+            uploaded_public_id = upload_result.get(
+                "public_id"
             )
 
-
-            secure_url = (
-                upload_result.get(
-                    "secure_url"
-                )
+            secure_url = upload_result.get(
+                "secure_url"
             )
 
-
-            if (
-                not uploaded_public_id
-                or
-                not secure_url
-            ):
+            if not uploaded_public_id or not secure_url:
 
                 raise RuntimeError(
-                    (
-                        "Cloudinary did not return "
-                        "the uploaded media."
-                    )
+                    "Cloudinary did not return the uploaded media."
                 )
 
-
-            # =================================================
+            # ================================================
             # TRACK UPLOAD FOR ROLLBACK
-            # =================================================
+            # ================================================
 
             uploaded_assets.append(
                 {
-                    "public_id":
-                        uploaded_public_id,
-
-                    "resource_type":
-                        resource_type,
+                    "public_id": uploaded_public_id,
+                    "resource_type": resource_type,
                 }
             )
 
+            duration_seconds = None
+            thumbnail_url = None
 
-            duration_seconds = (
-                None
-            )
-
-
-            thumbnail_url = (
-                None
-            )
-
-
-            # =================================================
+            # ================================================
             # VIDEO VALIDATION
-            # =================================================
+            # ================================================
 
-            if (
-                media_type
-                == "video"
-            ):
+            if media_type == "video":
 
                 duration_seconds = float(
                     upload_result.get(
@@ -25448,11 +25120,7 @@ def create_restaurant_experience():
                     or 0
                 )
 
-
-                if (
-                    duration_seconds
-                    <= 0
-                ):
+                if duration_seconds <= 0:
 
                     raise RuntimeError(
                         (
@@ -25461,11 +25129,9 @@ def create_restaurant_experience():
                         )
                     )
 
-
                 if (
                     duration_seconds
-                    >
-                    EVENT_REEL_MAX_DURATION_SECONDS
+                    > EVENT_REEL_MAX_DURATION_SECONDS
                 ):
 
                     raise ValueError(
@@ -25474,7 +25140,6 @@ def create_restaurant_experience():
                             "must be 30 seconds or shorter."
                         )
                     )
-
 
                 # =============================================
                 # VIDEO THUMBNAIL
@@ -25486,89 +25151,41 @@ def create_restaurant_experience():
                     )
                     .build_url(
                         resource_type="video",
-
                         format="jpg",
-
                         start_offset="1",
-
                         width=720,
-
                         crop="limit",
-
                         secure=True,
                     )
                 )
 
-
-            # =================================================
+            # ================================================
             # MEDIA DATABASE ROW
-            # =================================================
+            # ================================================
 
-            media_record = (
-                RestaurantExperienceMedia(
-
-                    post_id=(
-                        experience_post.id
-                    ),
-
-                    media_type=(
-                        media_type
-                    ),
-
-                    media_order=(
-                        media_order
-                    ),
-
-                    cloudinary_public_id=(
-                        uploaded_public_id
-                    ),
-
-                    media_url=(
-                        secure_url
-                    ),
-
-                    thumbnail_url=(
-                        thumbnail_url
-                    ),
-
-                    duration_seconds=(
-                        duration_seconds
-                    ),
-
-                    width=(
-                        upload_result.get(
-                            "width"
-                        )
-                    ),
-
-                    height=(
-                        upload_result.get(
-                            "height"
-                        )
-                    ),
-
-                    file_bytes=(
-                        upload_result.get(
-                            "bytes"
-                        )
-                        or
-                        file_size
-                    ),
-                )
+            media_record = RestaurantExperienceMedia(
+                post_id=experience_post.id,
+                media_type=media_type,
+                media_order=media_order,
+                cloudinary_public_id=uploaded_public_id,
+                media_url=secure_url,
+                thumbnail_url=thumbnail_url,
+                duration_seconds=duration_seconds,
+                width=upload_result.get("width"),
+                height=upload_result.get("height"),
+                file_bytes=(
+                    upload_result.get("bytes")
+                    or file_size
+                ),
             )
 
-
-            db.session.add(
-                media_record
-            )
-
+            db.session.add(media_record)
 
         # ====================================================
         # SAVE EVERYTHING
         # ====================================================
 
         db.session.commit()
-
 
     # ========================================================
     # VALIDATION / VIDEO FAILURE
@@ -25578,7 +25195,6 @@ def create_restaurant_experience():
 
         db.session.rollback()
 
-
         # ====================================================
         # CLOUDINARY CLEANUP
         # ====================================================
@@ -25588,15 +25204,8 @@ def create_restaurant_experience():
             try:
 
                 cloudinary.uploader.destroy(
-                    asset[
-                        "public_id"
-                    ],
-
-                    resource_type=(
-                        asset[
-                            "resource_type"
-                        ]
-                    ),
+                    asset["public_id"],
+                    resource_type=asset["resource_type"],
                 )
 
             except Exception:
@@ -25607,24 +25216,17 @@ def create_restaurant_experience():
                         "Cloudinary cleanup failed "
                         "public_id=%s"
                     ),
-                    asset[
-                        "public_id"
-                    ],
+                    asset["public_id"],
                 )
 
-
         flash(
-            str(
-                error
-            ),
+            str(error),
             "error",
         )
-
 
         return render_experience_form(
             preselected_restaurant
         )
-
 
     # ========================================================
     # GENERAL FAILURE
@@ -25634,7 +25236,6 @@ def create_restaurant_experience():
 
         db.session.rollback()
 
-
         # ====================================================
         # CLOUDINARY CLEANUP
         # ====================================================
@@ -25644,15 +25245,8 @@ def create_restaurant_experience():
             try:
 
                 cloudinary.uploader.destroy(
-                    asset[
-                        "public_id"
-                    ],
-
-                    resource_type=(
-                        asset[
-                            "resource_type"
-                        ]
-                    ),
+                    asset["public_id"],
+                    resource_type=asset["resource_type"],
                 )
 
             except Exception:
@@ -25663,11 +25257,8 @@ def create_restaurant_experience():
                         "Cloudinary cleanup failed "
                         "public_id=%s"
                     ),
-                    asset[
-                        "public_id"
-                    ],
+                    asset["public_id"],
                 )
-
 
         current_app.logger.exception(
             (
@@ -25680,39 +25271,23 @@ def create_restaurant_experience():
             error,
         )
 
-
         flash(
             (
-                "Kalxa could not submit your "
-                "experience. Please try again."
+                "Kalxa could not submit your experience. "
+                "Please try again."
             ),
             "error",
         )
-
 
         # ====================================================
         # RETURN TO SAME RESTAURANT WHEN PRESELECTED
         # ====================================================
 
-        if preselected_restaurant:
-
-            return redirect(
-                url_for(
-                    "create_restaurant_experience",
-
-                    restaurant_id=(
-                        preselected_restaurant.id
-                    ),
-                )
-            )
-
-
         return redirect(
-            url_for(
-                "create_restaurant_experience"
+            experience_form_url(
+                preselected_restaurant
             )
         )
-
 
     # ========================================================
     # SUCCESS
@@ -25726,14 +25301,10 @@ def create_restaurant_experience():
         "success",
     )
 
-
     return redirect(
         url_for(
             "restaurant_experience_thank_you",
-
-            restaurant_id=(
-                advert.id
-            ),
+            restaurant_id=advert.id,
         )
     )
 
