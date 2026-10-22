@@ -23,21 +23,16 @@
     {% endif %}
 </title>
 
-
 <style>
 
     * {
         box-sizing: border-box;
     }
 
-
     body {
-
         margin: 0;
-
         background: #ffffff;
         color: #111827;
-
         font-family:
             Inter,
             -apple-system,
@@ -47,1928 +42,1146 @@
             Helvetica,
             Arial,
             sans-serif;
-
-        -webkit-font-smoothing:
-            antialiased;
+        -webkit-font-smoothing: antialiased;
     }
-
 
     .page {
-
-        width:
-            min(
-                100% - 28px,
-                640px
-            );
-
-        margin:
-            0 auto;
-
-        padding:
-            18px 0 70px;
+        width: min(100% - 28px, 640px);
+        margin: 0 auto;
+        padding: 18px 0 70px;
     }
 
-
-    /* =====================================================
-       TOP BAR
-    ===================================================== */
+    /* TOP BAR */
 
     .topbar {
-
         display: flex;
-
         align-items: center;
         justify-content: space-between;
-
         margin-bottom: 24px;
-
         padding-bottom: 13px;
-
-        border-bottom:
-            1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
     }
-
 
     .brand {
-
         color: #111827;
-
         font-size: 14px;
         font-weight: 950;
-
-        letter-spacing:
-            .07em;
-
+        letter-spacing: .07em;
         text-decoration: none;
     }
-
 
     .back {
-
         color: #6b7280;
-
         font-size: 11px;
         font-weight: 850;
-
         text-decoration: none;
     }
 
-
-    /* =====================================================
-       HERO
-    ===================================================== */
+    /* HERO */
 
     .hero {
-
         margin-bottom: 23px;
     }
 
-
     .eyebrow {
-
-        margin:
-            0 0 7px;
-
+        margin: 0 0 7px;
         color: #6b7280;
-
         font-size: 9px;
         font-weight: 950;
-
         letter-spacing: .13em;
-
         text-transform: uppercase;
     }
 
-
     h1 {
-
         margin: 0;
-
         color: #111827;
-
-        font-size:
-            clamp(
-                30px,
-                8vw,
-                46px
-            );
-
+        font-size: clamp(30px, 8vw, 46px);
         line-height: 1;
-
         font-weight: 950;
-
         letter-spacing: -.05em;
     }
 
-
     .hero p {
-
         max-width: 520px;
-
-        margin:
-            13px 0 0;
-
+        margin: 13px 0 0;
         color: #6b7280;
-
         font-size: 13px;
         line-height: 1.6;
     }
 
-
-    /* =====================================================
-       QR RESTAURANT CARD
-    ===================================================== */
+    /* QR RESTAURANT CARD */
 
     .qr-restaurant-card {
-
         position: relative;
-
         overflow: hidden;
-
         margin-bottom: 20px;
-
         padding: 18px;
-
         background: #111827;
         color: #ffffff;
-
         border-radius: 18px;
     }
 
-
     .qr-restaurant-label {
-
         display: block;
-
         margin-bottom: 8px;
-
         color: #d1d5db;
-
         font-size: 9px;
         font-weight: 950;
-
         letter-spacing: .13em;
-
         text-transform: uppercase;
     }
 
-
     .qr-restaurant-name {
-
         margin: 0;
-
         color: #ffffff;
-
         font-size: 22px;
         line-height: 1.1;
-
         font-weight: 950;
-
         letter-spacing: -.025em;
     }
 
-
     .qr-restaurant-area {
-
-        margin:
-            7px 0 0;
-
+        margin: 7px 0 0;
         color: #d1d5db;
-
         font-size: 11px;
         line-height: 1.4;
     }
 
-
     .qr-confirmation {
-
         display: inline-flex;
-
         align-items: center;
-
         gap: 6px;
-
         margin-top: 13px;
-
-        padding:
-            6px 9px;
-
-        background:
-            rgba(
-                255,
-                255,
-                255,
-                .1
-            );
-
-        border:
-            1px solid
-            rgba(
-                255,
-                255,
-                255,
-                .12
-            );
-
+        padding: 6px 9px;
+        background: rgba(255, 255, 255, .1);
+        border: 1px solid rgba(255, 255, 255, .12);
         border-radius: 999px;
-
         color: #ffffff;
-
         font-size: 9px;
         font-weight: 850;
     }
 
-
     .qr-confirmation-dot {
-
         width: 6px;
         height: 6px;
-
         flex-shrink: 0;
-
         background: #22c55e;
-
         border-radius: 999px;
     }
 
-
-    /* =====================================================
-       FORM
-    ===================================================== */
+    /* FORM */
 
     .form-card {
-
         padding: 22px;
-
         background: #f8fafc;
-
-        border:
-            1px solid #e5e7eb;
-
+        border: 1px solid #e5e7eb;
         border-radius: 20px;
-
-        box-shadow:
-            0 10px 32px
-            rgba(
-                15,
-                23,
-                42,
-                .06
-            );
+        box-shadow: 0 10px 32px rgba(15, 23, 42, .06);
     }
 
-
     .field {
-
         margin-bottom: 18px;
     }
 
-
     label {
-
         display: block;
-
         margin-bottom: 6px;
-
         color: #111827;
-
         font-size: 11px;
         font-weight: 900;
     }
 
-
     .field-help {
-
         display: block;
-
         margin-top: 5px;
-
         color: #9ca3af;
-
         font-size: 9px;
         line-height: 1.4;
     }
-
 
     input,
     select,
     textarea {
-
         width: 100%;
-
-        padding:
-            11px 12px;
-
+        padding: 11px 12px;
         background: #ffffff;
         color: #111827;
-
-        border:
-            1px solid #d1d5db;
-
+        border: 1px solid #d1d5db;
         border-radius: 10px;
-
         outline: none;
-
         font: inherit;
-
         font-size: 13px;
     }
-
 
     input:focus,
     select:focus,
     textarea:focus {
-
         border-color: #111827;
-
-        box-shadow:
-            0 0 0 3px
-            rgba(
-                17,
-                24,
-                39,
-                .08
-            );
+        box-shadow: 0 0 0 3px rgba(17, 24, 39, .08);
     }
 
-
     textarea {
-
         min-height: 130px;
-
         resize: vertical;
     }
 
-
     input[type="file"] {
-
         padding: 10px;
-
         background: #ffffff;
     }
 
-
-    /* =====================================================
-       STAR RATING
-    ===================================================== */
+    /* STAR RATING */
 
     .rating-field {
-
         margin-bottom: 20px;
     }
 
-
     .rating-title {
-
         display: block;
-
         margin-bottom: 6px;
-
         color: #111827;
-
         font-size: 11px;
         font-weight: 900;
     }
 
-
     .star-rating {
-
         display: flex;
-
         align-items: center;
-
         gap: 6px;
-
         width: max-content;
         max-width: 100%;
-
-        padding:
-            9px 11px;
-
+        padding: 9px 11px;
         background: #ffffff;
-
-        border:
-            1px solid #d1d5db;
-
+        border: 1px solid #d1d5db;
         border-radius: 12px;
     }
 
-
     .star-rating input {
-
         position: absolute;
-
         width: 1px;
         height: 1px;
-
         opacity: 0;
-
         pointer-events: none;
     }
 
-
     .star-rating label {
-
         width: 38px;
         height: 38px;
-
         display: grid;
         place-items: center;
-
         margin: 0;
-
         color: #d1d5db;
-
         font-size: 30px;
         line-height: 1;
-
         cursor: pointer;
-
         user-select: none;
-
-        transition:
-            color .15s ease,
-            transform .15s ease;
+        transition: color .15s ease, transform .15s ease;
     }
-
 
     .star-rating label:hover {
-
-        transform:
-            scale(1.08);
+        transform: scale(1.08);
     }
 
-
     .star-rating label.selected {
-
         color: #f5b301;
     }
 
-
     .rating-feedback {
-
         min-height: 18px;
-
         margin-top: 6px;
-
         color: #6b7280;
-
         font-size: 10px;
         font-weight: 800;
     }
 
-
-    /* =====================================================
-       MEDIA
-    ===================================================== */
+    /* MEDIA */
 
     .media-section {
-
         margin-bottom: 20px;
     }
 
-
     .media-heading {
-
-        margin:
-            0 0 5px;
-
+        margin: 0 0 5px;
         color: #111827;
-
         font-size: 11px;
         font-weight: 900;
     }
 
-
     .media-intro {
-
-        margin:
-            0 0 12px;
-
+        margin: 0 0 12px;
         color: #6b7280;
-
         font-size: 10px;
         line-height: 1.5;
     }
 
-
     .media-choice-grid {
-
         display: grid;
-
-        grid-template-columns:
-            repeat(
-                2,
-                minmax(0, 1fr)
-            );
-
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
-
         margin-bottom: 14px;
     }
 
-
     .media-choice {
-
         position: relative;
-
         min-height: 104px;
-
         display: flex;
-
         flex-direction: column;
-
         justify-content: space-between;
-
         padding: 14px;
-
         background: #ffffff;
         color: #111827;
-
-        border:
-            1px solid #d1d5db;
-
+        border: 1px solid #d1d5db;
         border-radius: 14px;
-
         cursor: pointer;
-
         text-align: left;
-
         font-family: inherit;
-
-        transition:
-            border-color .15s ease,
-            background .15s ease,
-            color .15s ease;
+        transition: border-color .15s ease, background .15s ease, color .15s ease;
     }
 
-
     .media-choice:hover {
-
         border-color: #9ca3af;
     }
 
-
     .media-choice.active {
-
         background: #111827;
         color: #ffffff;
-
         border-color: #111827;
     }
 
-
     .media-choice-icon {
-
         display: block;
-
         margin-bottom: 15px;
-
         font-size: 24px;
         line-height: 1;
     }
 
-
     .media-choice-title {
-
         display: block;
-
         margin-bottom: 3px;
-
         font-size: 12px;
         font-weight: 950;
     }
 
-
     .media-choice-description {
-
         display: block;
-
         color: #6b7280;
-
         font-size: 9px;
         line-height: 1.4;
     }
 
-
-    .media-choice.active
-    .media-choice-description {
-
+    .media-choice.active .media-choice-description {
         color: #d1d5db;
     }
 
-
     .media-panel {
-
         display: none;
-
         padding: 14px;
-
         background: #ffffff;
-
-        border:
-            1px solid #e5e7eb;
-
+        border: 1px solid #e5e7eb;
         border-radius: 14px;
     }
 
-
     .media-panel.active {
-
         display: block;
     }
 
-
     .media-panel-title {
-
-        margin:
-            0 0 5px;
-
+        margin: 0 0 5px;
         color: #111827;
-
         font-size: 11px;
         font-weight: 950;
     }
 
-
     .media-panel-description {
-
-        margin:
-            0 0 11px;
-
+        margin: 0 0 11px;
         color: #6b7280;
-
         font-size: 9px;
         line-height: 1.5;
     }
-
 
     .media-note {
-
         margin-top: 10px;
-
-        padding:
-            9px 10px;
-
+        padding: 9px 10px;
         background: #f8fafc;
         color: #6b7280;
-
-        border:
-            1px solid #e5e7eb;
-
+        border: 1px solid #e5e7eb;
         border-radius: 9px;
-
         font-size: 9px;
         line-height: 1.5;
     }
 
-
-    /* =====================================================
-       SUBMIT
-    ===================================================== */
+    /* SUBMIT */
 
     .submit-button {
-
         width: 100%;
-
         min-height: 50px;
-
         display: flex;
-
         align-items: center;
         justify-content: center;
-
         margin-top: 6px;
-
         background: #111827;
         color: #ffffff;
-
         border: 0;
         border-radius: 11px;
-
         font-size: 13px;
         font-weight: 950;
-
         cursor: pointer;
     }
 
-
     .submit-button:hover {
-
         background: #27272a;
     }
 
-
     .submission-note {
-
-        margin:
-            14px 0 0;
-
+        margin: 14px 0 0;
         color: #6b7280;
-
         font-size: 9px;
         line-height: 1.55;
-
         text-align: center;
     }
 
-
-    /* =====================================================
-       EMPTY STATE
-    ===================================================== */
+    /* EMPTY STATE */
 
     .no-restaurants {
-
         padding: 24px;
-
         background: #fff7ed;
         color: #9a3412;
-
-        border:
-            1px solid #fed7aa;
-
+        border: 1px solid #fed7aa;
         border-radius: 15px;
-
         font-size: 12px;
         line-height: 1.55;
-
         text-align: center;
     }
 
-
-    /* =====================================================
-       FLASH
-    ===================================================== */
+    /* FLASH */
 
     .flash {
-
         margin-bottom: 14px;
-
-        padding:
-            11px 12px;
-
+        padding: 11px 12px;
         border-radius: 10px;
-
         font-size: 11px;
         font-weight: 800;
     }
 
-
     .flash.error {
-
         background: #fef2f2;
         color: #991b1b;
-
-        border:
-            1px solid #fecaca;
+        border: 1px solid #fecaca;
     }
-
 
     .flash.success {
-
         background: #f0fdf4;
         color: #166534;
-
-        border:
-            1px solid #bbf7d0;
+        border: 1px solid #bbf7d0;
     }
 
+    /* MOBILE */
 
-    /* =====================================================
-       MOBILE
-    ===================================================== */
-
-    @media (
-        max-width: 560px
-    ) {
-
+    @media (max-width: 560px) {
         .page {
-
-            width:
-                min(
-                    100% - 20px,
-                    640px
-                );
+            width: min(100% - 20px, 640px);
         }
-
 
         .form-card {
-
             padding: 17px;
-
             border-radius: 16px;
         }
-
 
         .qr-restaurant-card {
-
             padding: 16px;
-
             border-radius: 16px;
         }
 
-
         .qr-restaurant-name {
-
             font-size: 20px;
         }
 
-
         .star-rating {
-
             width: 100%;
-
-            justify-content:
-                space-between;
+            justify-content: space-between;
         }
-
 
         .star-rating label {
-
             width: 42px;
             height: 42px;
-
             font-size: 31px;
         }
-
     }
 
-
-    @media (
-        max-width: 390px
-    ) {
-
+    @media (max-width: 390px) {
         .media-choice-grid {
-
             grid-template-columns: 1fr;
         }
-
     }
 
 </style>
 
 </head>
 
-
 <body>
 
 <div class="page">
 
+    <!-- TOP BAR -->
 
-<!-- =====================================================
-     TOP BAR
-====================================================== -->
-
-<header class="topbar">
-
-    <a
-        href="{{ url_for('home') }}"
-        class="brand"
-    >
-        KALXA
-    </a>
-
-
-    {% if preselected_restaurant %}
-
-        <a
-            href="{{ url_for(
-                'restaurant_page',
-                advert_id=preselected_restaurant.id
-            ) }}"
-            class="back"
-        >
-            ← Restaurant
-        </a>
-
-    {% else %}
+    <header class="topbar">
 
         <a
             href="{{ url_for('home') }}"
-            class="back"
+            class="brand"
         >
-            ← Discover
+            KALXA
         </a>
 
-    {% endif %}
-
-</header>
-
-
-<!-- =====================================================
-     FLASH MESSAGES
-====================================================== -->
-
-{% with messages = get_flashed_messages(
-    with_categories=true
-) %}
-
-    {% if messages %}
-
-        {% for category, message in messages %}
-
-            <div class="flash {{ category }}">
-                {{ message }}
-            </div>
-
-        {% endfor %}
-
-    {% endif %}
-
-{% endwith %}
-
-
-<!-- =====================================================
-     HERO
-====================================================== -->
-
-<section class="hero">
-
-    <p class="eyebrow">
-
         {% if preselected_restaurant %}
 
-            KALXA RESTAURANT RATING
+            <a
+                href="{{ url_for(
+                    'restaurant_page',
+                    advert_id=preselected_restaurant.id
+                ) }}"
+                class="back"
+            >
+                ← Restaurant
+            </a>
 
         {% else %}
 
-            KALXA EXPERIENCES
+            <a
+                href="{{ url_for('home') }}"
+                class="back"
+            >
+                ← Discover
+            </a>
 
         {% endif %}
 
-    </p>
+    </header>
 
+    <!-- FLASH MESSAGES -->
 
-    <h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
 
-        {% if preselected_restaurant %}
+        {% if messages %}
 
-            Rate your visit.
+            {% for category, message in messages %}
 
-        {% else %}
+                <div class="flash {{ category }}">
+                    {{ message }}
+                </div>
 
-            Share your experience.
-
-        {% endif %}
-
-    </h1>
-
-
-    <p>
-
-        {% if preselected_restaurant %}
-
-            Share what your visit was like at
-            {{ preselected_restaurant.business_name }}.
-            Rate your experience, tell people what stood
-            out and add photos or a short reel.
-            You do not need a Kalxa account.
-
-        {% else %}
-
-            Been somewhere worth talking about?
-            Tag the restaurant, rate your experience,
-            add photos or a short reel and tell people
-            what your experience was like.
-            You do not need a Kalxa account.
+            {% endfor %}
 
         {% endif %}
 
-    </p>
+    {% endwith %}
 
-</section>
+    <!-- HERO -->
 
+    <section class="hero">
 
-<!-- =====================================================
-     QR RESTAURANT IDENTITY
-====================================================== -->
+        <p class="eyebrow">
+            {% if preselected_restaurant %}
+                KALXA RESTAURANT RATING
+            {% else %}
+                KALXA EXPERIENCES
+            {% endif %}
+        </p>
 
-{% if preselected_restaurant %}
+        <h1>
+            {% if preselected_restaurant %}
+                Rate your visit.
+            {% else %}
+                Share your experience.
+            {% endif %}
+        </h1>
 
-    <section class="qr-restaurant-card">
-
-        <span class="qr-restaurant-label">
-            You're rating
-        </span>
-
-
-        <h2 class="qr-restaurant-name">
-            {{ preselected_restaurant.business_name }}
-        </h2>
-
-
-        {% if preselected_restaurant.area %}
-
-            <p class="qr-restaurant-area">
-                📍 {{ preselected_restaurant.area }}
-            </p>
-
-        {% endif %}
-
-
-        <div class="qr-confirmation">
-
-            <span class="qr-confirmation-dot"></span>
-
-            Restaurant selected from Kalxa QR
-
-        </div>
+        <p>
+            {% if preselected_restaurant %}
+                Share what your visit was like at
+                {{ preselected_restaurant.business_name }}.
+                Rate your experience, tell people what stood
+                out and add photos or a short reel.
+                You do not need a Kalxa account.
+            {% else %}
+                Been somewhere worth talking about?
+                Tag the restaurant, rate your experience,
+                add photos or a short reel and tell people
+                what your experience was like.
+                You do not need a Kalxa account.
+            {% endif %}
+        </p>
 
     </section>
 
-{% endif %}
+    <!-- QR RESTAURANT IDENTITY -->
 
+    {% if preselected_restaurant %}
 
-<!-- =====================================================
-     FORM
-====================================================== -->
+        <section class="qr-restaurant-card">
 
-{% if restaurants or preselected_restaurant %}
-
-    <form
-        method="POST"
-
-        {% if preselected_restaurant %}
-            action="{{ url_for(
-                'create_restaurant_experience',
-                restaurant_id=preselected_restaurant.id
-            ) }}"
-        {% else %}
-            action="{{ url_for(
-                'create_restaurant_experience'
-            ) }}"
-        {% endif %}
-
-        enctype="multipart/form-data"
-
-        class="form-card"
-
-        id="experience-form"
-    >
-
-
-        <!-- =====================================
-             NAME
-        ====================================== -->
-
-        <div class="field">
-
-            <label for="poster_name">
-                Your name
-            </label>
-
-
-            <input
-                id="poster_name"
-                name="poster_name"
-                type="text"
-                maxlength="120"
-                required
-                autocomplete="name"
-                placeholder="e.g. Lwazi Hlongwane"
-                value="{{ request.form.get(
-                    'poster_name',
-                    ''
-                ) }}"
-            >
-
-
-            <span class="field-help">
-                This name will appear publicly with your post.
+            <span class="qr-restaurant-label">
+                You're rating
             </span>
 
-        </div>
+            <h2 class="qr-restaurant-name">
+                {{ preselected_restaurant.business_name }}
+            </h2>
 
+            {% if preselected_restaurant.area %}
 
-        <!-- =====================================
-             RESTAURANT
-        ====================================== -->
-
-        {% if preselected_restaurant %}
-
-            <input
-                type="hidden"
-                id="restaurant_advert_id"
-                name="restaurant_advert_id"
-                value="{{ preselected_restaurant.id }}"
-            >
-
-
-            <div class="field">
-
-                <label>
-                    Restaurant
-                </label>
-
-
-                <input
-                    type="text"
-                    value="{{
-                        preselected_restaurant.business_name
-                    }}{% if preselected_restaurant.area %} — {{ preselected_restaurant.area }}{% endif %}"
-                    readonly
-                    aria-label="Selected restaurant"
-                >
-
-
-                <span class="field-help">
-                    This restaurant was selected from
-                    the Kalxa QR you scanned.
-                </span>
-
-            </div>
-
-
-        {% else %}
-
-            <div class="field">
-
-                <label for="restaurant_advert_id">
-                    Tag a restaurant
-                </label>
-
-
-                {% set selected_restaurant =
-                    request.form.get(
-                        'restaurant_advert_id'
-                    )
-                    or request.args.get(
-                        'restaurant_id'
-                    )
-                %}
-
-
-                <select
-                    id="restaurant_advert_id"
-                    name="restaurant_advert_id"
-                    required
-                >
-
-                    <option value="">
-                        Choose restaurant
-                    </option>
-
-
-                    {% for restaurant in restaurants %}
-
-                        <option
-                            value="{{ restaurant.id }}"
-
-                            {% if
-                                selected_restaurant
-                                and
-                                selected_restaurant|string
-                                == restaurant.id|string
-                            %}
-                                selected
-                            {% endif %}
-                        >
-
-                            {{ restaurant.business_name }}
-
-                            {% if restaurant.area %}
-                                — {{ restaurant.area }}
-                            {% endif %}
-
-                        </option>
-
-                    {% endfor %}
-
-                </select>
-
-
-                <span class="field-help">
-                    Only restaurants with an active Kalxa
-                    subscription can be tagged.
-                </span>
-
-            </div>
-
-        {% endif %}
-
-
-        <!-- =====================================
-             STAR RATING
-        ====================================== -->
-
-        <div class="rating-field">
-
-            <span class="rating-title">
-                Rate your experience
-            </span>
-
-
-            {% set selected_rating =
-                request.form.get(
-                    'rating',
-                    ''
-                )
-            %}
-
-
-            <div
-                class="star-rating"
-                id="star-rating"
-                role="radiogroup"
-                aria-label="Rate your restaurant experience"
-            >
-
-                {% for value in range(1, 6) %}
-
-                    <input
-                        type="radio"
-                        id="rating-{{ value }}"
-                        name="rating"
-                        value="{{ value }}"
-
-                        {% if
-                            selected_rating|string
-                            == value|string
-                        %}
-                            checked
-                        {% endif %}
-
-                        {% if value == 1 %}
-                            required
-                        {% endif %}
-                    >
-
-
-                    <label
-                        for="rating-{{ value }}"
-                        data-rating-value="{{ value }}"
-                        aria-label="{{ value }} out of 5 stars"
-                    >
-                        ★
-                    </label>
-
-                {% endfor %}
-
-            </div>
-
-
-            <div
-                class="rating-feedback"
-                id="rating-feedback"
-                aria-live="polite"
-            >
-
-                {% if selected_rating %}
-
-                    {{ selected_rating }} out of 5 stars
-
-                {% else %}
-
-                    Choose between 1 and 5 stars.
-
-                {% endif %}
-
-            </div>
-
-
-            <span class="field-help">
-                1 star is the lowest rating and
-                5 stars is the highest.
-            </span>
-
-        </div>
-
-
-        <!-- =====================================
-             EXPERIENCE
-        ====================================== -->
-
-        <div class="field">
-
-            <label for="experience_text">
-                How was your experience?
-            </label>
-
-
-            <textarea
-                id="experience_text"
-                name="experience_text"
-                maxlength="2000"
-                required
-                placeholder="Tell people what you enjoyed, the atmosphere, food, service or what made the place memorable."
-            >{{ request.form.get(
-                'experience_text',
-                ''
-            ) }}</textarea>
-
-
-            <span class="field-help">
-                Maximum 2,000 characters.
-            </span>
-
-        </div>
-
-
-        <!-- =====================================
-             MEDIA
-        ====================================== -->
-
-        <div class="media-section">
-
-            <p class="media-heading">
-                Add to your experience
-            </p>
-
-
-            <p class="media-intro">
-                Choose photos or a short reel.
-            </p>
-
-
-            <div class="media-choice-grid">
-
-                <button
-                    type="button"
-                    class="media-choice active"
-                    id="choose-photos"
-                    aria-pressed="true"
-                >
-
-                    <span class="media-choice-icon">
-                        📷
-                    </span>
-
-                    <span>
-
-                        <span class="media-choice-title">
-                            Add photos
-                        </span>
-
-                        <span class="media-choice-description">
-                            Up to 3 photos · 8 MB each
-                        </span>
-
-                    </span>
-
-                </button>
-
-
-                <button
-                    type="button"
-                    class="media-choice"
-                    id="choose-reel"
-                    aria-pressed="false"
-                >
-
-                    <span class="media-choice-icon">
-                        🎬
-                    </span>
-
-                    <span>
-
-                        <span class="media-choice-title">
-                            Add a reel
-                        </span>
-
-                        <span class="media-choice-description">
-                            1 video · up to 30 seconds
-                        </span>
-
-                    </span>
-
-                </button>
-
-            </div>
-
-
-            <!-- =================================
-                 PHOTOS
-            ================================== -->
-
-            <div
-                class="media-panel active"
-                id="photos-panel"
-            >
-
-                <p class="media-panel-title">
-                    Add photos
+                <p class="qr-restaurant-area">
+                    📍 {{ preselected_restaurant.area }}
                 </p>
-
-
-                <p class="media-panel-description">
-                    Choose 1 to 3 photos.
-                    JPG, PNG or WebP.
-                    Maximum 8 MB per photo.
-                </p>
-
-
-                <input
-                    id="experience_photos"
-                    name="experience_media"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    required
-                >
-
-
-                <div class="media-note">
-                    You can select up to 3 photos at once.
-                </div>
-
-            </div>
-
-
-            <!-- =================================
-                 REEL
-            ================================== -->
-
-            <div
-                class="media-panel"
-                id="reel-panel"
-            >
-
-                <p class="media-panel-title">
-                    Add a short reel
-                </p>
-
-
-                <p class="media-panel-description">
-                    Choose one video.
-                    Maximum 30 seconds and 80 MB.
-                </p>
-
-
-                <input
-                    id="experience_reel"
-                    name="experience_media"
-                    type="file"
-                    accept="video/*"
-                    disabled
-                >
-
-
-                <div class="media-note">
-                    One short reel can be submitted
-                    with each experience.
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================
-             SUBMIT
-        ====================================== -->
-
-        <button
-            type="submit"
-            class="submit-button"
-            id="submit-button"
-        >
-
-            {% if preselected_restaurant %}
-
-                Submit Rating & Experience →
-
-            {% else %}
-
-                Submit Experience →
 
             {% endif %}
 
-        </button>
+            <div class="qr-confirmation">
+                <span class="qr-confirmation-dot"></span>
+                Restaurant selected from Kalxa QR
+            </div>
 
+        </section>
 
-        <p class="submission-note">
+    {% endif %}
 
-            Posts are reviewed before appearing publicly
-            on Kalxa. By submitting media, you confirm
-            that you have permission to share it.
+    <!-- FORM -->
 
-        </p>
+    {% if restaurants or preselected_restaurant %}
 
-    </form>
+        <form
+            method="POST"
+            action="{% if preselected_restaurant %}{{ url_for('create_restaurant_experience', restaurant_id=preselected_restaurant.id) }}{% else %}{{ url_for('create_restaurant_experience') }}{% endif %}"
+            enctype="multipart/form-data"
+            class="form-card"
+            id="experience-form"
+        >
 
+            {#
+                Include a CSRF token when Flask-WTF or another
+                compatible CSRF integration is configured.
+            #}
+            {% if csrf_token is defined %}
 
-{% else %}
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="{{ csrf_token() }}"
+                >
 
-    <div class="no-restaurants">
+            {% endif %}
 
-        There are currently no active subscribed
-        restaurants available for tagging.
+            <!-- NAME -->
 
-        <br><br>
+            <div class="field">
 
-        Please check again later.
+                <label for="poster_name">
+                    Your name
+                </label>
 
-    </div>
+                <input
+                    id="poster_name"
+                    name="poster_name"
+                    type="text"
+                    maxlength="120"
+                    required
+                    autocomplete="name"
+                    placeholder="e.g. Lwazi Hlongwane"
+                    value="{{ request.form.get('poster_name', '') }}"
+                >
 
-{% endif %}
+                <span class="field-help">
+                    This name will appear publicly with your post.
+                </span>
 
+            </div>
+
+            <!-- RESTAURANT -->
+
+            {% if preselected_restaurant %}
+
+                <input
+                    type="hidden"
+                    id="restaurant_advert_id"
+                    name="restaurant_advert_id"
+                    value="{{ preselected_restaurant.id }}"
+                >
+
+                <div class="field">
+
+                    <label for="selected-restaurant-name">
+                        Restaurant
+                    </label>
+
+                    <input
+                        type="text"
+                        id="selected-restaurant-name"
+                        value="{{ preselected_restaurant.business_name }}{% if preselected_restaurant.area %} — {{ preselected_restaurant.area }}{% endif %}"
+                        readonly
+                        aria-label="Selected restaurant"
+                    >
+
+                    <span class="field-help">
+                        This restaurant was selected from
+                        the Kalxa QR you scanned.
+                    </span>
+
+                </div>
+
+            {% else %}
+
+                <div class="field">
+
+                    <label for="restaurant_advert_id">
+                        Tag a restaurant
+                    </label>
+
+                    {% set selected_restaurant =
+                        request.form.get('restaurant_advert_id')
+                        or request.args.get('restaurant_id')
+                    %}
+
+                    <select
+                        id="restaurant_advert_id"
+                        name="restaurant_advert_id"
+                        required
+                    >
+
+                        <option value="">
+                            Choose restaurant
+                        </option>
+
+                        {% for restaurant in restaurants %}
+
+                            <option
+                                value="{{ restaurant.id }}"
+                                {% if selected_restaurant and selected_restaurant|string == restaurant.id|string %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ restaurant.business_name }}{% if restaurant.area %} — {{ restaurant.area }}{% endif %}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <span class="field-help">
+                        Only restaurants currently eligible
+                        for customer experiences can be tagged.
+                    </span>
+
+                </div>
+
+            {% endif %}
+
+            <!-- STAR RATING -->
+
+            <div class="rating-field">
+
+                <span class="rating-title">
+                    Rate your experience
+                </span>
+
+                {% set selected_rating = request.form.get('rating', '') %}
+
+                <div
+                    class="star-rating"
+                    id="star-rating"
+                    role="radiogroup"
+                    aria-label="Rate your restaurant experience"
+                >
+
+                    {% for value in range(1, 6) %}
+
+                        <input
+                            type="radio"
+                            id="rating-{{ value }}"
+                            name="rating"
+                            value="{{ value }}"
+                            {% if selected_rating|string == value|string %}
+                                checked
+                            {% endif %}
+                            {% if value == 1 %}
+                                required
+                            {% endif %}
+                        >
+
+                        <label
+                            for="rating-{{ value }}"
+                            data-rating-value="{{ value }}"
+                            aria-label="{{ value }} out of 5 stars"
+                            title="{{ value }} out of 5 stars"
+                        >
+                            ★
+                        </label>
+
+                    {% endfor %}
+
+                </div>
+
+                <div
+                    class="rating-feedback"
+                    id="rating-feedback"
+                    aria-live="polite"
+                >
+                    {% if selected_rating %}
+                        {{ selected_rating }} out of 5 stars
+                    {% else %}
+                        Choose between 1 and 5 stars.
+                    {% endif %}
+                </div>
+
+                <span class="field-help">
+                    1 star is the lowest rating and
+                    5 stars is the highest.
+                </span>
+
+            </div>
+
+            <!-- EXPERIENCE TEXT -->
+
+            <div class="field">
+
+                <label for="experience_text">
+                    How was your experience?
+                </label>
+
+                <textarea
+                    id="experience_text"
+                    name="experience_text"
+                    maxlength="2000"
+                    required
+                    placeholder="Tell people what you enjoyed, the atmosphere, food, service or what made the place memorable."
+                >{{ request.form.get('experience_text', '') }}</textarea>
+
+                <span class="field-help">
+                    Maximum 2,000 characters.
+                </span>
+
+            </div>
+
+            <!-- MEDIA -->
+
+            <div class="media-section">
+
+                <p class="media-heading">
+                    Add to your experience
+                </p>
+
+                <p class="media-intro">
+                    Choose photos or a short reel.
+                </p>
+
+                <div class="media-choice-grid">
+
+                    <button
+                        type="button"
+                        class="media-choice active"
+                        id="choose-photos"
+                        aria-pressed="true"
+                    >
+
+                        <span class="media-choice-icon">
+                            📷
+                        </span>
+
+                        <span>
+                            <span class="media-choice-title">
+                                Add photos
+                            </span>
+
+                            <span class="media-choice-description">
+                                Up to 3 photos · 8 MB each
+                            </span>
+                        </span>
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="media-choice"
+                        id="choose-reel"
+                        aria-pressed="false"
+                    >
+
+                        <span class="media-choice-icon">
+                            🎬
+                        </span>
+
+                        <span>
+                            <span class="media-choice-title">
+                                Add a reel
+                            </span>
+
+                            <span class="media-choice-description">
+                                1 video · up to 30 seconds
+                            </span>
+                        </span>
+
+                    </button>
+
+                </div>
+
+                <!-- PHOTOS -->
+
+                <div
+                    class="media-panel active"
+                    id="photos-panel"
+                >
+
+                    <p class="media-panel-title">
+                        Add photos
+                    </p>
+
+                    <p class="media-panel-description">
+                        Choose 1 to 3 photos.
+                        JPG, PNG or WebP.
+                        Maximum 8 MB per photo.
+                    </p>
+
+                    <input
+                        id="experience_photos"
+                        name="experience_media"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        multiple
+                        required
+                    >
+
+                    <div class="media-note">
+                        You can select up to 3 photos at once.
+                    </div>
+
+                </div>
+
+                <!-- REEL -->
+
+                <div
+                    class="media-panel"
+                    id="reel-panel"
+                >
+
+                    <p class="media-panel-title">
+                        Add a short reel
+                    </p>
+
+                    <p class="media-panel-description">
+                        Choose one video.
+                        Maximum 30 seconds and 80 MB.
+                    </p>
+
+                    <input
+                        id="experience_reel"
+                        name="experience_media"
+                        type="file"
+                        accept=".mp4,.mov,.m4v,.webm,video/mp4,video/quicktime,video/x-m4v,video/webm"
+                        disabled
+                    >
+
+                    <div class="media-note">
+                        One short reel can be submitted
+                        with each experience.
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- SUBMIT -->
+
+            <button
+                type="submit"
+                class="submit-button"
+                id="submit-button"
+            >
+                {% if preselected_restaurant %}
+                    Submit Rating &amp; Experience →
+                {% else %}
+                    Submit Experience →
+                {% endif %}
+            </button>
+
+            <p class="submission-note">
+                Posts are reviewed before appearing publicly
+                on Kalxa. By submitting media, you confirm
+                that you have permission to share it.
+            </p>
+
+        </form>
+
+    {% else %}
+
+        <div class="no-restaurants">
+            There are currently no active subscribed
+            restaurants available for tagging.
+            <br><br>
+            Please check again later.
+        </div>
+
+    {% endif %}
 
 </div>
 
-
-<!-- =====================================================
-     STAR RATING
-====================================================== -->
+<!-- STAR RATING -->
 
 <script>
-
 (() => {
 
-    const container =
-        document.getElementById(
-            "star-rating"
-        );
-
-
-    const feedback =
-        document.getElementById(
-            "rating-feedback"
-        );
-
+    const container = document.getElementById("star-rating");
+    const feedback = document.getElementById("rating-feedback");
 
     if (!container) {
         return;
     }
 
+    const inputs = Array.from(
+        container.querySelectorAll('input[name="rating"]')
+    );
 
-    const inputs =
-        Array.from(
-            container.querySelectorAll(
-                'input[name="rating"]'
-            )
-        );
+    const labels = Array.from(
+        container.querySelectorAll("[data-rating-value]")
+    );
 
-
-    const labels =
-        Array.from(
-            container.querySelectorAll(
-                "[data-rating-value]"
-            )
-        );
-
-
-    function ratingText(
-        rating
-    ) {
+    function ratingText(rating) {
 
         const descriptions = {
-
             1: "1 out of 5 · Poor",
-
             2: "2 out of 5 · Fair",
-
             3: "3 out of 5 · Good",
-
             4: "4 out of 5 · Very good",
-
-            5: "5 out of 5 · Excellent",
-
+            5: "5 out of 5 · Excellent"
         };
 
-
-        return (
-            descriptions[rating]
-            ||
-            "Choose between 1 and 5 stars."
-        );
-
+        return descriptions[rating] || "Choose between 1 and 5 stars.";
     }
-
-
-    function paint(
-        rating
-    ) {
-
-        labels.forEach(
-            (label) => {
-
-                const value =
-                    Number(
-                        label.dataset.ratingValue
-                    );
-
-
-                label.classList.toggle(
-                    "selected",
-                    value <= rating
-                );
-
-            }
-        );
-
-
-        if (feedback) {
-
-            feedback.textContent =
-                ratingText(
-                    rating
-                );
-
-        }
-
-    }
-
 
     function selectedRating() {
 
-        const checked =
-            inputs.find(
-                (input) =>
-                    input.checked
-            );
+        const checked = inputs.find(
+            input => input.checked
+        );
 
-
-        return checked
-            ? Number(
-                checked.value
-            )
-            : 0;
-
+        return checked ? Number(checked.value) : 0;
     }
 
+    function paint(rating) {
 
-    labels.forEach(
-        (label) => {
+        labels.forEach(label => {
 
-            label.addEventListener(
-                "mouseenter",
-                () => {
+            const value = Number(label.dataset.ratingValue);
 
-                    paint(
-                        Number(
-                            label.dataset.ratingValue
-                        )
-                    );
-
-                }
+            label.classList.toggle(
+                "selected",
+                value <= rating
             );
 
+        });
 
-            label.addEventListener(
-                "click",
-                () => {
-
-                    window.setTimeout(
-                        () => {
-
-                            paint(
-                                selectedRating()
-                            );
-
-                        },
-                        0
-                    );
-
-                }
-            );
-
+        if (feedback) {
+            feedback.textContent = ratingText(rating);
         }
-    );
+    }
 
+    labels.forEach(label => {
 
-    container.addEventListener(
-        "mouseleave",
-        () => {
+        label.addEventListener("mouseenter", () => {
+            paint(Number(label.dataset.ratingValue));
+        });
 
-            paint(
-                selectedRating()
-            );
+        label.addEventListener("click", () => {
 
-        }
-    );
+            window.setTimeout(() => {
+                paint(selectedRating());
+            }, 0);
 
+        });
 
-    inputs.forEach(
-        (input) => {
+    });
 
-            input.addEventListener(
-                "change",
-                () => {
+    container.addEventListener("mouseleave", () => {
+        paint(selectedRating());
+    });
 
-                    paint(
-                        Number(
-                            input.value
-                        )
-                    );
+    inputs.forEach(input => {
 
-                }
-            );
+        input.addEventListener("change", () => {
+            paint(Number(input.value));
+        });
 
-        }
-    );
+    });
 
-
-    paint(
-        selectedRating()
-    );
+    paint(selectedRating());
 
 })();
-
 </script>
 
-
-<!-- =====================================================
-     PHOTO / REEL PANEL SWITCHER
-
-     IMPORTANT:
-     This script does NOT read input.files.
-     It does NOT inspect File objects.
-     It does NOT intercept form submission.
-     It does NOT use DataTransfer.
-     It does NOT recreate FileList objects.
-====================================================== -->
+<!-- PHOTO / REEL PANEL SWITCHER -->
 
 <script>
-
 (() => {
 
-    const photoButton =
-        document.getElementById(
-            "choose-photos"
-        );
+    const photoButton = document.getElementById("choose-photos");
+    const reelButton = document.getElementById("choose-reel");
 
+    const photoPanel = document.getElementById("photos-panel");
+    const reelPanel = document.getElementById("reel-panel");
 
-    const reelButton =
-        document.getElementById(
-            "choose-reel"
-        );
-
-
-    const photoPanel =
-        document.getElementById(
-            "photos-panel"
-        );
-
-
-    const reelPanel =
-        document.getElementById(
-            "reel-panel"
-        );
-
-
-    const photoInput =
-        document.getElementById(
-            "experience_photos"
-        );
-
-
-    const reelInput =
-        document.getElementById(
-            "experience_reel"
-        );
-
+    const photoInput = document.getElementById("experience_photos");
+    const reelInput = document.getElementById("experience_reel");
 
     if (
-        !photoButton
-        ||
-        !reelButton
-        ||
-        !photoPanel
-        ||
-        !reelPanel
-        ||
-        !photoInput
-        ||
+        !photoButton ||
+        !reelButton ||
+        !photoPanel ||
+        !reelPanel ||
+        !photoInput ||
         !reelInput
     ) {
-
         return;
-
     }
-
 
     function showPhotos() {
 
-        photoButton.classList.add(
-            "active"
-        );
+        photoButton.classList.add("active");
+        reelButton.classList.remove("active");
 
+        photoButton.setAttribute("aria-pressed", "true");
+        reelButton.setAttribute("aria-pressed", "false");
 
-        reelButton.classList.remove(
-            "active"
-        );
+        photoPanel.classList.add("active");
+        reelPanel.classList.remove("active");
 
+        photoInput.disabled = false;
+        photoInput.required = true;
 
-        photoButton.setAttribute(
-            "aria-pressed",
-            "true"
-        );
-
-
-        reelButton.setAttribute(
-            "aria-pressed",
-            "false"
-        );
-
-
-        photoPanel.classList.add(
-            "active"
-        );
-
-
-        reelPanel.classList.remove(
-            "active"
-        );
-
-
-        /*
-         * Activate the native photo picker.
-         *
-         * No selected File objects are inspected.
-         */
-
-        photoInput.disabled =
-            false;
-
-
-        photoInput.required =
-            true;
-
-
-        reelInput.disabled =
-            true;
-
-
-        reelInput.required =
-            false;
-
+        reelInput.disabled = true;
+        reelInput.required = false;
     }
-
 
     function showReel() {
 
-        reelButton.classList.add(
-            "active"
-        );
+        reelButton.classList.add("active");
+        photoButton.classList.remove("active");
 
+        reelButton.setAttribute("aria-pressed", "true");
+        photoButton.setAttribute("aria-pressed", "false");
 
-        photoButton.classList.remove(
-            "active"
-        );
+        reelPanel.classList.add("active");
+        photoPanel.classList.remove("active");
 
+        reelInput.disabled = false;
+        reelInput.required = true;
 
-        reelButton.setAttribute(
-            "aria-pressed",
-            "true"
-        );
-
-
-        photoButton.setAttribute(
-            "aria-pressed",
-            "false"
-        );
-
-
-        reelPanel.classList.add(
-            "active"
-        );
-
-
-        photoPanel.classList.remove(
-            "active"
-        );
-
-
-        /*
-         * Activate the native reel picker.
-         *
-         * Again, we do not touch FileList.
-         */
-
-        reelInput.disabled =
-            false;
-
-
-        reelInput.required =
-            true;
-
-
-        photoInput.disabled =
-            true;
-
-
-        photoInput.required =
-            false;
-
+        photoInput.disabled = true;
+        photoInput.required = false;
     }
 
-
-    photoButton.addEventListener(
-        "click",
-        showPhotos
-    );
-
-
-    reelButton.addEventListener(
-        "click",
-        showReel
-    );
+    photoButton.addEventListener("click", showPhotos);
+    reelButton.addEventListener("click", showReel);
 
 })();
-
 </script>
 
-
 </body>
-
 </html>
