@@ -19982,6 +19982,7 @@ def restaurant_rating_qr_page(
 # ============================================================
 # ADMIN - RESTAURANTS
 # ============================================================
+
 @app.route("/admin/restaurants")
 def admin_restaurants():
 
@@ -20009,18 +20010,11 @@ def admin_restaurants():
     # ========================================================
 
     if account_type != "restaurant":
-
         flash(
-            (
-                "Restaurant advertising is only "
-                "available to restaurant accounts."
-            ),
+            "Restaurant advertising is only available to restaurant accounts.",
             "error",
         )
-
-        return redirect(
-            url_for("admin_dashboard")
-        )
+        return redirect(url_for("admin_dashboard"))
 
     # ========================================================
     # LOAD RESTAURANTS
@@ -20028,24 +20022,13 @@ def admin_restaurants():
 
     adverts = (
         RestaurantAdvert.query
-        .filter_by(
-            organizer_id=organizer.id,
-        )
-        .order_by(
-            RestaurantAdvert.created_at.desc(),
-        )
+        .filter_by(organizer_id=organizer.id)
+        .order_by(RestaurantAdvert.created_at.desc())
         .all()
     )
 
     # ========================================================
     # SYNCHRONIZE RESTAURANT SUBSCRIPTIONS
-    # ========================================================
-    #
-    # Downgrade any paid restaurant plan whose grace period
-    # has expired before calculating dashboard metrics.
-    #
-    # This does not modify the organizer's separate
-    # ticketing subscription.
     # ========================================================
 
     for advert in adverts:
@@ -20055,44 +20038,117 @@ def admin_restaurants():
     # DASHBOARD METRICS
     # ========================================================
 
-    advert_ids = [
-        advert.id
-        for advert in adverts
-    ]
+    advert_ids = [advert.id for advert in adverts]
 
     live_adverts = sum(
-        1
-        for advert in adverts
+        1 for advert in adverts
         if advert.campaign_status == "live"
     )
 
     scheduled_adverts = sum(
-        1
-        for advert in adverts
+        1 for advert in adverts
         if advert.campaign_status == "scheduled"
     )
 
     expired_adverts = sum(
-        1
-        for advert in adverts
+        1 for advert in adverts
         if advert.campaign_status == "expired"
     )
 
     paused_adverts = sum(
-        1
-        for advert in adverts
+        1 for advert in adverts
         if advert.campaign_status == "paused"
     )
 
     live_reels = sum(
-        1
-        for advert in adverts
+        1 for advert in adverts
         if (
             advert.reel
             and advert.reel.active
             and advert.campaign_status == "live"
         )
     )
+
+    # ========================================================
+    # PROFILE AND REEL VIEW COUNTS
+    # ========================================================
+    #
+    # These counts are available to Free, Standard and Premium.
+    #
+    # restaurant_view:
+    #     A public restaurant profile was loaded.
+    #
+    # restaurant_reel_view:
+    #     A Reel playback event was recorded.
+    #
+    # Counts are restricted to this organizer's restaurants.
+    # ========================================================
+
+    restaurant_profile_views = {}
+    restaurant_reel_views = {}
+
+    total_restaurant_profile_views = 0
+    total_restaurant_reel_views = 0
+
+    if advert_ids:
+
+        profile_view_rows = (
+            db.session.query(
+                RestaurantAnalyticsEvent.restaurant_id,
+                db.func.count(),
+            )
+            .filter(
+                RestaurantAnalyticsEvent.restaurant_id.in_(
+                    advert_ids
+                )
+            )
+            .filter(
+                RestaurantAnalyticsEvent.event_type
+                == "restaurant_view"
+            )
+            .group_by(
+                RestaurantAnalyticsEvent.restaurant_id
+            )
+            .all()
+        )
+
+        restaurant_profile_views = {
+            restaurant_id: int(view_count or 0)
+            for restaurant_id, view_count in profile_view_rows
+        }
+
+        reel_view_rows = (
+            db.session.query(
+                RestaurantAnalyticsEvent.restaurant_id,
+                db.func.count(),
+            )
+            .filter(
+                RestaurantAnalyticsEvent.restaurant_id.in_(
+                    advert_ids
+                )
+            )
+            .filter(
+                RestaurantAnalyticsEvent.event_type
+                == "restaurant_reel_view"
+            )
+            .group_by(
+                RestaurantAnalyticsEvent.restaurant_id
+            )
+            .all()
+        )
+
+        restaurant_reel_views = {
+            restaurant_id: int(view_count or 0)
+            for restaurant_id, view_count in reel_view_rows
+        }
+
+        total_restaurant_profile_views = sum(
+            restaurant_profile_views.values()
+        )
+
+        total_restaurant_reel_views = sum(
+            restaurant_reel_views.values()
+        )
 
     # ========================================================
     # CUSTOMER EXPERIENCE METRICS
@@ -20155,7 +20211,6 @@ def admin_restaurants():
         ]
 
         if restaurant_post_ids:
-
             total_experience_loves = (
                 RestaurantExperienceLove.query
                 .filter(
@@ -20168,10 +20223,6 @@ def admin_restaurants():
 
     # ========================================================
     # CUSTOMER RATING QR DATA
-    # ========================================================
-    #
-    # Read existing QR records only.
-    # Do not generate QR codes automatically.
     # ========================================================
 
     restaurant_qr_data = {}
@@ -20197,20 +20248,18 @@ def admin_restaurants():
         rating_qr_by_restaurant = {}
 
         for restaurant_qr in existing_rating_qrs:
-
             if (
                 restaurant_qr.restaurant_advert_id
                 not in rating_qr_by_restaurant
             ):
-
                 rating_qr_by_restaurant[
                     restaurant_qr.restaurant_advert_id
                 ] = restaurant_qr
 
         for advert in adverts:
 
-            restaurant_qr = (
-                rating_qr_by_restaurant.get(advert.id)
+            restaurant_qr = rating_qr_by_restaurant.get(
+                advert.id
             )
 
             if restaurant_qr:
@@ -20280,7 +20329,6 @@ def admin_restaurants():
         "admin/restaurants.html",
 
         organizer=organizer,
-
         adverts=adverts,
 
         live_adverts=live_adverts,
@@ -20289,6 +20337,18 @@ def admin_restaurants():
         paused_adverts=paused_adverts,
 
         live_reels=live_reels,
+
+        # Profile and Reel views for every plan.
+        restaurant_profile_views=restaurant_profile_views,
+        restaurant_reel_views=restaurant_reel_views,
+
+        total_restaurant_profile_views=(
+            total_restaurant_profile_views
+        ),
+
+        total_restaurant_reel_views=(
+            total_restaurant_reel_views
+        ),
 
         approved_experience_count=(
             approved_experience_count
@@ -20304,8 +20364,7 @@ def admin_restaurants():
 
         restaurant_qr_data=restaurant_qr_data,
 
-        # Preserve the organizer's existing ticketing
-        # subscription information.
+        # Preserve existing ticketing subscription information.
         subscription_active=organizer.is_subscription_active,
 
         subscription_status=(
@@ -20328,6 +20387,113 @@ def admin_restaurants():
             KALXA_RESTAURANT_SUBSCRIPTION_PRICE
         ),
     )
+    
+
+@app.route(
+    "/restaurant/<int:advert_id>/reel-view",
+    methods=["POST"],
+)
+def restaurant_reel_view_event(advert_id):
+
+    # ========================================================
+    # LOAD PUBLIC RESTAURANT
+    # ========================================================
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
+        .first_or_404()
+    )
+
+    # ========================================================
+    # SYNCHRONIZE SUBSCRIPTION
+    # ========================================================
+
+    sync_restaurant_subscription(advert)
+
+    now = datetime.utcnow()
+
+    # ========================================================
+    # VERIFY ORGANIZER
+    # ========================================================
+
+    organizer = advert.organizer
+
+    if not organizer or not organizer.active:
+        abort(404)
+
+    if (
+        getattr(organizer, "account_type", None)
+        != "restaurant"
+    ):
+        abort(404)
+
+    # ========================================================
+    # VERIFY PUBLIC PROFILE AND CAMPAIGN
+    # ========================================================
+
+    if not advert.can_use_profile:
+        abort(404)
+
+    if advert.starts_at and advert.starts_at > now:
+        abort(404)
+
+    if advert.ends_at and advert.ends_at <= now:
+        abort(404)
+
+    # ========================================================
+    # VERIFY REEL
+    # ========================================================
+
+    reel = (
+        RestaurantReel.query
+        .filter_by(
+            advert_id=advert.id,
+            active=True,
+        )
+        .first()
+    )
+
+    if not reel or not advert.can_use_reel:
+        abort(404)
+
+    # ========================================================
+    # RECORD REEL VIEW
+    # ========================================================
+    #
+    # Deduplication uses the existing analytics helper.
+    # Repeated playback requests from the same anonymous
+    # session and attribution context can be suppressed.
+    # ========================================================
+
+    recorded = record_restaurant_analytics_event(
+        restaurant_id=advert.id,
+        event_type="restaurant_reel_view",
+        metadata={
+            "page": "restaurant",
+            "content": "reel",
+            "reel_id": reel.id,
+            "restaurant_plan": (
+                advert.normalized_subscription_tier
+            ),
+            "subscription_grace": (
+                advert.is_restaurant_subscription_in_grace_period
+            ),
+        },
+        deduplicate=True,
+    )
+
+    # ========================================================
+    # RETURN RESULT
+    # ========================================================
+
+    return jsonify({
+        "success": True,
+        "recorded": bool(recorded),
+    }), 200
 
 @app.route(
     "/admin/restaurants/new",
