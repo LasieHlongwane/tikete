@@ -1437,7 +1437,7 @@ table {
 
     width: 100%;
 
-    min-width: 1080px;
+    min-width: 1240px;
 
     border-collapse: collapse;
 }
@@ -3083,6 +3083,32 @@ tbody tr:hover {
 
                 </div>
 
+                <!-- Profile and Reel views are available on every plan. -->
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Profile Views
+                    </span>
+
+                    <span class="metric-value">
+                        {{ total_restaurant_profile_views|default(0) }}
+                    </span>
+
+                </div>
+
+                <div class="metric">
+
+                    <span class="metric-label">
+                        Reel Views
+                    </span>
+
+                    <span class="metric-value">
+                        {{ total_restaurant_reel_views|default(0) }}
+                    </span>
+
+                </div>
+
             </div>
 
             <!-- =================================================
@@ -3312,6 +3338,8 @@ tbody tr:hover {
                                         <th>Start</th>
                                         <th>End</th>
                                         <th>Reel</th>
+                                        <th>Profile Views</th>
+                                        <th>Reel Views</th>
                                         <th>Remaining</th>
                                         <th>Actions</th>
 
@@ -3479,6 +3507,26 @@ tbody tr:hover {
 
                                                 {% endif %}
 
+                                            </td>
+
+                                            <!-- PROFILE VIEWS -->
+
+                                            <td>
+                                                {{
+                                                    restaurant_profile_views.get(advert.id, 0)
+                                                    if restaurant_profile_views is defined
+                                                    else 0
+                                                }}
+                                            </td>
+
+                                            <!-- REEL VIEWS -->
+
+                                            <td>
+                                                {{
+                                                    restaurant_reel_views.get(advert.id, 0)
+                                                    if restaurant_reel_views is defined
+                                                    else 0
+                                                }}
                                             </td>
 
                                             <!-- REMAINING -->
