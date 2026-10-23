@@ -895,6 +895,52 @@
 
 
     /* =====================================================
+       RESTAURANT REEL
+    ===================================================== */
+
+    .restaurant-reel-section {
+        margin-top: 24px;
+    }
+
+    .restaurant-reel-heading {
+        margin: 0 0 10px;
+        color: #17191d;
+        font-size: 17px;
+        font-weight: 950;
+        letter-spacing: -.025em;
+    }
+
+    .restaurant-reel-caption {
+        margin: 0 0 12px;
+        color: #777d86;
+        font-size: 11px;
+    }
+
+    .restaurant-reel-frame {
+        overflow: hidden;
+        background: #090a0c;
+        border: 1px solid #d4d6da;
+        border-radius: 18px;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .restaurant-reel-video {
+        display: block;
+        width: 100%;
+        max-height: 720px;
+        aspect-ratio: 9 / 16;
+        object-fit: contain;
+        background: #090a0c;
+    }
+
+    .restaurant-reel-footnote {
+        margin: 8px 2px 0;
+        color: #777d86;
+        font-size: 9px;
+    }
+
+
+    /* =====================================================
        LOCATION / HOURS CARD
     ===================================================== */
 
@@ -2873,6 +2919,63 @@
                     <div class="restaurant-story-copy">
                         {{ advert.description }}
                     </div>
+
+                </section>
+
+            {% endif %}
+
+
+            <!-- =================================
+                 RESTAURANT REEL
+
+                 Reel playback is available whenever the
+                 restaurant's current plan permits it and
+                 an active Reel exists.
+            ================================== -->
+
+            {% if
+                can_use_reel|default(false)
+                and advert.reel
+                and advert.reel.active
+                and advert.reel.video_url
+            %}
+
+                <section class="restaurant-reel-section" aria-labelledby="restaurant-reel-heading">
+
+                    <h2
+                        class="restaurant-reel-heading"
+                        id="restaurant-reel-heading"
+                    >
+                        A little more to discover
+                    </h2>
+
+                    <p class="restaurant-reel-caption">
+                        Watch {{ advert.business_name }} in motion.
+                    </p>
+
+                    <div class="restaurant-reel-frame">
+                        <video
+                            class="restaurant-reel-video"
+                            data-restaurant-reel-video
+                            controls
+                            playsinline
+                            preload="metadata"
+                            {% if advert.reel.thumbnail_url %}
+                                poster="{{ advert.reel.thumbnail_url }}"
+                            {% endif %}
+                            aria-label="Restaurant Reel for {{ advert.business_name }}"
+                        >
+                            <source
+                                src="{{ advert.reel.video_url }}"
+                                type="video/mp4"
+                            >
+                            Your browser does not support HTML video playback.
+                        </video>
+                    </div>
+
+                    <p class="restaurant-reel-footnote">
+                        Reel · {{ (advert.reel.duration_seconds or 0)|int }} seconds
+                    </p>
 
                 </section>
 
@@ -6286,6 +6389,44 @@
 
 {% endif %}
 
+
+<!-- =========================================
+     RESTAURANT REEL VIEW TRACKING
+========================================== -->
+<script>
+(() => {
+    const reelVideo = document.querySelector(
+        "[data-restaurant-reel-video]"
+    );
+
+    if (!reelVideo) {
+        return;
+    }
+
+    let viewRequestSent = false;
+
+    reelVideo.addEventListener("play", () => {
+        if (viewRequestSent) {
+            return;
+        }
+
+        viewRequestSent = true;
+
+        fetch(
+            "/restaurant/{{ advert.id }}/reel-view",
+            {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json"
+                }
+            }
+        ).catch(() => {
+            // Analytics must never interrupt Reel playback.
+        });
+    });
+})();
+</script>
 
 </body>
 
