@@ -142,9 +142,7 @@ from models import (
     RESTAURANT_PLAN_FEATURES,
     RESTAURANT_SUBSCRIPTION_GRACE_DAYS,
     PaystackSettlement,
-    TicketSettlementAllocation,
-    RestaurantSpecialPayment,
-    RestaurantSpecial,   
+    TicketSettlementAllocation,   
 )
 
 
@@ -1126,80 +1124,6 @@ def paystack_api_request(
 
     return result
 
-# ============================================================
-# KALXA RESTAURANT SPECIALS CONFIGURATION
-# ============================================================
-
-import secrets
-import logging
-
-RESTAURANT_SPECIAL_PACKAGES = {
-    7: {
-        "name": "7-Day Special",
-        "days": 7,
-        "amount": Decimal("35.00"),
-    },
-    14: {
-        "name": "14-Day Special",
-        "days": 14,
-        "amount": Decimal("70.00"),
-    },
-    30: {
-        "name": "30-Day Special",
-        "days": 30,
-        "amount": Decimal("100.00"),
-    },
-}
-
-
-def restaurant_special_package(duration_days):
-    """Return a valid, server-controlled special package."""
-
-    try:
-        duration_days = int(duration_days)
-    except (TypeError, ValueError):
-        return None
-
-    return RESTAURANT_SPECIAL_PACKAGES.get(duration_days)
-
-
-def restaurant_special_is_publishable(special):
-    """Check whether a special should appear publicly."""
-
-    if special is None:
-        return False
-
-    now = datetime.utcnow()
-
-    return (
-        special.active is True
-        and special.status == "active"
-        and special.starts_at is not None
-        and special.expires_at is not None
-        and special.starts_at <= now < special.expires_at
-    )
-
-
-def expire_restaurant_special_if_needed(special):
-    """
-    Update expired specials without deleting their history.
-    """
-
-    if special is None or special.status != "active":
-        return False
-
-    if (
-        special.expires_at is not None
-        and special.expires_at <= datetime.utcnow()
-    ):
-        special.active = False
-        special.status = "expired"
-
-        return True
-
-    return False
-
-
 def paystack_is_configured():
     """
     Check whether a Paystack secret key is configured.
@@ -1221,365 +1145,6 @@ def paystack_is_configured():
             ("sk_test_", "sk_live_")
         )
     )
-    
-    
-# ============================================================
-# CREATE RESTAURANT SPECIAL YOCO CHECKOUT
-# ============================================================
-
-def create_restaurant_special_checkout(payment, special):
-    """
-    Create a dedicated Yoco checkout for a restaurant special.
-
-    Uses the existing Yoco checkout service.
-    """
-
-    if payment.payment_method != "yoco":
-        raise YocoValidationError(
-            "Invalid payment method."
-        )
-
-    if payment.payment_status != "pending":
-        raise YocoValidationError(
-            "This payment is not pending."
-        )
-
-    if special.id != payment.special_id:
-        raise YocoValidationError(
-            "Payment and special do not match."
-        )
-
-    if special.organizer_id != payment.organizer_id:
-        raise YocoValidationError(
-            "Payment owner does not match the special."
-        )
-
-    if not yoco_is_configured():
-        raise YocoConfigurationError(
-            "Yoco is not configured."
-        )
-
-    success_url = url_for(
-        "restaurant_special_payment_return",
-        payment_id=payment.id,
-        _external=True,
-    )
-
-    cancel_url = url_for(
-        "restaurant_special_payment_cancel",
-        payment_id=payment.id,
-        _external=True,
-    )
-
-    result = create_yoco_checkout(
-        amount=payment.amount,
-        payment_reference=payment.payment_reference,
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata={
-            "payment_type": "restaurant_special",
-            "restaurant_special_payment_id": str(payment.id),
-            "restaurant_special_id": str(special.id),
-            "restaurant_advert_id": str(
-                payment.restaurant_advert_id
-            ),
-            "organizer_id": str(payment.organizer_id),
-            "duration_days": str(payment.duration_days),
-        },
-    )
-
-    checkout_id = result.get("checkout_id")
-    checkout_url = result.get("checkout_url")
-
-    if not checkout_id or not checkout_url:
-        raise YocoAPIError(
-            "Yoco did not return a valid checkout."
-        )
-
-    payment.yoco_checkout_id = checkout_id
-    payment.yoco_checkout_url = checkout_url
-    payment.yoco_payment_status = "pending"
-
-    db.session.flush()
-
-    return checkout_url  
-    
-      
-# ============================================================
-# VERIFY AND ACTIVATE RESTAURANT SPECIAL
-# ============================================================
-
-def verify_and_activate_restaurant_special_payment(
-    payment_id,
-    source="reconciliation",
-):
-    """
-    Verify payment directly against Yoco and activate the
-    corresponding restaurant special.
-
-    Never trusts a browser redirect as payment proof.
-    """
-
-    if source not in ("webhook", "reconciliation"):
-        raise YocoValidationError(
-            "Invalid payment verification source."
-        )
-
-    payment = db.session.get(
-        RestaurantSpecialPayment,
-        payment_id,
-    )
-
-    if payment is None:
-        return "unmatched"
-
-    if payment.payment_method != "yoco":
-        return "invalid"
-
-    if not payment.yoco_checkout_id:
-        return "invalid"
-
-    special = db.session.get(
-        RestaurantSpecial,
-        payment.special_id,
-    )
-
-    if special is None:
-        return "invalid"
-
-    # A completed special must never be activated a second time.
-    if payment.payment_status == "paid":
-        if (
-            special.status == "active"
-            and special.active
-            and special.starts_at
-            and special.expires_at
-        ):
-            return "already_paid"
-
-        if special.status == "expired":
-            return "already_paid"
-
-        return "invalid"
-
-    if payment.payment_status != "pending":
-        return "invalid"
-
-    try:
-        checkout = get_yoco_checkout(
-            payment.yoco_checkout_id
-        )
-    except Exception:
-        db.session.rollback()
-
-        logging.exception(
-            "Unable to retrieve Yoco checkout for "
-            "restaurant special payment %s",
-            payment.id,
-        )
-
-        raise
-
-    if not isinstance(checkout, dict):
-        return "invalid"
-
-    # Confirm the checkout belongs to this local payment.
-    if checkout.get("id") != payment.yoco_checkout_id:
-        return "invalid"
-
-    if str(checkout.get("status", "")).lower() != "completed":
-        return "pending"
-
-    # Preserve the existing test-only Yoco verification rule.
-    if checkout.get("processingMode") != "test":
-        return "invalid"
-
-    if str(checkout.get("currency", "")).upper() != "ZAR":
-        return "invalid"
-
-    try:
-        expected_cents = int(
-            Decimal(str(payment.amount)) * 100
-        )
-        actual_cents = int(checkout.get("amount"))
-    except (TypeError, ValueError, ArithmeticError):
-        return "invalid"
-
-    if actual_cents != expected_cents:
-        return "invalid"
-
-    yoco_payment_id = checkout.get("paymentId")
-
-    if (
-        not isinstance(yoco_payment_id, str)
-        or not yoco_payment_id.strip()
-    ):
-        return "invalid"
-
-    metadata = checkout.get("metadata")
-
-    if not isinstance(metadata, dict):
-        return "invalid"
-
-    # Validate all the payment associations.
-    expected_metadata = {
-        "payment_type": "restaurant_special",
-        "restaurant_special_payment_id": str(payment.id),
-        "restaurant_special_id": str(special.id),
-        "restaurant_advert_id": str(
-            payment.restaurant_advert_id
-        ),
-        "organizer_id": str(payment.organizer_id),
-        "duration_days": str(payment.duration_days),
-    }
-
-    for key, expected_value in expected_metadata.items():
-        if str(metadata.get(key, "")) != expected_value:
-            return "invalid"
-
-    if (
-        metadata.get("kalxa_payment_reference")
-        != payment.payment_reference
-    ):
-        return "invalid"
-
-    # Reject a Yoco payment ID already assigned to another
-    # restaurant special or an existing subscription payment.
-    special_payment_used = (
-        RestaurantSpecialPayment.query
-        .filter(
-            RestaurantSpecialPayment.yoco_payment_id
-            == yoco_payment_id,
-            RestaurantSpecialPayment.id != payment.id,
-        )
-        .first()
-    )
-
-    if special_payment_used:
-        return "invalid"
-
-    subscription_payment_used = (
-        SubscriptionPayment.query
-        .filter_by(
-            yoco_payment_id=yoco_payment_id
-        )
-        .first()
-    )
-
-    restaurant_subscription_payment_used = (
-        RestaurantSubscriptionPayment.query
-        .filter_by(
-            yoco_payment_id=yoco_payment_id
-        )
-        .first()
-    )
-
-    if (
-        subscription_payment_used
-        or restaurant_subscription_payment_used
-    ):
-        return "invalid"
-
-    package = restaurant_special_package(
-        payment.duration_days
-    )
-
-    if package is None:
-        return "invalid"
-
-    if Decimal(str(payment.amount)) != package["amount"]:
-        return "invalid"
-
-    if special.duration_days != package["days"]:
-        return "invalid"
-
-    if special.organizer_id != payment.organizer_id:
-        return "invalid"
-
-    if special.restaurant_advert_id != payment.restaurant_advert_id:
-        return "invalid"
-
-    # Verify that the restaurant still belongs to this organizer.
-    advert = db.session.get(
-        RestaurantAdvert,
-        payment.restaurant_advert_id,
-    )
-
-    if (
-        advert is None
-        or advert.organizer_id != payment.organizer_id
-    ):
-        return "invalid"
-
-    try:
-        # Use a transaction so the payment and activation are
-        # committed together.
-        payment = (
-            RestaurantSpecialPayment.query
-            .filter_by(id=payment_id)
-            .with_for_update()
-            .first()
-        )
-
-        special = (
-            RestaurantSpecial.query
-            .filter_by(id=special.id)
-            .with_for_update()
-            .first()
-        )
-
-        if payment is None or special is None:
-            db.session.rollback()
-            return "invalid"
-
-        # Recheck after acquiring the row locks.
-        if payment.payment_status == "paid":
-            db.session.rollback()
-            return "already_paid"
-
-        if payment.payment_status != "pending":
-            db.session.rollback()
-            return "invalid"
-
-        if special.status != "pending_payment":
-            db.session.rollback()
-            return "invalid"
-
-        if special.active or special.starts_at or special.expires_at:
-            db.session.rollback()
-            return "invalid"
-
-        now = datetime.utcnow()
-
-        payment.payment_status = "paid"
-        payment.yoco_payment_id = yoco_payment_id
-        payment.yoco_payment_status = "succeeded"
-        payment.paid_at = now
-        payment.payment_verified_at = now
-        payment.confirmed_at = now
-        payment.confirmed_by = source
-
-        special.status = "active"
-        special.active = True
-        special.starts_at = now
-        special.expires_at = now + timedelta(
-            days=package["days"]
-        )
-
-        db.session.commit()
-
-        return "activated"
-
-    except Exception:
-        db.session.rollback()
-
-        logging.exception(
-            "Restaurant special payment activation failed "
-            "for payment %s",
-            payment_id,
-        )
-
-        raise          
 # ============================================================
 # STORIES CONVERSION ANALYTICS API
 # ============================================================
@@ -1841,25 +1406,35 @@ def _yoco_payment_used_elsewhere(payment_id, kind, row_id):
 
 
 
+# ============================================================
+# PROCESS YOCO PAYMENTS
+# ORGANIZER SUBSCRIPTIONS
+# RESTAURANT SUBSCRIPTIONS
+# RESTAURANT SPECIALS
+# ============================================================
 
 def process_yoco_subscription_payment(event):
     """
-    Process a verified Yoco subscription webhook.
-
-    IMPORTANT:
-    This function must only be called after
-    verify_yoco_webhook() succeeds.
+    Process a verified Yoco webhook event.
 
     Supports:
-        1. Events containing an explicit checkout ID.
-        2. Events containing a payment ID but no checkout ID.
+        1. Organizer subscription payments.
+        2. Restaurant subscription payments.
+        3. Restaurant special payments.
 
-    SECURITY:
-        - Never trusts webhook data alone for activation.
-        - Never treats payment ID as checkout ID.
-        - Retrieves checkout information directly from Yoco.
-        - Uses the central verification function.
-        - Does not activate unmatched payments.
+    Security:
+        - Called only after webhook signature verification.
+        - Independently retrieves candidate checkouts from Yoco.
+        - Never activates a payment using webhook data alone.
+        - Never treats a payment ID as a checkout ID.
+        - Requires exactly one matching local payment record.
+
+    Idempotency:
+        Subscription payments continue through the existing
+        subscription verification function.
+
+        Restaurant specials use their dedicated verification
+        and activation function.
     """
 
     # ========================================================
@@ -1867,10 +1442,11 @@ def process_yoco_subscription_payment(event):
     # ========================================================
 
     if not isinstance(event, dict):
+
         return "invalid"
 
     # ========================================================
-    # EXTRACT IDENTIFIERS
+    # EXTRACT WEBHOOK IDENTIFIERS
     # ========================================================
 
     try:
@@ -1904,172 +1480,310 @@ def process_yoco_subscription_payment(event):
     # ========================================================
 
     if event_type != "payment.succeeded":
+
         return "ignored"
 
     # ========================================================
-    # PATH 1 — EXPLICIT CHECKOUT ID
+    # LOCAL HELPER: FIND CHECKOUT OWNERS
+    # ========================================================
+
+    def find_checkout_owners(target_checkout_id):
+        """
+        Find every local payment record associated with a
+        checkout ID.
+
+        A checkout must belong to exactly one payment record
+        across all three supported payment types.
+        """
+
+        if (
+            not isinstance(target_checkout_id, str)
+            or not target_checkout_id.strip()
+        ):
+
+            return []
+
+        owners = []
+
+        # ----------------------------------------------------
+        # ORGANIZER SUBSCRIPTION
+        # ----------------------------------------------------
+
+        organizer_payments = (
+            SubscriptionPayment.query
+            .filter_by(
+                yoco_checkout_id=target_checkout_id,
+                payment_method="yoco",
+            )
+            .all()
+        )
+
+        for payment in organizer_payments:
+
+            owners.append((
+                "organizer",
+                payment.id,
+            ))
+
+        # ----------------------------------------------------
+        # RESTAURANT SUBSCRIPTION
+        # ----------------------------------------------------
+
+        restaurant_payments = (
+            RestaurantSubscriptionPayment.query
+            .filter_by(
+                yoco_checkout_id=target_checkout_id,
+                payment_method="yoco",
+            )
+            .all()
+        )
+
+        for payment in restaurant_payments:
+
+            owners.append((
+                "restaurant",
+                payment.id,
+            ))
+
+        # ----------------------------------------------------
+        # RESTAURANT SPECIAL
+        # ----------------------------------------------------
+
+        special_payments = (
+            RestaurantSpecialPayment.query
+            .filter_by(
+                yoco_checkout_id=target_checkout_id,
+                payment_method="yoco",
+            )
+            .all()
+        )
+
+        for payment in special_payments:
+
+            owners.append((
+                "restaurant_special",
+                payment.id,
+            ))
+
+        return owners
+
+    # ========================================================
+    # LOCAL HELPER: DISPATCH PAYMENT VERIFICATION
+    # ========================================================
+
+    def verify_matched_payment(kind, payment_id):
+        """
+        Send the matched payment to its dedicated verifier.
+        """
+
+        if kind == "organizer":
+
+            return verify_and_activate_yoco_subscription(
+                kind="organizer",
+                payment_id=payment_id,
+                source="webhook",
+            )
+
+        if kind == "restaurant":
+
+            return verify_and_activate_yoco_subscription(
+                kind="restaurant",
+                payment_id=payment_id,
+                source="webhook",
+            )
+
+        if kind == "restaurant_special":
+
+            return verify_and_activate_restaurant_special_payment(
+                payment_id=payment_id,
+                source="webhook",
+            )
+
+        return "invalid"
+
+    # ========================================================
+    # PATH 1: WEBHOOK CONTAINS CHECKOUT ID
     # ========================================================
 
     if checkout_id:
 
-        kind, payment_id = (
-            _yoco_find_checkout_payment(
-                checkout_id
-            )
+        owners = find_checkout_owners(
+            checkout_id
         )
 
-        if (
-            kind is None
-            or payment_id is None
-        ):
+        # ----------------------------------------------------
+        # NO MATCH
+        # ----------------------------------------------------
+
+        if not owners:
 
             db.session.rollback()
 
             current_app.logger.warning(
-                (
-                    "[Yoco] Webhook checkout not found "
-                    "in local payment records."
-                )
+                "[Yoco] Checkout ID has no local payment record."
             )
 
             return "unmatched"
 
-        # Capture identifiers before rollback.
+        # ----------------------------------------------------
+        # MULTIPLE MATCHES
+        # ----------------------------------------------------
 
-        selected_kind = kind
-        selected_payment_id = payment_id
+        if len(owners) != 1:
 
+            db.session.rollback()
+
+            current_app.logger.error(
+                (
+                    "[Yoco] Checkout ID is associated with "
+                    "multiple local payment records."
+                )
+            )
+
+            return "invalid"
+
+        # ----------------------------------------------------
+        # VERIFY MATCHED PAYMENT
+        # ----------------------------------------------------
+
+        matched_kind, matched_payment_id = owners[0]
+
+        # Capture IDs before releasing the read transaction.
         db.session.rollback()
 
-        # ====================================================
-        # VERIFY CHECKOUT AND ACTIVATE
-        # ====================================================
-
-        return verify_and_activate_yoco_subscription(
-            kind=selected_kind,
-            payment_id=selected_payment_id,
-            source="webhook",
+        return verify_matched_payment(
+            matched_kind,
+            matched_payment_id,
         )
 
     # ========================================================
-    # PATH 2 — PAYMENT ID ONLY
+    # PATH 2: WEBHOOK CONTAINS PAYMENT ID ONLY
     # ========================================================
 
-    if not yoco_payment_id:
+    if (
+        not isinstance(yoco_payment_id, str)
+        or not yoco_payment_id.strip()
+    ):
 
         current_app.logger.warning(
             (
-                "[Yoco] Successful payment event "
-                "contains neither a checkout ID "
-                "nor a payment ID."
+                "[Yoco] Successful payment event contains "
+                "neither a checkout ID nor a payment ID."
             )
         )
 
         return "unmatched"
 
     # ========================================================
-    # FIND RECENT LOCAL PENDING PAYMENTS
+    # FIND PENDING CHECKOUT CANDIDATES
     # ========================================================
-    #
-    # A payment ID alone cannot identify a checkout
-    # without additional verification.
-    #
-    # Search candidate local checkouts and ask Yoco
-    # which checkout belongs to the payment ID.
-    #
-    # Do not activate based on this webhook alone.
-    # ========================================================
+
+    candidates = []
+
+    # --------------------------------------------------------
+    # ORGANIZER SUBSCRIPTION CANDIDATES
+    # --------------------------------------------------------
 
     organizer_candidates = (
         SubscriptionPayment.query
-
-        .filter(
-            SubscriptionPayment.payment_method
-            == "yoco"
+        .filter_by(
+            payment_method="yoco",
+            payment_status="pending",
         )
-
-        .filter(
-            SubscriptionPayment.payment_status
-            == "pending"
-        )
-
         .filter(
             SubscriptionPayment.yoco_checkout_id.isnot(
                 None
             )
         )
-
         .order_by(
             SubscriptionPayment.created_at.desc()
         )
-
         .limit(100)
-
         .all()
     )
-
-    restaurant_candidates = (
-        RestaurantSubscriptionPayment.query
-
-        .filter(
-            RestaurantSubscriptionPayment.payment_method
-            == "yoco"
-        )
-
-        .filter(
-            RestaurantSubscriptionPayment.payment_status
-            == "pending"
-        )
-
-        .filter(
-            RestaurantSubscriptionPayment.yoco_checkout_id.isnot(
-                None
-            )
-        )
-
-        .order_by(
-            RestaurantSubscriptionPayment.created_at.desc()
-        )
-
-        .limit(100)
-
-        .all()
-    )
-
-    # ========================================================
-    # SNAPSHOT IDENTIFIERS
-    # ========================================================
-
-    candidates = []
 
     for payment in organizer_candidates:
 
         if payment.yoco_checkout_id:
 
-            candidates.append(
-                (
-                    "organizer",
-                    payment.id,
-                    payment.yoco_checkout_id,
-                )
+            candidates.append((
+                "organizer",
+                payment.id,
+                payment.yoco_checkout_id,
+            ))
+
+    # --------------------------------------------------------
+    # RESTAURANT SUBSCRIPTION CANDIDATES
+    # --------------------------------------------------------
+
+    restaurant_candidates = (
+        RestaurantSubscriptionPayment.query
+        .filter_by(
+            payment_method="yoco",
+            payment_status="pending",
+        )
+        .filter(
+            RestaurantSubscriptionPayment.yoco_checkout_id.isnot(
+                None
             )
+        )
+        .order_by(
+            RestaurantSubscriptionPayment.created_at.desc()
+        )
+        .limit(100)
+        .all()
+    )
 
     for payment in restaurant_candidates:
 
         if payment.yoco_checkout_id:
 
-            candidates.append(
-                (
-                    "restaurant",
-                    payment.id,
-                    payment.yoco_checkout_id,
-                )
+            candidates.append((
+                "restaurant",
+                payment.id,
+                payment.yoco_checkout_id,
+            ))
+
+    # --------------------------------------------------------
+    # RESTAURANT SPECIAL CANDIDATES
+    # --------------------------------------------------------
+
+    special_candidates = (
+        RestaurantSpecialPayment.query
+        .filter_by(
+            payment_method="yoco",
+            payment_status="pending",
+        )
+        .filter(
+            RestaurantSpecialPayment.yoco_checkout_id.isnot(
+                None
             )
+        )
+        .order_by(
+            RestaurantSpecialPayment.created_at.desc()
+        )
+        .limit(100)
+        .all()
+    )
+
+    for payment in special_candidates:
+
+        if payment.yoco_checkout_id:
+
+            candidates.append((
+                "restaurant_special",
+                payment.id,
+                payment.yoco_checkout_id,
+            ))
+
+    # --------------------------------------------------------
+    # RELEASE THE READ TRANSACTION
+    # --------------------------------------------------------
 
     db.session.rollback()
 
     # ========================================================
-    # VERIFY CANDIDATE CHECKOUTS WITH YOCO
+    # ASK YOCO WHICH CHECKOUT MATCHES THE PAYMENT ID
     # ========================================================
 
     matching_candidates = []
@@ -2095,62 +1809,70 @@ def process_yoco_subscription_payment(event):
             current_app.logger.warning(
                 (
                     "[Yoco] Could not retrieve candidate "
-                    "checkout for webhook reconciliation."
+                    "checkout during payment reconciliation."
                 )
             )
 
             continue
 
-        # ====================================================
-        # CHECKOUT MUST MATCH STORED ID
-        # ====================================================
+        if not isinstance(checkout, dict):
+
+            continue
+
+        # ----------------------------------------------------
+        # VERIFY STORED CHECKOUT ID
+        # ----------------------------------------------------
 
         if (
             checkout.get("id")
             != candidate_checkout_id
         ):
+
             continue
 
-        # ====================================================
-        # CHECKOUT MUST BE COMPLETED
-        # ====================================================
+        # ----------------------------------------------------
+        # VERIFY COMPLETED STATUS
+        # ----------------------------------------------------
 
         if (
-            checkout.get("status")
+            str(
+                checkout.get("status", "")
+            ).lower()
             != "completed"
         ):
+
             continue
 
-        # ====================================================
-        # PAYMENT ID MUST MATCH WEBHOOK
-        # ====================================================
+        # ----------------------------------------------------
+        # VERIFY PAYMENT ID
+        # ----------------------------------------------------
 
-        checkout_payment_id = (
-            checkout.get("paymentId")
+        checkout_payment_id = checkout.get(
+            "paymentId"
         )
 
         if not isinstance(
             checkout_payment_id,
             str,
         ):
+
             continue
 
         if (
             checkout_payment_id.strip()
             != yoco_payment_id
         ):
+
             continue
 
-        # ====================================================
-        # FOUND MATCHING CHECKOUT
-        # ====================================================
+        # ----------------------------------------------------
+        # MATCH FOUND
+        # ----------------------------------------------------
 
-        matching_candidates.append(
-            (
-                kind,
-                payment_id,
-            )
-        )
+        matching_candidates.append((
+            kind,
+            payment_id,
+        ))
 
     # ========================================================
     # REQUIRE EXACTLY ONE MATCH
@@ -2173,8 +1895,8 @@ def process_yoco_subscription_payment(event):
 
             current_app.logger.warning(
                 (
-                    "[Yoco] Payment reconciliation "
-                    "incomplete due to Yoco API errors."
+                    "[Yoco] Payment reconciliation incomplete "
+                    "because one or more Yoco requests failed."
                 )
             )
 
@@ -2182,33 +1904,25 @@ def process_yoco_subscription_payment(event):
 
         current_app.logger.warning(
             (
-                "[Yoco] No matching checkout found "
-                "for successful payment event."
+                "[Yoco] No matching checkout found for "
+                "the successful payment event."
             )
         )
 
         return "unmatched"
 
     # ========================================================
-    # MATCHED PAYMENT
+    # VERIFY THE MATCHED PAYMENT
     # ========================================================
 
-    (
-        matched_kind,
-        matched_payment_id,
-    ) = matching_candidates[0]
-
-    # ========================================================
-    # FINAL INDEPENDENT VERIFICATION
-    # ========================================================
-
-    return verify_and_activate_yoco_subscription(
-        kind=matched_kind,
-        payment_id=matched_payment_id,
-        source="webhook",
+    matched_kind, matched_payment_id = (
+        matching_candidates[0]
     )
 
-
+    return verify_matched_payment(
+        matched_kind,
+        matched_payment_id,
+    )
 
 
 # ============================================================
@@ -20414,169 +20128,6 @@ def restaurant_rating_qr_page(
             ),
         )
     )
-    
-    
-# ============================================================
-# CREATE RESTAURANT SPECIAL AND START PAYMENT
-# ============================================================
-
-@app.route(
-    "/admin/restaurants/<int:advert_id>/specials/create",
-    methods=["POST"],
-)
-def admin_create_restaurant_special(advert_id):
-    organizer = require_ticketing_organizer()
-
-    if organizer is None:
-        abort(403)
-
-    if getattr(organizer, "account_type", None) != "restaurant":
-        abort(403)
-
-    advert = db.session.get(
-        RestaurantAdvert,
-        advert_id,
-    )
-
-    if (
-        advert is None
-        or advert.organizer_id != organizer.id
-    ):
-        abort(404)
-
-    if getattr(organizer, "is_suspended", False):
-        abort(403)
-
-    headline = (
-        request.form.get("headline", "").strip()
-    )
-
-    description = (
-        request.form.get("description", "").strip()
-    )
-
-    price_text = (
-        request.form.get("price_text", "").strip()
-    )
-
-    duration_days = request.form.get("duration_days")
-
-    if not headline or len(headline) > 180:
-        flash(
-            "Enter a special headline of up to 180 characters.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    if len(description) > 5000:
-        flash(
-            "The special description is too long.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    if len(price_text) > 100:
-        flash(
-            "The price text is too long.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    package = restaurant_special_package(
-        duration_days
-    )
-
-    if package is None:
-        flash(
-            "Select a valid promotion package.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    if not yoco_is_configured():
-        flash(
-            "Online payments are temporarily unavailable.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    reference = (
-        "KALXA-SPECIAL-"
-        + secrets.token_hex(12).upper()
-    )
-
-    special = RestaurantSpecial(
-        restaurant_advert_id=advert.id,
-        organizer_id=organizer.id,
-        headline=headline,
-        description=description,
-        price_text=price_text or None,
-        duration_days=package["days"],
-        amount_paid=package["amount"],
-        currency="ZAR",
-        status="pending_payment",
-        active=False,
-    )
-
-    db.session.add(special)
-    db.session.flush()
-
-    payment = RestaurantSpecialPayment(
-        special_id=special.id,
-        restaurant_advert_id=advert.id,
-        organizer_id=organizer.id,
-        payment_reference=reference,
-        payment_method="yoco",
-        plan_name=package["name"],
-        duration_days=package["days"],
-        amount=package["amount"],
-        currency="ZAR",
-        payment_status="pending",
-    )
-
-    db.session.add(payment)
-    db.session.flush()
-
-    try:
-        checkout_url = create_restaurant_special_checkout(
-            payment,
-            special,
-        )
-
-        db.session.commit()
-
-    except Exception:
-        db.session.rollback()
-
-        logging.exception(
-            "Failed to create restaurant special checkout."
-        )
-
-        flash(
-            "We could not start your payment. Please try again.",
-            "error",
-        )
-
-        return redirect(
-            url_for("admin_restaurants")
-        )
-
-    return redirect(checkout_url)    
 # ============================================================
 # ADMIN - RESTAURANTS
 # ============================================================
@@ -20986,109 +20537,6 @@ def admin_restaurants():
         ),
     )
     
-
-# ============================================================
-# RESTAURANT SPECIAL PAYMENT RETURN
-# ============================================================
-
-@app.route(
-    "/payments/yoco/restaurant-special/<int:payment_id>/return",
-    methods=["GET"],
-)
-def restaurant_special_payment_return(payment_id):
-    organizer = require_ticketing_organizer()
-
-    if organizer is None:
-        abort(403)
-
-    payment = db.session.get(
-        RestaurantSpecialPayment,
-        payment_id,
-    )
-
-    if (
-        payment is None
-        or payment.organizer_id != organizer.id
-    ):
-        abort(404)
-
-    try:
-        result = verify_and_activate_restaurant_special_payment(
-            payment.id,
-            source="reconciliation",
-        )
-
-    except Exception:
-        db.session.rollback()
-
-        logging.exception(
-            "Restaurant special payment reconciliation failed."
-        )
-
-        result = "pending"
-
-    if result == "activated":
-        flash(
-            "Payment verified! Your restaurant special is now live.",
-            "success",
-        )
-
-    elif result == "already_paid":
-        flash(
-            "Your special payment has already been processed.",
-            "success",
-        )
-
-    elif result == "pending":
-        flash(
-            "Your payment is still being verified. "
-            "Please check your specials dashboard shortly.",
-            "info",
-        )
-
-    else:
-        flash(
-            "We could not confirm this payment yet. "
-            "Please contact support if you were charged.",
-            "warning",
-        )
-
-    return redirect(
-        url_for("admin_restaurants")
-    )
-
-
-@app.route(
-    "/payments/yoco/restaurant-special/<int:payment_id>/cancel",
-    methods=["GET"],
-)
-def restaurant_special_payment_cancel(payment_id):
-    organizer = require_ticketing_organizer()
-
-    if organizer is None:
-        abort(403)
-
-    payment = db.session.get(
-        RestaurantSpecialPayment,
-        payment_id,
-    )
-
-    if (
-        payment is None
-        or payment.organizer_id != organizer.id
-    ):
-        abort(404)
-
-    flash(
-        "Payment was not confirmed. "
-        "Your special has not been published.",
-        "info",
-    )
-
-    return redirect(
-        url_for("admin_restaurants")
-    )
-
 
 @app.route(
     "/restaurant/<int:advert_id>/reel-view",
@@ -26677,28 +26125,33 @@ def admin_resume_restaurant(
 # STAGE 1D - YOCO SUBSCRIPTION WEBHOOK
 # ============================================================
 
+# ============================================================
+# YOCO WEBHOOK
+# ORGANIZER SUBSCRIPTIONS, RESTAURANT SUBSCRIPTIONS,
+# AND RESTAURANT SPECIALS
+# ============================================================
+
 @app.route(
     "/webhooks/yoco",
     methods=["POST"],
 )
 def yoco_webhook():
     """
-    Receive Yoco webhook notifications.
+    Receive and verify Yoco webhook notifications.
 
-    SECURITY:
-        Webhook signatures must be verified before
-        processing any event.
+    Security:
+        - Verify the webhook signature before processing.
+        - Never trust the webhook alone as payment proof.
+        - Verify the checkout independently with Yoco.
 
-    PAYMENT SAFETY:
-        A webhook event is not sufficient proof
-        to activate a subscription.
+    Supports:
+        - Organizer subscription payments.
+        - Restaurant subscription payments.
+        - Restaurant special payments.
 
-        The payment processor must independently
-        verify the corresponding checkout with Yoco.
-
-    IDEMPOTENCY:
-        Repeated notifications must never extend
-        the same subscription twice.
+    Idempotency:
+        Each payment type uses its own verification and
+        activation function.
     """
 
     # ========================================================
@@ -26731,7 +26184,7 @@ def yoco_webhook():
         )
 
         return jsonify({
-            "error": "Invalid webhook"
+            "error": "Invalid webhook",
         }), 400
 
     # ========================================================
@@ -26745,7 +26198,7 @@ def yoco_webhook():
         )
 
         return jsonify({
-            "error": "Invalid event"
+            "error": "Invalid event",
         }), 400
 
     event_type = event.get(
@@ -26759,7 +26212,7 @@ def yoco_webhook():
     )
 
     # ========================================================
-    # PROCESS SUBSCRIPTION PAYMENT
+    # PROCESS PAYMENT
     # ========================================================
 
     try:
@@ -26773,11 +26226,11 @@ def yoco_webhook():
         db.session.rollback()
 
         current_app.logger.exception(
-            "[Yoco] Subscription webhook processing failed."
+            "[Yoco] Webhook payment processing failed."
         )
 
         return jsonify({
-            "error": "Processing failed"
+            "error": "Processing failed",
         }), 500
 
     # ========================================================
@@ -26814,29 +26267,44 @@ def yoco_webhook():
     if result == "unmatched":
 
         current_app.logger.warning(
-            "[Yoco] Verified payment could not be matched."
+            "[Yoco] Verified payment could not be matched.",
         )
 
         return jsonify({
-            "error": "Payment not matched"
+            "error": "Payment not matched",
         }), 503
 
     # ========================================================
-    # INVALID PAYMENT EVENT
+    # PAYMENT VERIFICATION STILL PENDING
+    # ========================================================
+
+    if result == "pending":
+
+        current_app.logger.warning(
+            "[Yoco] Payment verification is still pending.",
+        )
+
+        return jsonify({
+            "received": True,
+            "result": "pending",
+        }), 503
+
+    # ========================================================
+    # INVALID PAYMENT
     # ========================================================
 
     if result == "invalid":
 
         current_app.logger.warning(
-            "[Yoco] Payment event could not be processed."
+            "[Yoco] Payment event could not be processed.",
         )
 
         return jsonify({
-            "error": "Payment event invalid"
+            "error": "Payment event invalid",
         }), 422
 
     # ========================================================
-    # UNEXPECTED PROCESSOR RESULT
+    # UNEXPECTED RESULT
     # ========================================================
 
     current_app.logger.error(
@@ -26845,7 +26313,7 @@ def yoco_webhook():
     )
 
     return jsonify({
-        "error": "Unexpected processing result"
+        "error": "Unexpected processing result",
     }), 500
 # ============================================================
 # RESTAURANT REEL
