@@ -6493,7 +6493,330 @@ class RestaurantAdvert(db.Model):
             f"business_name={self.business_name} "
             f"status={self.campaign_status}>"
         )
+        
+        
+# ============================================================
+# RESTAURANT SPECIALS
+# ============================================================
 
+class RestaurantSpecial(db.Model):
+    __tablename__ = "restaurant_specials"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        index=True
+    )
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        index=True
+    )
+
+    headline = db.Column(
+        db.String(180),
+        nullable=False
+    )
+
+    description = db.Column(
+        db.Text,
+        nullable=False,
+        default=""
+    )
+
+    price_text = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    image_url = db.Column(
+        db.String(1000),
+        nullable=True
+    )
+
+    duration_days = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    amount_paid = db.Column(
+        db.Numeric(10, 2),
+        nullable=False
+    )
+
+    currency = db.Column(
+        db.String(3),
+        nullable=False,
+        default="ZAR"
+    )
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending_payment",
+        index=True
+    )
+
+    active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        index=True
+    )
+
+    starts_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True
+    )
+
+    expires_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        index=True
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
+        foreign_keys=[restaurant_advert_id]
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+        foreign_keys=[organizer_id]
+    )
+
+    payment = db.relationship(
+        "RestaurantSpecialPayment",
+        back_populates="special",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
+    @property
+    def is_currently_active(self):
+        """
+        Return True only when the special has been paid,
+        activated, and is within its publication period.
+        """
+
+        now = datetime.utcnow()
+
+        return (
+            self.active
+            and self.status == "active"
+            and self.starts_at is not None
+            and self.expires_at is not None
+            and self.starts_at <= now < self.expires_at
+        )
+
+    @property
+    def remaining_days(self):
+        """
+        Number of whole days remaining in the promotion.
+        """
+
+        if not self.expires_at:
+            return 0
+
+        remaining = self.expires_at - datetime.utcnow()
+
+        if remaining.total_seconds() <= 0:
+            return 0
+
+        return (
+            remaining.days
+            + (
+                1
+                if remaining.seconds > 0
+                else 0
+            )
+        )
+
+
+
+# ============================================================
+# RESTAURANT SPECIAL PAYMENTS
+# ============================================================
+
+class RestaurantSpecialPayment(db.Model):
+    __tablename__ = "restaurant_special_payments"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    special_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_specials.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+
+    restaurant_advert_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "restaurant_adverts.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        index=True
+    )
+
+    organizer_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "organizers.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False,
+        index=True
+    )
+
+    payment_reference = db.Column(
+        db.String(120),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+
+    payment_method = db.Column(
+        db.String(30),
+        nullable=False,
+        default="yoco"
+    )
+
+    plan_name = db.Column(
+        db.String(80),
+        nullable=False
+    )
+
+    duration_days = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    amount = db.Column(
+        db.Numeric(10, 2),
+        nullable=False
+    )
+
+    currency = db.Column(
+        db.String(3),
+        nullable=False,
+        default="ZAR"
+    )
+
+    payment_status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="pending",
+        index=True
+    )
+
+    yoco_checkout_id = db.Column(
+        db.String(255),
+        nullable=True,
+        unique=True,
+        index=True
+    )
+
+    yoco_checkout_url = db.Column(
+        db.String(2000),
+        nullable=True
+    )
+
+    yoco_payment_id = db.Column(
+        db.String(255),
+        nullable=True,
+        unique=True,
+        index=True
+    )
+
+    yoco_payment_status = db.Column(
+        db.String(50),
+        nullable=True
+    )
+
+    paid_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    payment_verified_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    confirmed_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    confirmed_by = db.Column(
+        db.String(50),
+        nullable=True
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    special = db.relationship(
+        "RestaurantSpecial",
+        back_populates="payment"
+    )
+
+    restaurant_advert = db.relationship(
+        "RestaurantAdvert",
+        foreign_keys=[restaurant_advert_id]
+    )
+
+    organizer = db.relationship(
+        "Organizer",
+        foreign_keys=[organizer_id]
+    )
 # ============================================================
 # RESTAURANT GALLERY IMAGE
 # ============================================================
