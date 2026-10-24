@@ -6400,34 +6400,62 @@
     );
 
     if (!reelVideo) {
+        console.warn(
+            "Reel tracking: video element not found."
+        );
         return;
     }
 
     let viewRequestSent = false;
 
-    reelVideo.addEventListener("play", () => {
+    reelVideo.addEventListener("play", async () => {
         if (viewRequestSent) {
             return;
         }
 
         viewRequestSent = true;
 
-        fetch(
-            "/restaurant/{{ advert.id }}/reel-view",
-            {
-                method: "POST",
-                credentials: "same-origin",
-                headers: {
-                    "Accept": "application/json"
+        try {
+            const response = await fetch(
+                "/restaurant/{{ advert.id }}/reel-view",
+                {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json"
+                    }
                 }
+            );
+
+            const data = await response.json().catch(
+                () => ({})
+            );
+
+            console.log("Reel tracking result:", {
+                status: response.status,
+                success: data.success,
+                recorded: data.recorded,
+                response: data
+            });
+
+            if (!response.ok || !data.success) {
+                console.error(
+                    "Reel tracking failed."
+                );
+
+                viewRequestSent = false;
             }
-        ).catch(() => {
-            // Analytics must never interrupt Reel playback.
-        });
+        } catch (error) {
+            console.error(
+                "Reel tracking request failed:",
+                error
+            );
+
+            viewRequestSent = false;
+        }
     });
 })();
 </script>
-
 </body>
 
 </html>
