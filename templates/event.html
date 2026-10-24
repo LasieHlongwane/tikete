@@ -6192,6 +6192,126 @@ content="Kalxa"
     {% endif %}
 
 
+     
+    <!-- =====================================================
+     ACTIVE RESTAURANT SPECIALS
+====================================================== -->
+
+{% if restaurant_specials %}
+
+<section class="homepage-restaurant-specials">
+
+    <div class="homepage-restaurant-specials-heading">
+        <h2>Restaurant Specials</h2>
+
+        <p>
+            Discover the latest food and drink offers on Kalxa.
+        </p>
+    </div>
+
+    <div class="homepage-restaurant-specials-grid">
+
+        {% for special in restaurant_specials %}
+
+            <article class="homepage-restaurant-special-card">
+
+                <div class="homepage-restaurant-special-content">
+
+                    <h3>{{ special.headline }}</h3>
+
+                    {% if special.price_text %}
+                        <p class="homepage-restaurant-special-price">
+                            {{ special.price_text }}
+                        </p>
+                    {% endif %}
+
+                    <p>
+                        {{ special.description }}
+                    </p>
+
+                    {% if special.restaurant_advert %}
+                        <p class="homepage-restaurant-special-restaurant">
+                            {{ special.restaurant_advert.business_name }}
+                        </p>
+                    {% endif %}
+
+                    {% if special.expires_at %}
+                        <p class="homepage-restaurant-special-expiry">
+                            Offer ends
+                            {{ special.expires_at.strftime("%d %b %Y") }}
+                        </p>
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endif %}
+
+<style>
+.homepage-restaurant-specials {
+    padding: 24px 16px;
+}
+
+.homepage-restaurant-specials-heading {
+    margin-bottom: 18px;
+}
+
+.homepage-restaurant-specials-heading h2 {
+    margin-bottom: 8px;
+}
+
+.homepage-restaurant-specials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.homepage-restaurant-special-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+    background: #fff;
+    overflow-wrap: anywhere;
+}
+
+.homepage-restaurant-special-card h3 {
+    margin-top: 0;
+}
+
+.homepage-restaurant-special-price {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.homepage-restaurant-special-restaurant {
+    font-weight: 700;
+}
+
+.homepage-restaurant-special-expiry {
+    font-size: 12px;
+    color: #64748b;
+}
+
+@media (max-width: 700px) {
+    .homepage-restaurant-specials-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 450px) {
+    .homepage-restaurant-specials-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
     <!-- =====================================
          EVENTS
     ====================================== -->
