@@ -6641,6 +6641,45 @@ def api_public_restaurants():
         ]
     })
 
+# ============================================================
+# PUBLIC KALXA STATISTICS
+# ============================================================
+
+@app.route(
+    "/api/public/stats",
+    methods=["GET"],
+)
+def api_public_stats():
+    """
+    Return public statistics for the KALXA homepage.
+
+    Business counts come directly from the existing
+    restaurant_adverts database table.
+
+    Only active restaurant/business profiles are counted.
+    Subscription tier does not determine whether a profile
+    is included in this count.
+
+    Event, opportunity, and category statistics will be
+    added after their existing models have been inspected.
+    """
+
+    businesses_listed = (
+        db.session.query(
+            db.func.count(
+                RestaurantAdvert.id
+            )
+        )
+        .filter(
+            RestaurantAdvert.active.is_(True)
+        )
+        .scalar()
+        or 0
+    )
+
+    return jsonify({
+        "businesses_listed": businesses_listed,
+    })
 
 # ============================================================
 # SINGLE PUBLIC RESTAURANT
