@@ -6645,6 +6645,10 @@ def api_public_restaurants():
 # PUBLIC KALXA STATISTICS
 # ============================================================
 
+# ============================================================
+# PUBLIC KALXA STATISTICS
+# ============================================================
+
 @app.route(
     "/api/public/stats",
     methods=["GET"],
@@ -6653,16 +6657,17 @@ def api_public_stats():
     """
     Return public statistics for the KALXA homepage.
 
-    Business counts come directly from the existing
-    restaurant_adverts database table.
+    Businesses:
+        Count active restaurant/business profiles.
 
-    Only active restaurant/business profiles are counted.
-    Subscription tier does not determine whether a profile
-    is included in this count.
-
-    Event, opportunity, and category statistics will be
-    added after their existing models have been inspected.
+    Events:
+        Count published, active events that have not been
+        deleted by their organizers.
     """
+
+    # --------------------------------------------------------
+    # ACTIVE BUSINESS PROFILES
+    # --------------------------------------------------------
 
     businesses_listed = (
         db.session.query(
@@ -6677,10 +6682,33 @@ def api_public_stats():
         or 0
     )
 
+    # --------------------------------------------------------
+    # PUBLISHED PUBLIC EVENTS
+    # --------------------------------------------------------
+
+    events_published = (
+        db.session.query(
+            db.func.count(
+                TicketEvent.id
+            )
+        )
+        .filter(
+            TicketEvent.status == "published",
+            TicketEvent.active.is_(True),
+            TicketEvent.organizer_deleted.is_(False),
+        )
+        .scalar()
+        or 0
+    )
+
+    # --------------------------------------------------------
+    # PUBLIC RESPONSE
+    # --------------------------------------------------------
+
     return jsonify({
         "businesses_listed": businesses_listed,
+        "events_published": events_published,
     })
-
 # ============================================================
 # SINGLE PUBLIC RESTAURANT
 # ============================================================
