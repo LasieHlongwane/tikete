@@ -6648,22 +6648,54 @@ def api_public_restaurants():
 # ============================================================
 # PUBLIC KALXA STATISTICS
 # ============================================================
-
 @app.route(
     "/api/public/stats",
-    methods=["GET"],
+    methods=["GET", "OPTIONS"],
 )
 def api_public_stats():
     """
     Return public statistics for the KALXA homepage.
 
-    Businesses:
-        Count active restaurant/business profiles.
-
-    Events:
-        Count published, active events that have not been
-        deleted by their organizers.
+    Allows the KALXA About website to read statistics
+    from the Ticketing API using cross-origin requests.
     """
+
+    from flask import request, jsonify, make_response
+
+    # --------------------------------------------------------
+    # ALLOW ONLY THE KALXA WEBSITE ORIGINS
+    # --------------------------------------------------------
+
+    allowed_origins = {
+        "https://about.kalxa.co.za",
+        "https://kalxa.co.za",
+    }
+
+    origin = request.headers.get("Origin", "")
+
+    response = make_response()
+
+    if origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+
+    response.headers["Access-Control-Allow-Methods"] = (
+        "GET, OPTIONS"
+    )
+
+    response.headers["Access-Control-Allow-Headers"] = (
+        "Content-Type, Accept"
+    )
+
+    response.headers["Cache-Control"] = "no-store"
+
+    # --------------------------------------------------------
+    # HANDLE CORS PREFLIGHT REQUEST
+    # --------------------------------------------------------
+
+    if request.method == "OPTIONS":
+        response.status_code = 204
+        return response
 
     # --------------------------------------------------------
     # ACTIVE BUSINESS PROFILES
@@ -6671,9 +6703,7 @@ def api_public_stats():
 
     businesses_listed = (
         db.session.query(
-            db.func.count(
-                RestaurantAdvert.id
-            )
+            db.func.count(RestaurantAdvert.id)
         )
         .filter(
             RestaurantAdvert.active.is_(True)
@@ -6688,9 +6718,7 @@ def api_public_stats():
 
     events_published = (
         db.session.query(
-            db.func.count(
-                TicketEvent.id
-            )
+            db.func.count(TicketEvent.id)
         )
         .filter(
             TicketEvent.status == "published",
@@ -6702,13 +6730,24 @@ def api_public_stats():
     )
 
     # --------------------------------------------------------
-    # PUBLIC RESPONSE
+    # RETURN PUBLIC STATISTICS WITH CORS HEADERS
     # --------------------------------------------------------
 
-    return jsonify({
-        "businesses_listed": businesses_listed,
-        "events_published": events_published,
-    })
+    response = make_response(
+        jsonify({
+            "businesses_listed": businesses_listed,
+            "events_published": events_published,
+        })
+    )
+
+    if origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
+
+    response.headers["Cache-Control"] = "no-store"
+
+    return response
+
 # ============================================================
 # SINGLE PUBLIC RESTAURANT
 # ============================================================
