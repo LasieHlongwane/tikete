@@ -13115,6 +13115,11 @@ def superadmin_extend_partner_access(organizer_id):
 # SUPERADMIN - INDEX RESTAURANT KNOWLEDGE
 # ============================================================
 
+                    
+# ============================================================
+# SUPERADMIN - INDEX RESTAURANT KNOWLEDGE
+# ============================================================
+
 @app.route(
     "/superadmin/index-business-knowledge/<int:advert_id>",
     methods=["GET", "POST"],
@@ -13126,11 +13131,17 @@ def superadmin_index_business_knowledge(advert_id):
     if auth:
         return auth
 
+    csrf_session_key = "business_knowledge_index_csrf"
+
     # --------------------------------------------------------
-    # GET: Show a confirmation form
+    # GET: Show confirmation form
     # --------------------------------------------------------
 
     if request.method == "GET":
+
+        csrf_token = secrets.token_urlsafe(32)
+
+        session[csrf_session_key] = csrf_token
 
         return Response(
             f"""
@@ -13152,7 +13163,8 @@ def superadmin_index_business_knowledge(advert_id):
 
                 <p>
                     You are about to index the public knowledge
-                    for restaurant ID: <strong>{advert_id}</strong>.
+                    for restaurant ID:
+                    <strong>{advert_id}</strong>.
                 </p>
 
                 <p>
@@ -13160,10 +13172,18 @@ def superadmin_index_business_knowledge(advert_id):
                 </p>
 
                 <form method="POST">
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{csrf_token}"
+                    >
+
                     <button type="submit"
                             style="padding: 12px 20px;">
                         Start Indexing
                     </button>
+
                 </form>
             </body>
             </html>
@@ -13172,12 +13192,45 @@ def superadmin_index_business_knowledge(advert_id):
         )
 
     # --------------------------------------------------------
-    # POST: Perform indexing
+    # POST: Validate CSRF token
+    # --------------------------------------------------------
+
+    submitted_token = request.form.get(
+        "csrf_token",
+        "",
+    )
+
+    expected_token = session.get(
+        csrf_session_key,
+        "",
+    )
+
+    if (
+        not submitted_token
+        or not expected_token
+        or not secrets.compare_digest(
+            submitted_token,
+            expected_token,
+        )
+    ):
+        return jsonify({
+            "success": False,
+            "message": "Invalid or expired security token. Please try again.",
+        }), 403
+
+    # Prevent reuse of the same token.
+    session.pop(csrf_session_key, None)
+
+    # --------------------------------------------------------
+    # Verify public restaurant availability
     # --------------------------------------------------------
 
     advert = (
         RestaurantAdvert.query
-        .filter_by(id=advert_id, active=True)
+        .filter_by(
+            id=advert_id,
+            active=True,
+        )
         .first()
     )
 
@@ -13213,6 +13266,10 @@ def superadmin_index_business_knowledge(advert_id):
             "message": "This restaurant profile is outside its public availability period.",
         }), 403
 
+    # --------------------------------------------------------
+    # Index business knowledge
+    # --------------------------------------------------------
+
     try:
 
         from services.business_knowledge import (
@@ -13238,7 +13295,6 @@ def superadmin_index_business_knowledge(advert_id):
                 "Check the Render logs."
             ),
         }), 500
-
 # ============================================================
 # SUPER ADMIN DASHBOARD
 # ============================================================
