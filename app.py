@@ -12859,7 +12859,44 @@ def admin_reconcile_yoco_restaurant_subscription(
     )
 
 
+# ============================================================
+# SUPERADMIN - OPENAI CONNECTION TEST
+# ============================================================
 
+@app.route(
+    "/superadmin/test-openai-connection",
+    methods=["GET"],
+)
+def superadmin_test_openai_connection():
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    from services.business_ai import (
+        test_openai_connection,
+    )
+
+    try:
+
+        result = test_openai_connection()
+
+        return jsonify(result), 200
+
+    except Exception:
+
+        current_app.logger.exception(
+            "KALXA OpenAI connection test failed."
+        )
+
+        return jsonify({
+            "success": False,
+            "message": (
+                "OpenAI connection failed. "
+                "Check the Render logs."
+            ),
+        }), 500
 # ============================================================
 # SUPER ADMIN - EXTEND EVENT PARTNER
 # ============================================================
