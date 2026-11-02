@@ -13110,6 +13110,135 @@ def superadmin_extend_partner_access(organizer_id):
         )
     )
 
+
+# ============================================================
+# SUPERADMIN - INDEX RESTAURANT KNOWLEDGE
+# ============================================================
+
+@app.route(
+    "/superadmin/index-business-knowledge/<int:advert_id>",
+    methods=["GET", "POST"],
+)
+def superadmin_index_business_knowledge(advert_id):
+
+    auth = require_superadmin()
+
+    if auth:
+        return auth
+
+    # --------------------------------------------------------
+    # GET: Show a confirmation form
+    # --------------------------------------------------------
+
+    if request.method == "GET":
+
+        return Response(
+            f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport"
+                      content="width=device-width, initial-scale=1">
+                <title>Index Business Knowledge</title>
+            </head>
+            <body style="
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 20px;
+            ">
+                <h2>Index Business Knowledge</h2>
+
+                <p>
+                    You are about to index the public knowledge
+                    for restaurant ID: <strong>{advert_id}</strong>.
+                </p>
+
+                <p>
+                    This operation may use your OpenAI API credits.
+                </p>
+
+                <form method="POST">
+                    <button type="submit"
+                            style="padding: 12px 20px;">
+                        Start Indexing
+                    </button>
+                </form>
+            </body>
+            </html>
+            """,
+            mimetype="text/html",
+        )
+
+    # --------------------------------------------------------
+    # POST: Perform indexing
+    # --------------------------------------------------------
+
+    advert = (
+        RestaurantAdvert.query
+        .filter_by(id=advert_id, active=True)
+        .first()
+    )
+
+    if not advert:
+        return jsonify({
+            "success": False,
+            "message": "Restaurant profile not found or inactive.",
+        }), 404
+
+    sync_restaurant_subscription(advert)
+
+    organizer = advert.organizer
+
+    if (
+        not organizer
+        or not organizer.active
+        or getattr(organizer, "account_type", None) != "restaurant"
+        or not advert.can_use_profile
+    ):
+        return jsonify({
+            "success": False,
+            "message": "This restaurant profile is not publicly available.",
+        }), 403
+
+    now = datetime.utcnow()
+
+    if (
+        (advert.starts_at and advert.starts_at > now)
+        or (advert.ends_at and advert.ends_at <= now)
+    ):
+        return jsonify({
+            "success": False,
+            "message": "This restaurant profile is outside its public availability period.",
+        }), 403
+
+    try:
+
+        from services.business_knowledge import (
+            index_business_knowledge,
+        )
+
+        result = index_business_knowledge(advert)
+
+        return jsonify(result), 200
+
+    except Exception:
+
+        current_app.logger.exception(
+            "Restaurant knowledge indexing failed. "
+            "business_id=%s",
+            advert_id,
+        )
+
+        return jsonify({
+            "success": False,
+            "message": (
+                "Knowledge indexing failed. "
+                "Check the Render logs."
+            ),
+        }), 500
+
 # ============================================================
 # SUPER ADMIN DASHBOARD
 # ============================================================
