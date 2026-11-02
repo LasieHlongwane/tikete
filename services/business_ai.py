@@ -469,3 +469,24 @@ def answer_business_question(
         )
 
         raise
+
+
+
+# ============================================================
+# OPENAI CONNECTION TEST
+# ============================================================
+
+def test_openai_connection():
+    """
+    Verify that KALXA can communicate with OpenAI.
+    Does not expose the API key.
+    """
+
+    client = get_openai_client()
+
+    response = client.models.list()
+
+    return {
+        "success": True,
+        "message": "OpenAI connection successful.",
+    }
